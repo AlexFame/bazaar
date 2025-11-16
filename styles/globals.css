@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* БАЗОВЫЕ СТИЛИ */
+@layer base {
+  body {
+    @apply bg-brand-yellow text-brand-black;
+    font-family: -apple-system, BlinkMacSystemFont, Inter, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* КОМПОНЕНТЫ */
+@layer components {
+  /* Карточка объявления */
+  .card {
+    @apply bg-brand-white rounded-3xl border border-brand-yellow-light
+           shadow-[0_14px_40px_rgba(0,0,0,0.08)] overflow-hidden;
+  }
+
+  /* Кнопки */
+  .btn {
+    @apply px-4 py-2 rounded-2xl font-semibold text-center cursor-pointer transition;
+  }
+
+  .btn-primary {
+    @apply bg-brand-purple text-brand-white hover:bg-brand-purple-dark;
+  }
+
+  .btn-light {
+    @apply bg-brand-white text-brand-black border border-brand-black/10
+           hover:bg-brand-yellow-light;
+  }
+
+  /* Заголовки */
+  .h1 {
+    @apply text-[26px] font-extrabold;
+  }
+
+  .h2 {
+    @apply text-[20px] font-bold;
+  }
+
+  /* Текст-акцент */
+  .text-accent {
+    @apply text-brand-purple font-semibold;
+  }
+
+  /* Контейнер */
+  .container {
+    @apply px-4 sm:px-6 md:px-10;
+  }
+}
+/* Контейнер под Telegram WebApp и мобильную версию */
+.telegram-container {
+  max-width: 420px; /* ширина окна мини аппки */
+  margin: 0 auto;
+  padding: 0 10px; /* небольшой внутренний отступ по краям */
+}

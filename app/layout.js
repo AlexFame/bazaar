@@ -1,0 +1,24 @@
+import "../styles/globals.css";
+import Providers from "./providers";
+import AppShell from "@/components/AppShell";
+
+export const metadata = {
+  title: "Bazaar",
+  description: "Мини маркетплейс Bazaar",
+  // важно для мобильной верстки и Telegram WebApp
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+};
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="ru">
+      <body className="min-h-screen">
+        <Providers>
+          <div className="telegram-container">
+            <AppShell>{children}</AppShell>
+          </div>
+        </Providers>
+      </body>
+    </html>
+  );
+}
