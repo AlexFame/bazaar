@@ -1,6 +1,7 @@
 import "../styles/globals.css";
 import Providers from "./providers";
 import AppShell from "@/components/AppShell";
+import { Suspense } from "react";
 
 export const metadata = {
   title: "Bazaar",
@@ -20,7 +21,10 @@ export default function RootLayout({ children }) {
       <body className="min-h-screen">
         <Providers>
           <div className="telegram-container">
-            <AppShell>{children}</AppShell>
+            {/* ВОТ ЭТО НОВОЕ */}
+            <Suspense fallback={null}>
+              <AppShell>{children}</AppShell>
+            </Suspense>
           </div>
         </Providers>
       </body>
