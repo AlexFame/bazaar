@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { getUserId, isTelegramEnv } from "@/lib/telegram";
+import { getUserId } from "@/lib/telegram";
 import ListingCard from "@/components/ListingCard";
 import { useLang } from "@/lib/i18n-client";
 
@@ -49,27 +49,35 @@ export default function MyPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    async function load() {
-      // Если не в Telegram — нет пользователя
-      if (!isTelegramEnv()) {
+    let cancelled = false;
+
+    async function loadWithRetry(attempt = 0) {
+      if (cancelled) return;
+
+      // Пытаемся вытащить userId из Telegram
+      const userId = getUserId();
+
+      if (!userId) {
+        // Даём Телеге время и пробуем ещё пару раз
+        if (attempt < 5) {
+          setTimeout(() => loadWithRetry(attempt + 1), 200);
+          return;
+        }
+
+        // После нескольких попыток так и нет юзера
         setError(t.needTelegram);
         setLoading(false);
         return;
       }
 
-      const userId = getUserId();
-      if (!userId) {
-        setError(t.noUser);
-        setLoading(false);
-        return;
-      }
-
-      // Загружаем объявления пользователя
+      // Если userId получили – грузим объявления
       const { data, error } = await supabase
         .from("listings")
         .select("*")
         .eq("owner_id", userId)
         .order("created_at", { ascending: false });
+
+      if (cancelled) return;
 
       if (error) {
         console.error(error);
@@ -82,8 +90,16 @@ export default function MyPage() {
       setLoading(false);
     }
 
-    load();
-  }, [lang]); // меняем язык — меняется текст страницы
+    setLoading(true);
+    setError("");
+    setListings([]);
+
+    loadWithRetry();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lang, t.needTelegram, t.error]); // при смене языка перезапускаем
 
   return (
     <div className="w-full flex justify-center mt-6 px-3">
@@ -99,7 +115,9 @@ export default function MyPage() {
         )}
 
         {/* Загрузка */}
-        {loading && <div className="text-sm text-black/60">{t.loading}</div>}
+        {loading && !error && (
+          <div className="text-sm text-black/60">{t.loading}</div>
+        )}
 
         {/* Нет объявлений */}
         {!loading && !error && listings.length === 0 && (
