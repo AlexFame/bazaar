@@ -5,8 +5,13 @@ import AppShell from "@/components/AppShell";
 export const metadata = {
   title: "Bazaar",
   description: "Мини маркетплейс Bazaar",
-  // важно для мобильной верстки и Telegram WebApp
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+};
+
+// важно для мобильной верстки и Telegram WebApp
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({ children }) {
