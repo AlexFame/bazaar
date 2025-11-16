@@ -402,14 +402,16 @@ export default function FeedPageClient() {
         </div>
 
         {hasMore && listings.length > 0 && (
-          <button
-            type="button"
-            onClick={handleLoadMore}
-            disabled={loadingMore}
-            className="mt-4 mb-6 px-6 py-2 text-xs font-medium bg-black text-white rounded-full disabled:opacity-60"
-          >
-            {loadingMore ? txt.loadingMore : txt.loadMore}
-          </button>
+          <div className="mt-4 mb-6 flex justify-center">
+            <button
+              type="button"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+              className="px-6 py-2 text-xs font-medium bg-black text-white rounded-full disabled:opacity-60"
+            >
+              {loadingMore ? txt.loadingMore : txt.loadMore}
+            </button>
+          </div>
         )}
       </div>
     </div>

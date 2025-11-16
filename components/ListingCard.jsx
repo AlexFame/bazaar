@@ -110,7 +110,7 @@ export default function ListingCard({ listing }) {
 
   return (
     <Link href={`/listing/${listing.id}`}>
-      <article className="bg-white rounded-2xl p-2 shadow-sm flex flex-col h-full">
+      <article className="bg-white rounded-2xl p-2 shadow-sm flex flex-col h-full border border-black/10">
         {/* Фото */}
         {imageUrl && (
           <div className="w-full mb-2">

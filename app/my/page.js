@@ -1,42 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { getUserId } from "@/lib/telegram";
-import ListingCard from "@/components/ListingCard";
+import { getUserId } from "@/lib/userId";
 import { useLang } from "@/lib/i18n-client";
 
-// Локальные переводы страницы
 const pageTranslations = {
   ru: {
-    title: "Мои объявления",
-    needTelegram:
+    my: "Мои объявления",
+    needBot:
       "Открой мини-аппку через Telegram-бота, чтобы увидеть свои объявления.",
-    noUser:
-      "Не удалось определить пользователя Telegram. Перезапусти мини-аппку через бота.",
-    loading: "Загружаем…",
-    empty: "У тебя пока нет объявлений.",
-    error: "Ошибка загрузки объявлений",
   },
   ua: {
-    title: "Мої оголошення",
-    needTelegram:
+    my: "Мої оголошення",
+    needBot:
       "Відкрий міні-додаток через Telegram-бота, щоб побачити свої оголошення.",
-    noUser:
-      "Не вдалося визначити користувача Telegram. Перезапусти міні-додаток через бота.",
-    loading: "Завантажуємо…",
-    empty: "У тебе поки немає оголошень.",
-    error: "Помилка завантаження оголошень",
   },
   en: {
-    title: "My listings",
-    needTelegram:
-      "Open the mini-app via the Telegram bot to see your listings.",
-    noUser:
-      "Failed to identify Telegram user. Restart the mini-app via the bot.",
-    loading: "Loading…",
-    empty: "You don't have any listings yet.",
-    error: "Failed to load listings",
+    my: "My listings",
+    needBot: "Open the mini-app through the Telegram bot to see your listings.",
   },
 };
 
@@ -44,92 +25,48 @@ export default function MyPage() {
   const { lang } = useLang();
   const t = pageTranslations[lang] || pageTranslations.ru;
 
-  const [loading, setLoading] = useState(true);
-  const [listings, setListings] = useState([]);
-  const [error, setError] = useState("");
+  const [userId, setUserId] = useState(null);
+
+  // DEBUG BLOCK
+  const [debug, setDebug] = useState("");
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function loadWithRetry(attempt = 0) {
-      if (cancelled) return;
-
-      // Пытаемся вытащить userId из Telegram
-      const userId = getUserId();
-
-      if (!userId) {
-        // Даём Телеге время и пробуем ещё пару раз
-        if (attempt < 5) {
-          setTimeout(() => loadWithRetry(attempt + 1), 200);
-          return;
-        }
-
-        // После нескольких попыток так и нет юзера
-        setError(t.needTelegram);
-        setLoading(false);
-        return;
-      }
-
-      // Если userId получили – грузим объявления
-      const { data, error } = await supabase
-        .from("listings")
-        .select("*")
-        .eq("owner_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (cancelled) return;
-
-      if (error) {
-        console.error(error);
-        setError(t.error);
-        setLoading(false);
-        return;
-      }
-
-      setListings(data || []);
-      setLoading(false);
+    async function loadUser() {
+      const id = await getUserId();
+      setUserId(id);
     }
+    loadUser();
 
-    setLoading(true);
-    setError("");
-    setListings([]);
-
-    loadWithRetry();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [lang, t.needTelegram, t.error]); // при смене языка перезапускаем
+    // DEBUG: показать initDataUnsafe
+    if (typeof window !== "undefined" && window.Telegram?.WebApp) {
+      try {
+        const raw = window.Telegram.WebApp.initDataUnsafe || {};
+        setDebug(JSON.stringify(raw, null, 2));
+      } catch {}
+    }
+  }, []);
 
   return (
-    <div className="w-full flex justify-center mt-6 px-3">
-      <div className="max-w-[520px] w-full">
-        {/* Заголовок */}
-        <h1 className="text-lg font-semibold mb-4">{t.title}</h1>
+    <div className="w-full flex flex-col items-center mt-6 px-3">
+      <div className="bg-white rounded-2xl shadow-sm p-4 max-w-sm w-full text-left">
+        <h1 className="text-lg font-semibold mb-3">{t.my}</h1>
 
-        {/* Ошибка */}
-        {error && (
-          <div className="text-sm text-red-500 bg-white p-3 rounded-xl mb-4">
-            {error}
+        {!userId ? (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+            {t.needBot}
+          </div>
+        ) : (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+            Твой Telegram user_id: {userId}
           </div>
         )}
 
-        {/* Загрузка */}
-        {loading && !error && (
-          <div className="text-sm text-black/60">{t.loading}</div>
+        {/* DEBUG OUTPUT */}
+        {debug && (
+          <pre className="mt-4 text-[10px] text-black/60 whitespace-pre-wrap break-all">
+            {debug}
+          </pre>
         )}
-
-        {/* Нет объявлений */}
-        {!loading && !error && listings.length === 0 && (
-          <div className="text-sm text-black/60">{t.empty}</div>
-        )}
-
-        {/* Список объявлений */}
-        <div className="grid grid-cols-2 gap-2">
-          {listings.map((item) => (
-            <ListingCard key={item.id} listing={item} />
-          ))}
-        </div>
       </div>
     </div>
   );
