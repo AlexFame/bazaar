@@ -37,10 +37,15 @@ export default function AppShell({ children }) {
 
   return (
     <div className="w-full min-h-screen bg-[#FFD500] flex flex-col">
+      {/* СЛОГАН В САМОМ ВЕРХУ */}
+      <div className="w-full text-center text-[11px] text-black/70 py-2">
+        Bazaar – первый Telegram-маркетплейс для мигрантов в Германии
+      </div>
+
       {/* ВЕРХ */}
       <header className="w-full bg-[#FFD500] pt-3 pb-2">
         <div className="w-full flex flex-col gap-2 px-4">
-          {/* ПОИСК */}
+          {/* ПОИСК НАД МЕНЮ */}
           <form
             onSubmit={handleSearchSubmit}
             className="w-full flex items-center gap-2"
@@ -60,7 +65,7 @@ export default function AppShell({ children }) {
             </button>
           </form>
 
-          {/* МЕНЮ */}
+          {/* ЛИНИЯ МЕНЮ */}
           <div className="w-full flex items-center gap-2 nav-tabs">
             {/* Главная */}
             <Link href="/">
@@ -101,7 +106,7 @@ export default function AppShell({ children }) {
               </button>
             </Link>
 
-            {/* ЯЗЫК */}
+            {/* ЯЗЫК – СПРАВА */}
             <div className="ml-auto">
               <LangSwitcher />
             </div>
