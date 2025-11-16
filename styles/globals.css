@@ -62,3 +62,17 @@
   padding: 8px 10px 16px; /* небольшой отступ сверху/снизу и по бокам */
   box-sizing: border-box;
 }
+/* Центровка второй навигации */
+.nav-tabs {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-start; /* на десктопе ведёт себя как раньше */
+}
+
+/* На узких экранах (телега / мобилка) центрируем */
+@media (max-width: 600px) {
+  .nav-tabs {
+    justify-content: center;
+  }
+}

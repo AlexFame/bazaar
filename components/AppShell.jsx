@@ -25,9 +25,7 @@ export default function AppShell({ children }) {
     const term = search.trim();
 
     const params = new URLSearchParams();
-    if (term) {
-      params.set("q", term);
-    }
+    if (term) params.set("q", term);
 
     const basePath = "/";
     const url = params.toString()
@@ -42,7 +40,7 @@ export default function AppShell({ children }) {
       {/* ВЕРХ */}
       <header className="w-full bg-[#FFD500] pt-3 pb-2">
         <div className="w-full flex flex-col gap-2 px-4">
-          {/* ПОИСК НАД МЕНЮ */}
+          {/* ПОИСК */}
           <form
             onSubmit={handleSearchSubmit}
             className="w-full flex items-center gap-2"
@@ -50,7 +48,7 @@ export default function AppShell({ children }) {
             <input
               type="text"
               placeholder={t("search_main_ph")}
-              className="w-full bg-white rounded-full px-4 py-2...xs md:text-sm shadow-sm outline-none placeholder:text-black/40"
+              className="w-full bg-white rounded-full px-4 py-2 text-xs md:text-sm shadow-sm outline-none placeholder:text-black/40"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -62,8 +60,8 @@ export default function AppShell({ children }) {
             </button>
           </form>
 
-          {/* ЛИНИЯ МЕНЮ */}
-          <div className="w-full flex items-center gap-2">
+          {/* МЕНЮ */}
+          <div className="w-full flex items-center gap-2 nav-tabs">
             {/* Главная */}
             <Link href="/">
               <button
@@ -103,7 +101,7 @@ export default function AppShell({ children }) {
               </button>
             </Link>
 
-            {/* ЯЗЫК – СПРАВА */}
+            {/* ЯЗЫК */}
             <div className="ml-auto">
               <LangSwitcher />
             </div>
