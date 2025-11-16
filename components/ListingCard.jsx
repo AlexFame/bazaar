@@ -21,9 +21,9 @@ const typeLabels = {
     unknown: "Оголошення",
   },
   en: {
-    sell: "For sale",
-    buy: "Wanted",
-    free: "Give away",
+    sell: "Sell",
+    buy: "Buy",
+    free: "Free",
     services: "Services",
     unknown: "Listing",
   },
@@ -51,9 +51,6 @@ function formatDate(createdAt, lang) {
   if (Number.isNaN(d.getTime())) return "";
 
   const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
-
   const labels = dateLabels[lang] || dateLabels.ru;
   const locale = lang === "ua" ? "uk-UA" : lang === "ru" ? "ru-RU" : "en-US";
 
@@ -62,21 +59,25 @@ function formatDate(createdAt, lang) {
     minute: "2-digit",
   });
 
-  if (diffDays < 1 && now.getDate() === d.getDate()) {
-    return `${labels.todayPrefix} ${timeStr}`;
-  }
+  const sameDay =
+    now.getFullYear() === d.getFullYear() &&
+    now.getMonth() === d.getMonth() &&
+    now.getDate() === d.getDate();
 
-  if (
-    diffDays < 2 &&
-    new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).getDate() ===
-      d.getDate()
-  ) {
-    return `${labels.yesterdayPrefix} ${timeStr}`;
-  }
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+
+  const isYesterday =
+    yesterday.getFullYear() === d.getFullYear() &&
+    yesterday.getMonth() === d.getMonth() &&
+    yesterday.getDate() === d.getDate();
+
+  if (sameDay) return `${labels.todayPrefix} ${timeStr}`;
+  if (isYesterday) return `${labels.yesterdayPrefix} ${timeStr}`;
 
   return d.toLocaleDateString(locale, {
-    day: "numeric",
-    month: "short",
+    day: "2-digit",
+    month: "2-digit",
     year: "numeric",
   });
 }
@@ -95,17 +96,12 @@ export default function ListingCard({ listing }) {
       .from("listing-images")
       .getPublicUrl(listing.image_path);
 
-    if (data?.publicUrl) {
-      setImageUrl(data.publicUrl);
-    } else {
-      setImageUrl(null);
-    }
+    setImageUrl(data?.publicUrl || null);
   }, [listing?.image_path]);
 
   const typeMap = typeLabels[lang] || typeLabels.ru;
   const typeKey = listing?.type || "unknown";
   const typeText = typeMap[typeKey] || typeMap.unknown;
-
   const dateText = formatDate(listing?.created_at, lang);
 
   return (
@@ -117,36 +113,36 @@ export default function ListingCard({ listing }) {
             <img
               src={imageUrl}
               alt={listing.title || "Фото"}
-              className="w-full h-32 object-cover rounded-xl"
+              className="w-full h-36 object-cover rounded-xl"
             />
           </div>
         )}
 
         {/* Тип + дата */}
         <div className="flex items-center justify-between mb-1">
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-black text-white text-[10px] font-medium">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black text-white text-[11px] font-medium">
             {typeText}
           </span>
           {dateText && (
-            <span className="text-[10px] text-black/50">{dateText}</span>
+            <span className="text-[11px] text-black/50">{dateText}</span>
           )}
         </div>
 
         {/* Заголовок */}
         {listing.title && (
-          <h2 className="text-xs font-semibold line-clamp-2 mb-0.5">
+          <h2 className="text-sm font-semibold line-clamp-2 mb-0.5">
             {listing.title}
           </h2>
         )}
 
         {/* Цена */}
         {typeof listing.price === "number" && (
-          <div className="text-xs font-semibold mb-0.5">{listing.price} €</div>
+          <div className="text-sm font-semibold mb-0.5">{listing.price} €</div>
         )}
 
         {/* Локация */}
         {listing.location_text && (
-          <div className="text-[10px] text-black/60 line-clamp-1">
+          <div className="text-[11px] text-black/60 line-clamp-1">
             {listing.location_text}
           </div>
         )}

@@ -12,19 +12,20 @@ export default function CategoryScroll() {
   return (
     <div className="w-full flex justify-center mt-3">
       <div className="w-full max-w-[520px] px-3">
-        {/* ОДИН скролл-контейнер */}
+        {/* Один общий горизонтальный скролл для двух рядов */}
         <div className="overflow-x-auto pb-2">
-          {/* Внутри — две строки */}
-          <div className="inline-flex flex-col gap-2">
-            {/* Первая линия */}
-            <div className="flex gap-2 mb-1">
+          {/* Внутренний контейнер центрируется, но всё равно можно скроллить, если не влазит */}
+          <div className="inline-flex flex-col gap-2 mx-auto">
+            {/* Первый ряд */}
+            <div className="flex gap-2 justify-center">
               {firstRow.map((cat) => (
                 <button
                   key={cat.key}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full bg-white text-xs font-medium whitespace-nowrap flex items-center"
+                  type="button"
+                  className="flex-shrink-0 px-4 py-2 rounded-full bg-[#F2F3F7] text-xs font-medium whitespace-nowrap flex items-center gap-1 border border-black/5"
                 >
                   {cat.icon && (
-                    <span className="mr-1" aria-hidden="true">
+                    <span className="text-sm" aria-hidden="true">
                       {cat.icon}
                     </span>
                   )}
@@ -33,22 +34,25 @@ export default function CategoryScroll() {
               ))}
             </div>
 
-            {/* Вторая линия */}
-            <div className="flex gap-2">
-              {secondRow.map((cat) => (
-                <button
-                  key={cat.key}
-                  className="flex-shrink-0 px-3 py-1.5 rounded-full bg-white text-xs font-medium whitespace-nowrap flex items-center"
-                >
-                  {cat.icon && (
-                    <span className="mr-1" aria-hidden="true">
-                      {cat.icon}
-                    </span>
-                  )}
-                  <span>{cat[lang] || cat.ru}</span>
-                </button>
-              ))}
-            </div>
+            {/* Второй ряд */}
+            {secondRow.length > 0 && (
+              <div className="flex gap-2 justify-center">
+                {secondRow.map((cat) => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    className="flex-shrink-0 px-4 py-2 rounded-full bg-[#F2F3F7] text-xs font-medium whitespace-nowrap flex items-center gap-1 border border-black/5"
+                  >
+                    {cat.icon && (
+                      <span className="text-sm" aria-hidden="true">
+                        {cat.icon}
+                      </span>
+                    )}
+                    <span>{cat[lang] || cat.ru}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -73,10 +73,9 @@ export default function CreateListingClient({ onCreated }) {
         return;
       }
 
-      let dbType = listingType;
-      if (dbType === "services") {
-        dbType = "sell";
-      }
+      // ❗ ПРАВКА: БЫЛО if (listingType === "services") dbType = "sell"
+      // ТЕПЕРЬ ОСТАВЛЯЕМ ЧТО ВЫБРАНО
+      const dbType = listingType;
 
       const { data: listing, error: insertError } = await supabase
         .from("listings")
@@ -86,7 +85,7 @@ export default function CreateListingClient({ onCreated }) {
           price: price ? Number(price) : null,
           location_text: location.trim() || null,
           contacts: contacts.trim() || "EMPTY",
-          type: dbType,
+          type: dbType, // <-- теперь правильно отправляется 'services'
           category_key: categoryKey || null,
         })
         .select()
@@ -260,8 +259,8 @@ export default function CreateListingClient({ onCreated }) {
                       className={`block w-full text-left px-3 py-1.5 ${
                         listingType === opt.value
                           ? "bg-black text-white"
-                          : "bg-white text-black hover:bg_black/10"
-                      }`.replace("hover:bg_black", "hover:bg-black")}
+                          : "bg-white text-black hover:bg-black/10"
+                      }`}
                     >
                       {t(opt.labelKey)}
                     </button>
