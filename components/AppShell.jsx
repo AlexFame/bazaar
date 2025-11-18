@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import LangSwitcher from "./LangSwitcher";
 import { useLang } from "@/lib/i18n-client";
-import { isTelegramEnv, getTG } from "@/lib/telegram";
+import { getTG } from "@/lib/telegram";
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
@@ -48,29 +48,52 @@ export default function AppShell({ children }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // 🧩 Telegram auth -> /api/auth/tg/verify
+  // Telegram auth -> /api/auth/tg/verify (для личного кабинета)
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (authOnceRef.current) return; // уже вызывали
-    if (!isTelegramEnv()) return; // не Telegram WebApp
+    if (authOnceRef.current) return;
 
-    const tg = getTG();
-    const initData = tg?.initData;
-    if (!initData) return;
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 20; // до ~3 секунд
 
-    authOnceRef.current = true;
+    const tryAuth = () => {
+      if (cancelled || authOnceRef.current) return;
 
-    (async () => {
-      try {
-        await fetch("/api/auth/tg/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ initData }),
-        });
-      } catch (err) {
-        console.warn("Telegram auth verify failed:", err);
+      // Берем WebApp напрямую из window.Telegram или через getTG
+      const tg =
+        (window.Telegram && window.Telegram.WebApp) || getTG?.() || null;
+
+      const initData = tg?.initData;
+      if (!initData) {
+        // Telegram WebView еще не инициализировался, подождем
+        attempts += 1;
+        if (attempts < maxAttempts) {
+          setTimeout(tryAuth, 150);
+        }
+        return;
       }
-    })();
+
+      authOnceRef.current = true;
+
+      (async () => {
+        try {
+          await fetch("/api/auth/tg/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ initData }),
+          });
+        } catch (err) {
+          console.warn("Telegram auth verify failed:", err);
+        }
+      })();
+    };
+
+    tryAuth();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSearchSubmit = (e) => {
@@ -115,7 +138,7 @@ export default function AppShell({ children }) {
         <div className="w-full max-w-[520px] px-3 mx-auto flex flex-col gap-3">
           {/* Текст сверху */}
           <div className="text-center text-xs font-semibold text-black/80">
-            Bazaar – Telegram-маркетплейс для мигрантов в Германии
+            Bazaar - Telegram-маркетплейс для мигрантов в Германии
           </div>
 
           {/* Поиск */}
