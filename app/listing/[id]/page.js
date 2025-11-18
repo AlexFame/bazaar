@@ -5,14 +5,66 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 
+// Строим ссылку по введённому контакту
+function buildContactLink(raw) {
+  if (!raw) return null;
+
+  const contact = raw.trim();
+
+  // Телеграм: @username
+  if (contact.startsWith("@")) {
+    const username = contact.slice(1).split(" ")[0];
+    if (username) return `https://t.me/${username}`;
+  }
+
+  // Телеграм: t.me/username
+  if (contact.includes("t.me/")) {
+    return contact.startsWith("http") ? contact : `https://${contact}`;
+  }
+
+  // Телефон: оставляем только цифры и +
+  const phone = contact.replace(/[^\d+]/g, "");
+  if (phone.length >= 6) {
+    return `tel:${phone}`;
+  }
+
+  return null;
+}
+
+// Определяем, что за контакт (телега / телефон)
+function detectType(raw) {
+  if (!raw) return { isPhone: false, isTelegram: false };
+
+  const c = raw.trim();
+
+  const isTelegram = c.startsWith("@") || c.includes("t.me/");
+
+  const cleaned = c.replace(/[^\d+]/g, "");
+  const isPhone = cleaned.length >= 6;
+
+  return { isPhone, isTelegram };
+}
+
+// Лейблы кнопок по языкам
+const TELEGRAM_LABEL = {
+  ru: "Написать в Telegram",
+  ua: "Написати в Telegram",
+  en: "Message on Telegram",
+};
+
+const CALL_LABEL = {
+  ru: "Позвонить",
+  ua: "Подзвонити",
+  en: "Call",
+};
+
 export default function ListingPage({ params }) {
   const { id } = params;
-  const { t } = useLang();
+  const { t, lang } = useLang();
 
   const [listing, setListing] = useState(null);
   const [imageUrls, setImageUrls] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -80,6 +132,9 @@ export default function ListingPage({ params }) {
     }
   }
 
+  const telegramLabel = TELEGRAM_LABEL[lang] || TELEGRAM_LABEL.ru;
+  const callLabel = CALL_LABEL[lang] || CALL_LABEL.ru;
+
   return (
     <div className="w-full flex justify-center mt-3">
       <div className="w-full max-w-[520px] px-3">
@@ -103,7 +158,7 @@ export default function ListingPage({ params }) {
 
           {!loading && listing && (
             <>
-              {/* ГАЛЕРЕЯ СО СКРОЛЛОМ БЕЗ SCROLLBAR */}
+              {/* ГАЛЕРЕЯ */}
               {imageUrls.length > 0 && (
                 <>
                   <div
@@ -137,7 +192,6 @@ export default function ListingPage({ params }) {
                     }
                   `}</style>
 
-                  {/* ТОЧКИ (Airbnb style) */}
                   {imageUrls.length > 1 && (
                     <div className="flex justify-center gap-2 mt-2 mb-3">
                       {imageUrls.map((_, i) => (
@@ -175,8 +229,64 @@ export default function ListingPage({ params }) {
                 </p>
               )}
 
+              {/* КОНТАКТ + КНОПКИ */}
               {listing.contacts && listing.contacts !== "EMPTY" && (
-                <p className="text-xs mt-1 text-black/60">{listing.contacts}</p>
+                <div className="mt-2">
+                  {(() => {
+                    // Разбиваем на несколько контактов:
+                    // @user
+                    // +49123...
+                    const raw = String(listing.contacts || "");
+                    const parts = raw
+                      .split(/[\n,;]+/)
+                      .map((c) => c.trim())
+                      .filter(Boolean);
+
+                    if (!parts.length) return null;
+
+                    let telegramLink = null;
+                    let phoneLink = null;
+
+                    for (const part of parts) {
+                      const { isPhone, isTelegram } = detectType(part);
+                      const link = buildContactLink(part);
+                      if (!link) continue;
+
+                      if (isTelegram && !telegramLink) {
+                        telegramLink = link;
+                      }
+                      if (isPhone && !phoneLink) {
+                        phoneLink = link;
+                      }
+                    }
+
+                    if (!telegramLink && !phoneLink) return null;
+
+                    return (
+                      <div className="flex gap-2 mt-3">
+                        {telegramLink && (
+                          <a
+                            href={telegramLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-black text-white text-center"
+                          >
+                            {telegramLabel}
+                          </a>
+                        )}
+
+                        {phoneLink && (
+                          <a
+                            href={phoneLink}
+                            className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-black text-white text-center"
+                          >
+                            {callLabel}
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
               )}
             </>
           )}

@@ -12,12 +12,10 @@ export default function CategoryScroll() {
   return (
     <div className="w-full flex justify-center mt-3">
       <div className="w-full max-w-[520px] px-3">
-        {/* Один общий горизонтальный скролл для двух рядов */}
         <div className="overflow-x-auto pb-2">
-          {/* Внутренний контейнер центрируется, но всё равно можно скроллить, если не влазит */}
           <div className="inline-flex flex-col gap-2 mx-auto">
             {/* Первый ряд */}
-            <div className="flex gap-2 justify-center">
+            <div className="flex gap-2 justify-start">
               {firstRow.map((cat) => (
                 <button
                   key={cat.key}
@@ -36,7 +34,7 @@ export default function CategoryScroll() {
 
             {/* Второй ряд */}
             {secondRow.length > 0 && (
-              <div className="flex gap-2 justify-center">
+              <div className="flex gap-2 justify-start">
                 {secondRow.map((cat) => (
                   <button
                     key={cat.key}

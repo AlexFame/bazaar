@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import ListingCard from "@/components/ListingCard";
 import { getUserId } from "@/lib/userId";
 import { useLang } from "@/lib/i18n-client";
 
@@ -9,15 +11,25 @@ const pageTranslations = {
     my: "Мои объявления",
     needBot:
       "Открой мини-аппку через Telegram-бота, чтобы увидеть свои объявления.",
+    loading: "Загружаем ваши объявления...",
+    empty: "У тебя пока нет объявлений.",
+    hintCreate: 'Нажми кнопку "Создать", чтобы опубликовать первое объявление.',
   },
   ua: {
     my: "Мої оголошення",
     needBot:
       "Відкрий міні-додаток через Telegram-бота, щоб побачити свої оголошення.",
+    loading: "Завантажуємо твої оголошення...",
+    empty: "У тебе поки немає оголошень.",
+    hintCreate:
+      'Натисни кнопку "Створити", щоб опублікувати своє перше оголошення.',
   },
   en: {
     my: "My listings",
-    needBot: "Open the mini-app through the Telegram bot to see your listings.",
+    needBot: "Open the mini-app via the Telegram bot to see your listings.",
+    loading: "Loading your listings...",
+    empty: "You don’t have any listings yet.",
+    hintCreate: 'Tap "Create" to publish your first listing.',
   },
 };
 
@@ -26,46 +38,89 @@ export default function MyPage() {
   const t = pageTranslations[lang] || pageTranslations.ru;
 
   const [userId, setUserId] = useState(null);
-
-  // DEBUG BLOCK
-  const [debug, setDebug] = useState("");
+  const [username, setUsername] = useState(null);
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadUser() {
-      const id = await getUserId();
+    async function load() {
+      const id = getUserId();
       setUserId(id);
-    }
-    loadUser();
 
-    // DEBUG: показать initDataUnsafe
-    if (typeof window !== "undefined" && window.Telegram?.WebApp) {
+      if (typeof window === "undefined") {
+        setLoading(false);
+        return;
+      }
+
+      const tg = window.Telegram?.WebApp;
+      const uname = tg?.initDataUnsafe?.user?.username || null;
+      setUsername(uname);
+
+      // Если нет userId или username – показываем сообщение, что надо открыть через бота
+      if (!id || !uname) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const raw = window.Telegram.WebApp.initDataUnsafe || {};
-        setDebug(JSON.stringify(raw, null, 2));
-      } catch {}
+        const { data, error } = await supabase
+          .from("listings")
+          // Ищем объявления, где в contacts есть @твой_ник
+          .select("*")
+          .ilike("contacts", `%@${uname}%`)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Ошибка загрузки моих объявлений:", error);
+          setListings([]);
+        } else {
+          setListings(Array.isArray(data) ? data : []);
+        }
+      } catch (e) {
+        console.error("Ошибка загрузки моих объявлений:", e);
+        setListings([]);
+      } finally {
+        setLoading(false);
+      }
     }
+
+    load();
   }, []);
 
+  const showNeedBot = !userId || !username;
+
   return (
-    <div className="w-full flex flex-col items-center mt-6 px-3">
-      <div className="bg-white rounded-2xl shadow-sm p-4 max-w-sm w-full text-left">
+    <div className="w-full flex justify-center mt-3">
+      <div className="w-full max-w-[520px] px-3">
         <h1 className="text-lg font-semibold mb-3">{t.my}</h1>
 
-        {!userId ? (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+        {showNeedBot && (
+          <div className="p-3 mb-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700">
             {t.needBot}
-          </div>
-        ) : (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
-            Твой Telegram user_id: {userId}
           </div>
         )}
 
-        {/* DEBUG OUTPUT */}
-        {debug && (
-          <pre className="mt-4 text-[10px] text-black/60 whitespace-pre-wrap break-all">
-            {debug}
-          </pre>
+        {!showNeedBot && loading && (
+          <div className="bg-white rounded-2xl shadow-sm p-3 text-xs text-black/60">
+            {t.loading}
+          </div>
+        )}
+
+        {!showNeedBot && !loading && listings.length === 0 && (
+          <div className="bg-white rounded-2xl shadow-sm p-3 text-xs text-black/80">
+            <p>{t.empty}</p>
+            <p className="mt-1 text-black/60">{t.hintCreate}</p>
+          </div>
+        )}
+
+        {!showNeedBot && !loading && listings.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-sm p-3">
+            <div className="grid grid-cols-2 gap-2">
+              {listings.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>
