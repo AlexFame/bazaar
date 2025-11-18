@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import LangSwitcher from "./LangSwitcher";
 import { useLang } from "@/lib/i18n-client";
+import { isTelegramEnv, getTG } from "@/lib/telegram";
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
@@ -16,13 +17,16 @@ export default function AppShell({ children }) {
   const [showFloatingSearch, setShowFloatingSearch] = useState(false);
   const lastScrollY = useRef(0);
 
+  // чтобы не дергать /api/auth/tg/verify по 100 раз
+  const authOnceRef = useRef(false);
+
   // Подтягиваем q из URL в инпут
   useEffect(() => {
     const q = searchParams.get("q") || "";
     setSearch(q);
   }, [searchParams]);
 
-  // Липкий поиск: вниз - показываем, вверх - прячем (с плавной анимацией)
+  // Липкий поиск: вниз - показываем, вверх - прячем
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -42,6 +46,31 @@ export default function AppShell({ children }) {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // 🧩 Telegram auth -> /api/auth/tg/verify
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (authOnceRef.current) return; // уже вызывали
+    if (!isTelegramEnv()) return; // не Telegram WebApp
+
+    const tg = getTG();
+    const initData = tg?.initData;
+    if (!initData) return;
+
+    authOnceRef.current = true;
+
+    (async () => {
+      try {
+        await fetch("/api/auth/tg/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ initData }),
+        });
+      } catch (err) {
+        console.warn("Telegram auth verify failed:", err);
+      }
+    })();
   }, []);
 
   const handleSearchSubmit = (e) => {
@@ -89,14 +118,15 @@ export default function AppShell({ children }) {
             Bazaar – Telegram-маркетплейс для мигрантов в Германии
           </div>
 
-          {/* Поиск в шапке */}
+          {/* Поиск */}
           <form onSubmit={handleSearchSubmit} className="w-full">
             {renderSearchBar()}
           </form>
 
-          {/* НАВИГАЦИЯ + ЯЗЫК — СТРОГО ПО ЦЕНТРУ */}
+          {/* НАВИГАЦИЯ + ЯЗЫК */}
           <div className="flex items-center justify-center gap-2">
             <nav className="flex gap-2">
+              {/* Главная */}
               <Link href="/">
                 <button
                   className={`${navBtn} ${
@@ -109,18 +139,7 @@ export default function AppShell({ children }) {
                 </button>
               </Link>
 
-              <Link href="/create">
-                <button
-                  className={`${navBtn} ${
-                    pathname === "/create"
-                      ? "bg-black text-white"
-                      : "bg-[#F2F3F7] text-black"
-                  }`}
-                >
-                  {t("navbar_create")}
-                </button>
-              </Link>
-
+              {/* Мои объявления */}
               <Link href="/my">
                 <button
                   className={`${navBtn} ${
@@ -139,7 +158,7 @@ export default function AppShell({ children }) {
         </div>
       </header>
 
-      {/* Липкая панель поиска – всегда в DOM, плавная анимация */}
+      {/* Липкая панель поиска */}
       <div
         className={`fixed top-2 left-1/2 -translate-x-1/2 w-full max-w-[520px] px-3 z-30 transition-all duration-200 ${
           showFloatingSearch
@@ -150,7 +169,7 @@ export default function AppShell({ children }) {
         <form onSubmit={handleSearchSubmit}>{renderSearchBar()}</form>
       </div>
 
-      {/* Контент под телегу по ширине */}
+      {/* Контент */}
       <main className="flex-1 w-full max-w-[520px] mx-auto px-3 pb-4">
         {children}
       </main>

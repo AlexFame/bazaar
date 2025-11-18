@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
-import { getTelegramUser } from "@/lib/telegram";
+import { getTelegramUser, isTelegramEnv } from "@/lib/telegram";
 
 export default function CreateListingClient({ onCreated }) {
   const [title, setTitle] = useState("");
@@ -13,7 +13,7 @@ export default function CreateListingClient({ onCreated }) {
   const [location, setLocation] = useState("");
   const [contacts, setContacts] = useState("");
 
-  // МНОГО ФОТО
+  // много фото
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
 
@@ -31,6 +31,17 @@ export default function CreateListingClient({ onCreated }) {
 
   const closeTimeoutRef = useRef(null);
 
+  const [inTelegram, setInTelegram] = useState(true);
+
+  useEffect(() => {
+    // определяем, внутри ли Telegram WebApp
+    try {
+      setInTelegram(isTelegramEnv());
+    } catch {
+      setInTelegram(false);
+    }
+  }, []);
+
   const typeOptions = [
     { value: "buy", labelKey: "field_type_buy" },
     { value: "sell", labelKey: "field_type_sell" },
@@ -38,7 +49,7 @@ export default function CreateListingClient({ onCreated }) {
     { value: "services", labelKey: "field_type_services" },
   ];
 
-  // добавление файлов из input/drag&drop
+  // добавление файлов из input / dnd
   function addFiles(fileList) {
     const incoming = Array.from(fileList || []);
     if (!incoming.length) return;
@@ -51,16 +62,17 @@ export default function CreateListingClient({ onCreated }) {
 
     setImageFiles((prev) => [...prev, ...toAdd]);
 
-    const newPreviews = toAdd.map((file) => ({
-      name: file.name,
-      url: URL.createObjectURL(file),
-    }));
-    setImagePreviews((prev) => [...prev, ...newPreviews]);
+    toAdd.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImagePreviews((prev) => [...prev, event.target.result]);
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   function handleFileChange(e) {
     addFiles(e.target.files);
-    e.target.value = "";
   }
 
   function handleDrop(e) {
@@ -72,19 +84,6 @@ export default function CreateListingClient({ onCreated }) {
   function handleDragOver(e) {
     e.preventDefault();
     e.stopPropagation();
-  }
-
-  function removeImage(index) {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-
-    setImagePreviews((prev) => {
-      const copy = [...prev];
-      const [removed] = copy.splice(index, 1);
-      if (removed?.url) {
-        URL.revokeObjectURL(removed.url);
-      }
-      return copy;
-    });
   }
 
   async function handleSubmit(e) {
@@ -101,10 +100,10 @@ export default function CreateListingClient({ onCreated }) {
         return;
       }
 
-      // тип из дропдауна
+      // тип берём из выбора
       const dbType = listingType;
 
-      // Берём Telegram-пользователя
+      // данные телеграма для личного кабинета
       const tgUser = getTelegramUser();
       const createdBy = tgUser?.id ? String(tgUser.id) : null;
       const createdByUsername = tgUser?.username || null;
@@ -131,65 +130,55 @@ export default function CreateListingClient({ onCreated }) {
         return;
       }
 
-      // Загрузка картинок, если есть
-      let hadUploadError = false;
+      // загрузка картинок
+      if (imageFiles.length > 0 && listing) {
+        const listingId = listing.id;
+        let mainImagePath = null;
+        let hadUploadError = false;
 
-      if (listing && imageFiles.length > 0) {
-        const folder = `listing-${listing.id}`;
+        for (let index = 0; index < imageFiles.length; index++) {
+          const file = imageFiles[index];
+          const ext =
+            file.name && file.name.includes(".")
+              ? file.name.split(".").pop()
+              : "jpg";
 
-        for (const file of imageFiles) {
-          const ext = file.name.split(".").pop() || "jpg";
-          const fileName = `${Date.now()}-${Math.random()
-            .toString(36)
-            .slice(2)}.${ext}`;
+          const fileName = `${listingId}-${index}.${ext}`;
+          const filePath = `listing-${listingId}/${fileName}`;
 
           const { error: uploadError } = await supabase.storage
             .from("listing-images")
-            .upload(`${folder}/${fileName}`, file, {
-              cacheControl: "3600",
-              upsert: false,
-            });
-
-          if (uploadError) {
-            console.error("Ошибка загрузки файла:", uploadError);
-            hadUploadError = true;
-          }
-        }
-
-        if (!listing.image_path && imageFiles[0]) {
-          const firstExt = imageFiles[0].name.split(".").pop() || "jpg";
-          const firstName = `${Date.now()}-main.${firstExt}`;
-
-          const { error: uploadErrorMain } = await supabase.storage
-            .from("listing-images")
-            .upload(`${folder}/${firstName}`, imageFiles[0], {
+            .upload(filePath, file, {
               cacheControl: "3600",
               upsert: true,
             });
 
-          if (uploadErrorMain) {
-            console.error(
-              "Ошибка загрузки первой картинки как основной:",
-              uploadErrorMain
-            );
-          } else {
-            const { error: updateError } = await supabase
-              .from("listings")
-              .update({
-                image_path: `${folder}/${firstName}`,
-              })
-              .eq("id", listing.id);
+          if (uploadError) {
+            console.error("Ошибка загрузки картинки:", uploadError);
+            hadUploadError = true;
+            continue;
+          }
 
-            if (updateError) {
-              console.error("Ошибка обновления image_path:", updateError);
-            }
+          if (!mainImagePath) {
+            mainImagePath = filePath;
           }
         }
 
-        if (hadUploadError) {
-          setErrorMsg(
-            "Объявление создано, но не удалось загрузить часть изображений."
-          );
+        if (mainImagePath) {
+          const { error: updateError } = await supabase
+            .from("listings")
+            .update({ image_path: mainImagePath })
+            .eq("id", listing.id);
+
+          if (updateError) {
+            console.error(
+              "Ошибка обновления объявления с картинкой:",
+              updateError
+            );
+            setErrorMsg("Объявление создано, но не удалось связать картинку.");
+          }
+        } else if (hadUploadError) {
+          setErrorMsg("Объявление создано, но не удалось загрузить картинку.");
         }
       }
 
@@ -205,9 +194,7 @@ export default function CreateListingClient({ onCreated }) {
       setListingType("buy");
       setCategoryKey(CATEGORY_DEFS[0]?.key || "kids");
 
-      if (onCreated) {
-        onCreated();
-      }
+      if (onCreated) onCreated();
 
       if (closeTimeoutRef.current) {
         clearTimeout(closeTimeoutRef.current);
@@ -223,159 +210,204 @@ export default function CreateListingClient({ onCreated }) {
     }
   }
 
+  function handleWrapperEnter() {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+  }
+
+  function handleWrapperLeave() {
+    if (dropdownOpen) {
+      closeTimeoutRef.current = setTimeout(() => {
+        setDropdownOpen(false);
+      }, 500);
+    }
+  }
+
+  // если не в Telegram WebApp – только текст, без формы
+  if (!inTelegram) {
+    return (
+      <section className="w-full max-w-xl mx-auto mt-4 px-3">
+        <h1 className="text-lg font-semibold mb-4">{t("new_heading")}</h1>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-3 py-3 text-xs text-black/80">
+          <div className="font-semibold mb-1">Открой через Telegram</div>
+          <p className="leading-snug">
+            Создавать объявления можно только если ты открыл Bazaar из
+            Telegram-бота. Открой бота, нажми кнопку с WebApp и попробуй ещё
+            раз.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full max-w-[520px] mx-auto px-3 mt-3"
-    >
+    <section className="w-full max-w-xl mx-auto mt-4 px-3">
+      <h1 className="text-lg font-semibold mb-4">{t("new_heading")}</h1>
+
       {errorMsg && (
-        <div className="mb-3 text-xs text-red-700 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+        <div className="mb-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
           {errorMsg}
         </div>
       )}
+
       {successMsg && (
-        <div className="mb-3 text-xs text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+        <div className="mb-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
           {successMsg}
         </div>
       )}
 
-      {/* Тип объявления */}
-      <div className="mb-3">
-        <div className="text-xs font-semibold mb-1">
-          {t("field_type_label")}
-        </div>
-        <div className="relative inline-block">
-          <button
-            type="button"
-            onClick={() => setDropdownOpen((v) => !v)}
-            className="px-3 py-2 rounded-full border border-black text-xs font-medium bg-white flex items-center gap-1"
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-2xl shadow-sm px-3 py-3"
+      >
+        {/* выбор типа */}
+        <div className="mb-3">
+          <div className="text-xs font-semibold mb-1">{t("field_type")}</div>
+
+          <div
+            className="relative inline-block"
+            onMouseEnter={handleWrapperEnter}
+            onMouseLeave={handleWrapperLeave}
           >
-            <span>
-              {t(
-                typeOptions.find((o) => o.value === listingType)?.labelKey ||
-                  "field_type_sell"
-              )}
-            </span>
-            <span className="text-[10px]">▼</span>
-          </button>
-
-          {dropdownOpen && (
-            <div className="absolute mt-1 w-full rounded-2xl border border-black bg-white shadow-lg z-20 overflow-hidden">
-              <div className="flex flex-col text-xs">
-                {typeOptions.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      setListingType(opt.value);
-                      setDropdownOpen(false);
-                    }}
-                    className={`block w-full text-left px-3 py-1.5 ${
-                      listingType === opt.value
-                        ? "bg-black text-white"
-                        : "bg-white text-black hover:bg-black/10"
-                    }`}
-                  >
-                    {t(opt.labelKey)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Категория */}
-      <div className="mb-3">
-        <div className="text-xs font-semibold mb-1">{t("field_category")}</div>
-        <div className="grid grid-cols-2 gap-2">
-          {CATEGORY_DEFS.map((cat) => (
             <button
-              key={cat.key}
               type="button"
-              onClick={() => setCategoryKey(cat.key)}
-              className={`px-3 py-2 rounded-xl text-xs border ${
-                categoryKey === cat.key
-                  ? "bg-black text-white border-black"
-                  : "bg-white text-black border-black/10"
-              }`}
+              className="px-4 py-2 bg-black text-white rounded-full text-xs font-medium"
+              onClick={() => setDropdownOpen((prev) => !prev)}
             >
-              {cat[lang] || cat.ru}
+              {t(typeOptions.find((o) => o.value === listingType).labelKey)}
             </button>
-          ))}
+
+            {dropdownOpen && (
+              <div className="absolute left-0 mt-2 w-44 bg-white border border-black rounded-xl shadow-lg z-20 text-xs">
+                <div className="py-1">
+                  {typeOptions.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setListingType(opt.value);
+                        setDropdownOpen(false);
+                      }}
+                      className={`block w-full text-left px-3 py-1.5 ${
+                        listingType === opt.value
+                          ? "bg-black text-white"
+                          : "bg-white text-black hover:bg-black/10"
+                      }`}
+                    >
+                      {t(opt.labelKey)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Заголовок */}
-      <div className="mb-3">
-        <div className="text-xs font-semibold mb-1">{t("field_title")}</div>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-black/20 text-sm"
-          maxLength={120}
-        />
-      </div>
-
-      {/* Описание */}
-      <div className="mb-3">
-        <div className="text-xs font-semibold mb-1">
-          {t("field_description")}
+        {/* категория */}
+        <div className="mb-3">
+          <div className="text-xs font-semibold mb-1">
+            {t("field_category")}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {CATEGORY_DEFS.map((cat) => (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => setCategoryKey(cat.key)}
+                className={`flex items-center px-3 py-1.5 rounded-full border text-xs font-medium ${
+                  categoryKey === cat.key
+                    ? "bg-black text-white border-black"
+                    : "bg-white text-black border-black/20"
+                }`}
+              >
+                {cat.icon && (
+                  <span className="mr-2" aria-hidden="true">
+                    {cat.icon}
+                  </span>
+                )}
+                <span>{cat[lang] || cat.ru}</span>
+              </button>
+            ))}
+          </div>
         </div>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-black/20 text-sm min-h-[80px]"
-        />
-      </div>
 
-      {/* Цена */}
-      <div className="mb-3">
-        <div className="text-xs font-semibold mb-1">{t("field_price")}</div>
-        <input
-          type="number"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-black/20 text-sm"
-          min={0}
-        />
-      </div>
+        {/* остальная форма */}
+        <div className="flex flex-col gap-2">
+          <input
+            type="text"
+            placeholder={t("field_title_ph")}
+            className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
 
-      {/* Локация */}
-      <div className="mb-3">
-        <div className="text-xs font-semibold mb-1">{t("field_location")}</div>
-        <input
-          type="text"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-black/20 text-sm"
-        />
-      </div>
+          <textarea
+            placeholder={t("field_description_ph")}
+            className="w-full border border-black rounded-xl px-3 py-2 text-sm min-h-[80px]"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
 
-      {/* Контакты */}
-      <div className="mb-3">
-        <div className="text-xs font-semibold mb-1">{t("field_contacts")}</div>
-        <textarea
-          value={contacts}
-          onChange={(e) => setContacts(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-black/20 text-sm min-h-[60px]"
-          placeholder="@username\n+49123456789"
-        />
-      </div>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              placeholder={t("field_price_ph")}
+              className="w-1/3 border border-black rounded-xl px-3 py-2 text-sm"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
 
-      {/* Фото (много) */}
-      <div className="mb-4">
-        <div className="text-xs font-semibold mb-1">{t("field_images")}</div>
+            <input
+              type="text"
+              placeholder={t("field_location_ph")}
+              className="flex-1 border border-black rounded-xl px-3 py-2 text-sm"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+          </div>
 
+          <input
+            type="text"
+            placeholder={t("field_contacts_ph")}
+            className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+            value={contacts}
+            onChange={(e) => setContacts(e.target.value)}
+          />
+        </div>
+
+        {/* зона фото – много фото */}
         <div
-          className="border border-dashed border-black/30 rounded-2xl p-3 text-center text-xs text-black/60 cursor-pointer"
+          className="mt-2 border border-dashed border-black rounded-2xl px-4 py-4 text-xs text-center cursor-pointer bg-white"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
         >
-          <p className="mb-1">{t("field_images_hint")}</p>
-          <label className="inline-flex items-center px-3 py-1.5 rounded-full bg-black text-white cursor-pointer text-xs">
-            {t("btn_choose_images")}
+          <label className="flex flex-col items-center justify-center gap-2 cursor-pointer">
+            {imagePreviews.length > 0 ? (
+              <div className="flex flex-wrap justify-center gap-2">
+                {imagePreviews.map((src, idx) => (
+                  <img
+                    key={idx}
+                    src={src}
+                    alt={`Предпросмотр ${idx + 1}`}
+                    className="h-24 w-24 rounded-xl object-cover"
+                  />
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="text-xs font-semibold">Загрузите фото</div>
+                <div className="text-[11px] text-black/60">
+                  До 10 изображений
+                </div>
+              </>
+            )}
+
+            <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-black text-xs font-medium">
+              Выбрать изображения
+            </span>
+
             <input
               type="file"
               accept="image/*"
@@ -386,35 +418,14 @@ export default function CreateListingClient({ onCreated }) {
           </label>
         </div>
 
-        {imagePreviews.length > 0 && (
-          <div className="mt-2 grid grid-cols-4 gap-2">
-            {imagePreviews.map((img, i) => (
-              <div key={i} className="relative">
-                <img
-                  src={img.url}
-                  alt={img.name}
-                  className="w-full h-16 object-cover rounded-xl"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeImage(i)}
-                  className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-black text-white text-[10px] flex items-center justify-center"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full py-2.5 rounded-full bg-black text-white text-sm font-semibold disabled:opacity-60"
-      >
-        {loading ? t("btn_publishing") : t("btn_publish")}
-      </button>
-    </form>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full mt-3 bg-black text-white text-sm font-semibold rounded-full py-2 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {loading ? t("btn_publish") + "..." : t("btn_publish")}
+        </button>
+      </form>
+    </section>
   );
 }
