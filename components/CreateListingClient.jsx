@@ -27,19 +27,43 @@ export default function CreateListingClient({ onCreated }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  const { t, lang } = useLang();
-
   const closeTimeoutRef = useRef(null);
 
-  const [inTelegram, setInTelegram] = useState(true);
+  // по умолчанию считаем, что НЕ в Telegram
+  // и аккуратно несколько раз проверяем окружение,
+  // чтобы дождаться инициализации Telegram WebApp
+  const [inTelegram, setInTelegram] = useState(false);
 
   useEffect(() => {
-    // определяем, внутри ли Telegram WebApp
-    try {
-      setInTelegram(isTelegramEnv());
-    } catch {
-      setInTelegram(false);
+    let cancelled = false;
+    let attempts = 0;
+    const maxAttempts = 20; // ~3 секунды ожидания
+
+    function check() {
+      if (cancelled) return;
+
+      try {
+        if (isTelegramEnv()) {
+          setInTelegram(true);
+          return;
+        }
+      } catch {
+        // игнорируем ошибку и пробуем ещё
+      }
+
+      attempts += 1;
+      if (attempts < maxAttempts) {
+        setTimeout(check, 150);
+      } else {
+        setInTelegram(false);
+      }
     }
+
+    check();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const typeOptions = [
@@ -86,21 +110,32 @@ export default function CreateListingClient({ onCreated }) {
     e.stopPropagation();
   }
 
+  function removeImage(index) {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  const { t } = useLang();
+
   async function handleSubmit(e) {
     e.preventDefault();
-    if (loading) return;
 
-    setLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
 
-    try {
-      if (!title.trim()) {
-        setErrorMsg("Введите заголовок.");
-        return;
-      }
+    if (!title.trim()) {
+      setErrorMsg("Введите заголовок объявления.");
+      return;
+    }
 
-      // тип берём из выбора
+    if (!contacts.trim()) {
+      setErrorMsg("Укажите способ связи (телефон или Telegram).");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
       const dbType = listingType;
 
       // данные телеграма для личного кабинета
@@ -167,18 +202,18 @@ export default function CreateListingClient({ onCreated }) {
         if (mainImagePath) {
           const { error: updateError } = await supabase
             .from("listings")
-            .update({ image_path: mainImagePath })
+            .update({ main_image_path: mainImagePath })
             .eq("id", listing.id);
 
           if (updateError) {
-            console.error(
-              "Ошибка обновления объявления с картинкой:",
-              updateError
-            );
-            setErrorMsg("Объявление создано, но не удалось связать картинку.");
+            console.error("Ошибка обновления main_image_path:", updateError);
           }
-        } else if (hadUploadError) {
-          setErrorMsg("Объявление создано, но не удалось загрузить картинку.");
+        }
+
+        if (hadUploadError) {
+          setErrorMsg(
+            "Объявление сохранено, но часть изображений не удалось загрузить."
+          );
         }
       }
 
@@ -258,25 +293,27 @@ export default function CreateListingClient({ onCreated }) {
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-2xl shadow-sm px-3 py-3"
-      >
-        {/* выбор типа */}
-        <div className="mb-3">
-          <div className="text-xs font-semibold mb-1">{t("field_type")}</div>
+      <form onSubmit={handleSubmit} className="bg-[#F2F3F7] rounded-2xl p-3">
+        {/* тип объявления */}
+        <div className="flex flex-col mb-3">
+          <div className="text-[11px] font-semibold mb-1">
+            {t("field_type_label")}
+          </div>
 
           <div
-            className="relative inline-block"
+            className="relative"
             onMouseEnter={handleWrapperEnter}
             onMouseLeave={handleWrapperLeave}
           >
             <button
               type="button"
-              className="px-4 py-2 bg-black text-white rounded-full text-xs font-medium"
               onClick={() => setDropdownOpen((prev) => !prev)}
+              className="w-full border border-black rounded-xl px-3 py-2 text-xs flex items-center justify-between bg-white"
             >
-              {t(typeOptions.find((o) => o.value === listingType).labelKey)}
+              <span>
+                {t(typeOptions.find((o) => o.value === listingType).labelKey)}
+              </span>
+              <span className="text-[10px]">▼</span>
             </button>
 
             {dropdownOpen && (
@@ -306,35 +343,34 @@ export default function CreateListingClient({ onCreated }) {
         </div>
 
         {/* категория */}
-        <div className="mb-3">
-          <div className="text-xs font-semibold mb-1">
-            {t("field_category")}
+        <div className="flex flex-col mb-3">
+          <div className="text-[11px] font-semibold mb-1">
+            {t("field_category_label")}
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="flex flex-wrap gap-2">
             {CATEGORY_DEFS.map((cat) => (
               <button
                 key={cat.key}
                 type="button"
                 onClick={() => setCategoryKey(cat.key)}
-                className={`flex items-center px-3 py-1.5 rounded-full border text-xs font-medium ${
+                className={`px-3 py-1.5 rounded-full text-[11px] border ${
                   categoryKey === cat.key
                     ? "bg-black text-white border-black"
-                    : "bg-white text-black border-black/20"
+                    : "bg-white text-black border-black/10"
                 }`}
               >
-                {cat.icon && (
-                  <span className="mr-2" aria-hidden="true">
-                    {cat.icon}
-                  </span>
-                )}
-                <span>{cat[lang] || cat.ru}</span>
+                {cat.icon && <span className="mr-1.5">{cat.icon}</span>}
+                {t(cat.labelKey)}
               </button>
             ))}
           </div>
         </div>
 
-        {/* остальная форма */}
-        <div className="flex flex-col gap-2">
+        {/* заголовок */}
+        <div className="mb-3">
+          <div className="text-[11px] font-semibold mb-1">
+            {t("field_title_label")}
+          </div>
           <input
             type="text"
             placeholder={t("field_title_ph")}
@@ -342,32 +378,56 @@ export default function CreateListingClient({ onCreated }) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+        </div>
 
+        {/* описание */}
+        <div className="mb-3">
+          <div className="text-[11px] font-semibold mb-1">
+            {t("field_desc_label")}
+          </div>
           <textarea
-            placeholder={t("field_description_ph")}
-            className="w-full border border-black rounded-xl px-3 py-2 text-sm min-h-[80px]"
+            rows={4}
+            placeholder={t("field_desc_ph")}
+            className="w-full border border-black rounded-xl px-3 py-2 text-sm resize-none"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
+        </div>
 
-          <div className="flex gap-2">
-            <input
-              type="number"
-              placeholder={t("field_price_ph")}
-              className="w-1/3 border border-black rounded-xl px-3 py-2 text-sm"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
-
-            <input
-              type="text"
-              placeholder={t("field_location_ph")}
-              className="flex-1 border border-black rounded-xl px-3 py-2 text-sm"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
+        {/* цена */}
+        <div className="mb-3">
+          <div className="text-[11px] font-semibold mb-1">
+            {t("field_price_label")}
           </div>
+          <input
+            type="number"
+            min="0"
+            placeholder={t("field_price_ph")}
+            className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+          />
+        </div>
 
+        {/* локация */}
+        <div className="mb-3">
+          <div className="text-[11px] font-semibold mb-1">
+            {t("field_location_label")}
+          </div>
+          <input
+            type="text"
+            placeholder={t("field_location_ph")}
+            className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
+        </div>
+
+        {/* контакты */}
+        <div className="mb-3">
+          <div className="text-[11px] font-semibold mb-1">
+            {t("field_contacts_label")}
+          </div>
           <input
             type="text"
             placeholder={t("field_contacts_ph")}
@@ -387,26 +447,35 @@ export default function CreateListingClient({ onCreated }) {
             {imagePreviews.length > 0 ? (
               <div className="flex flex-wrap justify-center gap-2">
                 {imagePreviews.map((src, idx) => (
-                  <img
-                    key={idx}
-                    src={src}
-                    alt={`Предпросмотр ${idx + 1}`}
-                    className="h-24 w-24 rounded-xl object-cover"
-                  />
+                  <div key={idx} className="relative">
+                    <img
+                      src={src}
+                      alt={`Предпросмотр ${idx + 1}`}
+                      className="h-24 w-24 rounded-xl object-cover"
+                    />
+                    <button
+                      type="button"
+                      className="absolute -top-1 -right-1 bg-black text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        removeImage(idx);
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
               </div>
             ) : (
               <>
                 <div className="text-xs font-semibold">Загрузите фото</div>
                 <div className="text-[11px] text-black/60">
-                  До 10 изображений
+                  Перетащите файлы сюда или нажмите, чтобы выбрать. До 10
+                  изображений.
                 </div>
               </>
             )}
-
-            <span className="inline-flex items-center px-3 py-1.5 rounded-full border border-black text-xs font-medium">
-              Выбрать изображения
-            </span>
 
             <input
               type="file"
@@ -421,7 +490,7 @@ export default function CreateListingClient({ onCreated }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full mt-3 bg-black text-white text-sm font-semibold rounded-full py-2 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full mt-3 bg-black text-white text-sm rounded-full py-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loading ? t("btn_publish") + "..." : t("btn_publish")}
         </button>
