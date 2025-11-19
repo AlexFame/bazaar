@@ -23,7 +23,10 @@ create table if not exists public.listings (
   status listing_status not null default 'active',
   created_by uuid not null references public.profiles(id) on delete cascade,
   created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  -- New columns for filters
+  condition text, -- 'new', 'used', 'like_new'
+  parameters jsonb default '{}'::jsonb -- Category specific attributes
 );
 create index if not exists listings_type_status_created_at_idx on public.listings (type, status, created_at desc);
 create index if not exists listings_created_by_idx on public.listings (created_by);

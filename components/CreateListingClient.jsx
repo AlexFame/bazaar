@@ -13,6 +13,11 @@ export default function CreateListingClient({ onCreated }) {
   const [location, setLocation] = useState("");
   const [contacts, setContacts] = useState("");
 
+  // Новые поля
+  const [condition, setCondition] = useState("new"); // new | used
+  const [parameters, setParameters] = useState({}); // JSONB
+  const [isBarter, setIsBarter] = useState(false); // Бартер
+
   // много фото
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -65,6 +70,11 @@ export default function CreateListingClient({ onCreated }) {
       cancelled = true;
     };
   }, []);
+
+  // Сброс параметров при смене категории
+  useEffect(() => {
+    setParameters({});
+  }, [categoryKey]);
 
   const typeOptions = [
     { value: "buy", labelKey: "field_type_buy" },
@@ -144,6 +154,12 @@ export default function CreateListingClient({ onCreated }) {
       const createdBy = tgUser?.id ? String(tgUser.id) : null;
       const createdByUsername = tgUser?.username || null;
 
+      // Собираем параметры, добавляем бартер
+      const finalParameters = { ...parameters };
+      if (isBarter) {
+        finalParameters.barter = true;
+      }
+
       const { data: listing, error: insertError } = await supabase
         .from("listings")
         .insert({
@@ -156,6 +172,8 @@ export default function CreateListingClient({ onCreated }) {
           category_key: categoryKey || null,
           created_by: createdBy,
           created_by_username: createdByUsername,
+          condition: condition,
+          parameters: finalParameters,
         })
         .select()
         .single();
@@ -229,6 +247,9 @@ export default function CreateListingClient({ onCreated }) {
       setImagePreviews([]);
       setListingType("buy");
       setCategoryKey(CATEGORY_DEFS[0]?.key || "kids");
+      setParameters({});
+      setCondition("new");
+      setIsBarter(false);
 
       if (onCreated) onCreated();
 
@@ -260,6 +281,96 @@ export default function CreateListingClient({ onCreated }) {
       }, 500);
     }
   }
+
+  // Рендер динамических полей
+  const currentCategory = CATEGORY_DEFS.find((c) => c.key === categoryKey);
+  const categoryFilters = currentCategory?.filters || [];
+
+  const renderDynamicField = (filter) => {
+    // Пропускаем condition, так как оно общее (если нужно, можно сделать специфичным, но пока общее)
+    if (filter.key === "condition") return null;
+
+    const label = filter.label[lang] || filter.label.ru;
+    const value = parameters[filter.key] || "";
+
+    if (filter.type === "select") {
+      return (
+        <div key={filter.key} className="mb-3">
+          <div className="text-[11px] font-semibold mb-1">{label}</div>
+          <select
+            className="w-full border border-black rounded-xl px-3 py-2 text-sm bg-white"
+            value={value}
+            onChange={(e) =>
+              setParameters({ ...parameters, [filter.key]: e.target.value })
+            }
+          >
+            <option value="">-</option>
+            {filter.options.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label[lang] || opt.label.ru}
+              </option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    if (filter.type === "boolean") {
+      return (
+        <div key={filter.key} className="mb-3 flex items-center gap-2">
+          <input
+            type="checkbox"
+            id={`param-${filter.key}`}
+            checked={!!value}
+            onChange={(e) =>
+              setParameters({ ...parameters, [filter.key]: e.target.checked })
+            }
+            className="w-4 h-4"
+          />
+          <label htmlFor={`param-${filter.key}`} className="text-sm">
+            {label}
+          </label>
+        </div>
+      );
+    }
+
+    if (filter.type === "range") {
+        // Для создания объявления range обычно означает одно числовое поле (например, пробег)
+        // Или два поля? В контексте создания обычно вводится конкретное значение.
+        // Но в фильтрах это range.
+        // Если это "Пробег", то при создании это одно число.
+        // Если это "Зарплата", то при создании это может быть одно число или диапазон?
+        // Для простоты будем считать, что при создании вводится одно значение.
+        return (
+            <div key={filter.key} className="mb-3">
+              <div className="text-[11px] font-semibold mb-1">{label}</div>
+              <input
+                type="number"
+                className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+                value={value}
+                onChange={(e) =>
+                  setParameters({ ...parameters, [filter.key]: e.target.value })
+                }
+              />
+            </div>
+          );
+    }
+
+    // text, number
+    return (
+      <div key={filter.key} className="mb-3">
+        <div className="text-[11px] font-semibold mb-1">{label}</div>
+        <input
+          type={filter.type === "number" ? "number" : "text"}
+          className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+          value={value}
+          onChange={(e) =>
+            setParameters({ ...parameters, [filter.key]: e.target.value })
+          }
+        />
+      </div>
+    );
+  };
 
   // если не в Telegram WebApp – только текст, без формы
   if (!inTelegram) {
@@ -411,6 +522,20 @@ export default function CreateListingClient({ onCreated }) {
           />
         </div>
 
+        {/* Бартер */}
+        <div className="mb-3 flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="barter-check"
+            checked={isBarter}
+            onChange={(e) => setIsBarter(e.target.checked)}
+            className="w-4 h-4"
+          />
+          <label htmlFor="barter-check" className="text-sm">
+            Возможен обмен (Бартер)
+          </label>
+        </div>
+
         {/* локация */}
         <div className="mb-3">
           <div className="text-[11px] font-semibold mb-1">
@@ -438,6 +563,23 @@ export default function CreateListingClient({ onCreated }) {
             onChange={(e) => setContacts(e.target.value)}
           />
         </div>
+
+        {/* Состояние (общее) */}
+        <div className="mb-3">
+          <div className="text-[11px] font-semibold mb-1">Состояние</div>
+          <select
+            className="w-full border border-black rounded-xl px-3 py-2 text-sm bg-white"
+            value={condition}
+            onChange={(e) => setCondition(e.target.value)}
+          >
+             <option value="new">Новое</option>
+             <option value="used">Б/у</option>
+             <option value="like_new">Как новое</option>
+          </select>
+        </div>
+
+        {/* Динамические поля категории */}
+        {categoryFilters.map(renderDynamicField)}
 
         {/* зона фото – много фото */}
         <div
