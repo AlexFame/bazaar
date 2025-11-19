@@ -69,6 +69,7 @@ const filterTexts = {
     condition: "Состояние",
     type: "Тип",
     more: "Ещё",
+    foundInCategory: "Найдено в категории:",
   },
   ua: {
     searchPlaceholder: "Пошук по тексту",
@@ -105,6 +106,7 @@ const filterTexts = {
     condition: "Стан",
     type: "Тип",
     more: "Ще",
+    foundInCategory: "Знайдено в категорії:",
   },
   en: {
     searchPlaceholder: "Search text",
@@ -141,8 +143,113 @@ const filterTexts = {
     condition: "Condition",
     type: "Type",
     more: "More",
+    foundInCategory: "Found in category:",
   },
 };
+
+// Компонент слайдера цены
+const PriceSlider = ({ min, max, onChange, minLimit = 0, maxLimit = 100000 }) => {
+    const minVal = min === "" ? minLimit : Number(min);
+    const maxVal = max === "" ? maxLimit : Number(max);
+    const [localMin, setLocalMin] = useState(minVal);
+    const [localMax, setLocalMax] = useState(maxVal);
+
+    useEffect(() => {
+        setLocalMin(min === "" ? minLimit : Number(min));
+        setLocalMax(max === "" ? maxLimit : Number(max));
+    }, [min, max, minLimit, maxLimit]);
+
+    const handleMinChange = (e) => {
+        const value = Math.min(Number(e.target.value), localMax - 100);
+        setLocalMin(value);
+        onChange(value, localMax);
+    };
+
+    const handleMaxChange = (e) => {
+        const value = Math.max(Number(e.target.value), localMin + 100);
+        setLocalMax(value);
+        onChange(localMin, value);
+    };
+
+    const minPercent = ((localMin - minLimit) / (maxLimit - minLimit)) * 100;
+    const maxPercent = ((localMax - minLimit) / (maxLimit - minLimit)) * 100;
+
+    return (
+        <div className="w-full px-2 py-4">
+            <div className="relative w-full h-1 bg-gray-200 rounded-full">
+                <div
+                    className="absolute h-full bg-black rounded-full"
+                    style={{ left: `${minPercent}%`, width: `${maxPercent - minPercent}%` }}
+                ></div>
+                <input
+                    type="range"
+                    min={minLimit}
+                    max={maxLimit}
+                    value={localMin}
+                    onChange={handleMinChange}
+                    className="absolute w-full h-full opacity-0 cursor-pointer z-10"
+                    style={{ pointerEvents: 'none' }}
+                />
+                <input
+                    type="range"
+                    min={minLimit}
+                    max={maxLimit}
+                    value={localMax}
+                    onChange={handleMaxChange}
+                    className="absolute w-full h-full opacity-0 cursor-pointer z-20"
+                    style={{ pointerEvents: 'none' }}
+                />
+                
+                {/* Custom Thumbs */}
+                <div 
+                    className="absolute w-4 h-4 bg-white border-2 border-black rounded-full -top-1.5 shadow-sm"
+                    style={{ left: `${minPercent}%`, transform: 'translateX(-50%)' }}
+                ></div>
+                <div 
+                    className="absolute w-4 h-4 bg-white border-2 border-black rounded-full -top-1.5 shadow-sm"
+                    style={{ left: `${maxPercent}%`, transform: 'translateX(-50%)' }}
+                ></div>
+            </div>
+            <div className="flex justify-between mt-4 gap-2">
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500">От</span>
+                    <input 
+                        type="number" 
+                        value={localMin} 
+                        onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setLocalMin(val);
+                            onChange(val, localMax);
+                        }}
+                        className="w-20 border rounded px-1 py-0.5 text-xs"
+                    />
+                </div>
+                <div className="flex flex-col items-end">
+                    <span className="text-[10px] text-gray-500">До</span>
+                    <input 
+                        type="number" 
+                        value={localMax} 
+                        onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setLocalMax(val);
+                            onChange(localMin, val);
+                        }}
+                        className="w-20 border rounded px-1 py-0.5 text-xs text-right"
+                    />
+                </div>
+            </div>
+             <style jsx>{`
+                input[type=range]::-webkit-slider-thumb {
+                    pointer-events: auto;
+                    width: 20px;
+                    height: 20px;
+                    -webkit-appearance: none;
+                }
+            `}</style>
+        </div>
+    );
+};
+
 
 export default function FeedPageClient() {
   const { lang } = useLang();
@@ -228,19 +335,13 @@ export default function FeedPageClient() {
       const term = (searchTerm || "").trim();
       if (term) {
         // Умный поиск: расширяем запрос синонимами
-        // Так как Supabase .ilike не умеет OR внутри строки просто так,
-        // мы будем искать по каждому синониму через .or()
-        // Но .or() применяется ко всему запросу.
-        // Для простоты пока ищем по расширенному списку через запятую в .or()
-        
-        const expanded = expandSearchTerm(term); // возвращает строку "term|syn1|syn2" если бы мы хотели regex, но тут массив нужен
+        const expanded = expandSearchTerm(term);
         
         // Получаем массив синонимов
         const synonyms = SYNONYMS[term.toLowerCase()] || [];
         const allTerms = [term, ...synonyms];
         
         // Формируем сложный OR запрос
-        // title.ilike.%term%,description.ilike.%term% OR title.ilike.%syn1%...
         const orConditions = allTerms.map(t => `title.ilike.%${t}%,description.ilike.%${t}%,location_text.ilike.%${t}%`).join(",");
         query = query.or(orConditions);
       }
@@ -397,7 +498,7 @@ export default function FeedPageClient() {
           </button>
 
           {openDropdown === id && (
-              <div className="origin-top-left absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 p-3">
+              <div className="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 p-3">
                   {children}
               </div>
           )}
@@ -433,28 +534,17 @@ export default function FeedPageClient() {
                   </div>
               </FilterDropdown>
 
-              {/* Цена */}
+              {/* Цена (Слайдер) */}
               <FilterDropdown 
                   id="price" 
                   label={`${txt.price}${minPrice || maxPrice ? ': ' + (minPrice || '0') + ' - ' + (maxPrice || '∞') : ''}`}
                   active={!!minPrice || !!maxPrice}
               >
-                  <div className="flex flex-col gap-2">
-                      <input
-                          type="number"
-                          placeholder={txt.priceFrom}
-                          className="border border-gray-300 rounded-md px-2 py-1.5 text-xs"
-                          value={minPrice}
-                          onChange={(e) => setMinPrice(e.target.value)}
-                      />
-                      <input
-                          type="number"
-                          placeholder={txt.priceTo}
-                          className="border border-gray-300 rounded-md px-2 py-1.5 text-xs"
-                          value={maxPrice}
-                          onChange={(e) => setMaxPrice(e.target.value)}
-                      />
-                  </div>
+                  <PriceSlider 
+                      min={minPrice} 
+                      max={maxPrice} 
+                      onChange={(min, max) => { setMinPrice(min); setMaxPrice(max); }}
+                  />
               </FilterDropdown>
 
               {/* Состояние */}
