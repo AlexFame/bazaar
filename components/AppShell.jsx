@@ -19,7 +19,8 @@ export default function AppShell({ children }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFloatingSearch, setShowFloatingSearch] = useState(false);
   const lastScrollY = useRef(0);
-  const searchContainerRef = useRef(null);
+  const headerSearchRef = useRef(null);
+  const floatingSearchRef = useRef(null);
 
   // чтобы не дергать /api/auth/tg/verify по 100 раз
   const authOnceRef = useRef(false);
@@ -45,7 +46,10 @@ export default function AppShell({ children }) {
   // Закрываем подсказки при клике вне
   useEffect(() => {
       function handleClickOutside(event) {
-          if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+          const inHeader = headerSearchRef.current && headerSearchRef.current.contains(event.target);
+          const inFloating = floatingSearchRef.current && floatingSearchRef.current.contains(event.target);
+
+          if (!inHeader && !inFloating) {
               setShowSuggestions(false);
           }
       }
@@ -147,8 +151,8 @@ export default function AppShell({ children }) {
   const navBtn =
     "flex-1 text-center px-4 py-2 rounded-full text-xs font-medium transition-colors whitespace-nowrap";
 
-  const renderSearchBar = () => (
-    <div className="relative" ref={searchContainerRef}>
+  const renderSearchBar = (containerRef) => (
+    <div className="relative" ref={containerRef}>
         <div className="flex items-center gap-2 bg-[#F2F3F7] rounded-full px-3 py-2 shadow-sm">
         <span className="text-base opacity-60" aria-hidden="true">
             🔍
@@ -208,7 +212,7 @@ export default function AppShell({ children }) {
 
           {/* Поиск */}
           <form onSubmit={handleSearchSubmit} className="w-full">
-            {renderSearchBar()}
+            {renderSearchBar(headerSearchRef)}
           </form>
 
           {/* НАВИГАЦИЯ + ЯЗЫК */}
@@ -254,7 +258,7 @@ export default function AppShell({ children }) {
             : "opacity-0 -translate-y-4 pointer-events-none"
         }`}
       >
-        <form onSubmit={handleSearchSubmit}>{renderSearchBar()}</form>
+        <form onSubmit={handleSearchSubmit}>{renderSearchBar(floatingSearchRef)}</form>
       </div>
 
       {/* Контент */}
