@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { useLang } from "@/lib/i18n-client";
+import { expandSearchTerm, detectCategory, SYNONYMS } from "@/lib/searchUtils";
 
 const PAGE_SIZE = 10;
 
@@ -62,6 +63,12 @@ const filterTexts = {
     withPhoto: "С фото",
     yes: "Да",
     no: "Нет",
+    filters: "Фильтры",
+    category: "Категория",
+    price: "Цена",
+    condition: "Состояние",
+    type: "Тип",
+    more: "Ещё",
   },
   ua: {
     searchPlaceholder: "Пошук по тексту",
@@ -92,6 +99,12 @@ const filterTexts = {
     withPhoto: "З фото",
     yes: "Так",
     no: "Ні",
+    filters: "Фільтри",
+    category: "Категорія",
+    price: "Ціна",
+    condition: "Стан",
+    type: "Тип",
+    more: "Ще",
   },
   en: {
     searchPlaceholder: "Search text",
@@ -122,6 +135,12 @@ const filterTexts = {
     withPhoto: "With photo",
     yes: "Yes",
     no: "No",
+    filters: "Filters",
+    category: "Category",
+    price: "Price",
+    condition: "Condition",
+    type: "Type",
+    more: "More",
   },
 };
 
@@ -156,9 +175,32 @@ export default function FeedPageClient() {
   // Динамические фильтры (JSONB)
   const [dynamicFilters, setDynamicFilters] = useState({});
 
+  // Состояние для компактных выпадающих фильтров
+  const [openDropdown, setOpenDropdown] = useState(null); // 'category', 'price', 'condition', etc.
+  const dropdownRef = useRef(null);
+
+  // Закрытие дропдауна при клике вне
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   // когда меняется ?q= в урле (верхний поиск) - подхватываем в searchTerm
   useEffect(() => {
     setSearchTerm(urlQuery);
+    
+    // Умное определение категории
+    if (urlQuery) {
+        const detectedCat = detectCategory(urlQuery);
+        if (detectedCat) {
+            setCategoryFilter(detectedCat);
+        }
+    }
   }, [urlQuery]);
 
   // Сброс динамических фильтров при смене категории
@@ -185,9 +227,22 @@ export default function FeedPageClient() {
 
       const term = (searchTerm || "").trim();
       if (term) {
-        query = query.or(
-          `title.ilike.%${term}%,description.ilike.%${term}%,location_text.ilike.%${term}%`
-        );
+        // Умный поиск: расширяем запрос синонимами
+        // Так как Supabase .ilike не умеет OR внутри строки просто так,
+        // мы будем искать по каждому синониму через .or()
+        // Но .or() применяется ко всему запросу.
+        // Для простоты пока ищем по расширенному списку через запятую в .or()
+        
+        const expanded = expandSearchTerm(term); // возвращает строку "term|syn1|syn2" если бы мы хотели regex, но тут массив нужен
+        
+        // Получаем массив синонимов
+        const synonyms = SYNONYMS[term.toLowerCase()] || [];
+        const allTerms = [term, ...synonyms];
+        
+        // Формируем сложный OR запрос
+        // title.ilike.%term%,description.ilike.%term% OR title.ilike.%syn1%...
+        const orConditions = allTerms.map(t => `title.ilike.%${t}%,description.ilike.%${t}%,location_text.ilike.%${t}%`).join(",");
+        query = query.or(orConditions);
       }
 
       if (locationFilter.trim()) {
@@ -251,9 +306,7 @@ export default function FeedPageClient() {
       }
 
       // Динамические фильтры (JSONB)
-      // parameters @> '{"key": "value"}'
       if (categoryFilter !== "all" && Object.keys(dynamicFilters).length > 0) {
-        // Фильтруем пустые значения
         const activeFilters = Object.entries(dynamicFilters).reduce((acc, [k, v]) => {
             if (v !== "" && v !== false) acc[k] = v;
             return acc;
@@ -328,62 +381,191 @@ export default function FeedPageClient() {
   const currentCategory = CATEGORY_DEFS.find((c) => c.key === categoryFilter);
   const categoryFiltersDef = currentCategory?.filters || [];
 
-  const renderDynamicFilter = (filter) => {
-      if (filter.key === "condition") return null; // Уже есть общий фильтр
+  // --- КОМПОНЕНТЫ ФИЛЬТРОВ (Compact Mode) ---
 
-      const label = filter.label[lang] || filter.label.ru;
-      const value = dynamicFilters[filter.key] || "";
+  const FilterDropdown = ({ label, active, children, id }) => (
+      <div className="relative inline-block text-left mr-2 mb-2">
+          <button
+              type="button"
+              onClick={() => setOpenDropdown(openDropdown === id ? null : id)}
+              className={`inline-flex justify-between items-center w-full rounded-lg border px-3 py-2 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none ${active ? 'border-black ring-1 ring-black' : 'border-gray-300'}`}
+          >
+              {label}
+              <svg className="-mr-1 ml-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+          </button>
 
-      if (filter.type === "select") {
-          return (
-              <div key={filter.key} className="flex flex-col">
-                  <label className="text-[10px] font-semibold mb-1">{label}</label>
-                  <select
-                      className="border border-black rounded-xl px-2 py-1.5 text-xs bg-white"
-                      value={value}
-                      onChange={(e) => setDynamicFilters({...dynamicFilters, [filter.key]: e.target.value})}
-                  >
-                      <option value="">{txt.allCategories}</option> {/* "Все" */}
-                      {filter.options.map(opt => (
-                          <option key={opt.value} value={opt.value}>
-                              {opt.label[lang] || opt.label.ru}
-                          </option>
-                      ))}
-                  </select>
+          {openDropdown === id && (
+              <div className="origin-top-left absolute left-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 p-3">
+                  {children}
               </div>
-          )
-      }
-      
-      if (filter.type === "boolean") {
-           return (
-              <div key={filter.key} className="flex flex-col">
-                  <label className="text-[10px] font-semibold mb-1">{label}</label>
-                  <select
-                      className="border border-black rounded-xl px-2 py-1.5 text-xs bg-white"
-                      value={value}
-                      onChange={(e) => setDynamicFilters({...dynamicFilters, [filter.key]: e.target.value === "true" ? true : e.target.value === "false" ? false : ""})}
-                  >
-                      <option value="">-</option>
-                      <option value="true">{txt.yes}</option>
-                      <option value="false">{txt.no}</option>
-                  </select>
-              </div>
-          )
-      }
+          )}
+      </div>
+  );
 
-      // text, number, range (как input)
+  // Рендер компактных фильтров
+  const renderCompactFilters = () => {
       return (
-          <div key={filter.key} className="flex flex-col">
-              <label className="text-[10px] font-semibold mb-1">{label}</label>
-              <input
-                  type={filter.type === "number" ? "number" : "text"}
-                  className="border border-black rounded-xl px-2 py-1.5 text-xs"
-                  value={value}
-                  onChange={(e) => setDynamicFilters({...dynamicFilters, [filter.key]: e.target.value})}
-              />
+          <div className="flex flex-wrap items-center mb-4" ref={dropdownRef}>
+              {/* Категория */}
+              <FilterDropdown 
+                  id="category" 
+                  label={categoryFilter === 'all' ? txt.allCategories : (CATEGORY_DEFS.find(c => c.key === categoryFilter)?.[lang] || CATEGORY_DEFS.find(c => c.key === categoryFilter)?.ru)}
+                  active={categoryFilter !== 'all'}
+              >
+                  <div className="max-h-60 overflow-y-auto">
+                      <button
+                          className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${categoryFilter === 'all' ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
+                          onClick={() => { setCategoryFilter('all'); setOpenDropdown(null); }}
+                      >
+                          {txt.allCategories}
+                      </button>
+                      {CATEGORY_DEFS.map(cat => (
+                          <button
+                              key={cat.key}
+                              className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${categoryFilter === cat.key ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
+                              onClick={() => { setCategoryFilter(cat.key); setOpenDropdown(null); }}
+                          >
+                              {cat.icon} {cat[lang] || cat.ru}
+                          </button>
+                      ))}
+                  </div>
+              </FilterDropdown>
+
+              {/* Цена */}
+              <FilterDropdown 
+                  id="price" 
+                  label={`${txt.price}${minPrice || maxPrice ? ': ' + (minPrice || '0') + ' - ' + (maxPrice || '∞') : ''}`}
+                  active={!!minPrice || !!maxPrice}
+              >
+                  <div className="flex flex-col gap-2">
+                      <input
+                          type="number"
+                          placeholder={txt.priceFrom}
+                          className="border border-gray-300 rounded-md px-2 py-1.5 text-xs"
+                          value={minPrice}
+                          onChange={(e) => setMinPrice(e.target.value)}
+                      />
+                      <input
+                          type="number"
+                          placeholder={txt.priceTo}
+                          className="border border-gray-300 rounded-md px-2 py-1.5 text-xs"
+                          value={maxPrice}
+                          onChange={(e) => setMaxPrice(e.target.value)}
+                      />
+                  </div>
+              </FilterDropdown>
+
+              {/* Состояние */}
+              <FilterDropdown 
+                  id="condition" 
+                  label={conditionFilter === 'all' ? txt.condition : (conditionFilter === 'new' ? txt.conditionNew : conditionFilter === 'used' ? txt.conditionUsed : txt.conditionLikeNew)}
+                  active={conditionFilter !== 'all'}
+              >
+                  <div className="flex flex-col">
+                      {['all', 'new', 'used', 'like_new'].map(cond => (
+                          <button
+                              key={cond}
+                              className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${conditionFilter === cond ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
+                              onClick={() => { setConditionFilter(cond); setOpenDropdown(null); }}
+                          >
+                              {cond === 'all' ? txt.conditionAny : cond === 'new' ? txt.conditionNew : cond === 'used' ? txt.conditionUsed : txt.conditionLikeNew}
+                          </button>
+                      ))}
+                  </div>
+              </FilterDropdown>
+
+               {/* Тип */}
+               <FilterDropdown 
+                  id="type" 
+                  label={typeFilter === 'all' ? txt.type : (typeFilter === 'buy' ? txt.typeBuy : typeFilter === 'sell' ? txt.typeSell : typeFilter === 'services' ? txt.typeServices : txt.typeFree)}
+                  active={typeFilter !== 'all'}
+              >
+                  <div className="flex flex-col">
+                      {['all', 'buy', 'sell', 'services', 'free'].map(t => (
+                          <button
+                              key={t}
+                              className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${typeFilter === t ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
+                              onClick={() => { setTypeFilter(t); setOpenDropdown(null); }}
+                          >
+                              {t === 'all' ? txt.typeAny : t === 'buy' ? txt.typeBuy : t === 'sell' ? txt.typeSell : t === 'services' ? txt.typeServices : txt.typeFree}
+                          </button>
+                      ))}
+                  </div>
+              </FilterDropdown>
+
+              {/* Динамические фильтры категории */}
+              {categoryFilter !== 'all' && categoryFiltersDef.map(filter => {
+                  if (filter.key === 'condition') return null; // пропускаем, так как есть общий
+                  const val = dynamicFilters[filter.key];
+                  const label = filter.label[lang] || filter.label.ru;
+                  
+                  return (
+                      <FilterDropdown
+                          key={filter.key}
+                          id={filter.key}
+                          label={`${label}${val ? ': ' + val : ''}`}
+                          active={!!val}
+                      >
+                          <div className="flex flex-col">
+                              {filter.type === 'select' && (
+                                  <>
+                                      <button
+                                          className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${!val ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
+                                          onClick={() => { setDynamicFilters({...dynamicFilters, [filter.key]: ''}); setOpenDropdown(null); }}
+                                      >
+                                          {txt.allCategories}
+                                      </button>
+                                      {filter.options.map(opt => (
+                                          <button
+                                              key={opt.value}
+                                              className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${val === opt.value ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
+                                              onClick={() => { setDynamicFilters({...dynamicFilters, [filter.key]: opt.value}); setOpenDropdown(null); }}
+                                          >
+                                              {opt.label[lang] || opt.label.ru}
+                                          </button>
+                                      ))}
+                                  </>
+                              )}
+                              {filter.type === 'boolean' && (
+                                  <>
+                                      <button className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${val === '' ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`} onClick={() => { setDynamicFilters({...dynamicFilters, [filter.key]: ''}); setOpenDropdown(null); }}>-</button>
+                                      <button className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${val === true ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`} onClick={() => { setDynamicFilters({...dynamicFilters, [filter.key]: true}); setOpenDropdown(null); }}>{txt.yes}</button>
+                                      <button className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${val === false ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`} onClick={() => { setDynamicFilters({...dynamicFilters, [filter.key]: false}); setOpenDropdown(null); }}>{txt.no}</button>
+                                  </>
+                              )}
+                              {(filter.type === 'text' || filter.type === 'number' || filter.type === 'range') && (
+                                  <input
+                                      type={filter.type === 'number' ? 'number' : 'text'}
+                                      className="border border-gray-300 rounded-md px-2 py-1.5 text-xs w-full"
+                                      value={val || ''}
+                                      onChange={(e) => setDynamicFilters({...dynamicFilters, [filter.key]: e.target.value})}
+                                      placeholder={label}
+                                  />
+                              )}
+                          </div>
+                      </FilterDropdown>
+                  );
+              })}
+              
+              {/* Чекбоксы (Фото, Бартер) как кнопки */}
+              <button
+                  onClick={() => setWithPhotoFilter(withPhotoFilter === 'yes' ? 'all' : 'yes')}
+                  className={`mr-2 mb-2 px-3 py-2 rounded-lg border text-xs font-medium ${withPhotoFilter === 'yes' ? 'bg-black text-white border-black' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              >
+                  {txt.withPhoto}
+              </button>
+               <button
+                  onClick={() => setBarterFilter(barterFilter === 'yes' ? 'all' : 'yes')}
+                  className={`mr-2 mb-2 px-3 py-2 rounded-lg border text-xs font-medium ${barterFilter === 'yes' ? 'bg-black text-white border-black' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              >
+                  {txt.barter}
+              </button>
+
           </div>
-      )
-  }
+      );
+  };
 
 
   return (
@@ -411,130 +593,8 @@ export default function FeedPageClient() {
                 />
               </div>
 
-              {/* 2. Категории */}
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setCategoryFilter("all")}
-                  className={`px-3 py-1 rounded-full border text-[11px] font-medium ${
-                    categoryFilter === "all"
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-black border-black/20"
-                  }`}
-                >
-                  {txt.allCategories}
-                </button>
-                {CATEGORY_DEFS.map((cat) => (
-                  <button
-                    key={cat.key}
-                    type="button"
-                    onClick={() => setCategoryFilter(cat.key)}
-                    className={`px-3 py-1 rounded-full border text-[11px] font-medium flex items-center ${
-                      categoryFilter === cat.key
-                        ? "bg-black text-white border-black"
-                        : "bg-white text-black border-black/20"
-                    }`}
-                  >
-                    {cat.icon && (
-                      <span className="mr-1" aria-hidden="true">
-                        {cat.icon}
-                      </span>
-                    )}
-                    <span>{cat[lang] || cat.ru}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* 3. Общие фильтры (всегда) */}
-              <div className="grid grid-cols-2 gap-2">
-                  {/* Цена */}
-                  <div className="flex gap-1">
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder={txt.priceFrom}
-                        className="w-full border border-black rounded-xl px-2 py-1.5 text-xs"
-                        value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
-                      />
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder={txt.priceTo}
-                        className="w-full border border-black rounded-xl px-2 py-1.5 text-xs"
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                      />
-                  </div>
-
-                  {/* Тип объявления */}
-                  <select
-                      className="border border-black rounded-xl px-2 py-1.5 text-xs bg-white"
-                      value={typeFilter}
-                      onChange={(e) => setTypeFilter(e.target.value)}
-                  >
-                      <option value="all">{txt.typeAny}</option>
-                      <option value="buy">{txt.typeBuy}</option>
-                      <option value="sell">{txt.typeSell}</option>
-                      <option value="services">{txt.typeServices}</option>
-                      <option value="free">{txt.typeFree}</option>
-                  </select>
-
-                  {/* Состояние */}
-                  <select
-                      className="border border-black rounded-xl px-2 py-1.5 text-xs bg-white"
-                      value={conditionFilter}
-                      onChange={(e) => setConditionFilter(e.target.value)}
-                  >
-                      <option value="all">{txt.conditionAny}</option>
-                      <option value="new">{txt.conditionNew}</option>
-                      <option value="used">{txt.conditionUsed}</option>
-                      <option value="like_new">{txt.conditionLikeNew}</option>
-                  </select>
-
-                  {/* Дата */}
-                  <select
-                      className="border border-black rounded-xl px-2 py-1.5 text-xs bg-white"
-                      value={dateFilter}
-                      onChange={(e) => setDateFilter(e.target.value)}
-                  >
-                      <option value="all">{txt.dateAll}</option>
-                      <option value="today">{txt.dateToday}</option>
-                      <option value="3d">{txt.date3d}</option>
-                      <option value="7d">{txt.date7d}</option>
-                      <option value="30d">{txt.date30d}</option>
-                  </select>
-
-                  {/* С фото */}
-                   <select
-                      className="border border-black rounded-xl px-2 py-1.5 text-xs bg-white"
-                      value={withPhotoFilter}
-                      onChange={(e) => setWithPhotoFilter(e.target.value)}
-                  >
-                      <option value="all">Фото: Все</option>
-                      <option value="yes">{txt.withPhoto}</option>
-                  </select>
-
-                   {/* Бартер */}
-                   <select
-                      className="border border-black rounded-xl px-2 py-1.5 text-xs bg-white"
-                      value={barterFilter}
-                      onChange={(e) => setBarterFilter(e.target.value)}
-                  >
-                      <option value="all">Бартер: -</option>
-                      <option value="yes">{txt.barter}</option>
-                  </select>
-              </div>
-
-              {/* 4. Динамические фильтры категории */}
-              {categoryFilter !== "all" && categoryFiltersDef.length > 0 && (
-                  <div className="border-t border-black/10 pt-2 mt-1">
-                      <div className="text-[11px] font-semibold mb-2 opacity-60">Фильтры категории:</div>
-                      <div className="grid grid-cols-2 gap-2">
-                          {categoryFiltersDef.map(renderDynamicFilter)}
-                      </div>
-                  </div>
-              )}
+              {/* 2. Компактные фильтры (вместо больших кнопок) */}
+              {renderCompactFilters()}
 
               {/* Популярные запросы */}
               <div className="mt-1">

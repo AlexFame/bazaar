@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import LangSwitcher from "./LangSwitcher";
 import { useLang } from "@/lib/i18n-client";
 import { getTG } from "@/lib/telegram";
+import { getSuggestions } from "@/lib/searchUtils";
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
@@ -14,8 +15,11 @@ export default function AppShell({ children }) {
   const { t } = useLang();
 
   const [search, setSearch] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFloatingSearch, setShowFloatingSearch] = useState(false);
   const lastScrollY = useRef(0);
+  const searchContainerRef = useRef(null);
 
   // чтобы не дергать /api/auth/tg/verify по 100 раз
   const authOnceRef = useRef(false);
@@ -25,6 +29,29 @@ export default function AppShell({ children }) {
     const q = searchParams.get("q") || "";
     setSearch(q);
   }, [searchParams]);
+
+  // Обновляем подсказки при вводе
+  useEffect(() => {
+      if (search.length >= 2) {
+          const newSuggestions = getSuggestions(search);
+          setSuggestions(newSuggestions);
+          setShowSuggestions(newSuggestions.length > 0);
+      } else {
+          setSuggestions([]);
+          setShowSuggestions(false);
+      }
+  }, [search]);
+
+  // Закрываем подсказки при клике вне
+  useEffect(() => {
+      function handleClickOutside(event) {
+          if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+              setShowSuggestions(false);
+          }
+      }
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Липкий поиск: вниз - показываем, вверх - прячем
   useEffect(() => {
@@ -97,7 +124,8 @@ export default function AppShell({ children }) {
   }, []);
 
   const handleSearchSubmit = (e) => {
-    e.preventDefault();
+    e?.preventDefault();
+    setShowSuggestions(false);
     const term = search.trim();
     const params = new URLSearchParams();
 
@@ -107,27 +135,64 @@ export default function AppShell({ children }) {
     router.push(url);
   };
 
+  const handleSuggestionClick = (suggestion) => {
+      setSearch(suggestion.text);
+      setShowSuggestions(false);
+      
+      const params = new URLSearchParams();
+      params.set("q", suggestion.text);
+      router.push(`/?${params.toString()}`);
+  };
+
   const navBtn =
     "flex-1 text-center px-4 py-2 rounded-full text-xs font-medium transition-colors whitespace-nowrap";
 
   const renderSearchBar = () => (
-    <div className="flex items-center gap-2 bg-[#F2F3F7] rounded-full px-3 py-2 shadow-sm">
-      <span className="text-base opacity-60" aria-hidden="true">
-        🔍
-      </span>
-      <input
-        type="text"
-        placeholder={t("search_main_ph")}
-        className="flex-1 bg-transparent text-sm outline-none placeholder:text-black/40"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-      <button
-        type="submit"
-        className="px-4 py-1.5 rounded-full bg-black text-white text-xs font-semibold"
-      >
-        {t("btn_search")}
-      </button>
+    <div className="relative" ref={searchContainerRef}>
+        <div className="flex items-center gap-2 bg-[#F2F3F7] rounded-full px-3 py-2 shadow-sm">
+        <span className="text-base opacity-60" aria-hidden="true">
+            🔍
+        </span>
+        <input
+            type="text"
+            placeholder={t("search_main_ph")}
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-black/40"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onFocus={() => {
+                if (suggestions.length > 0) setShowSuggestions(true);
+            }}
+        />
+        <button
+            type="submit"
+            className="px-4 py-1.5 rounded-full bg-black text-white text-xs font-semibold"
+        >
+            {t("btn_search")}
+        </button>
+        </div>
+
+        {/* Autocomplete Dropdown */}
+        {showSuggestions && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden z-50">
+                {suggestions.map((s, i) => (
+                    <button
+                        key={i}
+                        type="button"
+                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center justify-between group"
+                        onClick={() => handleSuggestionClick(s)}
+                    >
+                        <span className="text-gray-800 group-hover:text-black">
+                            {s.text}
+                        </span>
+                        {s.category && (
+                            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                                {s.category}
+                            </span>
+                        )}
+                    </button>
+                ))}
+            </div>
+        )}
     </div>
   );
 
