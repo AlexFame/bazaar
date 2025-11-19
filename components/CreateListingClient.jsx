@@ -115,7 +115,8 @@ export default function CreateListingClient({ onCreated }) {
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   }
 
-  const { t } = useLang();
+  // БЕРЁМ ЕЩЁ И ТЕКУЩИЙ ЯЗЫК
+  const { t, lang } = useLang();
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -360,7 +361,8 @@ export default function CreateListingClient({ onCreated }) {
                 }`}
               >
                 {cat.icon && <span className="mr-1.5">{cat.icon}</span>}
-                {t(cat.labelKey)}
+                {/* БЕРЁМ ТЕКСТ ПРЯМО ИЗ CATEGORY_DEFS */}
+                <span>{cat[lang] || cat.ru}</span>
               </button>
             ))}
           </div>
