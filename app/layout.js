@@ -2,6 +2,7 @@ import "../styles/globals.css";
 import Providers from "./providers";
 import AppShell from "@/components/AppShell";
 import { Suspense } from "react";
+import Script from "next/script";
 
 export const metadata = {
   title: "Bazaar",
@@ -18,6 +19,12 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="ru">
+      <head>
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className="min-h-screen">
         <Providers>
           <div className="telegram-container">
