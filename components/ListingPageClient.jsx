@@ -52,6 +52,8 @@ export default function ListingPageClient() {
     }
   }
 
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+
   return (
     <main className="w-full flex justify-center">
       <div className="w-full max-w-xl px-4 pt-10 pb-24">
@@ -74,13 +76,41 @@ export default function ListingPageClient() {
         {!loading && !errorText && listing && (
           <div className="bg-white rounded-3xl px-4 py-4 shadow-sm">
             {imageUrl && (
-              <div className="w-full mb-3 rounded-2xl overflow-hidden bg-gray-50">
-                <img
-                  src={imageUrl}
-                  alt={listing.title || "Фото"}
-                  className="w-full h-auto object-contain max-h-[500px]"
-                />
-              </div>
+              <>
+                <div 
+                  className="w-full mb-3 rounded-2xl overflow-hidden bg-gray-50 cursor-pointer"
+                  onClick={() => setIsLightboxOpen(true)}
+                >
+                  <img
+                    src={imageUrl}
+                    alt={listing.title || "Фото"}
+                    className="w-full h-auto object-contain max-h-[500px]"
+                  />
+                </div>
+
+                {/* Lightbox Modal */}
+                {isLightboxOpen && (
+                  <div 
+                    className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+                    onClick={() => setIsLightboxOpen(false)}
+                  >
+                    <button 
+                      className="absolute top-4 right-4 text-white p-2"
+                      onClick={() => setIsLightboxOpen(false)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                    <img
+                      src={imageUrl}
+                      alt={listing.title || "Full size"}
+                      className="max-w-full max-h-full object-contain"
+                      onClick={(e) => e.stopPropagation()} 
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             <h1 className="text-base font-semibold mb-1">
