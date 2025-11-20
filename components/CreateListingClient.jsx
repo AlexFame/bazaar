@@ -151,8 +151,39 @@ export default function CreateListingClient({ onCreated }) {
 
       // данные телеграма для личного кабинета
       const tgUser = getTelegramUser();
-      const createdBy = tgUser?.id ? String(tgUser.id) : null;
-      const createdByUsername = tgUser?.username || null;
+      let profileId = null;
+
+      if (tgUser?.id) {
+          // 1. Проверяем, есть ли профиль
+          const { data: existingProfile } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq("tg_user_id", tgUser.id)
+              .single();
+
+          if (existingProfile) {
+              profileId = existingProfile.id;
+          } else {
+              // 2. Если нет, создаем
+              const { data: newProfile, error: createProfileError } = await supabase
+                  .from("profiles")
+                  .insert({
+                      tg_user_id: tgUser.id,
+                      tg_username: tgUser.username || null,
+                      full_name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || null,
+                  })
+                  .select("id")
+                  .single();
+              
+              if (createProfileError) {
+                  console.error("Ошибка создания профиля:", createProfileError);
+                  // Можно продолжить без profileId или вернуть ошибку
+                  // Если created_by обязателен (not null), то это критично
+              } else {
+                  profileId = newProfile.id;
+              }
+          }
+      }
 
       // Собираем параметры, добавляем бартер
       const finalParameters = { ...parameters };
@@ -170,7 +201,7 @@ export default function CreateListingClient({ onCreated }) {
           contacts: contacts.trim() || "EMPTY",
           type: dbType,
           category_key: categoryKey || null,
-          created_by: createdBy,
+          created_by: profileId,
           condition: condition,
           parameters: finalParameters,
         })
