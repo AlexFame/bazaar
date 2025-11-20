@@ -7,7 +7,6 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { getTelegramUser } from "@/lib/telegram";
-import { getUserId } from "@/lib/userId";
 
 // Строим ссылку по введённому контакту
 function buildContactLink(raw) {
@@ -121,9 +120,17 @@ export default function ListingPage({ params }) {
         setCurrentIndex(0);
 
         // Проверяем, является ли текущий пользователь владельцем объявления
-        const currentUserId = await getUserId();
-        if (currentUserId && listingData.created_by === currentUserId) {
-          setIsOwner(true);
+        const tgUser = getTelegramUser();
+        if (tgUser?.id) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("tg_user_id", tgUser.id)
+            .maybeSingle();
+          
+          if (profile && listingData.created_by === profile.id) {
+            setIsOwner(true);
+          }
         }
       } catch (err) {
         console.error("Ошибка:", err);
