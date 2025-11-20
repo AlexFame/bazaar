@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
+import { getTelegramUser } from "@/lib/telegram";
+import { getUserId } from "@/lib/userId";
 
 // Строим ссылку по введённому контакту
 function buildContactLink(raw) {
@@ -62,12 +65,14 @@ const CALL_LABEL = {
 export default function ListingPage({ params }) {
   const { id } = params;
   const { t, lang } = useLang();
+  const router = useRouter();
 
   const [listing, setListing] = useState(null);
   const [imageUrls, setImageUrls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -114,6 +119,12 @@ export default function ListingPage({ params }) {
 
         setImageUrls(urls);
         setCurrentIndex(0);
+
+        // Проверяем, является ли текущий пользователь владельцем объявления
+        const currentUserId = await getUserId();
+        if (currentUserId && listingData.created_by === currentUserId) {
+          setIsOwner(true);
+        }
       } catch (err) {
         console.error("Ошибка:", err);
       } finally {
@@ -131,6 +142,35 @@ export default function ListingPage({ params }) {
 
     if (index !== currentIndex) {
       setCurrentIndex(index);
+    }
+  }
+
+  function handleEdit() {
+    router.push(`/create?edit=${id}`);
+  }
+
+  async function handleDelete() {
+    if (!confirm("Вы уверены, что хотите удалить это объявление?")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error("Ошибка удаления:", error);
+        alert("Не удалось удалить объявление");
+        return;
+      }
+
+      // Перенаправляем на страницу "Мои объявления"
+      router.push("/my");
+    } catch (err) {
+      console.error("Ошибка:", err);
+      alert("Произошла ошибка при удалении");
     }
   }
 
@@ -358,6 +398,24 @@ export default function ListingPage({ params }) {
                       </div>
                     );
                   })()}
+                </div>
+              )}
+
+              {/* КНОПКИ РЕДАКТИРОВАНИЯ И УДАЛЕНИЯ (только для владельца) */}
+              {isOwner && (
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
+                  <button
+                    onClick={handleEdit}
+                    className="flex-1 py-2 px-3 bg-black text-white text-xs font-semibold rounded-full hover:bg-black/80 transition-colors"
+                  >
+                    Редактировать
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="flex-1 py-2 px-3 bg-red-600 text-white text-xs font-semibold rounded-full hover:bg-red-700 transition-colors"
+                  >
+                    Удалить
+                  </button>
                 </div>
               )}
             </>
