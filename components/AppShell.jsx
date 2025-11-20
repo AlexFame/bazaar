@@ -17,15 +17,11 @@ export default function AppShell({ children }) {
   const [search, setSearch] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [showFloatingSearch, setShowFloatingSearch] = useState(false);
-  const lastScrollY = useRef(0);
   const headerSearchRef = useRef(null);
-  const floatingSearchRef = useRef(null);
 
   // чтобы не дергать /api/auth/tg/verify по 100 раз
   const authOnceRef = useRef(false);
 
-  // Подтягиваем q из URL в инпут
   // Подтягиваем q из URL в инпут и сбрасываем подсказки
   useEffect(() => {
     const q = searchParams.get("q") || "";
@@ -34,42 +30,17 @@ export default function AppShell({ children }) {
     setSuggestions([]);
   }, [searchParams]);
 
-  // Обновляем подсказки при вводе (useEffect удален, логика перенесена в onChange)
-
   // Закрываем подсказки при клике вне
   useEffect(() => {
       function handleClickOutside(event) {
           const inHeader = headerSearchRef.current && headerSearchRef.current.contains(event.target);
-          const inFloating = floatingSearchRef.current && floatingSearchRef.current.contains(event.target);
 
-          if (!inHeader && !inFloating) {
+          if (!inHeader) {
               setShowSuggestions(false);
           }
       }
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Липкий поиск: вниз - показываем, вверх - прячем
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const handleScroll = () => {
-      const currentY = window.scrollY;
-      const prevY = lastScrollY.current;
-      const isScrollingDown = currentY > prevY;
-
-      if (currentY > 80 && isScrollingDown) {
-        setShowFloatingSearch(true);
-      } else if (!isScrollingDown) {
-        setShowFloatingSearch(false);
-      }
-
-      lastScrollY.current = currentY;
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Telegram auth -> /api/auth/tg/verify (для личного кабинета)
@@ -222,10 +193,12 @@ export default function AppShell({ children }) {
             Bazaar - Telegram-маркетплейс для мигрантов в Германии
           </div>
 
-          {/* Поиск */}
-          <form onSubmit={handleSearchSubmit} className="w-full">
-            {renderSearchBar(headerSearchRef)}
-          </form>
+          {/* Поиск - только на главной */}
+          {pathname === "/" && (
+            <form onSubmit={handleSearchSubmit} className="w-full">
+                {renderSearchBar(headerSearchRef)}
+            </form>
+          )}
 
           {/* НАВИГАЦИЯ + ЯЗЫК */}
           <div className="flex items-center justify-center gap-2">
@@ -261,17 +234,6 @@ export default function AppShell({ children }) {
           </div>
         </div>
       </header>
-
-      {/* Липкая панель поиска */}
-      <div
-        className={`fixed top-2 left-1/2 -translate-x-1/2 w-full max-w-[520px] px-3 z-30 transition-all duration-200 ${
-          showFloatingSearch
-            ? "opacity-100 translate-y-0 pointer-events-auto"
-            : "opacity-0 -translate-y-4 pointer-events-none"
-        }`}
-      >
-        <form onSubmit={handleSearchSubmit}>{renderSearchBar(floatingSearchRef)}</form>
-      </div>
 
       {/* Контент */}
       <main className="flex-1 w-full max-w-[520px] mx-auto px-3 pb-4">

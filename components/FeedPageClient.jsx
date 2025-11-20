@@ -536,7 +536,7 @@ export default function FeedPageClient() {
 
   // --- КОМПОНЕНТЫ ФИЛЬТРОВ (Compact Mode) ---
 
-  const FilterDropdown = ({ label, active, children, id }) => (
+  const FilterDropdown = ({ label, active, children, id, align = 'left' }) => (
       <div className="relative inline-block text-left mr-2 mb-2">
           <button
               type="button"
@@ -550,7 +550,7 @@ export default function FeedPageClient() {
           </button>
 
           {openDropdown === id && (
-              <div className="origin-top-left absolute left-0 mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 p-3">
+              <div className={`absolute mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 p-3 ${align === 'right' ? 'right-0 origin-top-right' : 'left-0 origin-top-left'}`}>
                   {children}
               </div>
           )}
@@ -710,6 +710,7 @@ export default function FeedPageClient() {
                   id="radius"
                   label={radiusFilter ? `📍 ${radiusFilter} км` : '📍 Радиус'}
                   active={!!radiusFilter}
+                  align="right"
               >
                   <div className="flex flex-col">
                       {!userLocation && (
