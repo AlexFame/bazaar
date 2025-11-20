@@ -185,11 +185,22 @@ export default function CreateListingClient({ onCreated }) {
           }
       }
 
+      console.log("🔍 [Create Listing] Resolved profileId:", profileId);
+      console.log("🔍 [Create Listing] Telegram User:", tgUser);
+
+      if (!profileId) {
+        console.error("❌ [Create Listing] No profileId - cannot create listing");
+        setErrorMsg("Не удалось определить ваш профиль. Попробуйте перезагрузить страницу.");
+        return;
+      }
+
       // Собираем параметры, добавляем бартер
       const finalParameters = { ...parameters };
       if (isBarter) {
         finalParameters.barter = true;
       }
+
+      console.log("📝 [Create Listing] Creating listing with created_by:", profileId);
 
       const { data: listing, error: insertError } = await supabase
         .from("listings")
