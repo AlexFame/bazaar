@@ -82,8 +82,11 @@ export default function MyPage() {
     async function load() {
       const tgUserId = getUserId();
       setUserId(tgUserId);
+      
+      console.log("🔍 [My Listings] Telegram User ID:", tgUserId);
 
       if (!tgUserId) {
+        console.log("❌ [My Listings] No Telegram User ID found");
         setLoading(false);
         setListings([]);
         return;
@@ -91,18 +94,24 @@ export default function MyPage() {
 
       try {
         // Сначала находим UUID пользователя в таблице profiles по его Telegram ID
+        console.log("🔍 [My Listings] Looking for profile with tg_user_id:", Number(tgUserId));
+        
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("id")
           .eq("tg_user_id", Number(tgUserId))
           .single();
 
+        console.log("📊 [My Listings] Profile query result:", { profileData, profileError });
+
         if (profileError || !profileData) {
-          console.error("Профиль не найден:", profileError);
+          console.error("❌ [My Listings] Профиль не найден:", profileError);
           setListings([]);
           setLoading(false);
           return;
         }
+
+        console.log("✅ [My Listings] Found profile UUID:", profileData.id);
 
         // Теперь ищем объявления по UUID из profiles
         const { data, error } = await supabase
@@ -111,14 +120,17 @@ export default function MyPage() {
           .eq("created_by", profileData.id)
           .order("created_at", { ascending: false });
 
+        console.log("📊 [My Listings] Listings query result:", { count: data?.length, error });
+
         if (error) {
-          console.error("Ошибка загрузки моих объявлений:", error);
+          console.error("❌ [My Listings] Ошибка загрузки моих объявлений:", error);
           setListings([]);
         } else {
+          console.log("✅ [My Listings] Found listings:", data);
           setListings(Array.isArray(data) ? data : []);
         }
       } catch (e) {
-        console.error("Ошибка загрузки моих объявлений:", e);
+        console.error("❌ [My Listings] Ошибка загрузки моих объявлений:", e);
         setListings([]);
       } finally {
         setLoading(false);
