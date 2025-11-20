@@ -2,9 +2,11 @@
 
 import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
+import { useRouter } from "next/navigation";
 
 export default function CategoryScroll() {
   const { lang } = useLang();
+  const router = useRouter();
 
   const firstRow = CATEGORY_DEFS.slice(0, 8);
   const secondRow = CATEGORY_DEFS.slice(8);
@@ -20,7 +22,12 @@ export default function CategoryScroll() {
                 <button
                   key={cat.key}
                   type="button"
-                  className="flex-shrink-0 px-4 py-2 rounded-full bg-[#F2F3F7] text-xs font-medium whitespace-nowrap flex items-center gap-1 border border-black/5"
+                  onClick={() => {
+                    const params = new URLSearchParams(window.location.search);
+                    params.set("category", cat.key);
+                    router.push(`/?${params.toString()}`);
+                  }}
+                  className="flex-shrink-0 px-4 py-2 rounded-full bg-[#F2F3F7] text-xs font-medium whitespace-nowrap flex items-center gap-1 border border-black/5 hover:bg-gray-200 transition-colors"
                 >
                   {cat.icon && (
                     <span className="text-sm" aria-hidden="true">
@@ -39,7 +46,12 @@ export default function CategoryScroll() {
                   <button
                     key={cat.key}
                     type="button"
-                    className="flex-shrink-0 px-4 py-2 rounded-full bg-[#F2F3F7] text-xs font-medium whitespace-nowrap flex items-center gap-1 border border-black/5"
+                    onClick={() => {
+                      const params = new URLSearchParams(window.location.search);
+                      params.set("category", cat.key);
+                      router.push(`/?${params.toString()}`);
+                    }}
+                    className="flex-shrink-0 px-4 py-2 rounded-full bg-[#F2F3F7] text-xs font-medium whitespace-nowrap flex items-center gap-1 border border-black/5 hover:bg-gray-200 transition-colors"
                   >
                     {cat.icon && (
                       <span className="text-sm" aria-hidden="true">
