@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
+import { CATEGORY_DEFS } from "@/lib/categories";
 
 // Строим ссылку по введённому контакту
 function buildContactLink(raw) {
@@ -265,6 +266,18 @@ export default function ListingPage({ params }) {
                   )}
                 </>
               )}
+
+              {/* КАТЕГОРИЯ */}
+              {(() => {
+                const category = CATEGORY_DEFS.find((c) => c.key === listing.category_key);
+                if (!category) return null;
+                const catLabel = category[lang] || category.ru;
+                return (
+                  <div className="text-xs text-gray-500 mb-1">
+                    {category.icon} {catLabel}
+                  </div>
+                );
+              })()}
 
               {listing.title && (
                 <h1 className="text-sm font-semibold mt-1 mb-1">
