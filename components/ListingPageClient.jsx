@@ -77,15 +77,20 @@ export default function ListingPageClient() {
           <div className="bg-white rounded-3xl px-4 py-4 shadow-sm">
             {imageUrl && (
               <>
-                <div 
-                  className="w-full mb-3 rounded-2xl overflow-hidden bg-gray-50 cursor-pointer"
+                  <div 
+                  className="w-full mb-3 rounded-2xl overflow-hidden bg-gray-50 cursor-pointer relative group"
                   onClick={() => setIsLightboxOpen(true)}
                 >
                   <img
                     src={imageUrl}
                     alt={listing.title || "Фото"}
-                    className="w-full h-auto object-contain max-h-[500px]"
+                    className="w-full h-auto object-contain"
                   />
+                  <div className="absolute bottom-2 right-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607zM10.5 7.5v6m3-3h-6" />
+                    </svg>
+                  </div>
                 </div>
 
                 {/* Lightbox Modal */}
