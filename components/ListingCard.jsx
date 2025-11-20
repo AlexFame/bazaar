@@ -87,17 +87,18 @@ export default function ListingCard({ listing }) {
   const [imageUrl, setImageUrl] = useState(null);
 
   useEffect(() => {
-    if (!listing?.image_path) {
+    const path = listing?.main_image_path || listing?.image_path;
+    if (!path) {
       setImageUrl(null);
       return;
     }
 
     const { data } = supabase.storage
       .from("listing-images")
-      .getPublicUrl(listing.image_path);
+      .getPublicUrl(path);
 
     setImageUrl(data?.publicUrl || null);
-  }, [listing?.image_path]);
+  }, [listing?.main_image_path, listing?.image_path]);
 
   const typeMap = typeLabels[lang] || typeLabels.ru;
   const typeKey = listing?.type || "unknown";
@@ -109,11 +110,11 @@ export default function ListingCard({ listing }) {
       <article className="bg-white rounded-2xl p-2 shadow-sm flex flex-col h-full border border-black/10">
         {/* Фото */}
         {imageUrl && (
-          <div className="w-full mb-2">
+          <div className="w-full mb-2 bg-gray-50 rounded-xl overflow-hidden">
             <img
               src={imageUrl}
               alt={listing.title || "Фото"}
-              className="w-full h-36 object-cover rounded-xl"
+              className="w-full h-36 object-contain"
             />
           </div>
         )}

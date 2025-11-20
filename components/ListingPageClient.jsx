@@ -38,10 +38,10 @@ export default function ListingPageClient() {
 
       setListing(data);
 
-      if (data.image_path) {
+      if (data.main_image_path || data.image_path) {
         const { data: publicData } = supabase.storage
           .from("listing-images")
-          .getPublicUrl(data.image_path);
+          .getPublicUrl(data.main_image_path || data.image_path);
 
         setImageUrl(publicData?.publicUrl || null);
       } else {
@@ -74,11 +74,11 @@ export default function ListingPageClient() {
         {!loading && !errorText && listing && (
           <div className="bg-white rounded-3xl px-4 py-4 shadow-sm">
             {imageUrl && (
-              <div className="w-full mb-3 rounded-2xl overflow-hidden bg-gray-100">
+              <div className="w-full mb-3 rounded-2xl overflow-hidden bg-gray-50">
                 <img
                   src={imageUrl}
                   alt={listing.title || "Фото"}
-                  className="w-full h-auto object-cover"
+                  className="w-full h-auto object-contain max-h-[500px]"
                 />
               </div>
             )}
