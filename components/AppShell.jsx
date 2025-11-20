@@ -26,22 +26,15 @@ export default function AppShell({ children }) {
   const authOnceRef = useRef(false);
 
   // Подтягиваем q из URL в инпут
+  // Подтягиваем q из URL в инпут и сбрасываем подсказки
   useEffect(() => {
     const q = searchParams.get("q") || "";
     setSearch(q);
+    setShowSuggestions(false);
+    setSuggestions([]);
   }, [searchParams]);
 
-  // Обновляем подсказки при вводе
-  useEffect(() => {
-      if (search.length >= 2) {
-          const newSuggestions = getSuggestions(search);
-          setSuggestions(newSuggestions);
-          setShowSuggestions(newSuggestions.length > 0);
-      } else {
-          setSuggestions([]);
-          setShowSuggestions(false);
-      }
-  }, [search]);
+  // Обновляем подсказки при вводе (useEffect удален, логика перенесена в onChange)
 
   // Закрываем подсказки при клике вне
   useEffect(() => {
@@ -142,7 +135,8 @@ export default function AppShell({ children }) {
   const handleSuggestionClick = (suggestion) => {
       setSearch(suggestion.text);
       setShowSuggestions(false);
-      
+      setSuggestions([]); // Очищаем подсказки, чтобы меню точно закрылось и не открывалось само
+
       const params = new URLSearchParams();
       params.set("q", suggestion.text);
       router.push(`/?${params.toString()}`);
@@ -162,7 +156,18 @@ export default function AppShell({ children }) {
             placeholder={t("search_main_ph")}
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-black/40"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+                const val = e.target.value;
+                setSearch(val);
+                if (val.length >= 2) {
+                    const newSuggestions = getSuggestions(val);
+                    setSuggestions(newSuggestions);
+                    setShowSuggestions(newSuggestions.length > 0);
+                } else {
+                    setSuggestions([]);
+                    setShowSuggestions(false);
+                }
+            }}
             onFocus={() => {
                 if (suggestions.length > 0) setShowSuggestions(true);
             }}
