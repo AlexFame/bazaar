@@ -66,6 +66,7 @@ export default function ListingPage({ params }) {
   const [imageUrls, setImageUrls] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -172,19 +173,77 @@ export default function ListingPage({ params }) {
                     onScroll={handleScroll}
                   >
                     {imageUrls.map((url, i) => (
-                      <img
+                      <div 
                         key={i}
-                        src={url}
-                        alt={`Фото ${i + 1}`}
-                        className="rounded-2xl object-cover flex-shrink-0"
-                        style={{
-                          width: "100%",
-                          height: "300px",
-                          scrollSnapAlign: "center",
+                        className="w-full flex-shrink-0 cursor-pointer bg-gray-50 rounded-2xl overflow-hidden"
+                        style={{ scrollSnapAlign: "center" }}
+                        onClick={() => {
+                          setCurrentIndex(i);
+                          setIsLightboxOpen(true);
                         }}
-                      />
+                      >
+                        <img
+                          src={url}
+                          alt={`Фото ${i + 1}`}
+                          className="w-full h-auto object-contain max-h-[500px]" 
+                        />
+                      </div>
                     ))}
                   </div>
+
+                  {/* Lightbox Modal */}
+                  {isLightboxOpen && (
+                    <div 
+                      className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+                      onClick={() => setIsLightboxOpen(false)}
+                    >
+                      <button 
+                        className="absolute top-4 right-4 text-white p-2 z-50"
+                        onClick={() => setIsLightboxOpen(false)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                      
+                      <div className="relative w-full h-full flex items-center justify-center">
+                         <img
+                          src={imageUrls[currentIndex]}
+                          alt="Full size"
+                          className="max-w-full max-h-full object-contain"
+                          onClick={(e) => e.stopPropagation()} 
+                        />
+                        
+                        {/* Navigation arrows if multiple images */}
+                        {imageUrls.length > 1 && (
+                          <>
+                            <button 
+                                className="absolute left-2 text-white p-2 bg-black/20 rounded-full hover:bg-black/40"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
+                                }}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            <button 
+                                className="absolute right-2 text-white p-2 bg-black/20 rounded-full hover:bg-black/40"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentIndex((prev) => (prev + 1) % imageUrls.length);
+                                }}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
                   <style jsx>{`
                     .no-scrollbar::-webkit-scrollbar {
