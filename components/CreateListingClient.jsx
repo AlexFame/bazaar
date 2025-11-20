@@ -171,7 +171,6 @@ export default function CreateListingClient({ onCreated }) {
           type: dbType,
           category_key: categoryKey || null,
           created_by: createdBy,
-          created_by_username: createdByUsername,
           condition: condition,
           parameters: finalParameters,
         })
