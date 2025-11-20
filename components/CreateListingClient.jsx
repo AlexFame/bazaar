@@ -220,10 +220,14 @@ export default function CreateListingClient({ onCreated }) {
         .single();
 
       if (insertError) {
-        console.error("Ошибка вставки объявления:", insertError);
+        console.error("❌ [Create Listing] Ошибка вставки объявления:", insertError);
         setErrorMsg(`Ошибка при сохранении: ${insertError.message} (${insertError.details || "no details"})`);
         return;
       }
+
+      console.log("✅ [Create Listing] Listing created successfully:", listing);
+      console.log("📋 [Create Listing] Listing ID:", listing?.id);
+      console.log("👤 [Create Listing] Listing created_by:", listing?.created_by);
 
       // загрузка картинок
       if (imageFiles.length > 0 && listing) {
