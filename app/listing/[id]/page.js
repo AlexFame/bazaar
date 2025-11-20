@@ -348,8 +348,8 @@ export default function ListingPage({ params }) {
                 </p>
               )}
 
-              {/* КОНТАКТ + КНОПКИ */}
-              {listing.contacts && listing.contacts !== "EMPTY" && (
+              {/* КОНТАКТ + КНОПКИ (только для НЕ владельцев) */}
+              {!isOwner && listing.contacts && listing.contacts !== "EMPTY" && (
                 <div className="mt-2">
                   {(() => {
                     // Разбиваем на несколько контактов:
