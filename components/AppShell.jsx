@@ -155,25 +155,32 @@ export default function AppShell({ children }) {
             type="text"
             placeholder={t("search_main_ph")}
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-black/40"
-            value={search}
+            value={headerSearchValue}
             onChange={(e) => {
                 const val = e.target.value;
-                setSearch(val);
-                if (val.length >= 2) {
-                    const newSuggestions = getSuggestions(val);
-                    setSuggestions(newSuggestions);
-                    setShowSuggestions(newSuggestions.length > 0);
+                setHeaderSearchValue(val);
+                if (val.trim().length >= 2) {
+                    const newSuggestions = getSuggestions(val, lang);
+                    setHeaderSuggestions(newSuggestions);
+                    setShowHeaderSuggestions(true);
                 } else {
-                    setSuggestions([]);
-                    setShowSuggestions(false);
+                    setHeaderSuggestions([]);
+                    setShowHeaderSuggestions(false);
+                }
+            }}
+            onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleHeaderSearch();
                 }
             }}
             onFocus={() => {
-                if (suggestions.length > 0) setShowSuggestions(true);
+                if (headerSuggestions.length > 0) setShowHeaderSuggestions(true);
             }}
         />
         <button
-            type="submit"
+            type="button"
+            onClick={handleHeaderSearch}
             className="px-4 py-1.5 rounded-full bg-black text-white text-xs font-semibold"
         >
             {t("btn_search")}
