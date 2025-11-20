@@ -180,7 +180,7 @@ export default function CreateListingClient({ onCreated }) {
 
       if (insertError) {
         console.error("Ошибка вставки объявления:", insertError);
-        setErrorMsg("Ошибка при сохранении объявления.");
+        setErrorMsg(`Ошибка при сохранении: ${insertError.message} (${insertError.details || "no details"})`);
         return;
       }
 
