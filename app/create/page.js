@@ -1,7 +1,11 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import CreateListingClient from "@/components/CreateListingClient";
 
 export default function CreatePage() {
-  return <CreateListingClient />;
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+  
+  return <CreateListingClient editId={editId} />;
 }

@@ -7,7 +7,7 @@ import { CATEGORY_DEFS } from "@/lib/categories";
 import { getTelegramUser, isTelegramEnv } from "@/lib/telegram";
 import { geocodeAddress } from "@/lib/geocoding";
 
-export default function CreateListingClient({ onCreated }) {
+export default function CreateListingClient({ onCreated, editId }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -80,6 +80,70 @@ export default function CreateListingClient({ onCreated }) {
   useEffect(() => {
     setParameters({});
   }, [categoryKey]);
+
+  // Загрузка данных объявления при редактировании
+  useEffect(() => {
+    if (!editId) return;
+
+    async function loadListing() {
+      try {
+        console.log("📝 [Edit] Loading listing:", editId);
+        
+        const { data: listing, error } = await supabase
+          .from("listings")
+          .select("*, listing_images(*)")
+          .eq("id", editId)
+          .single();
+
+        if (error) {
+          console.error("❌ [Edit] Error loading listing:", error);
+          setErrorMsg("Не удалось загрузить объявление");
+          return;
+        }
+
+        if (!listing) {
+          setErrorMsg("Объявление не найдено");
+          return;
+        }
+
+        console.log("✅ [Edit] Loaded listing:", listing);
+
+        // Заполняем форму данными
+        setTitle(listing.title || "");
+        setDescription(listing.description || "");
+        setPrice(listing.price ? String(listing.price) : "");
+        setLocation(listing.location_text || "");
+        setContacts(listing.contacts || "");
+        setListingType(listing.type || "buy");
+        setCategoryKey(listing.category_key || CATEGORY_DEFS[0]?.key || "kids");
+        setCondition(listing.condition || "new");
+        setParameters(listing.parameters || {});
+        setIsBarter(listing.parameters?.barter || false);
+        
+        if (listing.latitude && listing.longitude) {
+          setCoordinates({ lat: listing.latitude, lng: listing.longitude });
+        }
+
+        // Загружаем превью изображений
+        if (listing.listing_images && listing.listing_images.length > 0) {
+          const sortedImages = listing.listing_images.sort((a, b) => a.position - b.position);
+          const previews = sortedImages.map(img => {
+            const { data } = supabase.storage
+              .from("listing-images")
+              .getPublicUrl(img.file_path);
+            return data.publicUrl;
+          });
+          setImagePreviews(previews);
+        }
+
+      } catch (err) {
+        console.error("❌ [Edit] Exception:", err);
+        setErrorMsg("Ошибка при загрузке объявления");
+      }
+    }
+
+    loadListing();
+  }, [editId]);
 
   const typeOptions = [
     { value: "buy", labelKey: "field_type_buy" },
@@ -254,36 +318,70 @@ export default function CreateListingClient({ onCreated }) {
         finalParameters.barter = true;
       }
 
-      console.log("📝 [Create Listing] Creating listing with created_by:", profileId);
+      let listing;
+      let listingError;
 
-      const { data: listing, error: insertError } = await supabase
-        .from("listings")
-        .insert({
-          title: title.trim(),
-          description: description.trim() || null,
-          price: price ? Number(price) : null,
-          location_text: location.trim() || null,
-          contacts: contacts.trim() || "EMPTY",
-          type: dbType,
-          category_key: categoryKey || null,
-          created_by: profileId,
-          condition: condition,
-          parameters: finalParameters,
-          latitude: coordinates?.lat || null,
-          longitude: coordinates?.lng || null,
-        })
-        .select()
-        .single();
+      if (editId) {
+        // Режим редактирования - обновляем существующее объявление
+        console.log("📝 [Edit Listing] Updating listing:", editId);
+        
+        const { data, error } = await supabase
+          .from("listings")
+          .update({
+            title: title.trim(),
+            description: description.trim() || null,
+            price: price ? Number(price) : null,
+            location_text: location.trim() || null,
+            contacts: contacts.trim() || "EMPTY",
+            type: dbType,
+            category_key: categoryKey || null,
+            condition: condition,
+            parameters: finalParameters,
+            latitude: coordinates?.lat || null,
+            longitude: coordinates?.lng || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", editId)
+          .select()
+          .single();
+        
+        listing = data;
+        listingError = error;
+      } else {
+        // Режим создания - создаём новое объявление
+        console.log("📝 [Create Listing] Creating listing with created_by:", profileId);
+        
+        const { data, error } = await supabase
+          .from("listings")
+          .insert({
+            title: title.trim(),
+            description: description.trim() || null,
+            price: price ? Number(price) : null,
+            location_text: location.trim() || null,
+            contacts: contacts.trim() || "EMPTY",
+            type: dbType,
+            category_key: categoryKey || null,
+            created_by: profileId,
+            condition: condition,
+            parameters: finalParameters,
+            latitude: coordinates?.lat || null,
+            longitude: coordinates?.lng || null,
+          })
+          .select()
+          .single();
+        
+        listing = data;
+        listingError = error;
+      }
 
-      if (insertError) {
-        console.error("❌ [Create Listing] Ошибка вставки объявления:", insertError);
-        setErrorMsg(`Ошибка при сохранении: ${insertError.message} (${insertError.details || "no details"})`);
+      if (listingError) {
+        console.error(editId ? "❌ [Edit Listing] Ошибка обновления объявления:" : "❌ [Create Listing] Ошибка вставки объявления:", listingError);
+        setErrorMsg(`Ошибка при сохранении: ${listingError.message} (${listingError.details || "no details"})`);
         return;
       }
 
-      console.log("✅ [Create Listing] Listing created successfully:", listing);
-      console.log("📋 [Create Listing] Listing ID:", listing?.id);
-      console.log("👤 [Create Listing] Listing created_by:", listing?.created_by);
+      console.log(editId ? "✅ [Edit Listing] Listing updated successfully:" : "✅ [Create Listing] Listing created successfully:", listing);
+      console.log("📋 [Listing] Listing ID:", listing?.id);
 
       // загрузка картинок
       if (imageFiles.length > 0 && listing) {
@@ -337,7 +435,7 @@ export default function CreateListingClient({ onCreated }) {
         }
       }
 
-      setSuccessMsg("Объявление успешно опубликовано!");
+      setSuccessMsg(editId ? "Объявление успешно обновлено!" : "Объявление успешно опубликовано!");
 
       setTitle("");
       setDescription("");
