@@ -187,16 +187,18 @@ export default function CreateListingClient({ onCreated }) {
 
       if (tgUser?.id) {
           // 1. Проверяем, есть ли профиль
-          const { data: existingProfile } = await supabase
+          let { data: existingProfile, error: selectError } = await supabase
               .from("profiles")
               .select("id")
               .eq("tg_user_id", tgUser.id)
-              .single();
+              .maybeSingle();
 
           if (existingProfile) {
               profileId = existingProfile.id;
+              console.log("✅ [Create Listing] Found existing profile:", profileId);
           } else {
               // 2. Если нет, создаем
+              console.log("📝 [Create Listing] Creating new profile for tg_user_id:", tgUser.id);
               const { data: newProfile, error: createProfileError } = await supabase
                   .from("profiles")
                   .insert({
@@ -205,15 +207,35 @@ export default function CreateListingClient({ onCreated }) {
                       full_name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || null,
                   })
                   .select("id")
-                  .single();
+                  .maybeSingle();
               
               if (createProfileError) {
                   console.error("❌ [Create Listing] Ошибка создания профиля:", createProfileError);
-                  setErrorMsg("Не удалось создать профиль. Попробуйте перезагрузить страницу.");
-                  return;
+                  
+                  // Если ошибка уникальности, попробуем найти профиль еще раз
+                  if (createProfileError.code === '23505') {
+                      console.log("🔄 [Create Listing] Unique constraint error, retrying select...");
+                      const { data: retryProfile } = await supabase
+                          .from("profiles")
+                          .select("id")
+                          .eq("tg_user_id", tgUser.id)
+                          .maybeSingle();
+                      
+                      if (retryProfile) {
+                          profileId = retryProfile.id;
+                          console.log("✅ [Create Listing] Found profile on retry:", profileId);
+                      } else {
+                          setErrorMsg("Не удалось создать профиль. Попробуйте перезагрузить страницу.");
+                          return;
+                      }
+                  } else {
+                      setErrorMsg(`Ошибка создания профиля: ${createProfileError.message}`);
+                      return;
+                  }
+              } else {
+                  profileId = newProfile?.id;
+                  console.log("✅ [Create Listing] Created new profile:", profileId);
               }
-              
-              profileId = newProfile?.id;
           }
       }
 
