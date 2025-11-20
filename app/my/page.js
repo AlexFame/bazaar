@@ -80,20 +80,35 @@ export default function MyPage() {
     }
 
     async function load() {
-      const id = getUserId();
-      setUserId(id);
+      const tgUserId = getUserId();
+      setUserId(tgUserId);
 
-      if (!id) {
+      if (!tgUserId) {
         setLoading(false);
         setListings([]);
         return;
       }
 
       try {
+        // Сначала находим UUID пользователя в таблице profiles по его Telegram ID
+        const { data: profileData, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("tg_user_id", Number(tgUserId))
+          .single();
+
+        if (profileError || !profileData) {
+          console.error("Профиль не найден:", profileError);
+          setListings([]);
+          setLoading(false);
+          return;
+        }
+
+        // Теперь ищем объявления по UUID из profiles
         const { data, error } = await supabase
           .from("listings")
           .select("*")
-          .eq("created_by", String(id))
+          .eq("created_by", profileData.id)
           .order("created_at", { ascending: false });
 
         if (error) {
