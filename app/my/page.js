@@ -70,6 +70,64 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true);
   const [tgUser, setTgUser] = useState(null);
 
+  const loadListings = async () => {
+    const tgUserId = getUserId();
+    setUserId(tgUserId);
+    
+    console.log("🔍 [My Listings] Telegram User ID:", tgUserId);
+
+    if (!tgUserId) {
+      console.log("❌ [My Listings] No Telegram User ID found");
+      setLoading(false);
+      setListings([]);
+      return;
+    }
+
+    try {
+      // Сначала находим UUID пользователя в таблице profiles по его Telegram ID
+      console.log("🔍 [My Listings] Looking for profile with tg_user_id:", Number(tgUserId));
+      
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("tg_user_id", Number(tgUserId))
+        .single();
+
+      console.log("📊 [My Listings] Profile query result:", { profileData, profileError });
+
+      if (profileError || !profileData) {
+        console.error("❌ [My Listings] Профиль не найден:", profileError);
+        setListings([]);
+        setLoading(false);
+        return;
+      }
+
+      console.log("✅ [My Listings] Found profile UUID:", profileData.id);
+
+      // Теперь ищем объявления по UUID из profiles
+      const { data, error } = await supabase
+        .from("listings")
+        .select("*")
+        .eq("created_by", profileData.id)
+        .order("created_at", { ascending: false });
+
+      console.log("📊 [My Listings] Listings query result:", { count: data?.length, error });
+
+      if (error) {
+        console.error("❌ [My Listings] Ошибка загрузки моих объявлений:", error);
+        setListings([]);
+      } else {
+        console.log("✅ [My Listings] Found listings:", data);
+        setListings(Array.isArray(data) ? data : []);
+      }
+    } catch (e) {
+      console.error("❌ [My Listings] Ошибка загрузки моих объявлений:", e);
+      setListings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Пытаемся достать юзера из Telegram, если объект доступен
     try {
@@ -79,66 +137,14 @@ export default function MyPage() {
       console.warn("Не удалось прочитать Telegram user:", e);
     }
 
-    async function load() {
-      const tgUserId = getUserId();
-      setUserId(tgUserId);
-      
-      console.log("🔍 [My Listings] Telegram User ID:", tgUserId);
-
-      if (!tgUserId) {
-        console.log("❌ [My Listings] No Telegram User ID found");
-        setLoading(false);
-        setListings([]);
-        return;
-      }
-
-      try {
-        // Сначала находим UUID пользователя в таблице profiles по его Telegram ID
-        console.log("🔍 [My Listings] Looking for profile with tg_user_id:", Number(tgUserId));
-        
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("tg_user_id", Number(tgUserId))
-          .single();
-
-        console.log("📊 [My Listings] Profile query result:", { profileData, profileError });
-
-        if (profileError || !profileData) {
-          console.error("❌ [My Listings] Профиль не найден:", profileError);
-          setListings([]);
-          setLoading(false);
-          return;
-        }
-
-        console.log("✅ [My Listings] Found profile UUID:", profileData.id);
-
-        // Теперь ищем объявления по UUID из profiles
-        const { data, error } = await supabase
-          .from("listings")
-          .select("*")
-          .eq("created_by", profileData.id)
-          .order("created_at", { ascending: false });
-
-        console.log("📊 [My Listings] Listings query result:", { count: data?.length, error });
-
-        if (error) {
-          console.error("❌ [My Listings] Ошибка загрузки моих объявлений:", error);
-          setListings([]);
-        } else {
-          console.log("✅ [My Listings] Found listings:", data);
-          setListings(Array.isArray(data) ? data : []);
-        }
-      } catch (e) {
-        console.error("❌ [My Listings] Ошибка загрузки моих объявлений:", e);
-        setListings([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
+    loadListings();
   }, []);
+
+  const handleDelete = () => {
+    // Refresh listings after deletion
+    setLoading(true);
+    loadListings();
+  };
 
   return (
     <div className="w-full flex justify-center mt-3">
@@ -231,7 +237,12 @@ export default function MyPage() {
           <div className="bg-white rounded-2xl shadow-sm p-3">
             <div className="grid grid-cols-2 gap-2">
               {listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
+                <ListingCard 
+                  key={listing.id} 
+                  listing={listing} 
+                  showActions={true}
+                  onDelete={handleDelete}
+                />
               ))}
             </div>
           </div>

@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
+import { getUserId } from "@/lib/userId";
 
 const typeLabels = {
   ru: {
@@ -82,9 +84,12 @@ function formatDate(createdAt, lang) {
   });
 }
 
-export default function ListingCard({ listing }) {
+export default function ListingCard({ listing, showActions, onDelete }) {
   const { lang } = useLang();
+  const router = useRouter();
   const [imageUrl, setImageUrl] = useState(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [profileId, setProfileId] = useState(null);
 
   useEffect(() => {
     const path = listing?.main_image_path || listing?.image_path;
@@ -100,14 +105,112 @@ export default function ListingCard({ listing }) {
     setImageUrl(data?.publicUrl || null);
   }, [listing?.main_image_path, listing?.image_path]);
 
+  // Load favorite status
+  useEffect(() => {
+    async function loadFavoriteStatus() {
+      const tgUserId = getUserId();
+      if (!tgUserId) return;
+
+      try {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("tg_user_id", Number(tgUserId))
+          .single();
+
+        if (!profileData) return;
+        setProfileId(profileData.id);
+
+        const { data: favoriteData } = await supabase
+          .from("favorites")
+          .select("id")
+          .eq("profile_id", profileData.id)
+          .eq("listing_id", listing.id)
+          .single();
+
+        setIsFavorite(!!favoriteData);
+      } catch (e) {
+        // Not favorited or error
+        setIsFavorite(false);
+      }
+    }
+
+    loadFavoriteStatus();
+  }, [listing.id]);
+
   const typeMap = typeLabels[lang] || typeLabels.ru;
   const typeKey = listing?.type || "unknown";
   const typeText = typeMap[typeKey] || typeMap.unknown;
   const dateText = formatDate(listing?.created_at, lang);
 
+  const handleFavoriteClick = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!profileId) return;
+
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        await supabase
+          .from("favorites")
+          .delete()
+          .eq("profile_id", profileId)
+          .eq("listing_id", listing.id);
+        setIsFavorite(false);
+      } else {
+        // Add to favorites
+        await supabase
+          .from("favorites")
+          .insert({
+            profile_id: profileId,
+            listing_id: listing.id,
+          });
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
+  };
+
+  const handleEdit = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/create?edit=${listing.id}`);
+  };
+
+  const handleDelete = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!confirm("Удалить это объявление?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", listing.id);
+
+      if (error) throw error;
+
+      if (onDelete) onDelete();
+    } catch (error) {
+      console.error("Error deleting listing:", error);
+      alert("Ошибка при удалении объявления");
+    }
+  };
+
   return (
     <Link href={`/listing/${listing.id}`}>
-      <article className="bg-white rounded-2xl p-2 shadow-sm flex flex-col h-full border border-black/10">
+      <article className="bg-white rounded-2xl p-2 shadow-sm flex flex-col h-full border border-black/10 relative">
+        {/* Heart button */}
+        <button
+          onClick={handleFavoriteClick}
+          className="absolute top-3 right-3 z-10 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-lg hover:scale-110 transition-transform"
+        >
+          {isFavorite ? "❤️" : "🤍"}
+        </button>
+
         {/* Фото */}
         {imageUrl && (
           <div className="w-full mb-2 bg-gray-50 rounded-xl overflow-hidden">
@@ -145,6 +248,24 @@ export default function ListingCard({ listing }) {
         {listing.location_text && (
           <div className="text-[11px] text-black/60 line-clamp-1">
             {listing.location_text}
+          </div>
+        )}
+
+        {/* Edit/Delete buttons */}
+        {showActions && (
+          <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
+            <button
+              onClick={handleEdit}
+              className="flex-1 py-1.5 px-3 bg-black text-white text-[11px] rounded-lg hover:bg-black/80 transition-colors"
+            >
+              Редактировать
+            </button>
+            <button
+              onClick={handleDelete}
+              className="flex-1 py-1.5 px-3 bg-red-600 text-white text-[11px] rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Удалить
+            </button>
           </div>
         )}
       </article>
