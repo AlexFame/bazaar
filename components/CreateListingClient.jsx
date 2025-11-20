@@ -694,7 +694,7 @@ export default function CreateListingClient({ onCreated }) {
                       onClick={(e) => {
                         e.stopPropagation();
                         e.preventDefault();
-                        removeImage(idx);
+                        handleRemoveImage(idx);
                       }}
                     >
                       ×
