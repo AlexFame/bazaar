@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { getTelegramUser, isTelegramEnv } from "@/lib/telegram";
+import { geocodeAddress } from "@/lib/geocoding";
 
 export default function CreateListingClient({ onCreated }) {
   const [title, setTitle] = useState("");
@@ -17,6 +18,10 @@ export default function CreateListingClient({ onCreated }) {
   const [condition, setCondition] = useState("new"); // new | used
   const [parameters, setParameters] = useState({}); // JSONB
   const [isBarter, setIsBarter] = useState(false); // Бартер
+
+  // Геолокация (опционально)
+  const [coordinates, setCoordinates] = useState(null); // { lat, lng }
+  const [geocoding, setGeocoding] = useState(false);
 
   // много фото
   const [imageFiles, setImageFiles] = useState([]);
@@ -120,9 +125,36 @@ export default function CreateListingClient({ onCreated }) {
     e.stopPropagation();
   }
 
-  function removeImage(index) {
+  function handleRemoveImage(index) {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
     setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  // Геокодирование адреса (опционально)
+  async function handleGeocode() {
+    if (!location || location.trim().length < 3) {
+      alert('Введите адрес для определения координат');
+      return;
+    }
+
+    setGeocoding(true);
+    try {
+      const result = await geocodeAddress(location.trim());
+      
+      if (result) {
+        setCoordinates({ lat: result.lat, lng: result.lng });
+        console.log('✅ Координаты определены:', result);
+      } else {
+        alert('Не удалось определить координаты. Проверьте адрес.');
+        setCoordinates(null);
+      }
+    } catch (error) {
+      console.error('Ошибка геокодирования:', error);
+      alert('Ошибка при определении координат');
+      setCoordinates(null);
+    } finally {
+      setGeocoding(false);
+    }
   }
 
   // БЕРЁМ ЕЩЁ И ТЕКУЩИЙ ЯЗЫК
@@ -215,6 +247,8 @@ export default function CreateListingClient({ onCreated }) {
           created_by: profileId,
           condition: condition,
           parameters: finalParameters,
+          latitude: coordinates?.lat || null,
+          longitude: coordinates?.lng || null,
         })
         .select()
         .single();
@@ -593,6 +627,18 @@ export default function CreateListingClient({ onCreated }) {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
           />
+          
+          {/* Опциональная кнопка геокодирования */}
+          {location && location.trim().length >= 3 && (
+            <button
+              type="button"
+              onClick={handleGeocode}
+              disabled={geocoding}
+              className="mt-2 text-xs text-blue-600 hover:text-blue-800 disabled:text-gray-400 flex items-center gap-1"
+            >
+              📍 {geocoding ? 'Определяю координаты...' : coordinates ? '✓ Координаты определены' : 'Определить точное местоположение'}
+            </button>
+          )}
         </div>
 
         {/* контакты */}

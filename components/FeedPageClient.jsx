@@ -7,6 +7,7 @@ import ListingCard from "./ListingCard";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { useLang } from "@/lib/i18n-client";
 import { expandSearchTerm, detectCategory, SYNONYMS } from "@/lib/searchUtils";
+import { getUserLocation, saveUserLocation, getSavedUserLocation, clearUserLocation, calculateDistance } from "@/lib/geocoding";
 
 const PAGE_SIZE = 10;
 
@@ -276,6 +277,11 @@ export default function FeedPageClient() {
   const [typeFilter, setTypeFilter] = useState("all"); // all | buy | sell | services | free
   const [conditionFilter, setConditionFilter] = useState("all"); // all | new | used | like_new
   const [barterFilter, setBarterFilter] = useState("all"); // all | yes | no
+  
+  // Location-based filtering
+  const [userLocation, setUserLocation] = useState(null); // { lat, lng }
+  const [radiusFilter, setRadiusFilter] = useState(null); // null | 1 | 5 | 10 | 25 | 50 (km)
+  const [gettingLocation, setGettingLocation] = useState(false);
   const [withPhotoFilter, setWithPhotoFilter] = useState("all"); // all | yes | no
   const [dateFilter, setDateFilter] = useState("all"); // all | today | 3d | 7d | 30d
 
@@ -314,6 +320,34 @@ export default function FeedPageClient() {
   useEffect(() => {
     setDynamicFilters({});
   }, [categoryFilter]);
+
+  // Load saved user location on mount
+  useEffect(() => {
+    const saved = getSavedUserLocation();
+    if (saved) {
+      setUserLocation(saved);
+    }
+  }, []);
+
+  // Handler for getting user location
+  async function handleGetLocation() {
+    setGettingLocation(true);
+    try {
+      const location = await getUserLocation();
+      if (location) {
+        setUserLocation(location);
+        saveUserLocation(location.lat, location.lng);
+        console.log('✅ Геолокация получена:', location);
+      } else {
+        alert('Не удалось получить геолокацию. Проверьте разрешения браузера.');
+      }
+    } catch (error) {
+      console.error('Ошибка получения геолокации:', error);
+      alert('Ошибка при получении геолокации');
+    } finally {
+      setGettingLocation(false);
+    }
+  }
 
   async function fetchPage(pageIndex, { append = false } = {}) {
     const from = pageIndex * PAGE_SIZE;
@@ -431,7 +465,26 @@ export default function FeedPageClient() {
         return;
       }
 
-      const chunk = data || [];
+      let chunk = data || [];
+      
+      // Client-side distance filtering
+      if (userLocation && radiusFilter && chunk.length > 0) {
+        chunk = chunk.filter(listing => {
+          if (!listing.latitude || !listing.longitude) {
+            return false; // Exclude listings without coordinates
+          }
+          
+          const distance = calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            listing.latitude,
+            listing.longitude
+          );
+          
+          return distance <= radiusFilter;
+        });
+      }
+      
       if (append) {
         setListings((prev) => [...prev, ...chunk]);
       } else {
@@ -466,6 +519,8 @@ export default function FeedPageClient() {
     withPhotoFilter,
     dateFilter,
     dynamicFilters,
+    radiusFilter,
+    userLocation,
     lang,
   ]);
 
@@ -652,6 +707,50 @@ export default function FeedPageClient() {
               >
                   {txt.barter}
               </button>
+
+              {/* Радиус поиска */}
+              <FilterDropdown
+                  id="radius"
+                  label={radiusFilter ? `📍 ${radiusFilter} км` : '📍 Радиус'}
+                  active={!!radiusFilter}
+              >
+                  <div className="flex flex-col">
+                      {!userLocation && (
+                          <button
+                              onClick={handleGetLocation}
+                              disabled={gettingLocation}
+                              className="mb-2 px-3 py-2 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700 disabled:bg-gray-400"
+                          >
+                              {gettingLocation ? 'Определяю...' : '📍 Определить мое местоположение'}
+                          </button>
+                      )}
+                      {userLocation && (
+                          <>
+                              <button
+                                  className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${!radiusFilter ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
+                                  onClick={() => { setRadiusFilter(null); setOpenDropdown(null); }}
+                              >
+                                  Вся страна
+                              </button>
+                              {[1, 5, 10, 25, 50].map(km => (
+                                  <button
+                                      key={km}
+                                      className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${radiusFilter === km ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
+                                      onClick={() => { setRadiusFilter(km); setOpenDropdown(null); }}
+                                  >
+                                      {km} км
+                                  </button>
+                              ))}
+                              <button
+                                  onClick={() => { clearUserLocation(); setUserLocation(null); setRadiusFilter(null); setOpenDropdown(null); }}
+                                  className="mt-2 px-2 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-md"
+                              >
+                                  ✕ Очистить геолокацию
+                              </button>
+                          </>
+                      )}
+                  </div>
+              </FilterDropdown>
 
           </div>
       );
