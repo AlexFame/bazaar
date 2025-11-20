@@ -368,15 +368,13 @@ export default function FeedPageClient() {
       const term = (searchTerm || "").trim();
       if (term) {
         // Умный поиск: расширяем запрос синонимами
-        const expanded = expandSearchTerm(term);
+        const allTerms = expandSearchTerm(term);
         
-        // Получаем массив синонимов
-        const synonyms = SYNONYMS[term.toLowerCase()] || [];
-        const allTerms = [term, ...synonyms];
-        
-        // Формируем сложный OR запрос
-        const orConditions = allTerms.map(t => `title.ilike.%${t}%,description.ilike.%${t}%,location_text.ilike.%${t}%`).join(",");
-        query = query.or(orConditions);
+        if (allTerms.length > 0) {
+            // Формируем сложный OR запрос
+            const orConditions = allTerms.map(t => `title.ilike.%${t}%,description.ilike.%${t}%,location_text.ilike.%${t}%`).join(",");
+            query = query.or(orConditions);
+        }
       }
 
       if (locationFilter.trim()) {
