@@ -339,11 +339,10 @@ export default function FeedPageClient() {
         saveUserLocation(location.lat, location.lng);
         console.log('✅ Геолокация получена:', location);
       } else {
-        alert('Не удалось получить геолокацию. Проверьте разрешения браузера.');
+        console.warn('⚠️ Не удалось получить геолокацию (пользователь отказал в разрешении или браузер не поддерживает)');
       }
     } catch (error) {
-      console.error('Ошибка получения геолокации:', error);
-      alert('Ошибка при получении геолокации');
+      console.error('❌ Ошибка получения геолокации:', error);
     } finally {
       setGettingLocation(false);
     }
