@@ -208,12 +208,12 @@ export default function CreateListingClient({ onCreated }) {
                   .single();
               
               if (createProfileError) {
-                  console.error("Ошибка создания профиля:", createProfileError);
-                  // Можно продолжить без profileId или вернуть ошибку
-                  // Если created_by обязателен (not null), то это критично
-              } else {
-                  profileId = newProfile.id;
+                  console.error("❌ [Create Listing] Ошибка создания профиля:", createProfileError);
+                  setErrorMsg("Не удалось создать профиль. Попробуйте перезагрузить страницу.");
+                  return;
               }
+              
+              profileId = newProfile?.id;
           }
       }
 
