@@ -88,7 +88,20 @@ export default function MapComponent({ listings, userLocation }) {
                                     alert(`Ваши координаты: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}. \n(Для полноценной фильтрации включите геолокацию в фильтрах)`);
                                 },
                                 (error) => {
-                                    alert("Не удалось определить местоположение.");
+                                    console.error("Geolocation error:", error);
+                                    let errorMessage = "Не удалось определить местоположение.";
+                                    switch(error.code) {
+                                        case error.PERMISSION_DENIED:
+                                            errorMessage = "Вы запретили доступ к геолокации. Пожалуйста, разрешите доступ в настройках браузера.";
+                                            break;
+                                        case error.POSITION_UNAVAILABLE:
+                                            errorMessage = "Информация о местоположении недоступна.";
+                                            break;
+                                        case error.TIMEOUT:
+                                            errorMessage = "Время ожидания запроса истекло.";
+                                            break;
+                                    }
+                                    alert(errorMessage);
                                 }
                             );
                         } else {
