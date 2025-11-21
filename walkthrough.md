@@ -69,6 +69,6 @@ I have implemented advanced discovery features and social engagement tools.
     - Fallback to phone number if no username is available.
 3.  **Navigation**:
     - Created reusable `BackButton` component.
-    - Implemented "Swipe Right" gesture for going back.
+    - Implemented "Swipe Right" gesture for going back with **visual page sliding** and **haptic feedback**.
     - Integrated native Telegram Back Button (supports system gestures).
     - Added visual "Back" buttons to all secondary pages (Profile, Favorites, My Listings, Create, Detail).

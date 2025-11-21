@@ -85,7 +85,7 @@ export default function MapComponent({ listings, userLocation }) {
                                     // For now, let's just reload the page with location? No, that's bad.
                                     // Let's just center the map instance if we could access it.
                                     // Better: use useMap hook.
-                                    alert(`Ваши координаты: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}. \n(Для полноценной фильтрации включите геолокацию в фильтрах)`);
+                                    alert(`Ваши координаты: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
                                 },
                                 (error) => {
                                     console.error("Geolocation error:", error);
