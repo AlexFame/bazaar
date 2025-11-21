@@ -11,6 +11,12 @@ import { expandSearchTerm, detectCategory, SYNONYMS } from "@/lib/searchUtils";
 import { getTelegramUser } from "@/lib/telegram";
 import { getUserLocation, saveUserLocation, getSavedUserLocation, clearUserLocation, calculateDistance } from "@/lib/geocoding";
 import { getSearchHistory, addToSearchHistory, clearSearchHistory, removeFromSearchHistory } from "@/lib/searchHistory";
+import dynamic from "next/dynamic";
+
+const MapComponent = dynamic(() => import("./MapComponent"), { 
+    ssr: false, 
+    loading: () => <div className="h-[60vh] w-full bg-gray-100 animate-pulse rounded-xl mt-4" /> 
+});
 
 const PAGE_SIZE = 10;
 
@@ -958,26 +964,46 @@ export default function FeedPageClient() {
           </div>
         )}
 
-        {/* ЛЕНТА */}
-        {loading && listings.length === 0 ? (
+        {/* Переключатель вида и счетчик */}
+        <div className="flex justify-between items-center mb-3 mt-2">
+            <h2 className="text-xs font-medium text-gray-400">
+                {!loading && `${listings.length} ${listings.length % 10 === 1 && listings.length % 100 !== 11 ? 'объявление' : 'объявлений'}`}
+            </h2>
+            <div className="bg-gray-100 p-1 rounded-lg flex text-xs font-medium">
+                <button 
+                    className={`px-3 py-1.5 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-black' : 'text-gray-500'}`}
+                    onClick={() => setViewMode('list')}
+                >
+                    Список
+                </button>
+                <button 
+                    className={`px-3 py-1.5 rounded-md transition-all ${viewMode === 'map' ? 'bg-white shadow-sm text-black' : 'text-gray-500'}`}
+                    onClick={() => setViewMode('map')}
+                >
+                    Карта 🗺️
+                </button>
+            </div>
+        </div>
+
+        {/* Список объявлений или Карта */}
+        {loading ? (
+            <div className="grid grid-cols-2 gap-2">
+              {[...Array(6)].map((_, i) => <ListingCardSkeleton key={i} />)}
+            </div>
+        ) : listings.length === 0 ? (
+          <div className="text-center py-10 text-gray-500">
+            <p className="text-lg">Ничего не найдено 😔</p>
+            <p className="text-sm mt-2">Попробуйте изменить параметры поиска</p>
+          </div>
+        ) : viewMode === 'map' ? (
+            <MapComponent listings={listings} userLocation={userLocation} />
+        ) : (
           <div className="grid grid-cols-2 gap-2">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                <ListingCardSkeleton />
-              </div>
+            {listings.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} />
             ))}
           </div>
-        ) : null}
-
-        {!loading && listings.length === 0 && (
-          <div className="text-xs text-black/60 mb-4">{txt.empty}</div>
         )}
-
-        <div className="grid grid-cols-2 gap-2">
-          {listings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
-          ))}
-        </div>
 
         {hasMore && listings.length > 0 && (
           <div className="mt-4 mb-6 flex justify-center">

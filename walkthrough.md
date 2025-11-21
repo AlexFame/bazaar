@@ -1,32 +1,36 @@
-# Walkthrough - Stage 2: Search & Filter Enhancements
+# Walkthrough - Stage 3: Discovery & Engagement
 
-I have successfully implemented the second stage of features, focusing on search experience and filter management.
+I have implemented advanced discovery features and social engagement tools.
 
 ## Changes
 
-### 1. Search History
-- **Client-side Storage**: Implemented `lib/searchHistory.js` to store recent searches in `localStorage`.
-- **UI**: Added a dropdown to the search input in `FeedPageClient.jsx` that shows recent searches when focused.
-- **Interaction**: Clicking a history item immediately applies the search.
+### 1. Map View 🗺️
+- **Interactive Map**: Added `MapComponent` using `react-leaflet` and OpenStreetMap.
+- **Integration**: Added a "List / Map" toggle to the main feed.
+- **Functionality**: Displays listings as pins. Clicking a pin shows a popup with listing details and a link.
+- **User Location**: Shows user's current location on the map if available.
 
-### 2. Saved Searches
-- **Database**: Created `saved_searches` table with RLS policies to securely store user's search configurations.
-- **Saving**: Added a "Save Search" button (💾) to the feed page. It prompts for a name and saves all active filters (including dynamic ones).
-- **Management**: Created a new page `/saved-searches` where users can view and delete their saved searches.
-- **Restoration**: Clicking a saved search applies all filters by redirecting to the feed with URL parameters.
+### 2. Similar Listings 🔄
+- **Recommendations**: Added a "Similar Listings" block to the listing detail page.
+- **Algorithm**: Fetches 4 most recent listings from the same category (excluding the current one).
 
-### 3. Filter Improvements
-- **URL Synchronization**: Refactored `FeedPageClient.jsx` to initialize all filters from URL parameters. This enables sharing links with specific filters and supports the "Saved Searches" restoration.
-- **Reset Button**: Added a "Reset" button to clear all active filters at once.
-- **UX**: Improved category switching logic to correctly reset dynamic filters.
+### 3. Social Sharing 📤
+- **Share Button**: Added a native share button to the listing detail page.
+- **Metadata**: Converted `ListingPage` to a Server Component to generate dynamic Open Graph tags (Title, Description, Image) for beautiful link previews in messengers.
+- **Fallback**: Copies link to clipboard if native sharing is not supported.
 
 ## Verification Results
 
 ### Manual Verification Steps
-1.  **Search History**: Type "iphone", press Enter. Refresh. Click search input. "iphone" should appear.
-2.  **Save Search**: Select "Moto" category, Price 100-500. Click "Save". Name it "Cheap Moto".
-3.  **Restore Search**: Go to `/saved-searches` (link from My Listings or manually). Click "Cheap Moto". You should be redirected to the feed with "Moto" and Price 100-500 applied.
-4.  **Reset**: Apply filters. Click "Reset". All filters should clear.
-
-## Next Steps
-- Proceed to **Stage 3** (if any) or further refinements.
+1.  **Map View**:
+    - Go to Feed. Click "Map".
+    - Verify map loads and shows pins.
+    - Click a pin -> Popup should appear.
+    - Click "Open" in popup -> Should navigate to listing.
+2.  **Similar Listings**:
+    - Open any listing.
+    - Scroll down. "Similar Listings" should be visible (if there are other listings in the category).
+3.  **Sharing**:
+    - Click "Share" button.
+    - Verify share sheet or "Link copied" alert.
+    - Paste link in Telegram -> Check preview image and title.
