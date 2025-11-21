@@ -223,11 +223,6 @@ export default function MyPage() {
                ❤️ Избранное
             </button>
           </Link>
-          <Link href="/saved-searches" className="col-span-2">
-            <button className="w-full py-2.5 rounded-full bg-white border border-gray-300 text-black text-sm font-semibold hover:bg-gray-50 transition-colors">
-               💾 Сохраненные поиски
-            </button>
-          </Link>
         </div>
 
         {/* Состояния списка объявлений */}

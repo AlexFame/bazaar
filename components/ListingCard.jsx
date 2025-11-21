@@ -251,41 +251,43 @@ export default function ListingCard({ listing, showActions, onDelete }) {
           )}
         </div>
 
-        {/* Тип + дата */}
-        <div className="flex items-center justify-between mb-1">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black text-white text-[11px] font-medium">
-            {typeText}
-          </span>
-          {dateText && (
-            <span className="text-[11px] text-black/50">{dateText}</span>
-          )}
-        </div>
-
-        {/* Заголовок */}
-        {listing.title && (
-          <h2 className="text-sm font-semibold line-clamp-2 mb-0.5">
-            {listing.title}
-          </h2>
-        )}
-
-        {/* Цена */}
-        {typeof listing.price === "number" && (
-          <div className="flex justify-between items-end mt-2">
-          <span className="font-semibold text-sm">{listing.price} €</span>
-          {listing.views_count > 0 && (
-            <span className="text-[10px] text-gray-400 flex items-center gap-1">
-              👁️ {listing.views_count}
+        <div className="flex-1 flex flex-col">
+          {/* Тип + дата */}
+          <div className="flex items-center justify-between mb-1 mt-2">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black text-white text-[11px] font-medium">
+              {typeText}
             </span>
+            {dateText && (
+              <span className="text-[11px] text-black/50">{dateText}</span>
+            )}
+          </div>
+
+          {/* Заголовок */}
+          {listing.title && (
+            <h2 className="text-sm font-semibold line-clamp-2 mb-0.5">
+              {listing.title}
+            </h2>
+          )}
+
+          {/* Цена */}
+          {typeof listing.price === "number" && (
+            <div className="flex justify-between items-end mt-auto pt-2">
+            <span className="font-semibold text-sm">{listing.price} €</span>
+            {listing.views_count > 0 && (
+              <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                👁️ {listing.views_count}
+              </span>
+            )}
+          </div>
+          )}
+
+          {/* Локация */}
+          {listing.location_text && (
+            <div className="text-[11px] text-black/60 line-clamp-1 mt-1">
+              {listing.location_text}
+            </div>
           )}
         </div>
-        )}
-
-        {/* Локация */}
-        {listing.location_text && (
-          <div className="text-[11px] text-black/60 line-clamp-1">
-            {listing.location_text}
-          </div>
-        )}
 
         {/* Edit/Delete buttons */}
         {showActions && (

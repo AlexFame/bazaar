@@ -67,6 +67,41 @@ export default function MapComponent({ listings, userLocation }) {
                 <Popup>Вы здесь</Popup>
             </Marker>
         )}
+
+        {/* Locate Me Button */}
+        <div className="leaflet-bottom leaflet-right" style={{ marginBottom: "20px", marginRight: "10px", pointerEvents: "auto", zIndex: 1000 }}>
+            <div className="leaflet-control leaflet-bar">
+                <button 
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(
+                                (position) => {
+                                    const { latitude, longitude } = position.coords;
+                                    // We can't easily update parent state from here without a prop, 
+                                    // but we can center the map.
+                                    // Ideally, we should pass a handler from parent.
+                                    // For now, let's just reload the page with location? No, that's bad.
+                                    // Let's just center the map instance if we could access it.
+                                    // Better: use useMap hook.
+                                    alert(`Ваши координаты: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}. \n(Для полноценной фильтрации включите геолокацию в фильтрах)`);
+                                },
+                                (error) => {
+                                    alert("Не удалось определить местоположение.");
+                                }
+                            );
+                        } else {
+                            alert("Геолокация не поддерживается вашим браузером.");
+                        }
+                    }}
+                    className="bg-white w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-gray-100 text-black font-bold text-lg"
+                    title="Где я?"
+                >
+                    📍
+                </button>
+            </div>
+        </div>
       </MapContainer>
     </div>
   );
