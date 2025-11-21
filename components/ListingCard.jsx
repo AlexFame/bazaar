@@ -207,9 +207,18 @@ export default function ListingCard({ listing, showActions, onDelete }) {
         {/* Heart button */}
         <button
           onClick={handleFavoriteClick}
-          className="absolute top-3 right-3 z-10 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-lg hover:scale-110 transition-transform"
+          className="absolute top-2 right-2 z-10 p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 transition-transform"
         >
-          {isFavorite ? "❤️" : "🤍"}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill={isFavorite ? "#ef4444" : "none"}
+            stroke={isFavorite ? "#ef4444" : "currentColor"}
+            strokeWidth="2"
+            className="w-4 h-4"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+          </svg>
         </button>
 
         <div className="aspect-square w-full bg-gray-100 relative overflow-hidden">
@@ -280,16 +289,16 @@ export default function ListingCard({ listing, showActions, onDelete }) {
 
         {/* Edit/Delete buttons */}
         {showActions && (
-          <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
+          <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-100">
             <button
               onClick={handleEdit}
-              className="flex-1 py-1.5 px-3 bg-black text-white text-[11px] rounded-lg hover:bg-black/80 transition-colors"
+              className="w-full py-1.5 px-3 bg-gray-100 text-black text-[11px] font-medium rounded-lg hover:bg-gray-200 transition-colors"
             >
               Редактировать
             </button>
             <button
               onClick={handleDelete}
-              className="flex-1 py-1.5 px-3 bg-red-600 text-white text-[11px] rounded-lg hover:bg-red-700 transition-colors"
+              className="w-full py-1.5 px-3 bg-red-50 text-red-600 text-[11px] font-medium rounded-lg hover:bg-red-100 transition-colors"
             >
               Удалить
             </button>

@@ -413,7 +413,7 @@ export default function FeedPageClient() {
     try {
       let query = supabase
         .from("listings")
-        .select("*")
+        .select("*, profiles:created_by(*)")
         .order("created_at", { ascending: false })
         .range(from, to);
 

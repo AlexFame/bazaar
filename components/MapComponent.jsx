@@ -30,8 +30,8 @@ export default function MapComponent({ listings, userLocation }) {
     <div className="h-[60vh] w-full rounded-xl overflow-hidden shadow-sm border border-gray-200 relative z-0 mt-4">
       <MapContainer center={center} zoom={zoom} style={{ height: "100%", width: "100%" }}>
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
         {validListings.map(listing => (
           <Marker key={listing.id} position={[listing.latitude, listing.longitude]}>
