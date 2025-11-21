@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { getTelegramUser } from "@/lib/telegram";
+import { ListingDetailSkeleton } from "@/components/SkeletonLoader";
 
 // Строим ссылку по введённому контакту
 function buildContactLink(raw) {
@@ -140,6 +142,24 @@ export default function ListingPage({ params }) {
     }
 
     loadListing();
+
+    // Логика подсчета просмотров
+    const viewedKey = `viewed_listing_${id}`;
+    const hasViewed = localStorage.getItem(viewedKey);
+
+    if (!hasViewed) {
+      // Если еще не смотрели в этой сессии, увеличиваем счетчик
+      supabase
+        .rpc("increment_view_count", { listing_id: id })
+        .then(({ error }) => {
+          if (!error) {
+            localStorage.setItem(viewedKey, "true");
+            console.log("View count incremented");
+          } else {
+            console.error("Error incrementing view count:", error);
+          }
+        });
+    }
   }, [id]);
 
   function handleScroll(e) {
@@ -197,9 +217,7 @@ export default function ListingPage({ params }) {
         </div>
 
         <div className="bg-white rounded-2xl p-3 shadow-sm">
-          {loading && (
-            <p className="text-xs text-black/60">Загружаем объявление...</p>
-          )}
+          {loading && <ListingDetailSkeleton />}
 
           {!loading && !listing && (
             <p className="text-xs text-black/60">Объявление не найдено.</p>
@@ -223,17 +241,21 @@ export default function ListingPage({ params }) {
                     {imageUrls.map((url, i) => (
                       <div 
                         key={i}
-                        className="w-full flex-shrink-0 cursor-pointer bg-gray-50 rounded-2xl overflow-hidden"
+                        className="w-full flex-shrink-0 cursor-pointer bg-gray-50 rounded-2xl overflow-hidden relative h-[300px]"
                         style={{ scrollSnapAlign: "center" }}
                         onClick={() => {
                           setCurrentIndex(i);
                           setIsLightboxOpen(true);
                         }}
                       >
-                        <img
+                        <Image
                           src={url}
                           alt={`Фото ${i + 1}`}
-                          className="w-full h-auto object-contain max-h-[500px]" 
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 768px) 100vw, 520px"
+                          placeholder="blur"
+                          blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN88/7dfwAIuQNS4g0U2AAAAABJRU5ErkJggg=="
                         />
                       </div>
                     ))}
@@ -255,12 +277,16 @@ export default function ListingPage({ params }) {
                       </button>
                       
                       <div className="relative w-full h-full flex items-center justify-center">
-                         <img
-                          src={imageUrls[currentIndex]}
-                          alt="Full size"
-                          className="max-w-full max-h-full object-contain"
-                          onClick={(e) => e.stopPropagation()} 
-                        />
+                         <div className="relative w-full h-full max-w-4xl max-h-[90vh]">
+                           <Image
+                            src={imageUrls[currentIndex]}
+                            alt="Full size"
+                            fill
+                            className="object-contain"
+                            sizes="100vw"
+                            onClick={(e) => e.stopPropagation()} 
+                          />
+                         </div>
                         
                         {/* Navigation arrows if multiple images */}
                         {imageUrls.length > 1 && (
@@ -333,7 +359,14 @@ export default function ListingPage({ params }) {
               )}
 
               {typeof listing.price === "number" && (
-                <p className="text-sm font-semibold mb-1">{listing.price} €</p>
+                <div className="flex justify-between items-end mb-1">
+                  <p className="text-sm font-semibold">{listing.price} €</p>
+                  {listing.views_count !== undefined && (
+                    <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                      👁️ {listing.views_count}
+                    </span>
+                  )}
+                </div>
               )}
 
               {listing.description && (

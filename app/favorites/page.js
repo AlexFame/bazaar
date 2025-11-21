@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { getUserId } from "@/lib/userId";
 import { useLang } from "@/lib/i18n-client";
 import ListingCard from "@/components/ListingCard";
+import { ListingCardSkeleton } from "@/components/SkeletonLoader";
 
 const pageTranslations = {
   ru: {
@@ -105,8 +106,14 @@ export default function FavoritesPage() {
         <p className="text-sm text-gray-500 mb-3">{t.subtitle}</p>
 
         {loading && (
-          <div className="bg-white rounded-2xl shadow-sm p-3 text-xs text-black/60">
-            {t.loading}
+          <div className="bg-white rounded-2xl shadow-sm p-3">
+            <div className="grid grid-cols-2 gap-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="overflow-hidden">
+                  <ListingCardSkeleton />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

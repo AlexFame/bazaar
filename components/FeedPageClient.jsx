@@ -4,10 +4,13 @@ import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
+import { ListingCardSkeleton } from "./SkeletonLoader";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { useLang } from "@/lib/i18n-client";
 import { expandSearchTerm, detectCategory, SYNONYMS } from "@/lib/searchUtils";
+import { getTelegramUser } from "@/lib/telegram";
 import { getUserLocation, saveUserLocation, getSavedUserLocation, clearUserLocation, calculateDistance } from "@/lib/geocoding";
+import { getSearchHistory, addToSearchHistory, clearSearchHistory, removeFromSearchHistory } from "@/lib/searchHistory";
 
 const PAGE_SIZE = 10;
 
@@ -303,23 +306,65 @@ export default function FeedPageClient() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // когда меняется ?q= в урле (верхний поиск) - подхватываем в searchTerm
-  useEffect(() => {
-    setSearchTerm(urlQuery);
-    
-    // Умное определение категории
-    if (urlQuery) {
-        const detectedCat = detectCategory(urlQuery);
-        if (detectedCat) {
-            setCategoryFilter(detectedCat);
-        }
-    }
-  }, [urlQuery]);
+  // Search History Logic
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [showSearchHistory, setShowSearchHistory] = useState(false);
+  const searchInputRef = useRef(null);
 
-  // Сброс динамических фильтров при смене категории
   useEffect(() => {
-    setDynamicFilters({});
-  }, [categoryFilter]);
+      setSearchHistory(getSearchHistory());
+  }, []);
+
+  const handleSearchKeyDown = (e) => {
+      if (e.key === 'Enter') {
+          const newHistory = addToSearchHistory(searchTerm);
+          setSearchHistory(newHistory);
+          setShowSearchHistory(false);
+          e.target.blur();
+      }
+  };
+
+  const handleHistoryClick = (term) => {
+      setSearchTerm(term);
+      const newHistory = addToSearchHistory(term);
+      setSearchHistory(newHistory);
+      setShowSearchHistory(false);
+  };
+
+  // Sync state with URL params
+  useEffect(() => {
+      const q = searchParams.get("q") || "";
+      setSearchTerm(q);
+      
+      setLocationFilter(searchParams.get("location") || "");
+      setMinPrice(searchParams.get("price_min") || "");
+      setMaxPrice(searchParams.get("price_max") || "");
+      
+      const cat = searchParams.get("category") || "all";
+      setCategoryFilter(cat);
+      
+      // Smart category detection only if no category in URL and there is a query
+      if (cat === "all" && q) {
+           const detected = detectCategory(q);
+           if (detected) setCategoryFilter(detected);
+      }
+
+      setTypeFilter(searchParams.get("type") || "all");
+      setConditionFilter(searchParams.get("condition") || "all");
+      setBarterFilter(searchParams.get("barter") || "all");
+      setWithPhotoFilter(searchParams.get("photo") || "all");
+      setDateFilter(searchParams.get("date") || "all");
+      setRadiusFilter(searchParams.get("radius") ? Number(searchParams.get("radius")) : null);
+
+      const dyn = {};
+      for (const [key, value] of searchParams.entries()) {
+          if (key.startsWith("dyn_")) {
+              dyn[key.replace("dyn_", "")] = value;
+          }
+      }
+      setDynamicFilters(dyn);
+
+  }, [searchParams]);
 
   // Load saved user location on mount
   useEffect(() => {
@@ -530,6 +575,69 @@ export default function FeedPageClient() {
     setSearchTerm(term);
   }
 
+  async function handleSaveSearch() {
+      const tgUser = getTelegramUser();
+      if (!tgUser) {
+          alert("Пожалуйста, войдите через Telegram, чтобы сохранять поиски.");
+          return;
+      }
+
+      const name = prompt("Название для поиска:", searchTerm || "Мой поиск");
+      if (name === null) return; // Cancelled
+
+      const params = {
+          searchTerm,
+          locationFilter,
+          minPrice,
+          maxPrice,
+          categoryFilter,
+          typeFilter,
+          conditionFilter,
+          barterFilter,
+          withPhotoFilter,
+          dateFilter,
+          dynamicFilters,
+          radiusFilter
+      };
+
+      try {
+        const { data: profile } = await supabase.from("profiles").select("id").eq("tg_user_id", tgUser.id).single();
+        
+        if (!profile) {
+            alert("Профиль не найден.");
+            return;
+        }
+
+        const { error } = await supabase.from("saved_searches").insert({
+            user_id: profile.id,
+            name: name || "Поиск",
+            query_params: params
+        });
+
+        if (error) throw error;
+        alert("Поиск сохранен!");
+      } catch (e) {
+        console.error(e);
+        alert("Ошибка сохранения.");
+      }
+  }
+
+  function handleResetFilters() {
+      setSearchTerm("");
+      setLocationFilter("");
+      setMinPrice("");
+      setMaxPrice("");
+      setCategoryFilter("all");
+      setTypeFilter("all");
+      setConditionFilter("all");
+      setBarterFilter("all");
+      setWithPhotoFilter("all");
+      setDateFilter("all");
+      setDynamicFilters({});
+      setRadiusFilter(null);
+      setUserLocation(null);
+  }
+
   // Рендер динамических фильтров
   const currentCategory = CATEGORY_DEFS.find((c) => c.key === categoryFilter);
   const categoryFiltersDef = currentCategory?.filters || [];
@@ -570,7 +678,7 @@ export default function FeedPageClient() {
                   <div className="max-h-60 overflow-y-auto">
                       <button
                           className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${categoryFilter === 'all' ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
-                          onClick={() => { setCategoryFilter('all'); setOpenDropdown(null); }}
+                          onClick={() => { setCategoryFilter('all'); setDynamicFilters({}); setOpenDropdown(null); }}
                       >
                           {txt.allCategories}
                       </button>
@@ -578,7 +686,7 @@ export default function FeedPageClient() {
                           <button
                               key={cat.key}
                               className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${categoryFilter === cat.key ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
-                              onClick={() => { setCategoryFilter(cat.key); setOpenDropdown(null); }}
+                              onClick={() => { setCategoryFilter(cat.key); setDynamicFilters({}); setOpenDropdown(null); }}
                           >
                               {cat.icon} {cat[lang] || cat.ru}
                           </button>
@@ -750,6 +858,21 @@ export default function FeedPageClient() {
                   </div>
               </FilterDropdown>
 
+              <div className="flex gap-2 ml-auto">
+                  <button
+                      onClick={handleSaveSearch}
+                      className="mb-2 px-3 py-2 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 flex items-center gap-1"
+                  >
+                      <span>💾</span> Сохранить
+                  </button>
+                  <button
+                      onClick={handleResetFilters}
+                      className="mb-2 px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200"
+                  >
+                      Сбросить
+                  </button>
+              </div>
+
           </div>
       );
   };
@@ -764,13 +887,33 @@ export default function FeedPageClient() {
             <div className="flex flex-col gap-3">
               {/* 1. Поиск + Локация */}
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder={txt.searchPlaceholder}
-                  className="flex-1 border border-black rounded-xl px-3 py-1.5 text-xs"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+                <div className="relative flex-1">
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder={txt.searchPlaceholder}
+                      className="w-full border border-black rounded-xl px-3 py-1.5 text-xs"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onFocus={() => setShowSearchHistory(true)}
+                      onBlur={() => setTimeout(() => setShowSearchHistory(false), 200)}
+                      onKeyDown={handleSearchKeyDown}
+                    />
+                    {showSearchHistory && searchHistory.length > 0 && (
+                        <div className="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 mt-1 max-h-60 overflow-y-auto">
+                            <div className="flex justify-between items-center px-3 py-2 border-b border-gray-100 bg-gray-50">
+                                <span className="text-[10px] font-semibold text-gray-500">Недавние</span>
+                                <button onClick={(e) => { e.preventDefault(); clearSearchHistory(); setSearchHistory([]); }} className="text-[10px] text-red-500 hover:underline">Очистить</button>
+                            </div>
+                            {searchHistory.map((item, idx) => (
+                                <div key={idx} className="flex justify-between items-center px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0" onClick={() => handleHistoryClick(item)}>
+                                    <span className="text-xs text-gray-700 truncate">{item}</span>
+                                    <button onClick={(e) => { e.stopPropagation(); const h = removeFromSearchHistory(item); setSearchHistory(h); }} className="text-gray-400 hover:text-red-500 px-1">×</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
                 <input
                   type="text"
                   placeholder={txt.locationPlaceholder}
@@ -817,7 +960,13 @@ export default function FeedPageClient() {
 
         {/* ЛЕНТА */}
         {loading && listings.length === 0 ? (
-          <div className="text-xs text-black/60 mb-4">{txt.loading}</div>
+          <div className="grid grid-cols-2 gap-2">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                <ListingCardSkeleton />
+              </div>
+            ))}
+          </div>
         ) : null}
 
         {!loading && listings.length === 0 && (

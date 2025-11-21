@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { getUserId } from "@/lib/userId";
 import { useLang } from "@/lib/i18n-client";
 import ListingCard from "@/components/ListingCard";
+import { ListingCardSkeleton } from "@/components/SkeletonLoader";
 import { getTelegramUser } from "@/lib/telegram";
 
 const pageTranslations = {
@@ -210,19 +211,30 @@ export default function MyPage() {
           </div>
         )}
 
-        {/* Кнопка создания */}
-        <div className="mb-3">
+        {/* Кнопки действий */}
+        <div className="mb-3 grid grid-cols-2 gap-2">
           <Link href="/create">
             <button className="w-full py-2.5 rounded-full bg-black text-white text-sm font-semibold">
               {t.createBtn}
+            </button>
+          </Link>
+          <Link href="/saved-searches">
+            <button className="w-full py-2.5 rounded-full bg-white border border-gray-300 text-black text-sm font-semibold hover:bg-gray-50 transition-colors">
+               Сохраненные поиски
             </button>
           </Link>
         </div>
 
         {/* Состояния списка объявлений */}
         {loading && (
-          <div className="bg-white rounded-2xl shadow-sm p-3 text-xs text-black/60">
-            {t.loading}
+          <div className="bg-white rounded-2xl shadow-sm p-3">
+            <div className="grid grid-cols-2 gap-2">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="overflow-hidden">
+                  <ListingCardSkeleton />
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
