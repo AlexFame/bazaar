@@ -290,6 +290,7 @@ export default function FeedPageClient() {
   // Location-based filtering
   const [userLocation, setUserLocation] = useState(null); // { lat, lng }
   const [radiusFilter, setRadiusFilter] = useState(null); // null | 1 | 5 | 10 | 25 | 50 (km)
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
   const [gettingLocation, setGettingLocation] = useState(false);
   const [withPhotoFilter, setWithPhotoFilter] = useState("all"); // all | yes | no
   const [dateFilter, setDateFilter] = useState("all"); // all | today | 3d | 7d | 30d
