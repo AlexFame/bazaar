@@ -219,12 +219,16 @@ export default function AppShell({ children }) {
             Bazaar - Telegram-маркетплейс для мигрантов в Германии
           </div>
 
-          {/* Поиск - только на главной */}
-          {pathname === "/" && (
+          {/* Поиск - с анимацией скрытия/появления */}
+          <div 
+            className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                pathname === "/" ? "max-h-16 opacity-100 mb-0" : "max-h-0 opacity-0 mb-0"
+            }`}
+          >
             <form onSubmit={handleSearchSubmit} className="w-full">
                 {renderSearchBar(headerSearchRef)}
             </form>
-          )}
+          </div>
 
           {/* НАВИГАЦИЯ + ЯЗЫК */}
           <div className="flex items-center justify-center gap-2">

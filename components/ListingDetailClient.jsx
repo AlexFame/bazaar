@@ -442,22 +442,6 @@ export default function ListingDetailClient({ id }) {
                     // 1. Пытаемся найти username в профиле создателя
                     const creatorUsername = listing.profiles?.tg_username;
                     
-                    // 2. Если есть username профиля, показываем кнопку "Написать продавцу"
-                    if (creatorUsername) {
-                        return (
-                            <div className="flex gap-2 mt-3">
-                                <a
-                                    href={`https://t.me/${creatorUsername}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-blue-500 text-white text-center hover:bg-blue-600 transition-colors"
-                                >
-                                    {TELEGRAM_LABEL[lang] || TELEGRAM_LABEL.ru}
-                                </a>
-                            </div>
-                        );
-                    }
-
                     // 3. Если нет профиля (старое объявление), пробуем парсить поле contacts
                     // Разбиваем на несколько контактов:
                     // @user
@@ -467,8 +451,6 @@ export default function ListingDetailClient({ id }) {
                       .split(/[\n,;]+/)
                       .map((c) => c.trim())
                       .filter(Boolean);
-
-                    if (!parts.length) return null;
 
                     let telegramLink = null;
                     let phoneLink = null;
@@ -486,6 +468,11 @@ export default function ListingDetailClient({ id }) {
                       }
                     }
 
+                    // Если есть username профиля, используем его для Telegram
+                    if (creatorUsername) {
+                        telegramLink = `https://t.me/${creatorUsername}`;
+                    }
+
                     if (!telegramLink && !phoneLink) return null;
 
                     return (
@@ -495,7 +482,7 @@ export default function ListingDetailClient({ id }) {
                             href={telegramLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-black text-white text-center"
+                            className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-black text-white text-center hover:bg-gray-800 transition-colors"
                           >
                             {TELEGRAM_LABEL[lang] || TELEGRAM_LABEL.ru}
                           </a>
@@ -504,7 +491,7 @@ export default function ListingDetailClient({ id }) {
                         {phoneLink && (
                           <a
                             href={phoneLink}
-                            className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-black text-white text-center"
+                            className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-white border border-black text-black text-center hover:bg-gray-50 transition-colors"
                           >
                             {callLabel}
                           </a>

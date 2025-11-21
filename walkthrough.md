@@ -72,3 +72,13 @@ I have implemented advanced discovery features and social engagement tools.
     - Implemented "Swipe Right" gesture for going back with **visual page sliding** and **haptic feedback**.
     - Integrated native Telegram Back Button (supports system gestures).
     - Added visual "Back" buttons to all secondary pages (Profile, Favorites, My Listings, Create, Detail).
+
+### Stage 6: Refinement & Polish
+1.  **Communication**:
+    - Reverted "Write to Seller" button to **Black** style.
+    - Enabled displaying **BOTH** "Write to Seller" (Telegram) and "Call" (Phone) buttons simultaneously if both contacts are available.
+2.  **Geolocation**:
+    - Fixed "Locate Me" button to force a fresh location request and correctly fly the map to the user's coordinates.
+3.  **UX/UI**:
+    - Implemented **smooth page transitions** (fade-in).
+    - Added smooth animation for the search bar to prevent layout shifts when navigating between Home and other pages.
