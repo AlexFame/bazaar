@@ -6,6 +6,7 @@ import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { getTelegramUser, isTelegramEnv } from "@/lib/telegram";
 import { geocodeAddress } from "@/lib/geocoding";
+import BackButton from "@/components/BackButton";
 
 export default function CreateListingClient({ onCreated, editId }) {
   const [title, setTitle] = useState("");
@@ -590,6 +591,9 @@ export default function CreateListingClient({ onCreated, editId }) {
 
   return (
     <section className="w-full max-w-xl mx-auto mt-4 px-3">
+      <div className="mb-3">
+          <BackButton />
+      </div>
       <h1 className="text-lg font-semibold mb-4">{t("new_heading")}</h1>
 
       {errorMsg && (

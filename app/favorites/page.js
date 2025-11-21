@@ -7,6 +7,7 @@ import { getUserId } from "@/lib/userId";
 import { useLang } from "@/lib/i18n-client";
 import ListingCard from "@/components/ListingCard";
 import { ListingCardSkeleton } from "@/components/SkeletonLoader";
+import BackButton from "@/components/BackButton";
 
 const pageTranslations = {
   ru: {
@@ -66,7 +67,10 @@ export default function FavoritesPage() {
         .from("favorites")
         .select(`
           listing_id,
-          listings (*)
+          listings (
+            *,
+            profiles:created_by(*)
+          )
         `)
         .eq("profile_id", profileData.id)
         .order("created_at", { ascending: false });
@@ -102,6 +106,9 @@ export default function FavoritesPage() {
   return (
     <div className="w-full flex justify-center mt-3">
       <div className="w-full max-w-[520px] px-3">
+        <div className="mb-3">
+            <BackButton />
+        </div>
         <h1 className="text-lg font-semibold mb-1">{t.title}</h1>
         <p className="text-sm text-gray-500 mb-3">{t.subtitle}</p>
 

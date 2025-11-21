@@ -9,6 +9,7 @@ import { useLang } from "@/lib/i18n-client";
 import ListingCard from "@/components/ListingCard";
 import { ListingCardSkeleton } from "@/components/SkeletonLoader";
 import { getTelegramUser } from "@/lib/telegram";
+import BackButton from "@/components/BackButton";
 
 const pageTranslations = {
   ru: {
@@ -108,7 +109,7 @@ export default function MyPage() {
       // Теперь ищем объявления по UUID из profiles
       const { data, error } = await supabase
         .from("listings")
-        .select("*")
+        .select("*, profiles:created_by(*)")
         .eq("created_by", profileData.id)
         .order("created_at", { ascending: false });
 
@@ -150,6 +151,9 @@ export default function MyPage() {
   return (
     <div className="w-full flex justify-center mt-3">
       <div className="w-full max-w-[520px] px-3">
+        <div className="mb-3">
+            <BackButton />
+        </div>
         <h1 className="text-lg font-semibold mb-1">{t.my}</h1>
         <p className="text-sm text-gray-500 mb-3">{t.mySubtitle}</p>
 

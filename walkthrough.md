@@ -34,3 +34,41 @@ I have implemented advanced discovery features and social engagement tools.
     - Click "Share" button.
     - Verify share sheet or "Link copied" alert.
     - Paste link in Telegram -> Check preview image and title.
+
+## Stage 4: User Trust & Profiles
+**Goal**: Build trust between users and provide identity verification.
+
+### Features Implemented
+1.  **Public Profiles**:
+    - Created `/profile/[id]` page.
+    - Displays user avatar, join date, and verification status.
+    - Lists all active listings by the user.
+2.  **Reviews System**:
+    - Added `reviews` table to database.
+    - Implemented `ReviewForm` for submitting ratings and comments.
+    - Implemented `ReviewList` to display feedback on profiles.
+3.  **Verification Badges**:
+    - Added `is_verified` column to profiles.
+    - Displayed "Verified Seller" badge on `ListingDetail` and `ListingCard`.
+4.  **UI Improvements**:
+    - Fixed "My Listings" button alignment.
+    - Added "Favorites" button to "My Listings".
+    - Improved Map with "Locate Me" button and better error messages.
+    - Switched Map tiles to CartoDB for English labels.
+
+## Stage 5: Communication & Navigation
+**Goal**: Enable user communication and improve app navigation.
+
+### Features Implemented
+1.  **Sharing Fix**:
+    - Updated `ListingDetail` to include the full URL in the share text.
+    - Ensures shared links are clickable in Telegram.
+2.  **Communication**:
+    - Added "Write to Seller" button (Telegram link) to `ListingDetail`.
+    - Opens a direct Telegram chat with the seller (using `tg_username`).
+    - Fallback to phone number if no username is available.
+3.  **Navigation**:
+    - Created reusable `BackButton` component.
+    - Implemented "Swipe Right" gesture for going back.
+    - Integrated native Telegram Back Button (supports system gestures).
+    - Added visual "Back" buttons to all secondary pages (Profile, Favorites, My Listings, Create, Detail).

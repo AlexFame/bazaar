@@ -10,6 +10,7 @@ import { CATEGORY_DEFS } from "@/lib/categories";
 import { getTelegramUser } from "@/lib/telegram";
 import { ListingDetailSkeleton } from "@/components/SkeletonLoader";
 import SimilarListings from "@/components/SimilarListings";
+import BackButton from "@/components/BackButton";
 
 // Строим ссылку по введённому контакту
 function buildContactLink(raw) {
@@ -203,10 +204,12 @@ export default function ListingDetailClient({ id }) {
 
   const handleShare = async () => {
       if (!listing) return;
-      const url = window.location.href;
+      // Ensure we have a valid URL. window.location.href might be internal in some webviews.
+      // Better to construct it explicitly if possible, or trust window.location.href
+      const url = window.location.href; 
       const shareData = {
           title: listing.title,
-          text: `${listing.title} - ${listing.price} €`,
+          text: `${listing.title} - ${listing.price} €\n${url}`, // Add URL to text for better compatibility
           url: url
       };
 
@@ -229,12 +232,7 @@ export default function ListingDetailClient({ id }) {
     <div className="w-full flex justify-center mt-3">
       <div className="w-full max-w-[520px] px-3">
         <div className="mb-3 flex justify-between items-center">
-          <Link
-            href="/"
-            className="inline-flex items-center px-3 py-1.5 rounded-full border border-black text-xs font-medium bg-white hover:bg-black hover:text-white transition-colors"
-          >
-            ← Назад
-          </Link>
+          <BackButton />
           
           {listing && (
             <button 
@@ -438,9 +436,29 @@ export default function ListingDetailClient({ id }) {
               )}
 
               {/* КОНТАКТ + КНОПКИ (только для НЕ владельцев) */}
-              {!isOwner && listing.contacts && listing.contacts !== "EMPTY" && (
+              {!isOwner && (
                 <div className="mt-2">
                   {(() => {
+                    // 1. Пытаемся найти username в профиле создателя
+                    const creatorUsername = listing.profiles?.username;
+                    
+                    // 2. Если есть username профиля, показываем кнопку "Написать продавцу"
+                    if (creatorUsername) {
+                        return (
+                            <div className="flex gap-2 mt-3">
+                                <a
+                                    href={`https://t.me/${creatorUsername}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-blue-500 text-white text-center hover:bg-blue-600 transition-colors"
+                                >
+                                    {TELEGRAM_LABEL[lang] || TELEGRAM_LABEL.ru}
+                                </a>
+                            </div>
+                        );
+                    }
+
+                    // 3. Если нет профиля (старое объявление), пробуем парсить поле contacts
                     // Разбиваем на несколько контактов:
                     // @user
                     // +49123...
@@ -479,7 +497,7 @@ export default function ListingDetailClient({ id }) {
                             rel="noopener noreferrer"
                             className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-black text-white text-center"
                           >
-                            {telegramLabel}
+                            {TELEGRAM_LABEL[lang] || TELEGRAM_LABEL.ru}
                           </a>
                         )}
 

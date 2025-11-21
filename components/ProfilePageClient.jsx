@@ -8,6 +8,7 @@ import ReviewForm from "@/components/ReviewForm";
 import ReviewList from "@/components/ReviewList";
 import Image from "next/image";
 import Link from "next/link";
+import BackButton from "@/components/BackButton";
 
 export default function ProfilePageClient({ profileId }) {
   const [profile, setProfile] = useState(null);
@@ -33,7 +34,7 @@ export default function ProfilePageClient({ profileId }) {
         // 2. Listings
         const { data: listingsData } = await supabase
           .from("listings")
-          .select("*")
+          .select("*, profiles:created_by(*)")
           .eq("created_by", profileId)
           // .eq("status", "active") // Uncomment if status column exists and is used
           .order("created_at", { ascending: false });
@@ -99,9 +100,7 @@ export default function ProfilePageClient({ profileId }) {
         
         {/* Header with Back Button */}
         <div className="mb-3">
-           <Link href="/" className="inline-flex items-center px-3 py-1.5 rounded-full border border-black text-xs font-medium bg-white hover:bg-black hover:text-white transition-colors">
-             ← На главную
-           </Link>
+           <BackButton />
         </div>
 
         {/* Profile Card */}
