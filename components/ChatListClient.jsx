@@ -11,6 +11,7 @@ export default function ChatListClient() {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
 
   const [unreadCounts, setUnreadCounts] = useState({});
 
@@ -41,6 +42,7 @@ export default function ChatListClient() {
 
       if (error) {
         console.error("Error fetching chats:", error);
+        setFetchError(error.message);
       } else {
         setConversations(data || []);
         
@@ -92,7 +94,14 @@ export default function ChatListClient() {
       <div className="px-4 py-2">
         {conversations.length === 0 ? (
           <div className="text-center text-gray-500 mt-20">
-            <p>У вас пока нет сообщений</p>
+            {fetchError ? (
+                <div className="text-red-500 px-4">
+                    <p className="font-bold">Ошибка загрузки:</p>
+                    <p className="text-sm">{fetchError}</p>
+                </div>
+            ) : (
+                <p>У вас пока нет сообщений</p>
+            )}
           </div>
         ) : (
           <div className="flex flex-col gap-1">
