@@ -94,8 +94,30 @@ export async function POST(req) {
         .maybeSingle();
 
     if (existingProfile && existingProfile.id !== authUser.id) {
-        console.warn(`Mismatch! Profile ${existingProfile.id} has tg_user_id ${tg_user_id}, but auth user is ${authUser.id}. Deleting old profile.`);
-        await supa.from('profiles').delete().eq('id', existingProfile.id);
+        // CRITICAL: DO NOT DELETE OLD PROFILES - it causes CASCADE deletion of all listings!
+        // Instead, just log the warning and use the existing profile
+        console.warn(`Mismatch! Profile ${existingProfile.id} has tg_user_id ${tg_user_id}, but auth user is ${authUser.id}.`);
+        console.warn(`Using existing profile to prevent data loss.`);
+        // DO NOT DELETE: await supa.from('profiles').delete().eq('id', existingProfile.id);
+        // Instead, update the existing profile
+        const { data: updated, error: updateErr } = await supa
+            .from('profiles')
+            .update({ tg_username })
+            .eq('id', existingProfile.id)
+            .select()
+            .single();
+        if (!updateErr) {
+            // Use the existing profile instead of creating new one
+            const token = jwt.sign({ 
+                aud: 'authenticated', 
+                role: 'authenticated', 
+                sub: existingProfile.id,
+                user_metadata: { tg_user_id } 
+            }, process.env.JWT_SECRET, { expiresIn: '30d' });
+            const res = new Response(JSON.stringify({ ok: true, token, user: updated }), { status: 200 });
+            res.headers.set('Set-Cookie', `app_session=${token}; Path=/; HttpOnly; SameSite=Lax; Secure`);
+            return res;
+        }
     }
 
     // We use Upsert to ensure if profile exists with this ID it's updated, 
