@@ -11,7 +11,10 @@ export async function POST(req) {
 
     if (!supabaseUrl || !supabaseKey) {
         console.error("❌ [Notification API] Missing Supabase credentials");
-        return NextResponse.json({ error: "Server configuration error (Supabase)" }, { status: 500 });
+        const missing = [];
+        if (!supabaseUrl) missing.push("NEXT_PUBLIC_SUPABASE_URL");
+        if (!supabaseKey) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+        return NextResponse.json({ error: `Server config error: Missing ${missing.join(", ")}` }, { status: 500 });
     }
 
     if (!TG_BOT_TOKEN) {
