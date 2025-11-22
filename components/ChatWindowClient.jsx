@@ -232,7 +232,7 @@ export default function ChatWindowClient({ conversationId }) {
 
       {/* Input Area - shown only when showInput is true */}
       {showInput && (
-      <div className="flex-shrink-0 p-3 bg-white border-t border-gray-100 pb-safe">
+      <div className="flex-shrink-0 p-3 bg-white border-t border-gray-100 pb-safe animate-slide-up">
         <form onSubmit={handleSend} className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
