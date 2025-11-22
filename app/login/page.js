@@ -36,14 +36,27 @@ export default function LoginPage() {
 
       // Set Supabase session
       if (data.token) {
-          const { error: sessionError } = await supabase.auth.setSession({
+          console.log("Setting session with token:", data.token.substring(0, 10) + "...");
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
               access_token: data.token,
-              refresh_token: data.token, // Using access token as refresh token since we don't have one, might fail refresh but works for initial session
+              refresh_token: data.token, 
           });
           
           if (sessionError) {
               console.error("Supabase session error:", sessionError);
-              // Continue anyway, maybe the cookie will work for some things
+              alert("Ошибка сохранения сессии: " + sessionError.message);
+          } else {
+              console.log("Session set successfully:", sessionData);
+              
+              // Verify immediately
+              const { data: { user: verifyUser }, error: verifyError } = await supabase.auth.getUser();
+              console.log("Immediate User Check:", verifyUser?.id);
+              if (verifyError) console.error("Immediate Verify Error:", verifyError);
+              
+              if (!verifyUser) {
+                  alert("Сессия не сохранилась! Проверьте консоль.");
+                  return; // Don't redirect if failed
+              }
           }
       }
 
