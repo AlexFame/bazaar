@@ -64,11 +64,6 @@ export async function POST(req) {
     const tg_username = data.user.username || null;
     const fakeEmail = `${tg_user_id}@telegram.bazaar.app`;
 
-    const tg_first_name = data.user.first_name || '';
-    const tg_last_name = data.user.last_name || '';
-    const full_name = `${tg_first_name} ${tg_last_name}`.trim() || tg_username || `User ${tg_user_id}`;
-    const avatar_url = data.user.photo_url || null;
-
     const supa = supaAdmin();
     
     // 1. Ensure user exists in auth.users
@@ -83,15 +78,10 @@ export async function POST(req) {
         const { data: newUser, error: createErr } = await supa.auth.admin.createUser({
             email: fakeEmail,
             email_confirm: true,
-            user_metadata: { tg_user_id, tg_username, full_name, avatar_url }
+            user_metadata: { tg_user_id, tg_username }
         });
         if (createErr) throw createErr;
         authUser = newUser.user;
-    } else {
-        // Update metadata if exists
-        await supa.auth.admin.updateUserById(authUser.id, {
-            user_metadata: { tg_user_id, tg_username, full_name, avatar_url }
-        });
     }
 
     // 2. Ensure profile exists in public.profiles with SAME ID
@@ -99,7 +89,7 @@ export async function POST(req) {
     // This happens if auth.users was cleared but profiles wasn't
     const { data: existingProfile } = await supa
         .from('profiles')
-        .select('*')
+        .select('id')
         .eq('tg_user_id', tg_user_id)
         .maybeSingle();
 
@@ -108,44 +98,20 @@ export async function POST(req) {
         await supa.from('profiles').delete().eq('id', existingProfile.id);
     }
 
-    // Check if profile exists with correct ID
-    const { data: currentProfile } = await supa
+    // We use Upsert to ensure if profile exists with this ID it's updated, 
+    // or created if not.
+    const { data: profile, error: profileErr } = await supa
         .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .maybeSingle();
-
-    let profile;
-    if (currentProfile) {
-        // Update only name and avatar, preserve other fields
-        const { data: updated, error: updateErr } = await supa
-            .from('profiles')
-            .update({ 
-                tg_username,
-                full_name,
-                avatar_url
-            })
-            .eq('id', authUser.id)
-            .select()
-            .single();
-        if (updateErr) throw updateErr;
-        profile = updated;
-    } else {
-        // Create new profile
-        const { data: created, error: createErr } = await supa
-            .from('profiles')
-            .insert({ 
-                id: authUser.id, 
-                tg_user_id, 
-                tg_username,
-                full_name,
-                avatar_url
-            })
-            .select()
-            .single();
-        if (createErr) throw createErr;
-        profile = created;
-    }
+        .upsert({ 
+            id: authUser.id, 
+            tg_user_id, 
+            tg_username
+            // updated_at removed to avoid schema error
+        })
+        .select()
+        .single();
+        
+    if (profileErr) throw profileErr;
 
     // Create token (assuming JWT_SECRET is Supabase JWT secret)
     const token = jwt.sign({ 
