@@ -58,8 +58,8 @@ export async function POST(req) {
     console.log(`✅ [Notification API] Found TG ID: ${profile.tg_user_id}. Sending message...`);
 
     // 2. Send Telegram message
-    // Construct the message text
-    const text = `📩 *Новое сообщение*\n\n📌 *${listingTitle || "Объявление"}*\n\n${message}`;
+    // Construct the message text (Plain text to avoid parsing errors)
+    const text = `📩 Новое сообщение\n\n📌 ${listingTitle || "Объявление"}\n\n${message}`;
 
     // Optional: Add button to open the app
     // Note: We need the correct URL for the WebApp. 
@@ -77,7 +77,7 @@ export async function POST(req) {
       body: JSON.stringify({
         chat_id: profile.tg_user_id,
         text: text,
-        parse_mode: "Markdown",
+        // parse_mode removed to avoid 400 errors with special chars
       }),
     });
 
