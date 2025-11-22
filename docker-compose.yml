@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  # Next.js application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - TG_BOT_TOKEN=${TG_BOT_TOKEN}
+    env_file:
+      - .env.local
+    restart: unless-stopped
+    networks:
+      - bazaar-network
+
+  # PostgreSQL for local development (optional)
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=bazaar
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    networks:
+      - bazaar-network
+
+  # pgAdmin for database management (optional)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    ports:
+      - "5050:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@bazaar.local
+      - PGADMIN_DEFAULT_PASSWORD=admin
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    restart: unless-stopped
+    networks:
+      - bazaar-network
+    depends_on:
+      - postgres
+
+networks:
+  bazaar-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  pgadmin-data:
