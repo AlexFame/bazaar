@@ -62,25 +62,49 @@ export async function POST(req) {
 
     const tg_user_id = Number(data.user.id);
     const tg_username = data.user.username || null;
+    const fakeEmail = `${tg_user_id}@telegram.bazaar.app`;
 
     const supa = supaAdmin();
-    // ensure profile by tg_user_id
-    const { data: existing, error: selErr } = await supa.from('profiles').select('*').eq('tg_user_id', tg_user_id).maybeSingle();
-    if (selErr) throw selErr;
-    let profile = existing;
-    if (!profile) {
-      const { data: ins, error: insErr } = await supa.from('profiles').insert({ tg_user_id, tg_username }).select('*').single();
-      if (insErr) throw insErr;
-      profile = ins;
-    } else if (profile.tg_username !== tg_username) {
-      await supa.from('profiles').update({ tg_username }).eq('id', profile.id);
+    
+    // 1. Ensure user exists in auth.users
+    let authUser;
+    const { data: { users }, error: listErr } = await supa.auth.admin.listUsers();
+    if (listErr) throw listErr;
+    
+    authUser = users.find(u => u.email === fakeEmail);
+    
+    if (!authUser) {
+        // Create new auth user
+        const { data: newUser, error: createErr } = await supa.auth.admin.createUser({
+            email: fakeEmail,
+            email_confirm: true,
+            user_metadata: { tg_user_id, tg_username }
+        });
+        if (createErr) throw createErr;
+        authUser = newUser.user;
     }
+
+    // 2. Ensure profile exists in public.profiles with SAME ID
+    // We use Upsert to ensure if profile exists with this ID it's updated, 
+    // or created if not.
+    const { data: profile, error: profileErr } = await supa
+        .from('profiles')
+        .upsert({ 
+            id: authUser.id, 
+            tg_user_id, 
+            tg_username,
+            updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+        
+    if (profileErr) throw profileErr;
 
     // Create token (assuming JWT_SECRET is Supabase JWT secret)
     const token = jwt.sign({ 
         aud: 'authenticated', 
         role: 'authenticated', 
-        sub: profile.id, 
+        sub: authUser.id, // MUST match auth.users.id
         user_metadata: { tg_user_id } 
     }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
