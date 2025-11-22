@@ -476,7 +476,7 @@ export default function ListingDetailClient({ id }) {
                             .select('id')
                             .eq('listing_id', listing.id)
                             .eq('buyer_id', user.id)
-                            .eq('seller_id', listing.user_id) // Assuming listing.user_id is the seller
+                            .eq('seller_id', listing.created_by) 
                             .single();
 
                         if (existingConv) {
@@ -488,7 +488,7 @@ export default function ListingDetailClient({ id }) {
                                 .insert({
                                     listing_id: listing.id,
                                     buyer_id: user.id,
-                                    seller_id: listing.user_id
+                                    seller_id: listing.created_by
                                 })
                                 .select()
                                 .single();
