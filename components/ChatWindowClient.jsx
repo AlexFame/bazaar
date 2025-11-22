@@ -180,7 +180,16 @@ export default function ChatWindowClient({ conversationId }) {
             message: content,
             listingTitle: listing?.title || "Товар"
           }),
-        }).catch(err => console.error("Failed to send notification:", err));
+        })
+        .then(async res => {
+            if (!res.ok) {
+                const text = await res.text();
+                console.error(`❌ [ChatWindow] Notification failed: ${res.status}`, text);
+            } else {
+                console.log("✅ [ChatWindow] Notification sent");
+            }
+        })
+        .catch(err => console.error("❌ [ChatWindow] Notification network error:", err));
       } else {
         console.warn("⚠️ [ChatWindow] No otherUser.id, cannot send notification");
       }
