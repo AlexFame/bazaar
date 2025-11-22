@@ -131,18 +131,43 @@ export default function ChatWindowClient({ conversationId }) {
 
     const content = newMessage.trim();
     setNewMessage("");
-    setShowInput(false); // Hide input after sending // Optimistic clear
-
-    const { error } = await supabase.from("messages").insert({
+    setShowInput(false); // Hide input after sending
+    
+    // Optimistic UI: Add message immediately
+    const optimisticMessage = {
+      id: `temp-${Date.now()}`,
       conversation_id: conversationId,
       sender_id: user.id,
       content: content,
-    });
+      created_at: new Date().toISOString(),
+      is_optimistic: true
+    };
+    
+    setMessages(prev => [...prev, optimisticMessage]);
+    scrollToBottom();
+
+    // Send to server
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content: content,
+      })
+      .select()
+      .single();
 
     if (error) {
       console.error("Error sending message:", error);
       alert("Не удалось отправить сообщение");
-      setNewMessage(text); // Restore on error
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+      setNewMessage(content); // Restore text
+    } else {
+      // Replace optimistic message with real one
+      setMessages(prev => 
+        prev.map(m => m.id === optimisticMessage.id ? data : m)
+      );
     }
   };
 
