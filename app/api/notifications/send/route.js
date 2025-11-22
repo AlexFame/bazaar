@@ -2,14 +2,24 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req) {
+  console.log("🔔 [Notification API] Request received");
   try {
     // Initialize Supabase Admin client inside handler
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    );
-
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
+
+    if (!supabaseUrl || !supabaseKey) {
+        console.error("❌ [Notification API] Missing Supabase credentials");
+        return NextResponse.json({ error: "Server configuration error (Supabase)" }, { status: 500 });
+    }
+
+    if (!TG_BOT_TOKEN) {
+         console.error("❌ [Notification API] TG_BOT_TOKEN is missing");
+         return NextResponse.json({ error: "Server configuration error (Telegram)" }, { status: 500 });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { recipientId, message, listingTitle } = await req.json();
 

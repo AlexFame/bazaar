@@ -242,7 +242,7 @@ export default function ChatWindowClient({ conversationId }) {
         onClick={() => {
           if (!showInput) {
             setShowInput(true);
-            setTimeout(() => textareaRef.current?.focus(), 100);
+            setTimeout(() => textareaRef.current?.focus({ preventScroll: true }), 100);
           }
         }}
       >
