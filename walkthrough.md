@@ -82,3 +82,13 @@ I have implemented advanced discovery features and social engagement tools.
 3.  **UX/UI**:
     - Implemented **smooth page transitions** (fade-in).
     - Added smooth animation for the search bar to prevent layout shifts when navigating between Home and other pages.
+
+### Stage 7: Internal Chat System
+1.  **Database**:
+    - Created `conversations` and `messages` tables with RLS policies.
+2.  **UI**:
+    - Implemented **Chat List** (`/messages`) with unread indicators.
+    - Implemented **Chat Window** (`/messages/[id]`) with real-time updates.
+3.  **Integration**:
+    - Updated "Write to Seller" button to open internal chat (creating new or opening existing).
+    - Added "Messages" link to the main navigation bar.

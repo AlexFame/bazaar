@@ -439,9 +439,6 @@ export default function ListingDetailClient({ id }) {
               {!isOwner && (
                 <div className="mt-2">
                   {(() => {
-                    // 1. Пытаемся найти username в профиле создателя
-                    const creatorUsername = listing.profiles?.tg_username;
-                    
                     // 3. Если нет профиля (старое объявление), пробуем парсить поле contacts
                     // Разбиваем на несколько контактов:
                     // @user
@@ -452,41 +449,68 @@ export default function ListingDetailClient({ id }) {
                       .map((c) => c.trim())
                       .filter(Boolean);
 
-                    let telegramLink = null;
                     let phoneLink = null;
 
                     for (const part of parts) {
-                      const { isPhone, isTelegram } = detectType(part);
+                      const { isPhone } = detectType(part);
                       const link = buildContactLink(part);
                       if (!link) continue;
 
-                      if (isTelegram && !telegramLink) {
-                        telegramLink = link;
-                      }
                       if (isPhone && !phoneLink) {
                         phoneLink = link;
                       }
                     }
 
-                    // Если есть username профиля, используем его для Telegram
-                    if (creatorUsername) {
-                        telegramLink = `https://t.me/${creatorUsername}`;
-                    }
+                    const handleWriteToSeller = async (e) => {
+                        e.preventDefault();
+                        
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (!user) {
+                            router.push('/login');
+                            return;
+                        }
 
-                    if (!telegramLink && !phoneLink) return null;
+                        // Check if conversation exists
+                        const { data: existingConv } = await supabase
+                            .from('conversations')
+                            .select('id')
+                            .eq('listing_id', listing.id)
+                            .eq('buyer_id', user.id)
+                            .eq('seller_id', listing.user_id) // Assuming listing.user_id is the seller
+                            .single();
+
+                        if (existingConv) {
+                            router.push(`/messages/${existingConv.id}`);
+                        } else {
+                            // Create new conversation
+                            const { data: newConv, error } = await supabase
+                                .from('conversations')
+                                .insert({
+                                    listing_id: listing.id,
+                                    buyer_id: user.id,
+                                    seller_id: listing.user_id
+                                })
+                                .select()
+                                .single();
+                            
+                            if (error) {
+                                console.error('Error creating chat:', error);
+                                alert('Не удалось начать чат');
+                            } else {
+                                router.push(`/messages/${newConv.id}`);
+                            }
+                        }
+                    };
 
                     return (
                       <div className="flex gap-2 mt-3">
-                        {telegramLink && (
-                          <a
-                            href={telegramLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                        {/* Internal Chat Button */}
+                        <button
+                            onClick={handleWriteToSeller}
                             className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-black text-white text-center hover:bg-gray-800 transition-colors"
-                          >
-                            {TELEGRAM_LABEL[lang] || TELEGRAM_LABEL.ru}
-                          </a>
-                        )}
+                        >
+                            Написать
+                        </button>
 
                         {phoneLink && (
                           <a

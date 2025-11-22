@@ -258,6 +258,19 @@ export default function AppShell({ children }) {
                   {t("navbar_myAds")}
                 </button>
               </Link>
+
+              {/* Сообщения */}
+              <Link href="/messages">
+                <button
+                  className={`${navBtn} ${
+                    pathname.startsWith("/messages")
+                      ? "bg-black text-white"
+                      : "bg-[#F2F3F7] text-black"
+                  }`}
+                >
+                  Сообщения
+                </button>
+              </Link>
             </nav>
 
             <LangSwitcher />
