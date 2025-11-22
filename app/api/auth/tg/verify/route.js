@@ -85,6 +85,19 @@ export async function POST(req) {
     }
 
     // 2. Ensure profile exists in public.profiles with SAME ID
+    // Check if a profile with this tg_user_id ALREADY exists but with a DIFFERENT ID
+    // This happens if auth.users was cleared but profiles wasn't
+    const { data: existingProfile } = await supa
+        .from('profiles')
+        .select('id')
+        .eq('tg_user_id', tg_user_id)
+        .maybeSingle();
+
+    if (existingProfile && existingProfile.id !== authUser.id) {
+        console.warn(`Mismatch! Profile ${existingProfile.id} has tg_user_id ${tg_user_id}, but auth user is ${authUser.id}. Deleting old profile.`);
+        await supa.from('profiles').delete().eq('id', existingProfile.id);
+    }
+
     // We use Upsert to ensure if profile exists with this ID it's updated, 
     // or created if not.
     const { data: profile, error: profileErr } = await supa
