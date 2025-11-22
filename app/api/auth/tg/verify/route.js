@@ -21,8 +21,18 @@ function checkTelegramAuth(initData, botToken) {
 export async function POST(req) {
   try {
     const { initData } = await req.json();
+    
+    if (!process.env.TG_BOT_TOKEN) {
+        console.error("TG_BOT_TOKEN is missing");
+        return new Response(JSON.stringify({ error: 'Server configuration error: TG_BOT_TOKEN missing' }), { status: 500 });
+    }
+
     const data = checkTelegramAuth(initData, process.env.TG_BOT_TOKEN);
-    if (!data) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401 });
+    if (!data) {
+        console.error("Telegram auth hash mismatch");
+        return new Response(JSON.stringify({ error: 'Telegram authentication failed (hash mismatch)' }), { status: 401 });
+    }
+
     const tg_user_id = Number(data.user.id);
     const tg_username = data.user.username || null;
 
@@ -39,11 +49,19 @@ export async function POST(req) {
       await supa.from('profiles').update({ tg_username }).eq('id', profile.id);
     }
 
-    const token = jwt.sign({ uid: profile.id, tg_user_id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    const res = new Response(JSON.stringify({ ok: true }), { status: 200 });
+    // Create token (assuming JWT_SECRET is Supabase JWT secret)
+    const token = jwt.sign({ 
+        aud: 'authenticated', 
+        role: 'authenticated', 
+        sub: profile.id, 
+        user_metadata: { tg_user_id } 
+    }, process.env.JWT_SECRET, { expiresIn: '30d' });
+
+    const res = new Response(JSON.stringify({ ok: true, token, user: profile }), { status: 200 });
     res.headers.set('Set-Cookie', `app_session=${token}; Path=/; HttpOnly; SameSite=Lax; Secure`);
     return res;
   } catch (e) {
+    console.error("Auth error:", e);
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 }

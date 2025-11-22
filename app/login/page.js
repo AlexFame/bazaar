@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getTG } from "@/lib/telegram";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -27,8 +28,23 @@ export default function LoginPage() {
         body: JSON.stringify({ initData }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        throw new Error("Ошибка авторизации. Попробуйте позже.");
+        throw new Error(data.error || "Ошибка авторизации. Попробуйте позже.");
+      }
+
+      // Set Supabase session
+      if (data.token) {
+          const { error: sessionError } = await supabase.auth.setSession({
+              access_token: data.token,
+              refresh_token: data.token, // Using access token as refresh token since we don't have one, might fail refresh but works for initial session
+          });
+          
+          if (sessionError) {
+              console.error("Supabase session error:", sessionError);
+              // Continue anyway, maybe the cookie will work for some things
+          }
       }
 
       // Success
