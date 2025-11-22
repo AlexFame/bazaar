@@ -252,10 +252,47 @@ export default function CreateListingClient({ onCreated, editId }) {
     setLoading(true);
 
     try {
+      // 0. Проверка авторизации и авто-логин если нужно
+      const { data: { session } } = await supabase.auth.getSession();
+      const tgUser = getTelegramUser();
+
+      if (!session) {
+          console.log("⚠️ [Create Listing] No active session. Attempting to restore...");
+          if (tgUser && window.Telegram?.WebApp?.initData) {
+               try {
+                   const res = await fetch("/api/auth/tg/verify", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ initData: window.Telegram.WebApp.initData }),
+                   });
+                   
+                   if (res.ok) {
+                       const { token } = await res.json();
+                       // Устанавливаем сессию
+                       const { error } = await supabase.auth.setSession({
+                           access_token: token,
+                           refresh_token: token, // Используем тот же токен как refresh (если поддерживается)
+                       });
+                       if (error) throw error;
+                       console.log("✅ [Create Listing] Session restored");
+                   } else {
+                       throw new Error("Auth failed");
+                   }
+               } catch (e) {
+                   console.error("❌ [Create Listing] Auth failed:", e);
+                   setErrorMsg("Ошибка авторизации. Попробуйте обновить страницу.");
+                   setLoading(false);
+                   return;
+               }
+          } else {
+               console.warn("⚠️ [Create Listing] No session and no Telegram data");
+               // Продолжаем, возможно это анонимный режим (хотя RLS скорее всего запретит)
+          }
+      }
+
       const dbType = listingType;
 
       // данные телеграма для личного кабинета
-      const tgUser = getTelegramUser();
       let profileId = null;
 
       if (tgUser?.id) {
