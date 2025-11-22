@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-// Initialize Supabase Admin client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
-const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
-
 export async function POST(req) {
   try {
+    // Initialize Supabase Admin client inside handler
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
+
     const { recipientId, message, listingTitle } = await req.json();
 
     if (!recipientId || !message) {
