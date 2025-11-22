@@ -13,7 +13,9 @@ export default function ChatWindowClient({ conversationId }) {
   const [user, setUser] = useState(null);
   const [otherUser, setOtherUser] = useState(null);
   const [listing, setListing] = useState(null);
+  const [showInput, setShowInput] = useState(false);
   const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -127,13 +129,14 @@ export default function ChatWindowClient({ conversationId }) {
     e.preventDefault();
     if (!newMessage.trim() || !user) return;
 
-    const text = newMessage.trim();
-    setNewMessage(""); // Optimistic clear
+    const content = newMessage.trim();
+    setNewMessage("");
+    setShowInput(false); // Hide input after sending // Optimistic clear
 
     const { error } = await supabase.from("messages").insert({
       conversation_id: conversationId,
       sender_id: user.id,
-      content: text,
+      content: content,
     });
 
     if (error) {
@@ -193,7 +196,15 @@ export default function ChatWindowClient({ conversationId }) {
 
       {/* Messages Area */}
       {/* Messages Area - takes remaining space */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 pb-4">
+      <div 
+        className="flex-1 overflow-y-auto p-3 space-y-3 pb-4"
+        onClick={() => {
+          if (!showInput) {
+            setShowInput(true);
+            setTimeout(() => textareaRef.current?.focus(), 100);
+          }
+        }}
+      >
         {messages.map((msg) => {
           const isMe = msg.sender_id === user?.id;
           return (
@@ -219,10 +230,12 @@ export default function ChatWindowClient({ conversationId }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
+      {/* Input Area - shown only when showInput is true */}
+      {showInput && (
       <div className="flex-shrink-0 p-3 bg-white border-t border-gray-100 pb-safe">
         <form onSubmit={handleSend} className="flex items-end gap-2">
           <textarea
+            ref={textareaRef}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Написать сообщение..."
@@ -234,6 +247,7 @@ export default function ChatWindowClient({ conversationId }) {
                     handleSend(e);
                 }
             }}
+            autoFocus
           />
           <button
             type="submit"
@@ -247,6 +261,7 @@ export default function ChatWindowClient({ conversationId }) {
           </button>
         </form>
       </div>
+      )}
     </div>
   );
 }
