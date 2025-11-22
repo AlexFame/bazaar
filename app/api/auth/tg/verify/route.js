@@ -6,15 +6,34 @@ function checkTelegramAuth(initData, botToken) {
   const url = new URLSearchParams(initData);
   const hash = url.get('hash');
   url.delete('hash');
-  const dataCheckString = [...url.entries()]
-    .sort(([a],[b]) => a.localeCompare(b))
+  
+  const params = [...url.entries()]
+    .sort(([a],[b]) => a.localeCompare(b));
+    
+  const dataCheckString = params
     .map(([k,v]) => `${k}=${v}`)
     .join('\n');
-  const secret = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
+    
+  const secret = crypto.createHmac('sha256', 'WebAppData').update(botToken.trim()).digest();
   const check = crypto.createHmac('sha256', secret).update(dataCheckString).digest('hex');
-  if (check !== hash) return null;
+  
+  if (check !== hash) {
+      console.log("Auth Failed:");
+      console.log("Received Hash:", hash);
+      console.log("Calculated Hash:", check);
+      console.log("Data Check String:", dataCheckString);
+      console.log("Bot Token (first 5):", botToken.substring(0, 5));
+      return null;
+  }
+  
   const obj = Object.fromEntries(url.entries());
-  if (obj.user) obj.user = JSON.parse(obj.user);
+  if (obj.user) {
+      try {
+        obj.user = JSON.parse(obj.user);
+      } catch (e) {
+          console.error("Error parsing user field:", e);
+      }
+  }
   return obj;
 }
 
