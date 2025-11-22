@@ -10,7 +10,7 @@ import { useLang } from "@/lib/i18n-client";
 const SLIDE_DURATION = 6000;
 
 export default function PopularListingsScroll() {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
