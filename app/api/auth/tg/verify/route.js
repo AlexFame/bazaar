@@ -41,6 +41,14 @@ export async function POST(req) {
   try {
     const { initData } = await req.json();
     
+    // Debug logs
+    console.log("Verifying Telegram Auth...");
+    if (process.env.JWT_SECRET) {
+        console.log("JWT_SECRET prefix:", process.env.JWT_SECRET.substring(0, 5) + "...");
+    } else {
+        console.error("JWT_SECRET is MISSING!");
+    }
+    
     if (!process.env.TG_BOT_TOKEN) {
         console.error("TG_BOT_TOKEN is missing");
         return new Response(JSON.stringify({ error: 'Server configuration error: TG_BOT_TOKEN missing' }), { status: 500 });

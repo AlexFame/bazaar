@@ -25,11 +25,17 @@ export default function ChatWindowClient({ conversationId }) {
 
   useEffect(() => {
     const initChat = async () => {
+      console.log("ChatWindow: Initializing...");
       const {
         data: { user },
+        error: authError
       } = await supabase.auth.getUser();
+      
+      console.log("ChatWindow User:", user?.id);
+      if (authError) console.error("ChatWindow Auth Error:", authError);
 
       if (!user) {
+        console.log("ChatWindow: No user, redirecting to login");
         router.push("/login");
         return;
       }
