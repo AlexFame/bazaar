@@ -533,6 +533,12 @@ export default function CreateListingClient({ onCreated, editId }) {
   const renderDynamicField = (filter) => {
     // Пропускаем condition, так как оно общее (если нужно, можно сделать специфичным, но пока общее)
     if (filter.key === "condition") return null;
+    
+    // Пропускаем материал и производитель для услуг
+    if (listingType === "service" && (filter.key === "material" || filter.key === "manufacturer")) {
+      return null;
+    }
+
 
     const label = filter.label[lang] || filter.label.ru;
     const value = parameters[filter.key] || "";
@@ -823,7 +829,8 @@ export default function CreateListingClient({ onCreated, editId }) {
           />
         </div>
 
-        {/* Состояние (общее) */}
+        {/* Состояние (только для товаров, не для услуг) */}
+        {listingType !== "service" && (
         <div className="mb-3">
           <div className="text-[11px] font-semibold mb-1">Состояние</div>
           <select
@@ -836,6 +843,7 @@ export default function CreateListingClient({ onCreated, editId }) {
              <option value="like_new">Как новое</option>
           </select>
         </div>
+        )}
 
         {/* Динамические поля категории */}
         {categoryFilters.map(renderDynamicField)}
