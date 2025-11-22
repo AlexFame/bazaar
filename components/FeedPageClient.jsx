@@ -12,6 +12,7 @@ import { getTelegramUser } from "@/lib/telegram";
 import { getUserLocation, saveUserLocation, getSavedUserLocation, clearUserLocation, calculateDistance } from "@/lib/geocoding";
 import { getSearchHistory, addToSearchHistory, clearSearchHistory, removeFromSearchHistory } from "@/lib/searchHistory";
 import dynamic from "next/dynamic";
+import PopularListingsScroll from "./PopularListingsScroll";
 
 const MapComponent = dynamic(() => import("./MapComponent"), { 
     ssr: false, 
@@ -43,119 +44,6 @@ const popularQueries = [
 ];
 
 // Локальные тексты для фильтров
-const filterTexts = {
-  ru: {
-    searchPlaceholder: "Поиск по тексту",
-    locationPlaceholder: "Город / район",
-    priceFrom: "Цена от",
-    priceTo: "Цена до",
-    allCategories: "Все категории",
-    typeAny: "Любой тип",
-    typeBuy: "Купить",
-    typeSell: "Продать",
-    typeServices: "Услуги",
-    typeFree: "Отдам бесплатно",
-    dateAll: "За всё время",
-    dateToday: "Сегодня",
-    date3d: "За 3 дня",
-    date7d: "За неделю",
-    date30d: "За месяц",
-    popularQueriesLabel: "Популярные запросы:",
-    loading: "Загружаем объявления...",
-    empty: "По этим фильтрам объявлений нет.",
-    loadMore: "Показать ещё",
-    loadingMore: "Загружаю...",
-    conditionAny: "Любое состояние",
-    conditionNew: "Новое",
-    conditionUsed: "Б/у",
-    conditionLikeNew: "Как новое",
-    barter: "Бартер",
-    withPhoto: "С фото",
-    yes: "Да",
-    no: "Нет",
-    filters: "Фильтры",
-    category: "Категория",
-    price: "Цена",
-    condition: "Состояние",
-    type: "Тип",
-    more: "Ещё",
-    foundInCategory: "Найдено в категории:",
-  },
-  ua: {
-    searchPlaceholder: "Пошук по тексту",
-    locationPlaceholder: "Місто / район",
-    priceFrom: "Ціна від",
-    priceTo: "Ціна до",
-    allCategories: "Усі категорії",
-    typeAny: "Будь-який тип",
-    typeBuy: "Купити",
-    typeSell: "Продати",
-    typeServices: "Послуги",
-    typeFree: "Віддам безкоштовно",
-    dateAll: "За весь час",
-    dateToday: "Сьогодні",
-    date3d: "За 3 дні",
-    date7d: "За тиждень",
-    date30d: "За місяць",
-    popularQueriesLabel: "Популярні запити:",
-    loading: "Завантажуємо оголошення...",
-    empty: "За цими фільтрами оголошень немає.",
-    loadMore: "Показати ще",
-    loadingMore: "Завантажую...",
-    conditionAny: "Будь-який стан",
-    conditionNew: "Нове",
-    conditionUsed: "Б/в",
-    conditionLikeNew: "Як нове",
-    barter: "Бартер",
-    withPhoto: "З фото",
-    yes: "Так",
-    no: "Ні",
-    filters: "Фільтри",
-    category: "Категорія",
-    price: "Ціна",
-    condition: "Стан",
-    type: "Тип",
-    more: "Ще",
-    foundInCategory: "Знайдено в категорії:",
-  },
-  en: {
-    searchPlaceholder: "Search text",
-    locationPlaceholder: "City / district",
-    priceFrom: "Price from",
-    priceTo: "Price to",
-    allCategories: "All categories",
-    typeAny: "Any type",
-    typeBuy: "Buy",
-    typeSell: "Sell",
-    typeServices: "Services",
-    typeFree: "Give away",
-    dateAll: "All time",
-    dateToday: "Today",
-    date3d: "Last 3 days",
-    date7d: "Last week",
-    date30d: "Last month",
-    popularQueriesLabel: "Popular searches:",
-    loading: "Loading listings...",
-    empty: "No listings for these filters.",
-    loadMore: "Show more",
-    loadingMore: "Loading...",
-    conditionAny: "Any condition",
-    conditionNew: "New",
-    conditionUsed: "Used",
-    conditionLikeNew: "Like new",
-    barter: "Barter",
-    withPhoto: "With photo",
-    yes: "Yes",
-    no: "No",
-    filters: "Filters",
-    category: "Category",
-    price: "Price",
-    condition: "Condition",
-    type: "Type",
-    more: "More",
-    foundInCategory: "Found in category:",
-  },
-};
 
 // Компонент слайдера цены
 const PriceSlider = ({ min, max, onChange, minLimit = 0, maxLimit = 100000 }) => {
@@ -262,8 +150,44 @@ const PriceSlider = ({ min, max, onChange, minLimit = 0, maxLimit = 100000 }) =>
 
 
 export default function FeedPageClient() {
-  const { lang } = useLang();
-  const txt = filterTexts[lang] || filterTexts.ru;
+  const { lang, t } = useLang();
+  const txt = {
+      searchPlaceholder: t("searchPlaceholder"),
+      locationPlaceholder: t("locationPlaceholder"),
+      priceFrom: t("priceFrom"),
+      priceTo: t("priceTo"),
+      allCategories: t("allCategories"),
+      typeAny: t("typeAny"),
+      typeBuy: t("typeBuy"),
+      typeSell: t("typeSell"),
+      typeServices: t("typeServices"),
+      typeFree: t("typeFree"),
+      dateAll: t("dateAll"),
+      dateToday: t("dateToday"),
+      date3d: t("date3d"),
+      date7d: t("date7d"),
+      date30d: t("date30d"),
+      popularQueriesLabel: t("popularQueriesLabel"),
+      loading: t("loading"),
+      empty: t("empty"),
+      loadMore: t("loadMore"),
+      loadingMore: t("loadingMore"),
+      conditionAny: t("conditionAny"),
+      conditionNew: t("conditionNew"),
+      conditionUsed: t("conditionUsed"),
+      conditionLikeNew: t("conditionLikeNew"),
+      barter: t("barter"),
+      withPhoto: t("withPhoto"),
+      yes: t("yes"),
+      no: t("no"),
+      filters: t("filters"),
+      category: t("category"),
+      price: t("price"),
+      condition: t("condition"),
+      type: t("type"),
+      more: t("more"),
+      foundInCategory: t("foundInCategory"),
+  };
 
   const searchParams = useSearchParams();
   const urlQuery = (searchParams.get("q") || "").trim();
@@ -651,6 +575,41 @@ export default function FeedPageClient() {
 
   // --- КОМПОНЕНТЫ ФИЛЬТРОВ (Compact Mode) ---
 
+  // Опции для селектов
+  const typeOptions = [
+    { value: "all", label: txt.typeAny },
+    { value: "sell", label: txt.typeSell },
+    { value: "buy", label: txt.typeBuy },
+    { value: "services", label: txt.typeServices },
+    { value: "free", label: txt.typeFree },
+  ];
+
+  const dateOptions = [
+    { value: "all", label: txt.dateAll },
+    { value: "today", label: txt.dateToday },
+    { value: "3d", label: txt.date3d },
+    { value: "7d", label: txt.date7d },
+    { value: "30d", label: txt.date30d },
+  ];
+
+  const conditionOptions = [
+    { value: "all", label: txt.conditionAny },
+    { value: "new", label: txt.conditionNew },
+    { value: "used", label: txt.conditionUsed },
+    { value: "like_new", label: txt.conditionLikeNew },
+  ];
+
+  // Популярные запросы (пример)
+  const popularQueries = [
+    "iPhone 13",
+    "PlayStation 5",
+    "Велосипед",
+    "Диван",
+    "Работа",
+  ];
+
+  // --- КОМПОНЕНТЫ ФИЛЬТРОВ (Compact Mode) ---
+
   const FilterDropdown = ({ label, active, children, id, align = 'left' }) => (
       <div className="relative inline-block text-left mr-2 mb-2">
           <button
@@ -987,7 +946,13 @@ export default function FeedPageClient() {
         </div>
 
         {/* Список объявлений или Карта */}
-        {loading ? (
+        {/* Popular Listings Scroll */}
+      {!hasSearchQuery && !categoryFilter && (
+        <PopularListingsScroll />
+      )}
+
+      {/* Список объявлений */}
+      {loading ? (
             <div className="grid grid-cols-2 gap-2">
               {[...Array(6)].map((_, i) => <ListingCardSkeleton key={i} />)}
             </div>

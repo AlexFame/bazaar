@@ -8,6 +8,8 @@ import { useLang } from "@/lib/i18n-client";
 import { getTG } from "@/lib/telegram";
 import { getSuggestions } from "@/lib/searchUtils";
 
+import { supabase } from "@/lib/supabaseClient";
+
 export default function AppShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -18,6 +20,7 @@ export default function AppShell({ children }) {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFloatingSearch, setShowFloatingSearch] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const lastScrollY = useRef(0);
   const headerSearchRef = useRef(null);
   const floatingSearchRef = useRef(null);
@@ -104,6 +107,21 @@ export default function AppShell({ children }) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ initData }),
           });
+          
+          // После успешной авторизации (или попытки) грузим кол-во непрочитанных
+          // Но нужно знать ID пользователя. 
+          // Проще запросить через supabase.auth.getUser() если сессия есть
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+              const { count } = await supabase
+                  .from('messages')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('is_read', false)
+                  .neq('sender_id', user.id);
+              
+              if (count !== null) setUnreadCount(count);
+          }
+
         } catch (err) {
           console.warn("Telegram auth verify failed:", err);
         }
@@ -116,6 +134,24 @@ export default function AppShell({ children }) {
       cancelled = true;
     };
   }, []);
+
+  // Периодическая проверка непрочитанных (раз в 30 сек)
+  useEffect(() => {
+      const interval = setInterval(async () => {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+              const { count } = await supabase
+                  .from('messages')
+                  .select('*', { count: 'exact', head: true })
+                  .eq('is_read', false)
+                  .neq('sender_id', user.id);
+              
+              if (count !== null) setUnreadCount(count);
+          }
+      }, 30000);
+      return () => clearInterval(interval);
+  }, []);
+
 
   const handleSearchSubmit = (e) => {
     e?.preventDefault();
@@ -140,7 +176,7 @@ export default function AppShell({ children }) {
   };
 
   const navBtn =
-    "flex-1 text-center px-4 py-2 rounded-full text-xs font-medium transition-colors whitespace-nowrap";
+    "flex-1 text-center px-4 py-2 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex items-center justify-center gap-2";
 
   const renderSearchBar = (containerRef) => (
     <div className="relative" ref={containerRef}>
@@ -232,7 +268,7 @@ export default function AppShell({ children }) {
 
           {/* НАВИГАЦИЯ + ЯЗЫК */}
           <div className="flex items-center justify-center gap-2">
-            <nav className="flex gap-2">
+            <nav className="flex gap-2 items-center justify-center">
               {/* Главная */}
               <Link href="/">
                 <button
@@ -259,16 +295,23 @@ export default function AppShell({ children }) {
                 </button>
               </Link>
 
-              {/* Сообщения */}
+              {/* Сообщения (Иконка + Бейдж) */}
               <Link href="/messages">
                 <button
-                  className={`${navBtn} ${
+                  className={`${navBtn} relative ${
                     pathname.startsWith("/messages")
                       ? "bg-black text-white"
                       : "bg-[#F2F3F7] text-black"
                   }`}
                 >
-                  Сообщения
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                  {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                  )}
                 </button>
               </Link>
             </nav>

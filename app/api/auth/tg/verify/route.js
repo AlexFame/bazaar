@@ -92,8 +92,8 @@ export async function POST(req) {
         .upsert({ 
             id: authUser.id, 
             tg_user_id, 
-            tg_username,
-            updated_at: new Date().toISOString()
+            tg_username
+            // updated_at removed to avoid schema error
         })
         .select()
         .single();

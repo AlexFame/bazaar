@@ -5,11 +5,6 @@ import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { useLang } from "@/lib/i18n-client";
 
-const LABELS = {
-  ru: "Популярные объявления",
-  ua: "Популярні оголошення",
-  en: "Popular listings",
-};
 
 // быстрее: 6 секунд на один слайд
 const SLIDE_DURATION = 6000;
@@ -71,7 +66,7 @@ export default function PopularListingsScroll() {
 
   if (loading || !items.length) return null;
 
-  const title = LABELS[lang] || LABELS.ru;
+  const title = t("popularListings");
 
   // разбиваем на группы по 2
   const slides = [];

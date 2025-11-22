@@ -53,17 +53,6 @@ function detectType(raw) {
 }
 
 // Лейблы кнопок по языкам
-const TELEGRAM_LABEL = {
-  ru: "Написать в Telegram",
-  ua: "Написати в Telegram",
-  en: "Message on Telegram",
-};
-
-const CALL_LABEL = {
-  ru: "Позвонить",
-  ua: "Подзвонити",
-  en: "Call",
-};
 
 export default function ListingDetailClient({ id }) {
   const { t, lang } = useLang();
@@ -225,8 +214,6 @@ export default function ListingDetailClient({ id }) {
       }
   };
 
-  const telegramLabel = TELEGRAM_LABEL[lang] || TELEGRAM_LABEL.ru;
-  const callLabel = CALL_LABEL[lang] || CALL_LABEL.ru;
 
   return (
     <div className="w-full flex justify-center mt-3">
@@ -239,7 +226,7 @@ export default function ListingDetailClient({ id }) {
                 onClick={handleShare}
                 className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-100 text-xs font-medium hover:bg-gray-200 transition-colors"
             >
-                📤 Поделиться
+                📤 {t("share")}
             </button>
           )}
         </div>
@@ -312,7 +299,7 @@ export default function ListingDetailClient({ id }) {
                             fill
                             className="object-contain"
                             sizes="100vw"
-                            onClick={(e) => e.stopPropagation()} 
+                            onClick={() => setIsLightboxOpen(false)} 
                           />
                          </div>
                         
@@ -368,14 +355,38 @@ export default function ListingDetailClient({ id }) {
                 </>
               )}
 
-              {/* КАТЕГОРИЯ */}
+              {/* КАТЕГОРИЯ И ИЕРАРХИЯ */}
               {(() => {
                 const category = CATEGORY_DEFS.find((c) => c.key === listing.category_key);
                 if (!category) return null;
                 const catLabel = category[lang] || category.ru;
+                
+                // Пробуем найти подкатегорию (subtype)
+                let subtypeLabel = null;
+                if (listing.parameters && listing.parameters.subtype) {
+                    const subtypeFilter = category.filters.find(f => f.key === 'subtype');
+                    if (subtypeFilter && subtypeFilter.options) {
+                        const opt = subtypeFilter.options.find(o => o.value === listing.parameters.subtype);
+                        if (opt) subtypeLabel = opt.label[lang] || opt.label.ru;
+                    }
+                }
+
                 return (
-                  <div className="text-xs text-gray-500 mb-1">
-                    {category.icon} {catLabel}
+                  <div className="flex flex-wrap items-center gap-1 text-xs text-gray-500 mb-1">
+                    <Link href={`/?category=${category.key}`} className="hover:text-black hover:underline flex items-center gap-1">
+                        {category.icon} {catLabel}
+                    </Link>
+                    {subtypeLabel && (
+                        <>
+                            <span>›</span>
+                            <Link 
+                                href={`/?category=${category.key}&dyn_subtype=${listing.parameters.subtype}`}
+                                className="hover:text-black hover:underline"
+                            >
+                                {subtypeLabel}
+                            </Link>
+                        </>
+                    )}
                   </div>
                 );
               })()}
@@ -418,7 +429,7 @@ export default function ListingDetailClient({ id }) {
                                   </svg>
                               )}
                           </div>
-                          <div className="text-xs text-gray-500">Смотреть профиль</div>
+                          <div className="text-xs text-gray-500">{t("view_profile")}</div>
                       </div>
                   </Link>
               )}
@@ -520,7 +531,7 @@ export default function ListingDetailClient({ id }) {
                             onClick={handleWriteToSeller}
                             className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-black text-white text-center hover:bg-gray-800 transition-colors"
                         >
-                            Написать
+                            {t("write_msg")}
                         </button>
 
                         {phoneLink && (
@@ -528,7 +539,7 @@ export default function ListingDetailClient({ id }) {
                             href={phoneLink}
                             className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-white border border-black text-black text-center hover:bg-gray-50 transition-colors"
                           >
-                            {callLabel}
+                            {t("msg_call")}
                           </a>
                         )}
                       </div>
@@ -544,13 +555,13 @@ export default function ListingDetailClient({ id }) {
                     onClick={handleEdit}
                     className="flex-1 py-2 px-3 bg-black text-white text-xs font-semibold rounded-full hover:bg-black/80 transition-colors"
                   >
-                    Редактировать
+                    {t("edit")}
                   </button>
                   <button
                     onClick={handleDelete}
                     className="flex-1 py-2 px-3 bg-red-600 text-white text-xs font-semibold rounded-full hover:bg-red-700 transition-colors"
                   >
-                    Удалить
+                    {t("delete")}
                   </button>
                 </div>
               )}

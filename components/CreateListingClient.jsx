@@ -25,8 +25,9 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [geocoding, setGeocoding] = useState(false);
 
   // много фото
-  const [imageFiles, setImageFiles] = useState([]);
-  const [imagePreviews, setImagePreviews] = useState([]);
+  // Unified image state: { type: 'existing'|'new', id?: string, url: string, file?: File, path?: string }
+  const [images, setImages] = useState([]);
+  const [initialImageIds, setInitialImageIds] = useState([]); // To track deletions
 
   const [listingType, setListingType] = useState("buy");
   const [categoryKey, setCategoryKey] = useState(
@@ -125,16 +126,22 @@ export default function CreateListingClient({ onCreated, editId }) {
           setCoordinates({ lat: listing.latitude, lng: listing.longitude });
         }
 
-        // Загружаем превью изображений
+        // Загружаем изображения
         if (listing.listing_images && listing.listing_images.length > 0) {
           const sortedImages = listing.listing_images.sort((a, b) => a.position - b.position);
-          const previews = sortedImages.map(img => {
+          const loadedImages = sortedImages.map(img => {
             const { data } = supabase.storage
               .from("listing-images")
               .getPublicUrl(img.file_path);
-            return data.publicUrl;
+            return {
+                type: 'existing',
+                id: img.id,
+                url: data.publicUrl,
+                path: img.file_path
+            };
           });
-          setImagePreviews(previews);
+          setImages(loadedImages);
+          setInitialImageIds(loadedImages.map(img => img.id));
         }
 
       } catch (err) {
@@ -159,17 +166,19 @@ export default function CreateListingClient({ onCreated, editId }) {
     if (!incoming.length) return;
 
     const limit = 10;
-    const spaceLeft = Math.max(limit - imageFiles.length, 0);
+    const spaceLeft = Math.max(limit - images.length, 0);
     if (spaceLeft <= 0) return;
 
     const toAdd = incoming.slice(0, spaceLeft);
 
-    setImageFiles((prev) => [...prev, ...toAdd]);
-
     toAdd.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (event) => {
-        setImagePreviews((prev) => [...prev, event.target.result]);
+        setImages((prev) => [...prev, {
+            type: 'new',
+            url: event.target.result,
+            file: file
+        }]);
       };
       reader.readAsDataURL(file);
     });
@@ -191,8 +200,7 @@ export default function CreateListingClient({ onCreated, editId }) {
   }
 
   function handleRemoveImage(index) {
-    setImageFiles((prev) => prev.filter((_, i) => i !== index));
-    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
   // Геокодирование адреса (опционально)
@@ -384,40 +392,76 @@ export default function CreateListingClient({ onCreated, editId }) {
       console.log(editId ? "✅ [Edit Listing] Listing updated successfully:" : "✅ [Create Listing] Listing created successfully:", listing);
       console.log("📋 [Listing] Listing ID:", listing?.id);
 
-      // загрузка картинок
-      if (imageFiles.length > 0 && listing) {
+      // --- ОБРАБОТКА ИЗОБРАЖЕНИЙ ---
+      if (listing) {
         const listingId = listing.id;
         let mainImagePath = null;
         let hadUploadError = false;
 
-        for (let index = 0; index < imageFiles.length; index++) {
-          const file = imageFiles[index];
-          const ext =
-            file.name && file.name.includes(".")
-              ? file.name.split(".").pop()
-              : "jpg";
-
-          const fileName = `${listingId}-${index}.${ext}`;
-          const filePath = `listing-${listingId}/${fileName}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from("listing-images")
-            .upload(filePath, file, {
-              cacheControl: "3600",
-              upsert: true,
-            });
-
-          if (uploadError) {
-            console.error("Ошибка загрузки картинки:", uploadError);
-            hadUploadError = true;
-            continue;
-          }
-
-          if (!mainImagePath) {
-            mainImagePath = filePath;
-          }
+        // 1. Удаление изображений (только для редактирования)
+        if (editId) {
+            const currentExistingIds = images
+                .filter(img => img.type === 'existing')
+                .map(img => img.id);
+            
+            const idsToDelete = initialImageIds.filter(id => !currentExistingIds.includes(id));
+            
+            if (idsToDelete.length > 0) {
+                console.log("🗑️ Deleting images:", idsToDelete);
+                // Удаляем из БД
+                const { error: deleteError } = await supabase
+                    .from('listing_images')
+                    .delete()
+                    .in('id', idsToDelete);
+                
+                if (deleteError) console.error("Error deleting images from DB:", deleteError);
+                
+                // Удаляем файлы из Storage (опционально, можно оставить для истории или чистить кроном)
+                // Для простоты пока не удаляем файлы физически, чтобы не сломать если что-то пойдет не так
+            }
         }
 
+        // 2. Загрузка новых и обновление позиций
+        for (let index = 0; index < images.length; index++) {
+            const img = images[index];
+            let filePath = img.path;
+
+            if (img.type === 'new') {
+                const file = img.file;
+                const ext = file.name && file.name.includes(".") ? file.name.split(".").pop() : "jpg";
+                const fileName = `${listingId}-${Date.now()}-${index}.${ext}`; // Unique name
+                filePath = `listing-${listingId}/${fileName}`;
+
+                const { error: uploadError } = await supabase.storage
+                    .from("listing-images")
+                    .upload(filePath, file, {
+                        cacheControl: "3600",
+                        upsert: true,
+                    });
+
+                if (uploadError) {
+                    console.error("Ошибка загрузки картинки:", uploadError);
+                    hadUploadError = true;
+                    continue;
+                }
+                
+                // Создаем запись в БД для нового фото
+                await supabase.from('listing_images').insert({
+                    listing_id: listingId,
+                    file_path: filePath,
+                    position: index
+                });
+            } else {
+                // Обновляем позицию для существующего фото
+                await supabase.from('listing_images')
+                    .update({ position: index })
+                    .eq('id', img.id);
+            }
+
+            if (index === 0) mainImagePath = filePath;
+        }
+
+        // Обновляем main_image_path
         if (mainImagePath) {
           const { error: updateError } = await supabase
             .from("listings")
@@ -753,7 +797,7 @@ export default function CreateListingClient({ onCreated, editId }) {
           />
           
           {/* Опциональная кнопка геокодирования */}
-          {location && location.trim().length >= 3 && (
+          {location && (
             <button
               type="button"
               onClick={handleGeocode}
@@ -803,12 +847,12 @@ export default function CreateListingClient({ onCreated, editId }) {
           onDragOver={handleDragOver}
         >
           <label className="flex flex-col items-center justify-center gap-2 cursor-pointer">
-            {imagePreviews.length > 0 ? (
+            {images.length > 0 ? (
               <div className="flex flex-wrap justify-center gap-2">
-                {imagePreviews.map((src, idx) => (
+                {images.map((img, idx) => (
                   <div key={idx} className="relative">
                     <img
-                      src={src}
+                      src={img.url}
                       alt={`Предпросмотр ${idx + 1}`}
                       className="h-24 w-24 rounded-xl object-cover"
                     />

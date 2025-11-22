@@ -16,6 +16,10 @@
   }
 }
 
+html {
+  font-size: 17px;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: #f8f9fa;
