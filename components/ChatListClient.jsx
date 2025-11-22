@@ -33,8 +33,8 @@ export default function ChatListClient() {
           id,
           updated_at,
           listing:listings(id, title, image_path, price),
-          buyer:buyer_id(id, full_name, avatar_url),
-          seller:seller_id(id, full_name, avatar_url)
+          buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
+          seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url)
         `)
         .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
         .order("updated_at", { ascending: false });

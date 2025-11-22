@@ -47,8 +47,8 @@ export default function ChatWindowClient({ conversationId }) {
         .select(`
           *,
           listing:listings(id, title, price, image_path),
-          buyer:buyer_id(id, full_name, avatar_url),
-          seller:seller_id(id, full_name, avatar_url)
+          buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
+          seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url)
         `)
         .eq("id", conversationId)
         .single();
