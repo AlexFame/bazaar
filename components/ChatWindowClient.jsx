@@ -168,6 +168,19 @@ export default function ChatWindowClient({ conversationId }) {
       setMessages(prev => 
         prev.map(m => m.id === optimisticMessage.id ? data : m)
       );
+
+      // Send Push Notification (Fire and forget)
+      if (otherUser?.id) {
+        fetch("/api/notifications/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipientId: otherUser.id,
+            message: content,
+            listingTitle: listing?.title || "Товар"
+          }),
+        }).catch(err => console.error("Failed to send notification:", err));
+      }
     }
   };
 

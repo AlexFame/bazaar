@@ -135,9 +135,10 @@ export default function AppShell({ children }) {
     };
   }, []);
 
-  // Периодическая проверка непрочитанных (раз в 30 сек)
+  // Периодическая проверка непрочитанных (раз в 30 сек) + Realtime
   useEffect(() => {
-      const interval = setInterval(async () => {
+      // Функция обновления счетчика
+      const fetchUnread = async () => {
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
               const { count } = await supabase
@@ -148,8 +149,48 @@ export default function AppShell({ children }) {
               
               if (count !== null) setUnreadCount(count);
           }
-      }, 30000);
-      return () => clearInterval(interval);
+      };
+
+      // 1. Initial fetch
+      fetchUnread();
+
+      // 2. Interval fetch (fallback)
+      const interval = setInterval(fetchUnread, 30000);
+
+      // 3. Realtime subscription
+      const channel = supabase
+          .channel('unread_messages_global')
+          .on(
+              'postgres_changes',
+              {
+                  event: 'INSERT',
+                  schema: 'public',
+                  table: 'messages',
+              },
+              (payload) => {
+                  // Если пришло новое сообщение, обновляем счетчик
+                  // RLS должен фильтровать сообщения только для моих чатов
+                  fetchUnread();
+              }
+          )
+          .on(
+              'postgres_changes',
+              {
+                  event: 'UPDATE',
+                  schema: 'public',
+                  table: 'messages',
+              },
+              (payload) => {
+                  // Если сообщение прочитано (is_read изменился), обновляем
+                  fetchUnread();
+              }
+          )
+          .subscribe();
+
+      return () => {
+          clearInterval(interval);
+          supabase.removeChannel(channel);
+      };
   }, []);
 
 
