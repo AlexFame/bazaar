@@ -6,14 +6,15 @@ export async function POST(req) {
   try {
     // Initialize Supabase Admin client inside handler
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    // Check both names to be safe, but prioritize the one used in lib/supabaseAdmin.js
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY;
     const TG_BOT_TOKEN = process.env.TG_BOT_TOKEN;
 
     if (!supabaseUrl || !supabaseKey) {
         console.error("❌ [Notification API] Missing Supabase credentials");
         const missing = [];
         if (!supabaseUrl) missing.push("NEXT_PUBLIC_SUPABASE_URL");
-        if (!supabaseKey) missing.push("SUPABASE_SERVICE_ROLE_KEY");
+        if (!supabaseKey) missing.push("SUPABASE_SERVICE_ROLE");
         return NextResponse.json({ error: `Server config error: Missing ${missing.join(", ")}` }, { status: 500 });
     }
 
