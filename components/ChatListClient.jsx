@@ -44,7 +44,22 @@ export default function ChatListClient() {
         console.error("Error fetching chats:", error);
         setFetchError(error.message);
       } else {
-        setConversations(data || []);
+        // Fetch last message for each conversation
+        const conversationsWithMessages = await Promise.all(
+          (data || []).map(async (conv) => {
+            const { data: lastMsg } = await supabase
+              .from("messages")
+              .select("content, created_at, sender_id")
+              .eq("conversation_id", conv.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .single();
+            
+            return { ...conv, lastMessage: lastMsg };
+          })
+        );
+        
+        setConversations(conversationsWithMessages);
         
         // Fetch unread messages count
         const { data: unreadData } = await supabase
@@ -150,7 +165,13 @@ export default function ChatListClient() {
                       </div>
                     </div>
                     
-                    {listing && (
+                    {/* Last Message Preview */}
+                    {conv.lastMessage ? (
+                      <p className={`text-xs truncate mt-0.5 ${unread > 0 ? 'font-medium text-gray-900' : 'text-gray-500'}`}>
+                        {conv.lastMessage.sender_id === user?.id ? 'Вы: ' : ''}
+                        {conv.lastMessage.content}
+                      </p>
+                    ) : listing && (
                       <div className="text-xs text-gray-500 truncate flex items-center gap-1 mt-0.5">
                         <span className="font-medium text-black/70">{listing.title}</span>
                         <span>•</span>

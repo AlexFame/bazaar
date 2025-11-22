@@ -158,32 +158,29 @@ export default function ChatWindowClient({ conversationId }) {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-white animate-fade-in">
+    <div className="flex flex-col h-screen max-w-[520px] mx-auto bg-white">
       {/* Header */}
-      <div className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
+      <div className="flex-shrink-0 flex items-center gap-3 p-3 border-b border-gray-100 bg-white sticky top-0 z-10">
         <BackButton />
-        
-        {/* User Info */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
-            {otherUser?.avatar_url ? (
-              <img src={otherUser.avatar_url} alt={otherUser.full_name} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-500 font-bold text-xs">
-                {otherUser?.full_name?.[0]?.toUpperCase() || "?"}
-              </div>
-            )}
+        {otherUser && (
+          <div className="flex items-center gap-2 flex-1">
+            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+              {otherUser.avatar_url ? (
+                <img src={otherUser.avatar_url} alt={otherUser.full_name} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center font-bold text-gray-400">
+                  {(otherUser.full_name || "U")[0].toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-sm truncate">{otherUser.full_name || "Пользователь"}</div>
+              {listing && (
+                <div className="text-xs text-gray-500 truncate">{listing.title} · {listing.price} €</div>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-sm truncate">{otherUser?.full_name || "Пользователь"}</span>
-            {listing && (
-              <span className="text-[10px] text-gray-500 truncate">
-                {listing.title} • {listing.price} €
-              </span>
-            )}
-          </div>
-        </div>
-
+        )}
         {/* Listing Image (Link to listing) */}
         {listing && (
             <a href={`/listing/${listing.id}`} className="w-8 h-8 rounded bg-gray-100 overflow-hidden flex-shrink-0 block">
@@ -195,7 +192,8 @@ export default function ChatWindowClient({ conversationId }) {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      {/* Messages Area - takes remaining space */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-3 pb-4">
         {messages.map((msg) => {
           const isMe = msg.sender_id === user?.id;
           return (
