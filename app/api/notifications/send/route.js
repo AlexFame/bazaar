@@ -65,18 +65,19 @@ export async function POST(req) {
     // Note: We need the correct URL for the WebApp. 
     // If we don't have it, we just send text.
     
-    const tgRes = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+    // Clean token (remove 'bot' prefix if user added it by mistake)
+    const cleanToken = TG_BOT_TOKEN.replace(/^bot/, "");
+    const apiUrl = `https://api.telegram.org/bot${cleanToken}/sendMessage`;
+
+    console.log(`🔔 [Notification API] Sending to TG URL: ${apiUrl.replace(cleanToken, "HIDDEN")}`);
+
+    const tgRes = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: profile.tg_user_id,
         text: text,
         parse_mode: "Markdown",
-        // reply_markup: {
-        //   inline_keyboard: [
-        //     [{ text: "Ответить", web_app: { url: "https://..." } }]
-        //   ]
-        // }
       }),
     });
 
