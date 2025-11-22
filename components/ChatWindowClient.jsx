@@ -171,6 +171,7 @@ export default function ChatWindowClient({ conversationId }) {
 
       // Send Push Notification (Fire and forget)
       if (otherUser?.id) {
+        console.log(`🔔 [ChatWindow] Sending notification to ${otherUser.id}`);
         fetch("/api/notifications/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -180,6 +181,8 @@ export default function ChatWindowClient({ conversationId }) {
             listingTitle: listing?.title || "Товар"
           }),
         }).catch(err => console.error("Failed to send notification:", err));
+      } else {
+        console.warn("⚠️ [ChatWindow] No otherUser.id, cannot send notification");
       }
     }
   };
@@ -270,7 +273,7 @@ export default function ChatWindowClient({ conversationId }) {
 
       {/* Input Area - shown only when showInput is true */}
       {showInput && (
-      <div className="flex-shrink-0 p-3 bg-white border-t border-gray-100 pb-safe animate-slide-up">
+      <div className="flex-shrink-0 p-3 bg-white border-t border-gray-100 pb-safe z-50 relative">
         <form onSubmit={handleSend} className="flex items-end gap-2">
           <textarea
             ref={textareaRef}

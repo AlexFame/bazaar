@@ -23,16 +23,25 @@ export async function POST(req) {
     }
 
     // 1. Get recipient's Telegram ID
+    console.log(`🔔 [Notification API] Fetching TG ID for profile: ${recipientId}`);
+    
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("tg_user_id")
       .eq("id", recipientId)
       .single();
 
-    if (error || !profile?.tg_user_id) {
-      console.log("Recipient not found or no TG ID (might be a test user):", recipientId);
-      return NextResponse.json({ error: "Recipient not found" }, { status: 404 });
+    if (error) {
+        console.error(`❌ [Notification API] Error fetching profile:`, error);
+        return NextResponse.json({ error: "Profile fetch error" }, { status: 500 });
     }
+
+    if (!profile?.tg_user_id) {
+      console.log(`⚠️ [Notification API] Recipient ${recipientId} has no tg_user_id`);
+      return NextResponse.json({ error: "Recipient has no Telegram ID" }, { status: 404 });
+    }
+
+    console.log(`✅ [Notification API] Found TG ID: ${profile.tg_user_id}. Sending message...`);
 
     // 2. Send Telegram message
     // Construct the message text
