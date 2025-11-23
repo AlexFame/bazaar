@@ -14,6 +14,7 @@ export default function ChatWindowClient({ conversationId }) {
   const [otherUser, setOtherUser] = useState(null);
   const [listing, setListing] = useState(null);
   const [showInput, setShowInput] = useState(false);
+  const [isSending, setIsSending] = useState(false); // Prevent duplicate sends
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -127,7 +128,11 @@ export default function ChatWindowClient({ conversationId }) {
 
   const handleSend = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user) return;
+    
+    // Prevent duplicate sends
+    if (isSending || !newMessage.trim() || !user) return;
+    
+    setIsSending(true); // Lock sending
 
     const content = newMessage.trim();
     setNewMessage("");
@@ -194,6 +199,8 @@ export default function ChatWindowClient({ conversationId }) {
         console.warn("⚠️ [ChatWindow] No otherUser.id, cannot send notification");
       }
     }
+    
+    setIsSending(false); // Unlock sending
   };
 
   const getImageUrl = (path) => {
@@ -301,7 +308,7 @@ export default function ChatWindowClient({ conversationId }) {
           />
           <button
             type="submit"
-            disabled={!newMessage.trim()}
+            disabled={!newMessage.trim() || isSending}
             className="w-11 h-11 flex items-center justify-center bg-black text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-opacity mb-[1px]"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
