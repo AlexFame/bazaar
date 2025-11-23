@@ -39,7 +39,7 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [initialImageIds, setInitialImageIds] = useState([]);
   const [coordinates, setCoordinates] = useState(null);
   const [geocoding, setGeocoding] = useState(false);
-  const isTelegram = isTelegramEnv();
+  const inTelegram = isTelegramEnv();
   const closeTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -797,7 +797,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             value={contacts}
             onChange={(e) => setContacts(e.target.value)}
           />
-          {isTelegram && (
+          {inTelegram && (
             <button
               type="button"
               className="mt-2 text-xs text-blue-600 hover:text-blue-800"
