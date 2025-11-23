@@ -11,6 +11,7 @@ import { getTelegramUser } from "@/lib/telegram";
 import { ListingDetailSkeleton } from "@/components/SkeletonLoader";
 import SimilarListings from "@/components/SimilarListings";
 import BackButton from "@/components/BackButton";
+import ReportButton from "@/components/ReportButton";
 
 // Строим ссылку по введённому контакту
 function buildContactLink(raw) {
