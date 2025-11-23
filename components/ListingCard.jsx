@@ -201,7 +201,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
     }
   };
 
-  const isVip = listing.is_vip;
+  const isVip = listing.is_vip || false;
 
   return (
     <Link href={`/listing/${listing.id}`}>
