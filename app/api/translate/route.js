@@ -5,6 +5,8 @@ export async function POST(request) {
   try {
     const { text, targetLang } = await request.json();
 
+    console.log("🔧 Translation API called:", { textLength: text?.length, targetLang });
+
     if (!text) {
       return NextResponse.json({ text: "" });
     }
@@ -20,9 +22,11 @@ export async function POST(request) {
 
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
     
+    console.log("🌐 Calling Google Translate API...");
     const response = await fetch(url);
     
     if (!response.ok) {
+        console.error("❌ Google API error:", response.status);
         throw new Error(`Google API responded with ${response.status}`);
     }
 
@@ -34,6 +38,8 @@ export async function POST(request) {
     if (data && data[0]) {
       translatedText = data[0].map(item => item[0]).join("");
     }
+
+    console.log("✅ Translation successful:", translatedText.substring(0, 50));
 
     return NextResponse.json({ text: translatedText });
 

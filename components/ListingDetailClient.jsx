@@ -162,12 +162,12 @@ export default function ListingDetailClient({ id }) {
     let isMounted = true;
     
     async function doTranslate() {
-      // Reset translation when listing changes to avoid showing old translation
-      // But here we want to keep it if just lang changed? 
-      // Actually, better to just translate.
+      console.log("🌍 Starting translation...", { lang, title: listing.title });
       
       const tTitle = await translateText(listing.title, lang);
       const tDesc = await translateText(listing.description, lang);
+      
+      console.log("✅ Translation complete:", { tTitle, tDesc });
       
       if (isMounted) {
         setTranslated({
