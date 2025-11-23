@@ -5,8 +5,44 @@ import { Suspense } from "react";
 import Script from "next/script";
 
 export const metadata = {
-  title: "Bazaar",
-  description: "Мини маркетплейс Bazaar",
+  title: {
+    default: "Bazaar - Доска объявлений",
+    template: "%s | Bazaar"
+  },
+  description: "Покупайте и продавайте товары, находите услуги и общайтесь с продавцами в вашем городе. Бесплатная доска объявлений в Telegram.",
+  keywords: ["объявления", "купить", "продать", "доска объявлений", "маркетплейс", "telegram", "bazaar"],
+  authors: [{ name: "Bazaar" }],
+  creator: "Bazaar",
+  publisher: "Bazaar",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    title: "Bazaar - Доска объявлений",
+    description: "Покупайте и продавайте товары в вашем городе",
+    url: "https://bazaar.vercel.app",
+    siteName: "Bazaar",
+    locale: "ru_RU",
+    type: "website",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    // Add your verification codes when ready
+    // google: 'your-google-verification-code',
+    // yandex: 'your-yandex-verification-code',
+  },
 };
 
 // важно для мобильной верстки и Telegram WebApp
