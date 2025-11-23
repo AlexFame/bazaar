@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import LangSwitcher from "./LangSwitcher";
+import ThemeToggle from "./ThemeToggle";
 import { useLang } from "@/lib/i18n-client";
 import { getTG } from "@/lib/telegram";
 import { getSuggestions } from "@/lib/searchUtils";
@@ -232,14 +233,14 @@ export default function AppShell({ children }) {
 
   const renderSearchBar = (containerRef) => (
     <div className="relative" ref={containerRef}>
-        <div className="flex items-center gap-2 bg-[#F2F3F7] rounded-full px-3 py-2 shadow-sm">
-        <span className="text-base opacity-60" aria-hidden="true">
+        <div className="flex items-center gap-2 bg-[#F2F3F7] dark:bg-[#262626] rounded-full px-3 py-2 shadow-sm transition-colors duration-300">
+        <span className="text-base opacity-60 dark:text-white/60" aria-hidden="true">
             🔍
         </span>
         <input
             type="text"
             placeholder={t("search_main_ph")}
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-black/40"
+            className="flex-1 bg-transparent text-sm outline-none placeholder:text-black/40 dark:placeholder:text-white/40 text-black dark:text-white"
             value={search}
             onChange={(e) => {
                 const val = e.target.value;
@@ -266,7 +267,7 @@ export default function AppShell({ children }) {
         <button
             type="button"
             onClick={handleSearchSubmit}
-            className="px-4 py-1.5 rounded-full bg-black text-white text-xs font-semibold"
+            className="px-4 py-1.5 rounded-full bg-black text-white dark:bg-white dark:text-black text-xs font-semibold"
         >
             {t("btn_search")}
         </button>
@@ -298,12 +299,12 @@ export default function AppShell({ children }) {
   );
 
   return (
-    <div className="w-full min-h-screen bg-white flex flex-col items-center">
+    <div className="w-full min-h-screen bg-white dark:bg-[#171717] flex flex-col items-center transition-colors duration-300">
       {/* Шапка */}
-      <header className="w-full bg-white pt-3 pb-3 border-b border-black/5">
+      <header className="w-full bg-white dark:bg-[#171717] pt-3 pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
         <div className="w-full max-w-[520px] px-3 mx-auto flex flex-col gap-3">
           {/* Текст сверху */}
-          <div className="text-center text-xs font-semibold text-black/80">
+          <div className="text-center text-xs font-semibold text-black/80 dark:text-white/80">
             Bazaar - Telegram-маркетплейс для мигрантов в Германии
           </div>
 
@@ -326,8 +327,8 @@ export default function AppShell({ children }) {
                 <button
                   className={`${navBtn} ${
                     pathname === "/"
-                      ? "bg-black text-white"
-                      : "bg-[#F2F3F7] text-black"
+                      ? "bg-black text-white dark:bg-white dark:text-black"
+                      : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
                   }`}
                 >
                   {t("navbar_brand")}
@@ -339,8 +340,8 @@ export default function AppShell({ children }) {
                 <button
                   className={`${navBtn} ${
                     pathname === "/my"
-                      ? "bg-black text-white"
-                      : "bg-[#F2F3F7] text-black"
+                      ? "bg-black text-white dark:bg-white dark:text-black"
+                      : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
                   }`}
                 >
                   {t("navbar_myAds")}
@@ -352,8 +353,8 @@ export default function AppShell({ children }) {
                 <button
                   className={`${navBtn} relative ${
                     pathname.startsWith("/messages")
-                      ? "bg-black text-white"
-                      : "bg-[#F2F3F7] text-black"
+                      ? "bg-black text-white dark:bg-white dark:text-black"
+                      : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
                   }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
@@ -368,6 +369,7 @@ export default function AppShell({ children }) {
               </Link>
             </nav>
 
+            <ThemeToggle />
             <LangSwitcher />
           </div>
         </div>

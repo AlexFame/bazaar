@@ -225,10 +225,10 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
 
   return (
     <Link href={`/listing/${listing.id}`}>
-      <article className={`bg-white rounded-2xl p-2 shadow-sm flex flex-col h-full relative transition-all ${
+      <article className={`bg-white dark:bg-[#171717] rounded-2xl p-2 shadow-sm flex flex-col h-full relative transition-all ${
         isVip 
-          ? 'border-2 border-yellow-400 ring-2 ring-yellow-100 shadow-md' 
-          : 'border border-black/10'
+          ? 'border-2 border-yellow-400 ring-2 ring-yellow-100 dark:ring-yellow-900 shadow-md' 
+          : 'border border-black/10 dark:border-white/10'
       }`}>
         {/* VIP Badge */}
         {isVip && (
@@ -240,7 +240,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
         {/* Heart button */}
         <button
           onClick={handleFavoriteClick}
-          className="absolute top-2 right-2 z-10 p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 transition-transform"
+          className="absolute top-2 right-2 z-10 p-1.5 bg-white/90 dark:bg-black/50 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 transition-transform"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -248,13 +248,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
             fill={isFavorite ? "#ef4444" : "none"}
             stroke={isFavorite ? "#ef4444" : "currentColor"}
             strokeWidth="2"
-            className="w-4 h-4"
+            className="w-4 h-4 text-black dark:text-white"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
           </svg>
         </button>
 
-        <div className="aspect-square w-full bg-gray-100 relative overflow-hidden">
+        <div className="aspect-square w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden rounded-xl">
           {imageUrl ? (
             <Image
               src={imageUrl}
@@ -266,7 +266,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
               blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN88/7dfwAIuQNS4g0U2AAAAABJRU5ErkJggg=="
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-600">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -287,17 +287,17 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
         <div className="flex-1 flex flex-col">
           {/* Тип + дата */}
           <div className="flex items-center justify-between mb-1 mt-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black text-white text-[11px] font-medium">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-[11px] font-medium">
               {typeText}
             </span>
             {dateText && (
-              <span className="text-[11px] text-black/50">{dateText}</span>
+              <span className="text-[11px] text-black/50 dark:text-white/50">{dateText}</span>
             )}
           </div>
 
           {/* Заголовок */}
           {listing.title && (
-            <h2 className="text-sm font-semibold line-clamp-2 mb-0.5">
+            <h2 className="text-sm font-semibold line-clamp-2 mb-0.5 text-black dark:text-white">
               {translatedTitle || listing.title}
             </h2>
           )}
@@ -305,7 +305,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
           {/* Цена */}
           {typeof listing.price === "number" && (
             <div className="flex justify-between items-end mt-auto pt-2">
-            <span className="font-semibold text-sm">{listing.price} €</span>
+            <span className="font-semibold text-sm text-black dark:text-white">{listing.price} €</span>
             {listing.views_count > 0 && (
               <span className="text-[10px] text-gray-400 flex items-center gap-1">
                 👁️ {listing.views_count}
@@ -316,7 +316,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
 
           {/* Локация */}
           {listing.location_text && (
-            <div className="text-[11px] text-black/60 line-clamp-1 mt-1">
+            <div className="text-[11px] text-black/60 dark:text-white/60 line-clamp-1 mt-1">
               {listing.location_text}
             </div>
           )}
@@ -327,14 +327,14 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
               <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
               </svg>
-              <span className="text-[10px] font-medium text-blue-600">Verified Seller</span>
+              <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400">Verified Seller</span>
             </div>
           )}
         </div>
 
         {/* Edit/Delete buttons */}
         {showActions && (
-          <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-100">
+          <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-white/10">
             {onPromote && !isVip && (
                 <button
                   onClick={(e) => {
@@ -349,13 +349,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
             )}
             <button
               onClick={handleEdit}
-              className="w-full py-1.5 px-3 bg-gray-100 text-black text-[11px] font-medium rounded-lg hover:bg-gray-200 transition-colors"
+              className="w-full py-1.5 px-3 bg-gray-100 dark:bg-gray-800 text-black dark:text-white text-[11px] font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
               Редактировать
             </button>
             <button
               onClick={handleDelete}
-              className="w-full py-1.5 px-3 bg-red-50 text-red-600 text-[11px] font-medium rounded-lg hover:bg-red-100 transition-colors"
+              className="w-full py-1.5 px-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[11px] font-medium rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
             >
               Удалить
             </button>

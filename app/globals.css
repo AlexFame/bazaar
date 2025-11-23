@@ -4,16 +4,20 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  --background-start-rgb: 248, 249, 250;
+  --background-end-rgb: 248, 249, 250;
+  --card-bg: 255, 255, 255;
+  --input-bg: 255, 255, 255;
+  --border-color: 229, 231, 235;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+[data-theme='dark'], .dark {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 10, 10, 10;
+  --background-end-rgb: 10, 10, 10;
+  --card-bg: 23, 23, 23;
+  --input-bg: 38, 38, 38;
+  --border-color: 64, 64, 64;
 }
 
 html {
@@ -22,7 +26,8 @@ html {
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: #f8f9fa;
+  background: rgb(var(--background-start-rgb));
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Telegram-like smooth scrolling */

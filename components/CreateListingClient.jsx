@@ -9,6 +9,7 @@ import { geocodeAddress } from "@/lib/geocoding";
 import BackButton from "@/components/BackButton";
 
 import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";
+import imageCompression from 'browser-image-compression';
 
 const typeOptions = [
   { value: "buy", labelKey: "field_type_buy" },
@@ -96,7 +97,7 @@ export default function CreateListingClient({ onCreated, editId }) {
   }, [editId]);
 
   // добавление файлов из input / dnd
-  function addFiles(fileList) {
+  async function addFiles(fileList) {
     const incoming = Array.from(fileList || []);
     if (!incoming.length) return;
 
@@ -106,24 +107,50 @@ export default function CreateListingClient({ onCreated, editId }) {
 
     const toAdd = incoming.slice(0, spaceLeft);
 
-    toAdd.forEach((file) => {
+    for (const file of toAdd) {
       // Auto-Moderation for Images
       const check = checkImage(file);
       if (!check.safe) {
           alert(`Ошибка загрузки файла ${file.name}: ${check.error}`);
-          return;
+          continue;
       }
 
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setImages((prev) => [...prev, {
-            type: 'new',
-            url: event.target.result,
-            file: file
-        }]);
-      };
-      reader.readAsDataURL(file);
-    });
+      try {
+        console.log(`Compressing ${file.name}...`);
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+          fileType: 'image/webp'
+        };
+        
+        const compressedFile = await imageCompression(file, options);
+        console.log(`Compressed ${file.name}: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setImages((prev) => [...prev, {
+              type: 'new',
+              url: event.target.result,
+              file: compressedFile
+          }]);
+        };
+        reader.readAsDataURL(compressedFile);
+
+      } catch (error) {
+        console.error("Image compression error:", error);
+        // Fallback to original
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setImages((prev) => [...prev, {
+              type: 'new',
+              url: event.target.result,
+              file: file
+          }]);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
   }
 
   function handleRemoveImage(index) {
