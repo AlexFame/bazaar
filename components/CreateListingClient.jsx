@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
-import { getTelegramUser, isTelegramEnv } from "@/lib/telegram";
+import { getTelegramUser, isTelegramEnv, checkTelegramAccountAge } from "@/lib/telegram";
 import { geocodeAddress } from "@/lib/geocoding";
 import BackButton from "@/components/BackButton";
 
@@ -172,6 +172,16 @@ export default function CreateListingClient({ onCreated, editId }) {
         console.warn("🤖 Bot detected via honeypot field");
         setErrorMsg("Ошибка отправки формы. Попробуйте позже.");
         return;
+    }
+
+    // Check Telegram account age (anti-bot measure)
+    if (!editId) { // Skip for edits
+        const accountCheck = checkTelegramAccountAge(7); // Minimum 7 days
+        if (!accountCheck.allowed) {
+            console.warn("🤖 Bot detected: new Telegram account");
+            setErrorMsg(accountCheck.reason);
+            return;
+        }
     }
 
     // Auto-Moderation for Text
