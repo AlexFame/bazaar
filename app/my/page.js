@@ -71,6 +71,7 @@ export default function MyPage() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tgUser, setTgUser] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const loadListings = async () => {
     const tgUserId = getUserId();
@@ -91,7 +92,7 @@ export default function MyPage() {
       
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
-        .select("id")
+        .select("id, is_admin")
         .eq("tg_user_id", Number(tgUserId))
         .single();
 
@@ -105,6 +106,9 @@ export default function MyPage() {
       }
 
       console.log("✅ [My Listings] Found profile UUID:", profileData.id);
+      
+      // Check if user is admin
+      setIsAdmin(profileData.is_admin || false);
 
       // Теперь ищем объявления по UUID из profiles
       const { data, error } = await supabase
@@ -241,7 +245,7 @@ export default function MyPage() {
         )}
 
         {/* Кнопки действий */}
-        <div className="mb-3 grid grid-cols-2 gap-2">
+        <div className={`mb-3 grid ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
           <Link href="/create">
             <button className="w-full py-2.5 rounded-full bg-black text-white text-sm font-semibold">
               {t.createBtn}
@@ -252,6 +256,13 @@ export default function MyPage() {
                ❤️ Избранное
             </button>
           </Link>
+          {isAdmin && (
+            <Link href="/admin">
+              <button className="w-full py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+                 🛡️ Админка
+              </button>
+            </Link>
+          )}
         </div>
 
         {/* Состояния списка объявлений */}
