@@ -11,10 +11,10 @@ import BackButton from "@/components/BackButton";
 import { checkContent, checkImage } from "@/lib/moderation";
 
 const typeOptions = [
-  { value: "buy", labelKey: "type_buy" },
-  { value: "sell", labelKey: "type_sell" },
-  { value: "service", labelKey: "type_service" },
-  { value: "exchange", labelKey: "type_exchange" },
+  { value: "buy", labelKey: "field_type_buy" },
+  { value: "sell", labelKey: "field_type_sell" },
+  { value: "service", labelKey: "field_type_service" },
+  { value: "exchange", labelKey: "field_type_exchange" },
 ];
 
 export default function CreateListingClient({ onCreated, editId }) {
