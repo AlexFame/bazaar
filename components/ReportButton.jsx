@@ -1,0 +1,107 @@
+"use client";
+
+import { useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+
+export default function ReportButton({ targetId, targetType = "listing" }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+          setError("Войдите, чтобы отправить жалобу");
+          setLoading(false);
+          return;
+      }
+
+      const { error: insertError } = await supabase
+        .from("reports")
+        .insert({
+          reporter_id: user.id,
+          target_type: targetType,
+          target_id: targetId,
+          reason: reason.trim(),
+          status: "pending"
+        });
+
+      if (insertError) throw insertError;
+
+      setSuccess(true);
+      setTimeout(() => {
+          setIsOpen(false);
+          setSuccess(false);
+          setReason("");
+      }, 2000);
+
+    } catch (err) {
+      console.error("Report error:", err);
+      setError("Ошибка отправки жалобы");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) {
+    return (
+      <button 
+        onClick={() => setIsOpen(true)}
+        className="text-xs text-gray-400 hover:text-red-500 underline"
+      >
+        Пожаловаться
+      </button>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm p-4 shadow-xl">
+        <h3 className="font-semibold mb-3">Пожаловаться</h3>
+        
+        {success ? (
+            <div className="text-green-600 text-center py-4">
+                Спасибо! Жалоба отправлена.
+            </div>
+        ) : (
+            <form onSubmit={handleSubmit}>
+                <textarea
+                    className="w-full border border-gray-300 rounded-xl p-3 text-sm mb-3 resize-none"
+                    rows={3}
+                    placeholder="Опишите причину..."
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    required
+                />
+                
+                {error && <div className="text-red-500 text-xs mb-2">{error}</div>}
+
+                <div className="flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(false)}
+                        className="flex-1 py-2 rounded-xl border border-gray-300 text-sm"
+                    >
+                        Отмена
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-medium disabled:opacity-50"
+                    >
+                        {loading ? "..." : "Отправить"}
+                    </button>
+                </div>
+            </form>
+        )}
+      </div>
+    </div>
+  );
+}

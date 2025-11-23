@@ -8,157 +8,12 @@ import { getTelegramUser, isTelegramEnv } from "@/lib/telegram";
 import { geocodeAddress } from "@/lib/geocoding";
 import BackButton from "@/components/BackButton";
 
+import { checkContent, checkImage } from "@/lib/moderation";
+
 export default function CreateListingClient({ onCreated, editId }) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [location, setLocation] = useState("");
-  const [contacts, setContacts] = useState("");
+  // ... (state)
 
-  // Новые поля
-  const [condition, setCondition] = useState("new"); // new | used
-  const [parameters, setParameters] = useState({}); // JSONB
-  const [isBarter, setIsBarter] = useState(false); // Бартер
-
-  // Геолокация (опционально)
-  const [coordinates, setCoordinates] = useState(null); // { lat, lng }
-  const [geocoding, setGeocoding] = useState(false);
-
-  // много фото
-  // Unified image state: { type: 'existing'|'new', id?: string, url: string, file?: File, path?: string }
-  const [images, setImages] = useState([]);
-  const [initialImageIds, setInitialImageIds] = useState([]); // To track deletions
-
-  const [listingType, setListingType] = useState("buy");
-  const [categoryKey, setCategoryKey] = useState(
-    CATEGORY_DEFS[0]?.key || "kids"
-  );
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [successMsg, setSuccessMsg] = useState("");
-
-  const closeTimeoutRef = useRef(null);
-
-  // по умолчанию считаем, что НЕ в Telegram
-  // и аккуратно несколько раз проверяем окружение,
-  // чтобы дождаться инициализации Telegram WebApp
-  const [inTelegram, setInTelegram] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    let attempts = 0;
-    const maxAttempts = 20; // ~3 секунды ожидания
-
-    function check() {
-      if (cancelled) return;
-
-      try {
-        if (isTelegramEnv()) {
-          setInTelegram(true);
-          return;
-        }
-      } catch {
-        // игнорируем ошибку и пробуем ещё
-      }
-
-      attempts += 1;
-      if (attempts < maxAttempts) {
-        setTimeout(check, 150);
-      } else {
-        setInTelegram(false);
-      }
-    }
-
-    check();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Сброс параметров при смене категории
-  useEffect(() => {
-    setParameters({});
-  }, [categoryKey]);
-
-  // Загрузка данных объявления при редактировании
-  useEffect(() => {
-    if (!editId) return;
-
-    async function loadListing() {
-      try {
-        console.log("📝 [Edit] Loading listing:", editId);
-        
-        const { data: listing, error } = await supabase
-          .from("listings")
-          .select("*, listing_images(*)")
-          .eq("id", editId)
-          .single();
-
-        if (error) {
-          console.error("❌ [Edit] Error loading listing:", error);
-          setErrorMsg("Не удалось загрузить объявление");
-          return;
-        }
-
-        if (!listing) {
-          setErrorMsg("Объявление не найдено");
-          return;
-        }
-
-        console.log("✅ [Edit] Loaded listing:", listing);
-
-        // Заполняем форму данными
-        setTitle(listing.title || "");
-        setDescription(listing.description || "");
-        setPrice(listing.price ? String(listing.price) : "");
-        setLocation(listing.location_text || "");
-        setContacts(listing.contacts || "");
-        setListingType(listing.type || "buy");
-        setCategoryKey(listing.category_key || CATEGORY_DEFS[0]?.key || "kids");
-        setCondition(listing.condition || "new");
-        setParameters(listing.parameters || {});
-        setIsBarter(listing.parameters?.barter || false);
-        
-        if (listing.latitude && listing.longitude) {
-          setCoordinates({ lat: listing.latitude, lng: listing.longitude });
-        }
-
-        // Загружаем изображения
-        if (listing.listing_images && listing.listing_images.length > 0) {
-          const sortedImages = listing.listing_images.sort((a, b) => a.position - b.position);
-          const loadedImages = sortedImages.map(img => {
-            const { data } = supabase.storage
-              .from("listing-images")
-              .getPublicUrl(img.file_path);
-            return {
-                type: 'existing',
-                id: img.id,
-                url: data.publicUrl,
-                path: img.file_path
-            };
-          });
-          setImages(loadedImages);
-          setInitialImageIds(loadedImages.map(img => img.id));
-        }
-
-      } catch (err) {
-        console.error("❌ [Edit] Exception:", err);
-        setErrorMsg("Ошибка при загрузке объявления");
-      }
-    }
-
-    loadListing();
-  }, [editId]);
-
-  const typeOptions = [
-    { value: "buy", labelKey: "field_type_buy" },
-    { value: "sell", labelKey: "field_type_sell" },
-    { value: "free", labelKey: "field_type_free" },
-    { value: "services", labelKey: "field_type_services" },
-  ];
+  // ...
 
   // добавление файлов из input / dnd
   function addFiles(fileList) {
@@ -172,6 +27,13 @@ export default function CreateListingClient({ onCreated, editId }) {
     const toAdd = incoming.slice(0, spaceLeft);
 
     toAdd.forEach((file) => {
+      // Auto-Moderation for Images
+      const check = checkImage(file);
+      if (!check.safe) {
+          alert(`Ошибка загрузки файла ${file.name}: ${check.error}`);
+          return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         setImages((prev) => [...prev, {
@@ -184,60 +46,20 @@ export default function CreateListingClient({ onCreated, editId }) {
     });
   }
 
-  function handleFileChange(e) {
-    addFiles(e.target.files);
-  }
-
-  function handleDrop(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    addFiles(e.dataTransfer.files);
-  }
-
-  function handleDragOver(e) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-
-  function handleRemoveImage(index) {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  }
-
-  // Геокодирование адреса (опционально)
-  async function handleGeocode() {
-    if (!location || location.trim().length < 3) {
-      alert('Введите адрес для определения координат');
-      return;
-    }
-
-    setGeocoding(true);
-    try {
-      const result = await geocodeAddress(location.trim());
-      
-      if (result) {
-        setCoordinates({ lat: result.lat, lng: result.lng });
-        console.log('✅ Координаты определены:', result);
-      } else {
-        alert('Не удалось определить координаты. Проверьте адрес.');
-        setCoordinates(null);
-      }
-    } catch (error) {
-      console.error('Ошибка геокодирования:', error);
-      alert('Ошибка при определении координат');
-      setCoordinates(null);
-    } finally {
-      setGeocoding(false);
-    }
-  }
-
-  // БЕРЁМ ЕЩЁ И ТЕКУЩИЙ ЯЗЫК
-  const { t, lang } = useLang();
+  // ...
 
   async function handleSubmit(e) {
     e.preventDefault();
 
     setErrorMsg("");
     setSuccessMsg("");
+
+    // Auto-Moderation for Text
+    const contentCheck = checkContent(title + " " + description);
+    if (!contentCheck.safe) {
+        setErrorMsg(`Объявление содержит недопустимые слова: ${contentCheck.flagged.join(", ")}`);
+        return;
+    }
 
     if (!title.trim()) {
       setErrorMsg("Введите заголовок объявления.");

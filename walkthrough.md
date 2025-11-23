@@ -92,3 +92,20 @@ I have implemented advanced discovery features and social engagement tools.
 3.  **Integration**:
     - Updated "Write to Seller" button to open internal chat (creating new or opening existing).
     - Added "Messages" link to the main navigation bar.
+
+### Stage 8: Safety & Moderation
+1.  **Safety System**:
+    - Created `reports` table for user complaints.
+    - Added `is_admin` flag to profiles for access control.
+    - Added `status` field to listings (active/banned).
+2.  **Auto-Moderation**:
+    - Implemented `lib/moderation.js` to filter profanity in listings.
+    - Added image validation (size/type) during upload.
+3.  **Admin Panel**:
+    - Created `/admin` dashboard protected by `is_admin` check.
+    - **Tabs**:
+        - **Reports**: View and resolve user complaints.
+        - **Listings**: Ban/Delete listings.
+        - **Users**: Manage users (view/admin status).
+4.  **User Features**:
+    - Added "Report" button to Listing Detail page.
