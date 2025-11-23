@@ -10,6 +10,13 @@ import BackButton from "@/components/BackButton";
 
 import { checkContent, checkImage } from "@/lib/moderation";
 
+const typeOptions = [
+  { value: "buy", labelKey: "type_buy" },
+  { value: "sell", labelKey: "type_sell" },
+  { value: "service", labelKey: "type_service" },
+  { value: "exchange", labelKey: "type_exchange" },
+];
+
 export default function CreateListingClient({ onCreated, editId }) {
   const { lang, t } = useLang();
   const [images, setImages] = useState([]);
@@ -129,6 +136,10 @@ export default function CreateListingClient({ onCreated, editId }) {
   function handleDrop(e) {
     e.preventDefault();
     addFiles(e.dataTransfer.files);
+  }
+
+  function handleFileChange(e) {
+    addFiles(e.target.files);
   }
 
   async function handleGeocode() {
