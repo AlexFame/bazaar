@@ -11,10 +11,79 @@ import BackButton from "@/components/BackButton";
 import { checkContent, checkImage } from "@/lib/moderation";
 
 export default function CreateListingClient({ onCreated, editId }) {
-  // ... (state)
+  const { lang, t } = useLang();
+  const [images, setImages] = useState([]);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("");
+  const [location, setLocation] = useState("");
+  const [contacts, setContacts] = useState("");
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [listingType, setListingType] = useState("buy");
   const [categoryKey, setCategoryKey] = useState(CATEGORY_DEFS[0]?.key || "kids");
+  const [parameters, setParameters] = useState({});
+  const [condition, setCondition] = useState("new");
+  const [isBarter, setIsBarter] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [initialImageIds, setInitialImageIds] = useState([]);
+  const [coordinates, setCoordinates] = useState(null);
+  const closeTimeoutRef = useRef(null);
 
-  // ...
+  useEffect(() => {
+    if (!editId) return;
+
+    setLoading(true);
+    const fetchListing = async () => {
+        const { data, error } = await supabase
+            .from("listings")
+            .select("*, listing_images(*)")
+            .eq("id", editId)
+            .single();
+
+        if (error) {
+            console.error("Error loading listing:", error);
+            setErrorMsg("Ошибка загрузки объявления");
+            setLoading(false);
+            return;
+        }
+
+        if (data) {
+            setTitle(data.title || "");
+            setDescription(data.description || "");
+            setPrice(data.price?.toString() || "");
+            setLocation(data.location_text || "");
+            setContacts(data.contacts || "");
+            setListingType(data.type || "buy");
+            setCategoryKey(data.category_key || "kids");
+            setCondition(data.condition || "new");
+            setIsBarter(data.parameters?.barter || false);
+            setParameters(data.parameters || {});
+            
+            if (data.latitude && data.longitude) {
+                setCoordinates({ lat: data.latitude, lng: data.longitude });
+            }
+
+            // Images
+            if (data.listing_images && data.listing_images.length > 0) {
+                const loadedImages = data.listing_images.map(img => ({
+                    type: 'existing',
+                    id: img.id,
+                    url: supabase.storage.from('listing-images').getPublicUrl(img.image_path).data.publicUrl,
+                    path: img.image_path
+                }));
+                setImages(loadedImages);
+                setInitialImageIds(loadedImages.map(img => img.id));
+            }
+        }
+        setLoading(false);
+    };
+
+    fetchListing();
+  }, [editId]);
 
   // добавление файлов из input / dnd
   function addFiles(fileList) {
@@ -47,7 +116,18 @@ export default function CreateListingClient({ onCreated, editId }) {
     });
   }
 
-  // ...
+  function handleRemoveImage(index) {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    addFiles(e.dataTransfer.files);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
