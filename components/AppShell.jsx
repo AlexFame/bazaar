@@ -9,6 +9,7 @@ import { getTG } from "@/lib/telegram";
 import { getSuggestions } from "@/lib/searchUtils";
 
 import { supabase } from "@/lib/supabaseClient";
+import Toast from "./Toast";
 
 export default function AppShell({ children }) {
   const pathname = usePathname();
@@ -21,6 +22,7 @@ export default function AppShell({ children }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showFloatingSearch, setShowFloatingSearch] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [toastMessage, setToastMessage] = useState(null);
   const lastScrollY = useRef(0);
   const headerSearchRef = useRef(null);
   const floatingSearchRef = useRef(null);
@@ -163,26 +165,23 @@ export default function AppShell({ children }) {
           .on(
               'postgres_changes',
               {
-                  event: 'INSERT',
+                  event: '*',
                   schema: 'public',
                   table: 'messages',
               },
               (payload) => {
-                  // Если пришло новое сообщение, обновляем счетчик
-                  // RLS должен фильтровать сообщения только для моих чатов
                   fetchUnread();
-              }
-          )
-          .on(
-              'postgres_changes',
-              {
-                  event: 'UPDATE',
-                  schema: 'public',
-                  table: 'messages',
-              },
-              (payload) => {
-                  // Если сообщение прочитано (is_read изменился), обновляем
-                  fetchUnread();
+                  // Show toast for new messages from others
+                  if (payload.eventType === 'INSERT') {
+                      supabase.auth.getUser().then(({ data: { user } }) => {
+                          if (user && payload.new.sender_id !== user.id) {
+                              // Check if we are on the chat page
+                              if (!window.location.pathname.includes(payload.new.conversation_id)) {
+                                  setToastMessage(`Новое сообщение: ${payload.new.content}`);
+                              }
+                          }
+                      });
+                  }
               }
           )
           .subscribe();
@@ -383,6 +382,8 @@ export default function AppShell({ children }) {
       <footer className="w-full max-w-[520px] mx-auto text-center text-[11px] py-5 opacity-60">
         Bazaar © 2025
       </footer>
+      
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
   );
 }
