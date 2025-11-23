@@ -11,6 +11,22 @@ export default function ThemeToggle() {
     setMounted(true);
   }, []);
 
+  useEffect(() => {
+    if (!mounted) return;
+    
+    // Update Telegram WebApp header color
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      if (theme === 'dark') {
+        tg.setHeaderColor('#000000');
+        tg.setBackgroundColor('#000000');
+      } else {
+        tg.setHeaderColor('#ffffff');
+        tg.setBackgroundColor('#ffffff');
+      }
+    }
+  }, [theme, mounted]);
+
   if (!mounted) return null;
 
   return (
