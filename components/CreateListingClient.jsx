@@ -8,7 +8,7 @@ import { getTelegramUser, isTelegramEnv } from "@/lib/telegram";
 import { geocodeAddress } from "@/lib/geocoding";
 import BackButton from "@/components/BackButton";
 
-import { checkContent, checkImage } from "@/lib/moderation";
+import { checkContent, checkImage, hasEmoji } from "@/lib/moderation";
 
 const typeOptions = [
   { value: "buy", labelKey: "field_type_buy" },
@@ -170,6 +170,12 @@ export default function CreateListingClient({ onCreated, editId }) {
     const contentCheck = checkContent(title + " " + description);
     if (!contentCheck.safe) {
         setErrorMsg(`Объявление содержит недопустимые слова: ${contentCheck.flagged.join(", ")}`);
+        return;
+    }
+
+    // Check for emojis in title
+    if (hasEmoji(title)) {
+        setErrorMsg("Эмодзи в заголовке запрещены. Используйте только текст.");
         return;
     }
 
