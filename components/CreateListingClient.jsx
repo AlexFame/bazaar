@@ -14,7 +14,7 @@ const typeOptions = [
   { value: "buy", labelKey: "field_type_buy" },
   { value: "sell", labelKey: "field_type_sell" },
   { value: "service", labelKey: "field_type_services" },
-  { value: "exchange", labelKey: "field_type_exchange" },
+  { value: "free", labelKey: "field_type_free" },
 ];
 
 export default function CreateListingClient({ onCreated, editId }) {
