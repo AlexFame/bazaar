@@ -154,21 +154,15 @@ export default function AppShell({ children }) {
 
   // Периодическая проверка непрочитанных (раз в 30 сек) + Realtime
   useEffect(() => {
-      console.log("🔔 [AppShell] Effect triggered. CurrentUser:", currentUser?.id);
-      
       if (!currentUser) return;
 
       // Функция обновления счетчика
       const fetchUnread = async () => {
-          console.log("🔔 [AppShell] Fetching unread count...");
-          const { count, error } = await supabase
+          const { count } = await supabase
               .from('messages')
               .select('*', { count: 'exact', head: true })
               .eq('is_read', false)
               .neq('sender_id', currentUser.id);
-          
-          if (error) console.error("🔔 [AppShell] Fetch error:", error);
-          console.log("🔔 [AppShell] Unread count:", count);
           
           if (count !== null) setUnreadCount(count);
       };
@@ -180,7 +174,6 @@ export default function AppShell({ children }) {
       const interval = setInterval(fetchUnread, 30000);
 
       // 3. Realtime subscription
-      console.log("🔔 [AppShell] Subscribing to realtime...");
       const channel = supabase
           .channel('unread_messages_global')
           .on(
@@ -191,27 +184,21 @@ export default function AppShell({ children }) {
                   table: 'messages',
               },
               (payload) => {
-                  console.log("🔔 [AppShell] Realtime Event:", payload);
                   fetchUnread();
                   
                   // Show toast for new messages from others
                   if (payload.eventType === 'INSERT' && payload.new.sender_id !== currentUser.id) {
                       const isChatOpen = window.location.pathname.includes(payload.new.conversation_id);
-                      console.log("🔔 [AppShell] New Msg. ChatOpen:", isChatOpen);
                       
                       if (!isChatOpen) {
-                          console.log("🔔 [AppShell] Setting toast message...");
                           setToastMessage(`Новое сообщение: ${payload.new.content}`);
                       }
                   }
               }
           )
-          .subscribe((status) => {
-              console.log("🔔 [AppShell] Subscription status:", status);
-          });
+          .subscribe();
 
       return () => {
-          console.log("🔔 [AppShell] Unsubscribing...");
           clearInterval(interval);
           supabase.removeChannel(channel);
       };
@@ -403,13 +390,6 @@ export default function AppShell({ children }) {
       <main className="flex-1 w-full max-w-[520px] mx-auto px-3 pb-4">
         {children}
       </main>
-
-      <button 
-          onClick={() => setToastMessage("Тестовое уведомление")}
-          className="fixed bottom-4 right-4 bg-red-500 text-white px-2 py-1 rounded text-xs opacity-50 hover:opacity-100 z-[9999]"
-      >
-          Test Toast
-      </button>
 
       <footer className="w-full max-w-[520px] mx-auto text-center text-[11px] py-5 opacity-60">
         Bazaar © 2025
