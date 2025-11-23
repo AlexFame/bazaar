@@ -31,6 +31,8 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [initialImageIds, setInitialImageIds] = useState([]);
   const [coordinates, setCoordinates] = useState(null);
+  const [geocoding, setGeocoding] = useState(false);
+  const isTelegram = isTelegramEnv();
   const closeTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -127,6 +129,24 @@ export default function CreateListingClient({ onCreated, editId }) {
   function handleDrop(e) {
     e.preventDefault();
     addFiles(e.dataTransfer.files);
+  }
+
+  async function handleGeocode() {
+    if (!location.trim()) return;
+    setGeocoding(true);
+    try {
+      const coords = await geocodeAddress(location);
+      if (coords) {
+        setCoordinates(coords);
+      } else {
+        alert("Не удалось определить координаты. Попробуйте уточнить адрес.");
+      }
+    } catch (e) {
+      console.error("Geocoding error:", e);
+      alert("Ошибка при определении координат.");
+    } finally {
+      setGeocoding(false);
+    }
   }
 
   async function handleSubmit(e) {
