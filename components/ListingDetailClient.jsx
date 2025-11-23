@@ -221,14 +221,18 @@ export default function ListingDetailClient({ id }) {
         <div className="mb-3 flex justify-between items-center">
           <BackButton />
           
-          {listing && (
-            <button 
-                onClick={handleShare}
-                className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-100 text-xs font-medium hover:bg-gray-200 transition-colors"
-            >
-                📤 {t("share")}
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {listing && <ReportButton targetId={listing.id} targetType="listing" />}
+            
+            {listing && (
+                <button 
+                    onClick={handleShare}
+                    className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-100 text-xs font-medium hover:bg-gray-200 transition-colors"
+                >
+                    📤 {t("share")}
+                </button>
+            )}
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl p-3 shadow-sm">
