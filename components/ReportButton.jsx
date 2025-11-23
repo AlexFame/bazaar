@@ -62,8 +62,14 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm p-4 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm p-4 shadow-xl relative">
+        <button 
+            onClick={() => setIsOpen(false)}
+            className="absolute top-2 right-2 text-gray-400 hover:text-black"
+        >
+            ✕
+        </button>
         <h3 className="font-semibold mb-3">Пожаловаться</h3>
         
         {success ? (
@@ -73,7 +79,7 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
         ) : (
             <form onSubmit={handleSubmit}>
                 <textarea
-                    className="w-full border border-gray-300 rounded-xl p-3 text-sm mb-3 resize-none"
+                    className="w-full border border-gray-300 rounded-xl p-3 text-sm mb-3 resize-none focus:outline-none focus:border-black"
                     rows={3}
                     placeholder="Опишите причину..."
                     value={reason}
@@ -87,14 +93,14 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
                     <button
                         type="button"
                         onClick={() => setIsOpen(false)}
-                        className="flex-1 py-2 rounded-xl border border-gray-300 text-sm"
+                        className="flex-1 py-2 rounded-xl border border-gray-300 text-sm hover:bg-gray-50"
                     >
                         Отмена
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-medium disabled:opacity-50"
+                        className="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-medium disabled:opacity-50 hover:bg-red-600"
                     >
                         {loading ? "..." : "Отправить"}
                     </button>

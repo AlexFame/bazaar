@@ -85,7 +85,7 @@ function formatDate(createdAt, lang) {
   });
 }
 
-export default function ListingCard({ listing, showActions, onDelete }) {
+export default function ListingCard({ listing, showActions, onDelete, onPromote }) {
   const { lang } = useLang();
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState(null);
@@ -201,9 +201,22 @@ export default function ListingCard({ listing, showActions, onDelete }) {
     }
   };
 
+  const isVip = listing.is_vip;
+
   return (
     <Link href={`/listing/${listing.id}`}>
-      <article className="bg-white rounded-2xl p-2 shadow-sm flex flex-col h-full border border-black/10 relative">
+      <article className={`bg-white rounded-2xl p-2 shadow-sm flex flex-col h-full relative transition-all ${
+        isVip 
+          ? 'border-2 border-yellow-400 ring-2 ring-yellow-100 shadow-md' 
+          : 'border border-black/10'
+      }`}>
+        {/* VIP Badge */}
+        {isVip && (
+            <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 text-black text-[10px] font-bold rounded-full shadow-sm flex items-center gap-1">
+                <span>👑</span> VIP
+            </div>
+        )}
+
         {/* Heart button */}
         <button
           onClick={handleFavoriteClick}
@@ -302,6 +315,18 @@ export default function ListingCard({ listing, showActions, onDelete }) {
         {/* Edit/Delete buttons */}
         {showActions && (
           <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-100">
+            {onPromote && !isVip && (
+                <button
+                  onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onPromote();
+                  }}
+                  className="w-full py-1.5 px-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[11px] font-bold rounded-lg shadow-sm hover:shadow-md transition-all"
+                >
+                  🚀 Продвинуть (VIP)
+                </button>
+            )}
             <button
               onClick={handleEdit}
               className="w-full py-1.5 px-3 bg-gray-100 text-black text-[11px] font-medium rounded-lg hover:bg-gray-200 transition-colors"

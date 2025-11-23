@@ -148,6 +148,31 @@ export default function MyPage() {
     loadListings();
   };
 
+  const handlePromote = async (listingId) => {
+      if (!confirm("Купить VIP статус на 7 дней? (Тестовая оплата)")) return;
+
+      try {
+          const nextWeek = new Date();
+          nextWeek.setDate(nextWeek.getDate() + 7);
+
+          const { error } = await supabase
+            .from('listings')
+            .update({ 
+                is_vip: true,
+                vip_until: nextWeek.toISOString()
+            })
+            .eq('id', listingId);
+
+          if (error) throw error;
+
+          alert("Успешно! Ваше объявление теперь VIP 👑");
+          loadListings(); // Refresh
+      } catch (err) {
+          console.error("Promote error:", err);
+          alert("Ошибка при покупке VIP");
+      }
+  };
+
   return (
     <div className="w-full flex justify-center mt-3">
       <div className="w-full max-w-[520px] px-3">
@@ -258,6 +283,7 @@ export default function MyPage() {
                   listing={listing} 
                   showActions={true}
                   onDelete={handleDelete}
+                  onPromote={() => handlePromote(listing.id)}
                 />
               ))}
             </div>
