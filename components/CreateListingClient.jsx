@@ -12,6 +12,7 @@ import { checkContent, checkImage } from "@/lib/moderation";
 
 export default function CreateListingClient({ onCreated, editId }) {
   // ... (state)
+  const [categoryKey, setCategoryKey] = useState(CATEGORY_DEFS[0]?.key || "kids");
 
   // ...
 
