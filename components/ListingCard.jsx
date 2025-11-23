@@ -12,14 +12,14 @@ const typeLabels = {
   ru: {
     sell: "Продам",
     buy: "Куплю",
-    free: "Отдам бесплатно",
+    free: "Отдам",
     services: "Услуги",
     unknown: "Объявление",
   },
   ua: {
     sell: "Продам",
     buy: "Куплю",
-    free: "Віддам безкоштовно",
+    free: "Віддам",
     services: "Послуги",
     unknown: "Оголошення",
   },
