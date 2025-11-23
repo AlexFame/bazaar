@@ -228,7 +228,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
       <article className={`bg-white dark:bg-[#171717] rounded-2xl p-2 shadow-sm flex flex-col h-full relative transition-all ${
         isVip 
           ? 'border-2 border-yellow-400 ring-2 ring-yellow-100 dark:ring-yellow-900 shadow-md' 
-          : 'border border-black/10 dark:border-white/10'
+          : 'border border-black/10 dark:border-white/10 dark:shadow-none'
       }`}>
         {/* VIP Badge */}
         {isVip && (

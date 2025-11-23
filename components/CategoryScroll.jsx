@@ -27,7 +27,7 @@ export default function CategoryScroll() {
                     params.set("category", cat.key);
                     router.push(`/?${params.toString()}`);
                   }}
-                  className="flex-shrink-0 px-4 py-2 rounded-full bg-[#F2F3F7] text-xs font-medium whitespace-nowrap flex items-center gap-1 border border-black/5 hover:bg-gray-200 transition-colors"
+                  className="flex-shrink-0 px-4 py-2 rounded-full bg-[#F2F3F7] dark:bg-[#262626] text-xs font-medium whitespace-nowrap flex items-center gap-1 border border-black/5 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-gray-700 text-black dark:text-white transition-colors"
                 >
                   {cat.icon && (
                     <span className="text-sm" aria-hidden="true">
@@ -51,7 +51,7 @@ export default function CategoryScroll() {
                       params.set("category", cat.key);
                       router.push(`/?${params.toString()}`);
                     }}
-                    className="flex-shrink-0 px-4 py-2 rounded-full bg-[#F2F3F7] text-xs font-medium whitespace-nowrap flex items-center gap-1 border border-black/5 hover:bg-gray-200 transition-colors"
+                    className="flex-shrink-0 px-4 py-2 rounded-full bg-[#F2F3F7] dark:bg-[#262626] text-xs font-medium whitespace-nowrap flex items-center gap-1 border border-black/5 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-gray-700 text-black dark:text-white transition-colors"
                   >
                     {cat.icon && (
                       <span className="text-sm" aria-hidden="true">

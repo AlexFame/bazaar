@@ -299,9 +299,9 @@ export default function AppShell({ children }) {
   );
 
   return (
-    <div className="w-full min-h-screen bg-white dark:bg-[#171717] flex flex-col items-center transition-colors duration-300">
+    <div className="w-full min-h-screen bg-white dark:bg-black flex flex-col items-center transition-colors duration-300">
       {/* Шапка */}
-      <header className="w-full bg-white dark:bg-[#171717] pt-3 pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
+      <header className="w-full bg-white dark:bg-black pt-3 pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
         <div className="w-full max-w-[520px] px-3 mx-auto flex flex-col gap-3">
           {/* Текст сверху */}
           <div className="text-center text-xs font-semibold text-black/80 dark:text-white/80">
