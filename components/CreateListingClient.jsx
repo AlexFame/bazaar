@@ -8,7 +8,7 @@ import { getTelegramUser, isTelegramEnv } from "@/lib/telegram";
 import { geocodeAddress } from "@/lib/geocoding";
 import BackButton from "@/components/BackButton";
 
-import { checkContent, checkImage, hasEmoji } from "@/lib/moderation";
+import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";
 
 const typeOptions = [
   { value: "buy", labelKey: "field_type_buy" },
@@ -173,15 +173,31 @@ export default function CreateListingClient({ onCreated, editId }) {
         return;
     }
 
+    // Validate title
+    const titleValidation = validateTitle(title);
+    if (!titleValidation.valid) {
+        setErrorMsg(titleValidation.error);
+        return;
+    }
+
     // Check for emojis in title
     if (hasEmoji(title)) {
         setErrorMsg("Эмодзи в заголовке запрещены. Используйте только текст.");
         return;
     }
 
-    if (!title.trim()) {
-      setErrorMsg("Введите заголовок объявления.");
-      return;
+    // Validate description
+    const descValidation = validateDescription(description);
+    if (!descValidation.valid) {
+        setErrorMsg(descValidation.error);
+        return;
+    }
+
+    // Validate price
+    const priceValidation = validatePrice(price, listingType);
+    if (!priceValidation.valid) {
+        setErrorMsg(priceValidation.error);
+        return;
     }
 
     if (!contacts.trim()) {
@@ -224,12 +240,50 @@ export default function CreateListingClient({ onCreated, editId }) {
                    setLoading(false);
                    return;
                }
-          } else {
-               console.warn("⚠️ [Create Listing] No session and no Telegram data");
-               // Продолжаем, возможно это анонимный режим (хотя RLS скорее всего запретит)
-          }
+           } else {
+               setErrorMsg("Войдите в систему, чтобы создать объявление.");
+               setLoading(false);
+               return;
+           }
       }
 
+      // Rate limiting: Check how many listings user created recently
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && !editId) { // Skip rate limit check when editing
+          const now = new Date();
+          const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+          // Check listings in last hour
+          const { data: recentListings, error: recentError } = await supabase
+              .from("listings")
+              .select("id, created_at")
+              .eq("created_by", user.id)
+              .gte("created_at", oneHourAgo.toISOString());
+
+          if (recentError) {
+              console.error("Error checking rate limit:", recentError);
+          } else if (recentListings && recentListings.length >= 3) {
+              setErrorMsg("Вы создали слишком много объявлений за последний час. Подождите немного.");
+              setLoading(false);
+              return;
+          }
+
+          // Check listings in last day
+          const { data: dailyListings, error: dailyError } = await supabase
+              .from("listings")
+              .select("id")
+              .eq("created_by", user.id)
+              .gte("created_at", oneDayAgo.toISOString());
+
+          if (dailyError) {
+              console.error("Error checking daily limit:", dailyError);
+          } else if (dailyListings && dailyListings.length >= 10) {
+              setErrorMsg("Вы достигли дневного лимита объявлений (10 в день). Попробуйте завтра.");
+              setLoading(false);
+              return;
+          }
+      }
       const dbType = listingType;
 
       // данные телеграма для личного кабинета
