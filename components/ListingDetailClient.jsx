@@ -12,6 +12,7 @@ import { ListingDetailSkeleton } from "@/components/SkeletonLoader";
 import SimilarListings from "@/components/SimilarListings";
 import BackButton from "@/components/BackButton";
 import ReportButton from "@/components/ReportButton";
+import { translateText } from "@/lib/translation";
 
 // Строим ссылку по введённому контакту
 function buildContactLink(raw) {
@@ -53,8 +54,6 @@ function detectType(raw) {
   return { isPhone, isTelegram };
 }
 
-// Лейблы кнопок по языкам
-
 export default function ListingDetailClient({ id }) {
   const { t, lang } = useLang();
   const router = useRouter();
@@ -65,6 +64,9 @@ export default function ListingDetailClient({ id }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
+  
+  // Translation state
+  const [translated, setTranslated] = useState({ title: "", description: "" });
 
   useEffect(() => {
     if (!id) return;
@@ -152,6 +154,33 @@ export default function ListingDetailClient({ id }) {
         });
     }
   }, [id]);
+
+  // Auto-translation effect
+  useEffect(() => {
+    if (!listing) return;
+
+    let isMounted = true;
+    
+    async function doTranslate() {
+      // Reset translation when listing changes to avoid showing old translation
+      // But here we want to keep it if just lang changed? 
+      // Actually, better to just translate.
+      
+      const tTitle = await translateText(listing.title, lang);
+      const tDesc = await translateText(listing.description, lang);
+      
+      if (isMounted) {
+        setTranslated({
+            title: tTitle,
+            description: tDesc
+        });
+      }
+    }
+
+    doTranslate();
+
+    return () => { isMounted = false; };
+  }, [listing, lang]);
 
   function handleScroll(e) {
     const scrollLeft = e.target.scrollLeft;
@@ -398,7 +427,7 @@ export default function ListingDetailClient({ id }) {
 
               {listing.title && (
                 <h1 className="text-sm font-semibold mt-1 mb-1">
-                  {listing.title}
+                  {translated.title || listing.title}
                 </h1>
               )}
 
@@ -441,7 +470,7 @@ export default function ListingDetailClient({ id }) {
 
               {listing.description && (
                 <p className="text-xs text-black/80 whitespace-pre-wrap mb-2">
-                  {listing.description}
+                  {translated.description || listing.description}
                 </p>
               )}
 
