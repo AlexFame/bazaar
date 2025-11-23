@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { getUserId } from "@/lib/userId";
+import { translateText } from "@/lib/translation";
 
 const typeLabels = {
   ru: {
@@ -91,6 +92,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
   const [imageUrl, setImageUrl] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
   const [profileId, setProfileId] = useState(null);
+  const [translatedTitle, setTranslatedTitle] = useState("");
 
   useEffect(() => {
     const path = listing?.main_image_path || listing?.image_path;
@@ -138,6 +140,24 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
 
     loadFavoriteStatus();
   }, [listing.id]);
+
+  // Auto-translate title when language changes
+  useEffect(() => {
+    if (!listing?.title) return;
+
+    let isMounted = true;
+
+    async function doTranslate() {
+      const translated = await translateText(listing.title, lang);
+      if (isMounted) {
+        setTranslatedTitle(translated);
+      }
+    }
+
+    doTranslate();
+
+    return () => { isMounted = false; };
+  }, [listing?.title, lang]);
 
   const typeMap = typeLabels[lang] || typeLabels.ru;
   const typeKey = listing?.type || "unknown";
@@ -278,7 +298,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
           {/* Заголовок */}
           {listing.title && (
             <h2 className="text-sm font-semibold line-clamp-2 mb-0.5">
-              {listing.title}
+              {translatedTitle || listing.title}
             </h2>
           )}
 
