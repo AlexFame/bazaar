@@ -173,10 +173,16 @@ export default function AppShell({ children }) {
                   fetchUnread();
                   // Show toast for new messages from others
                   if (payload.eventType === 'INSERT') {
+                      console.log("🔔 [AppShell] New message received:", payload.new);
                       supabase.auth.getUser().then(({ data: { user } }) => {
+                          console.log("🔔 [AppShell] Current user:", user?.id);
                           if (user && payload.new.sender_id !== user.id) {
                               // Check if we are on the chat page
-                              if (!window.location.pathname.includes(payload.new.conversation_id)) {
+                              const isChatOpen = window.location.pathname.includes(payload.new.conversation_id);
+                              console.log("🔔 [AppShell] Is chat open?", isChatOpen);
+                              
+                              if (!isChatOpen) {
+                                  console.log("🔔 [AppShell] Showing toast!");
                                   setToastMessage(`Новое сообщение: ${payload.new.content}`);
                               }
                           }
