@@ -23,12 +23,27 @@ export default function AppShell({ children }) {
   const [showFloatingSearch, setShowFloatingSearch] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [toastMessage, setToastMessage] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const lastScrollY = useRef(0);
   const headerSearchRef = useRef(null);
   const floatingSearchRef = useRef(null);
 
   // чтобы не дергать /api/auth/tg/verify по 100 раз
   const authOnceRef = useRef(false);
+
+  // Track current user
+  useEffect(() => {
+      const getUser = async () => {
+          const { data: { user } } = await supabase.auth.getUser();
+          setCurrentUser(user);
+      };
+      getUser();
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+          setCurrentUser(session?.user || null);
+      });
+      return () => subscription.unsubscribe();
+  }, []);
 
   // Подтягиваем q из URL в инпут и сбрасываем подсказки
   useEffect(() => {
@@ -139,18 +154,17 @@ export default function AppShell({ children }) {
 
   // Периодическая проверка непрочитанных (раз в 30 сек) + Realtime
   useEffect(() => {
+      if (!currentUser) return;
+
       // Функция обновления счетчика
       const fetchUnread = async () => {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-              const { count } = await supabase
-                  .from('messages')
-                  .select('*', { count: 'exact', head: true })
-                  .eq('is_read', false)
-                  .neq('sender_id', user.id);
-              
-              if (count !== null) setUnreadCount(count);
-          }
+          const { count } = await supabase
+              .from('messages')
+              .select('*', { count: 'exact', head: true })
+              .eq('is_read', false)
+              .neq('sender_id', currentUser.id);
+          
+          if (count !== null) setUnreadCount(count);
       };
 
       // 1. Initial fetch
@@ -170,23 +184,17 @@ export default function AppShell({ children }) {
                   table: 'messages',
               },
               (payload) => {
+                  console.log("🔔 [AppShell] Realtime Event:", payload);
                   fetchUnread();
+                  
                   // Show toast for new messages from others
-                  if (payload.eventType === 'INSERT') {
-                      console.log("🔔 [AppShell] New message received:", payload.new);
-                      supabase.auth.getUser().then(({ data: { user } }) => {
-                          console.log("🔔 [AppShell] Current user:", user?.id);
-                          if (user && payload.new.sender_id !== user.id) {
-                              // Check if we are on the chat page
-                              const isChatOpen = window.location.pathname.includes(payload.new.conversation_id);
-                              console.log("🔔 [AppShell] Is chat open?", isChatOpen);
-                              
-                              if (!isChatOpen) {
-                                  console.log("🔔 [AppShell] Showing toast!");
-                                  setToastMessage(`Новое сообщение: ${payload.new.content}`);
-                              }
-                          }
-                      });
+                  if (payload.eventType === 'INSERT' && payload.new.sender_id !== currentUser.id) {
+                      const isChatOpen = window.location.pathname.includes(payload.new.conversation_id);
+                      console.log("🔔 [AppShell] New Msg. ChatOpen:", isChatOpen);
+                      
+                      if (!isChatOpen) {
+                          setToastMessage(`Новое сообщение: ${payload.new.content}`);
+                      }
                   }
               }
           )
@@ -196,7 +204,7 @@ export default function AppShell({ children }) {
           clearInterval(interval);
           supabase.removeChannel(channel);
       };
-  }, []);
+  }, [currentUser]);
 
 
   const handleSearchSubmit = (e) => {
