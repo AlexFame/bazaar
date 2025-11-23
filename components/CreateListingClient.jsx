@@ -13,7 +13,7 @@ import { checkContent, checkImage } from "@/lib/moderation";
 const typeOptions = [
   { value: "buy", labelKey: "field_type_buy" },
   { value: "sell", labelKey: "field_type_sell" },
-  { value: "service", labelKey: "field_type_service" },
+  { value: "service", labelKey: "field_type_services" },
   { value: "exchange", labelKey: "field_type_exchange" },
 ];
 
