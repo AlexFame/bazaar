@@ -39,6 +39,7 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [initialImageIds, setInitialImageIds] = useState([]);
   const [coordinates, setCoordinates] = useState(null);
   const [geocoding, setGeocoding] = useState(false);
+  const [honeypot, setHoneypot] = useState(""); // Bot trap
   const inTelegram = isTelegramEnv();
   const closeTimeoutRef = useRef(null);
 
@@ -165,6 +166,13 @@ export default function CreateListingClient({ onCreated, editId }) {
 
     setErrorMsg("");
     setSuccessMsg("");
+
+    // Honeypot check - if filled, it's a bot
+    if (honeypot) {
+        console.warn("🤖 Bot detected via honeypot field");
+        setErrorMsg("Ошибка отправки формы. Попробуйте позже.");
+        return;
+    }
 
     // Auto-Moderation for Text
     const contentCheck = checkContent(title + " " + description);
@@ -690,6 +698,18 @@ export default function CreateListingClient({ onCreated, editId }) {
       )}
 
       <form onSubmit={handleSubmit} className="bg-[#F2F3F7] rounded-2xl p-3">
+        {/* Honeypot field - hidden from users, bots will fill it */}
+        <input
+          type="text"
+          name="website"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+        />
+        
         {/* тип объявления */}
         <div className="flex flex-col mb-3">
           <div className="text-[11px] font-semibold mb-1">
