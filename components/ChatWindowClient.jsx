@@ -104,7 +104,15 @@ export default function ChatWindowClient({ conversationId }) {
             filter: `conversation_id=eq.${conversationId}`,
           },
           (payload) => {
-            setMessages((prev) => [...prev, payload.new]);
+            // Prevent duplicates: check if message already exists
+            setMessages((prev) => {
+              const exists = prev.some(m => m.id === payload.new.id);
+              if (exists) {
+                console.log("⚠️ Duplicate message prevented:", payload.new.id);
+                return prev;
+              }
+              return [...prev, payload.new];
+            });
             
             // Mark as read immediately if I'm looking at the chat
             if (payload.new.sender_id !== user.id) {
