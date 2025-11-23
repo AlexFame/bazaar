@@ -1,0 +1,45 @@
+
+import { NextResponse } from "next/server";
+
+export async function POST(request) {
+  try {
+    const { text, targetLang } = await request.json();
+
+    if (!text) {
+      return NextResponse.json({ text: "" });
+    }
+
+    // Map our language codes to Google's
+    const langMap = {
+      "ua": "uk",
+      "ru": "ru",
+      "en": "en"
+    };
+
+    const target = langMap[targetLang] || "en";
+
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${target}&dt=t&q=${encodeURIComponent(text)}`;
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+        throw new Error(`Google API responded with ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // Extract translated text
+    // Response structure: [[["Translated text","Original text",...],...],...]
+    let translatedText = text;
+    if (data && data[0]) {
+      translatedText = data[0].map(item => item[0]).join("");
+    }
+
+    return NextResponse.json({ text: translatedText });
+
+  } catch (error) {
+    console.error("Translation API error:", error);
+    // Return original text on error to not break UI
+    return NextResponse.json({ text: "" }, { status: 500 });
+  }
+}
