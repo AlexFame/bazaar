@@ -775,7 +775,6 @@ export default function CreateListingClient({ onCreated, editId }) {
           )}
         </div>
 
-        {/* контакты */}
         <div className="mb-3">
           <div className="text-[11px] font-semibold mb-1">
             {t("field_contacts_label")}
@@ -787,6 +786,22 @@ export default function CreateListingClient({ onCreated, editId }) {
             value={contacts}
             onChange={(e) => setContacts(e.target.value)}
           />
+          {isTelegram && (
+            <button
+              type="button"
+              className="mt-2 text-xs text-blue-600 hover:text-blue-800"
+              onClick={() => {
+                const user = getTelegramUser();
+                if (user?.username) {
+                  setContacts(`@${user.username}`);
+                } else {
+                    alert("У вас не установлен username в Telegram.");
+                }
+              }}
+            >
+              Использовать мой юзернейм
+            </button>
+          )}
         </div>
 
         {/* Состояние (только для товаров, не для услуг) */}
