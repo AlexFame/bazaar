@@ -22,6 +22,11 @@
 
 html {
   font-size: 17px;
+  background-color: white;
+}
+
+html.dark {
+  background-color: black;
 }
 
 body {

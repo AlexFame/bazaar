@@ -12,6 +12,8 @@ import { getSuggestions } from "@/lib/searchUtils";
 import { supabase } from "@/lib/supabaseClient";
 import Toast from "./Toast";
 
+import TelegramThemeSync from "@/components/TelegramThemeSync";
+
 export default function AppShell({ children }) {
   const pathname = usePathname();
   const router = useRouter();
