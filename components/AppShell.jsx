@@ -301,84 +301,91 @@ export default function AppShell({ children }) {
   );
 
   return (
+  // Check if we are in a chat conversation (e.g. /messages/123)
+  // But NOT the main messages list (/messages)
+  const isChatConversation = pathname.startsWith("/messages/") && pathname.split("/").length > 2;
+
+  return (
     <div className="w-full min-h-[100dvh] bg-white dark:bg-black flex flex-col items-center transition-colors duration-300">
-      {/* Шапка */}
-      <header className="w-full bg-white dark:bg-black pt-3 pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
-        <div className="w-full max-w-[520px] px-3 mx-auto flex flex-col gap-3">
-          {/* Текст сверху */}
-          <div className="text-center text-xs font-semibold text-black/80 dark:text-white/80">
-            Bazaar - Telegram-маркетплейс для мигрантов в Германии
+      {/* Шапка - скрываем в чате */}
+      {!isChatConversation && (
+        <header className="w-full bg-white dark:bg-black pt-3 pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
+          <div className="w-full max-w-[520px] px-3 mx-auto flex flex-col gap-3">
+            {/* Текст сверху */}
+            <div className="text-center text-xs font-semibold text-black/80 dark:text-white/80">
+              Bazaar - Telegram-маркетплейс для мигрантов в Германии
+            </div>
+
+            {/* Поиск - с анимацией скрытия/появления */}
+            <div 
+              className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                  pathname === "/" ? "max-h-16 opacity-100 mb-0" : "max-h-0 opacity-0 mb-0"
+              }`}
+            >
+              <form onSubmit={handleSearchSubmit} className="w-full">
+                  {renderSearchBar(headerSearchRef)}
+              </form>
+            </div>
+
+            {/* НАВИГАЦИЯ + ЯЗЫК */}
+            <div className="flex items-center justify-center gap-2">
+              <nav className="flex gap-2 items-center justify-center">
+                {/* Главная */}
+                <Link href="/">
+                  <button
+                    className={`${navBtn} ${
+                      pathname === "/"
+                        ? "bg-black text-white dark:bg-white dark:text-black"
+                        : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
+                    }`}
+                  >
+                    {t("navbar_brand")}
+                  </button>
+                </Link>
+
+                {/* Мои объявления */}
+                <Link href="/my">
+                  <button
+                    className={`${navBtn} ${
+                      pathname === "/my"
+                        ? "bg-black text-white dark:bg-white dark:text-black"
+                        : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
+                    }`}
+                  >
+                    {t("navbar_myAds")}
+                  </button>
+                </Link>
+
+                {/* Сообщения (Иконка + Бейдж) */}
+                <Link href="/messages">
+                  <button
+                    className={`${navBtn} relative ${
+                      pathname.startsWith("/messages")
+                        ? "bg-black text-white dark:bg-white dark:text-black"
+                        : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                    </svg>
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                            {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                    )}
+                  </button>
+                </Link>
+              </nav>
+
+              <ThemeToggle />
+              <LangSwitcher />
+            </div>
           </div>
-
-          {/* Поиск - с анимацией скрытия/появления */}
-          <div 
-            className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                pathname === "/" ? "max-h-16 opacity-100 mb-0" : "max-h-0 opacity-0 mb-0"
-            }`}
-          >
-            <form onSubmit={handleSearchSubmit} className="w-full">
-                {renderSearchBar(headerSearchRef)}
-            </form>
-          </div>
-
-          {/* НАВИГАЦИЯ + ЯЗЫК */}
-          <div className="flex items-center justify-center gap-2">
-            <nav className="flex gap-2 items-center justify-center">
-              {/* Главная */}
-              <Link href="/">
-                <button
-                  className={`${navBtn} ${
-                    pathname === "/"
-                      ? "bg-black text-white dark:bg-white dark:text-black"
-                      : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
-                  }`}
-                >
-                  {t("navbar_brand")}
-                </button>
-              </Link>
-
-              {/* Мои объявления */}
-              <Link href="/my">
-                <button
-                  className={`${navBtn} ${
-                    pathname === "/my"
-                      ? "bg-black text-white dark:bg-white dark:text-black"
-                      : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
-                  }`}
-                >
-                  {t("navbar_myAds")}
-                </button>
-              </Link>
-
-              {/* Сообщения (Иконка + Бейдж) */}
-              <Link href="/messages">
-                <button
-                  className={`${navBtn} relative ${
-                    pathname.startsWith("/messages")
-                      ? "bg-black text-white dark:bg-white dark:text-black"
-                      : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                  </svg>
-                  {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
-                  )}
-                </button>
-              </Link>
-            </nav>
-
-            <ThemeToggle />
-            <LangSwitcher />
-          </div>
-        </div>
-      </header>
+        </header>
+      )}
 
       {/* Липкая панель поиска - только на главной */}
-      {pathname === "/" && (
+      {pathname === "/" && !isChatConversation && (
         <div
             className={`fixed top-2 left-1/2 -translate-x-1/2 w-full max-w-[520px] px-3 z-30 transition-all duration-200 ${
             showFloatingSearch
@@ -390,14 +397,16 @@ export default function AppShell({ children }) {
         </div>
       )}
 
-      {/* Контент */}
-      <main className="flex-1 w-full max-w-[520px] mx-auto px-3 pb-4">
+      {/* Контент - убираем отступы в чате */}
+      <main className={`flex-1 w-full max-w-[520px] mx-auto ${isChatConversation ? "p-0" : "px-3 pb-4"}`}>
         {children}
       </main>
 
-      <footer className="w-full max-w-[520px] mx-auto text-center text-[11px] py-5 opacity-60">
-        Bazaar © 2025
-      </footer>
+      {!isChatConversation && (
+        <footer className="w-full max-w-[520px] mx-auto text-center text-[11px] py-5 opacity-60">
+          Bazaar © 2025
+        </footer>
+      )}
       
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </div>
