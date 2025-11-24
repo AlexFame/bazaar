@@ -11,7 +11,7 @@ export default function TelegramThemeSync() {
     const tg = getTG();
     if (!tg) return;
 
-    const isDark = theme === "dark" || resolvedTheme === "dark";
+    const isDark = theme === "dark" || resolvedTheme === "dark" || tg.colorScheme === "dark";
     const color = isDark ? "#000000" : "#ffffff";
 
     try {
