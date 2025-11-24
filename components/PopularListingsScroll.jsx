@@ -102,10 +102,10 @@ export default function PopularListingsScroll() {
 
         {/* прогресс */}
         {slides.length > 1 && (
-          <div className="mt-2 h-1 w-full rounded-full bg-black/10 overflow-hidden">
+          <div className="mt-2 h-1 w-full rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
             <div
               key={currentIndex}
-              className="h-full bg-black progress-bar"
+              className="h-full bg-black dark:bg-white progress-bar"
               style={{ animationDuration: `${SLIDE_DURATION}ms` }}
             />
           </div>
