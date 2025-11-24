@@ -43,6 +43,7 @@ body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
   transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100dvh;
 }
 
 /* Telegram-like smooth scrolling */

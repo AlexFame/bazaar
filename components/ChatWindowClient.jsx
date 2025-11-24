@@ -226,13 +226,13 @@ export default function ChatWindowClient({ conversationId }) {
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-[520px] mx-auto bg-white">
+    <div className="flex flex-col h-[100dvh] max-w-[520px] mx-auto bg-white dark:bg-black">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 p-3 border-b border-gray-100 bg-white sticky top-0 z-10">
+      <div className="flex-shrink-0 flex items-center gap-3 p-3 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black sticky top-0 z-10">
         <BackButton />
         {otherUser && (
           <div className="flex items-center gap-2 flex-1">
-            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
               {otherUser.avatar_url ? (
                 <img src={otherUser.avatar_url} alt={otherUser.full_name} className="w-full h-full object-cover" />
               ) : (
@@ -242,16 +242,16 @@ export default function ChatWindowClient({ conversationId }) {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm truncate">{otherUser.full_name || "Пользователь"}</div>
+              <div className="font-semibold text-sm truncate text-black dark:text-white">{otherUser.full_name || "Пользователь"}</div>
               {listing && (
-                <div className="text-xs text-gray-500 truncate">{listing.title} · {listing.price} €</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{listing.title} · {listing.price} €</div>
               )}
             </div>
           </div>
         )}
         {/* Listing Image (Link to listing) */}
         {listing && (
-            <a href={`/listing/${listing.id}`} className="w-8 h-8 rounded bg-gray-100 overflow-hidden flex-shrink-0 block">
+            <a href={`/listing/${listing.id}`} className="w-8 h-8 rounded bg-gray-100 dark:bg-gray-800 overflow-hidden flex-shrink-0 block">
                 {listing.image_path && (
                     <img src={getImageUrl(listing.image_path)} alt={listing.title} className="w-full h-full object-cover" />
                 )}
@@ -260,15 +260,8 @@ export default function ChatWindowClient({ conversationId }) {
       </div>
 
       {/* Messages Area */}
-      {/* Messages Area - takes remaining space */}
       <div 
         className="flex-1 overflow-y-auto p-3 space-y-3 pb-4"
-        onClick={() => {
-          if (!showInput) {
-            setShowInput(true);
-            setTimeout(() => textareaRef.current?.focus({ preventScroll: true }), 100);
-          }
-        }}
       >
         {messages.map((msg) => {
           const isMe = msg.sender_id === user?.id;
@@ -280,12 +273,12 @@ export default function ChatWindowClient({ conversationId }) {
               <div
                 className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm ${
                   isMe
-                    ? "bg-black text-white rounded-br-none"
-                    : "bg-gray-100 text-black rounded-bl-none"
+                    ? "bg-black dark:bg-white text-white dark:text-black rounded-br-none"
+                    : "bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-bl-none"
                 }`}
               >
                 <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                <div className={`text-[9px] mt-1 text-right ${isMe ? "text-white/60" : "text-black/40"}`}>
+                <div className={`text-[9px] mt-1 text-right ${isMe ? "text-white/60 dark:text-black/60" : "text-black/40 dark:text-white/40"}`}>
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
@@ -295,16 +288,15 @@ export default function ChatWindowClient({ conversationId }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area - shown only when showInput is true */}
-      {showInput && (
-      <div className="flex-shrink-0 p-3 bg-white border-t border-gray-100 pb-safe z-50 relative">
+      {/* Input Area - Always visible */}
+      <div className="flex-shrink-0 p-3 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 pb-safe z-50 relative">
         <form onSubmit={handleSend} className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Написать сообщение..."
-            className="flex-1 bg-gray-100 rounded-2xl px-4 py-3 text-sm outline-none resize-none max-h-32 min-h-[44px]"
+            className="flex-1 bg-gray-100 dark:bg-gray-800 dark:text-white rounded-2xl px-4 py-3 text-sm outline-none resize-none max-h-32 min-h-[44px] placeholder-gray-500 dark:placeholder-gray-400"
             rows={1}
             onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -312,12 +304,11 @@ export default function ChatWindowClient({ conversationId }) {
                     handleSend(e);
                 }
             }}
-            autoFocus
           />
           <button
             type="submit"
             disabled={!newMessage.trim() || isSending}
-            className="w-11 h-11 flex items-center justify-center bg-black text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-opacity mb-[1px]"
+            className="w-11 h-11 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-opacity mb-[1px]"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -326,7 +317,6 @@ export default function ChatWindowClient({ conversationId }) {
           </button>
         </form>
       </div>
-      )}
     </div>
   );
 }

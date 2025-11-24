@@ -301,7 +301,7 @@ export default function AppShell({ children }) {
   );
 
   return (
-    <div className="w-full min-h-screen bg-white dark:bg-black flex flex-col items-center transition-colors duration-300">
+    <div className="w-full min-h-[100dvh] bg-white dark:bg-black flex flex-col items-center transition-colors duration-300">
       {/* Шапка */}
       <header className="w-full bg-white dark:bg-black pt-3 pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
         <div className="w-full max-w-[520px] px-3 mx-auto flex flex-col gap-3">
