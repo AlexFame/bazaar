@@ -14,19 +14,28 @@ export default function TelegramThemeSync() {
     const isDark = theme === "dark" || resolvedTheme === "dark" || tg.colorScheme === "dark";
     const color = isDark ? "#000000" : "#ffffff";
 
+    // 1. Update Telegram WebApp
     try {
-      // Устанавливаем цвет хедера
       tg.setHeaderColor(color);
-      
-      // Устанавливаем цвет фона самого Telegram WebApp (рамки)
       tg.setBackgroundColor(color);
-      
-      // Если поддерживается, можно и bottom bar покрасить (в новых версиях)
       if (tg.setBottomBarColor) {
         tg.setBottomBarColor(color);
       }
     } catch (e) {
       console.warn("Error syncing Telegram theme:", e);
+    }
+
+    // 2. Update Browser Meta Tag (for PWA/Mobile Browser edges)
+    try {
+      let meta = document.querySelector('meta[name="theme-color"]');
+      if (!meta) {
+        meta = document.createElement('meta');
+        meta.name = "theme-color";
+        document.head.appendChild(meta);
+      }
+      meta.content = color;
+    } catch (e) {
+      console.warn("Error syncing meta theme-color:", e);
     }
   }, [theme, resolvedTheme]);
 

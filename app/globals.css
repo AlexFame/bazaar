@@ -29,6 +29,16 @@ html.dark {
   background-color: black;
 }
 
+@media (prefers-color-scheme: dark) {
+  html {
+    background-color: black;
+  }
+  body {
+    background-color: black;
+    color: white;
+  }
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: rgb(var(--background-start-rgb));
