@@ -296,7 +296,7 @@ export default function ChatWindowClient({ conversationId }) {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Написать сообщение..."
-            className="flex-1 bg-gray-100 dark:bg-gray-800 dark:text-white rounded-2xl px-4 py-3 text-sm outline-none resize-none max-h-32 min-h-[44px] placeholder-gray-500 dark:placeholder-gray-400"
+            className="flex-1 bg-gray-100 dark:bg-gray-800 dark:text-white rounded-2xl px-4 py-3 text-base outline-none resize-none max-h-32 min-h-[44px] placeholder-gray-500 dark:placeholder-gray-400"
             rows={1}
             onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {

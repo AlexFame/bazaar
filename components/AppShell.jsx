@@ -300,10 +300,9 @@ export default function AppShell({ children }) {
     </div>
   );
 
-  return (
   // Check if we are in a chat conversation (e.g. /messages/123)
   // But NOT the main messages list (/messages)
-  const isChatConversation = pathname.startsWith("/messages/") && pathname.split("/").length > 2;
+  const isChatConversation = pathname.startsWith("/messages/") && pathname !== "/messages";
 
   return (
     <div className="w-full min-h-[100dvh] bg-white dark:bg-black flex flex-col items-center transition-colors duration-300">

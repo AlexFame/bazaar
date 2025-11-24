@@ -32,6 +32,8 @@ html.dark {
 @media (prefers-color-scheme: dark) {
   html {
     background-color: black;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   body {
     background-color: black;
