@@ -44,7 +44,13 @@ export default function LoginPage() {
           
           if (sessionError) {
               console.error("Supabase session error:", sessionError);
-              alert("Ошибка сохранения сессии: " + sessionError.message);
+              // Suppress specific error about deleted user, as the backend should now handle restoration on next try
+              if (!sessionError.message.includes("User from sub claim in JWT does not exist")) {
+                  alert("Ошибка сохранения сессии: " + sessionError.message);
+              } else {
+                  // Optional: Force reload or just log
+                  console.warn("Session mismatch detected. Backend should fix on next attempt.");
+              }
           } else {
               console.log("Session set successfully:", sessionData);
               

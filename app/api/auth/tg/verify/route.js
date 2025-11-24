@@ -66,62 +66,72 @@ export async function POST(req) {
 
     const supa = supaAdmin();
     
-    // 1. Ensure user exists in auth.users
-    let authUser;
-    const { data: { users }, error: listErr } = await supa.auth.admin.listUsers();
-    if (listErr) throw listErr;
-    
-    authUser = users.find(u => u.email === fakeEmail);
-    
-    if (!authUser) {
-        // Create new auth user
-        const { data: newUser, error: createErr } = await supa.auth.admin.createUser({
-            email: fakeEmail,
-            email_confirm: true,
-            user_metadata: { tg_user_id, tg_username }
-        });
-        if (createErr) throw createErr;
-        authUser = newUser.user;
-    }
-
-    // 2. Ensure profile exists in public.profiles with SAME ID
-    // Check if a profile with this tg_user_id ALREADY exists but with a DIFFERENT ID
-    // This happens if auth.users was cleared but profiles wasn't
+    // 1. Check for existing profile (The "Truth" for data)
     const { data: existingProfile } = await supa
         .from('profiles')
         .select('id')
         .eq('tg_user_id', tg_user_id)
         .maybeSingle();
 
-    if (existingProfile && existingProfile.id !== authUser.id) {
-        // CRITICAL: DO NOT DELETE OLD PROFILES - it causes CASCADE deletion of all listings!
-        // Instead, just log the warning and use the existing profile
-        console.warn(`Mismatch! Profile ${existingProfile.id} has tg_user_id ${tg_user_id}, but auth user is ${authUser.id}.`);
-        console.warn(`Using existing profile to prevent data loss.`);
-        // DO NOT DELETE: await supa.from('profiles').delete().eq('id', existingProfile.id);
-        // Instead, update the existing profile
-        const { data: updated, error: updateErr } = await supa
-            .from('profiles')
-            .update({ tg_username })
-            .eq('id', existingProfile.id)
-            .select()
-            .single();
-        if (!updateErr) {
-            // Use the existing profile instead of creating new one
-            const token = jwt.sign({ 
-                aud: 'authenticated', 
-                role: 'authenticated', 
-                sub: existingProfile.id,
-                user_metadata: { tg_user_id } 
-            }, process.env.JWT_SECRET, { expiresIn: '30d' });
-            const res = new Response(JSON.stringify({ ok: true, token, user: updated }), { status: 200 });
-            res.headers.set('Set-Cookie', `app_session=${token}; Path=/; HttpOnly; SameSite=Lax; Secure`);
-            return res;
+    let authUser;
+
+    // 2. Check for existing Auth User by email
+    const { data: { users }, error: listErr } = await supa.auth.admin.listUsers();
+    if (listErr) throw listErr;
+    
+    let existingAuthUser = users.find(u => u.email === fakeEmail);
+
+    if (existingProfile) {
+        // Case A: Profile exists. We MUST match this ID to keep data access.
+        
+        if (existingAuthUser) {
+            if (existingAuthUser.id === existingProfile.id) {
+                // Perfect match
+                authUser = existingAuthUser;
+            } else {
+                // Mismatch! The auth user is wrong (likely new/empty). The profile is old (has data).
+                // Delete the wrong auth user so we can recreate it with the correct ID
+                console.warn(`Mismatch! Deleting wrong auth user ${existingAuthUser.id} to restore profile ${existingProfile.id}`);
+                await supa.auth.admin.deleteUser(existingAuthUser.id);
+                
+                // Re-create with correct ID
+                const { data: newUser, error: createErr } = await supa.auth.admin.createUser({
+                    id: existingProfile.id, // RESTORE OLD ID
+                    email: fakeEmail,
+                    email_confirm: true,
+                    user_metadata: { tg_user_id, tg_username }
+                });
+                if (createErr) throw createErr;
+                authUser = newUser.user;
+            }
+        } else {
+            // Profile exists, but no Auth User (Orphan). Restore Auth User.
+            console.log(`Restoring orphan profile ${existingProfile.id}`);
+            const { data: newUser, error: createErr } = await supa.auth.admin.createUser({
+                id: existingProfile.id, // RESTORE OLD ID
+                email: fakeEmail,
+                email_confirm: true,
+                user_metadata: { tg_user_id, tg_username }
+            });
+            if (createErr) throw createErr;
+            authUser = newUser.user;
+        }
+    } else {
+        // Case B: No profile. Standard flow.
+        if (existingAuthUser) {
+            authUser = existingAuthUser;
+        } else {
+            const { data: newUser, error: createErr } = await supa.auth.admin.createUser({
+                email: fakeEmail, // Auto ID
+                email_confirm: true,
+                user_metadata: { tg_user_id, tg_username }
+            });
+            if (createErr) throw createErr;
+            authUser = newUser.user;
         }
     }
 
-    // We use Upsert to ensure if profile exists with this ID it's updated, 
-    // or created if not.
+    // 3. Upsert profile to ensure it's up to date
     const { data: profile, error: profileErr } = await supa
         .from('profiles')
         .upsert({ 
@@ -135,11 +145,11 @@ export async function POST(req) {
         
     if (profileErr) throw profileErr;
 
-    // Create token (assuming JWT_SECRET is Supabase JWT secret)
+    // Create token
     const token = jwt.sign({ 
         aud: 'authenticated', 
         role: 'authenticated', 
-        sub: authUser.id, // MUST match auth.users.id
+        sub: authUser.id, // Now guaranteed to match auth.users.id
         user_metadata: { tg_user_id } 
     }, process.env.JWT_SECRET, { expiresIn: '30d' });
 
