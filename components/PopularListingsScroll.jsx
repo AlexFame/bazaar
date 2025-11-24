@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { useLang } from "@/lib/i18n-client";
-
+import { useTheme } from "next-themes";
 
 // быстрее: 6 секунд на один слайд
 const SLIDE_DURATION = 6000;
@@ -13,8 +13,14 @@ export default function PopularListingsScroll() {
   const { lang, t } = useLang();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  const { theme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // грузим популярные объявления
   useEffect(() => {
@@ -74,6 +80,9 @@ export default function PopularListingsScroll() {
     slides.push(items.slice(i, i + 2));
   }
 
+  // Determine if dark mode is active
+  const isDark = mounted && (theme === "dark" || resolvedTheme === "dark");
+
   return (
     <div className="w-full flex justify-center mt-3">
       <div className="w-full max-w-[520px] px-3">
@@ -102,10 +111,16 @@ export default function PopularListingsScroll() {
 
         {/* прогресс */}
         {slides.length > 1 && (
-          <div className="mt-2 h-1 w-full rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
+          <div 
+            className={`mt-2 h-1 w-full rounded-full overflow-hidden transition-colors duration-300 ${
+              isDark ? "bg-white/20" : "bg-black/10"
+            }`}
+          >
             <div
               key={currentIndex}
-              className="h-full bg-black dark:bg-white progress-bar"
+              className={`h-full progress-bar transition-colors duration-300 ${
+                isDark ? "bg-white" : "bg-black"
+              }`}
               style={{ animationDuration: `${SLIDE_DURATION}ms` }}
             />
           </div>

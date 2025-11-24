@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { initTelegramUI, isTelegramEnv } from "@/lib/telegram";
 import { LanguageProvider } from "@/lib/i18n-client";
 
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export default function Providers({ children }) {
   const [inTG, setInTG] = useState(false);
