@@ -223,24 +223,29 @@ export default function ListingDetailClient({ id }) {
 
   const handleShare = async () => {
       if (!listing) return;
-      // Ensure we have a valid URL. window.location.href might be internal in some webviews.
-      // Better to construct it explicitly if possible, or trust window.location.href
+      
       const url = window.location.href; 
       const shareData = {
           title: listing.title,
-          text: `${listing.title} - ${listing.price} €\n${url}`, // Add URL to text for better compatibility
+          text: `${listing.title} - ${listing.price} €\n${url}`,
           url: url
       };
 
-      if (navigator.share) {
-          try {
+      try {
+          if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
               await navigator.share(shareData);
-          } catch (err) {
-              console.log("Share cancelled");
+          } else {
+              throw new Error("Share API not supported");
           }
-      } else {
-          navigator.clipboard.writeText(url);
-          alert("Ссылка скопирована!");
+      } catch (err) {
+          console.log("Share failed or not supported, falling back to clipboard:", err);
+          try {
+              await navigator.clipboard.writeText(url);
+              alert(t("link_copied") || "Ссылка скопирована!");
+          } catch (clipboardErr) {
+              console.error("Clipboard failed:", clipboardErr);
+              alert("Не удалось поделиться ссылкой");
+          }
       }
   };
 
