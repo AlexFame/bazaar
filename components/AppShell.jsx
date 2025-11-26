@@ -376,7 +376,7 @@ export default function AppShell({ children }) {
                 </Link>
               </nav>
 
-              <ThemeToggle />
+              {/* <ThemeToggle /> */}
               <LangSwitcher />
             </div>
           </div>
