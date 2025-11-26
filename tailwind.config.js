@@ -8,6 +8,15 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontSize: {
+        xs: ['0.85rem', { lineHeight: '1.2rem' }],
+        sm: ['1rem', { lineHeight: '1.5rem' }],
+        base: ['1.15rem', { lineHeight: '1.75rem' }],
+        lg: ['1.25rem', { lineHeight: '1.75rem' }],
+        xl: ['1.5rem', { lineHeight: '2rem' }],
+        '2xl': ['1.75rem', { lineHeight: '2.25rem' }],
+        '3xl': ['2.25rem', { lineHeight: '2.5rem' }],
+      },
       colors: {
         // фирменные цвета
         "brand-yellow": "#FFD60A",

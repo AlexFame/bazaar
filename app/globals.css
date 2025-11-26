@@ -21,7 +21,7 @@
 }
 
 html {
-  font-size: 17px;
+  font-size: 19px;
   background-color: white;
 }
 
@@ -43,7 +43,7 @@ html.dark {
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
+  background: #F0F8FF; /* Azure-like background */
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100dvh;
 }

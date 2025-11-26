@@ -110,7 +110,7 @@ const PriceSlider = ({ min, max, onChange, minLimit = 0, maxLimit = 100000 }) =>
             </div>
             <div className="flex justify-between mt-4 gap-2">
                 <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500">От</span>
+                    <span className="text-xs text-gray-500">От</span>
                     <input 
                         type="number" 
                         value={localMin} 
@@ -123,7 +123,7 @@ const PriceSlider = ({ min, max, onChange, minLimit = 0, maxLimit = 100000 }) =>
                     />
                 </div>
                 <div className="flex flex-col items-end">
-                    <span className="text-[10px] text-gray-500">До</span>
+                    <span className="text-xs text-gray-500">До</span>
                     <input 
                         type="number" 
                         value={localMax} 
@@ -324,7 +324,77 @@ export default function FeedPageClient() {
     }
   }
 
+  const [mapListings, setMapListings] = useState([]);
+
+  async function fetchMapListings() {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("listings")
+        .select("id, title, price, image_path, latitude, longitude, created_at, is_vip")
+        .not("latitude", "is", null)
+        .not("longitude", "is", null)
+        .order("created_at", { ascending: false });
+
+      // Apply same filters as main list
+      const term = (searchTerm || "").trim();
+      if (term) {
+        const allTerms = expandSearchTerm(term);
+        if (allTerms.length > 0) {
+            const orConditions = allTerms.map(t => `title.ilike.%${t}%,description.ilike.%${t}%,location_text.ilike.%${t}%`).join(",");
+            query = query.or(orConditions);
+        }
+      }
+
+      if (locationFilter.trim()) query = query.ilike("location_text", `%${locationFilter.trim()}%`);
+      if (categoryFilter !== "all") query = query.eq("category_key", categoryFilter);
+      if (typeFilter !== "all") query = query.eq("type", typeFilter);
+      if (minPrice) query = query.gte("price", Number(minPrice));
+      if (maxPrice) query = query.lte("price", Number(maxPrice));
+      if (conditionFilter !== "all") query = query.eq("condition", conditionFilter);
+      if (withPhotoFilter === "yes") query = query.not("main_image_path", "is", null);
+      if (withPhotoFilter === "no") query = query.is("main_image_path", null);
+      
+      // Date filter
+      if (dateFilter !== "all") {
+        const now = new Date();
+        let fromDate = null;
+        if (dateFilter === "today") fromDate = new Date(new Date().setHours(0,0,0,0));
+        else if (dateFilter === "3d") fromDate = new Date(now.getTime() - 3 * 86400000);
+        else if (dateFilter === "7d") fromDate = new Date(now.getTime() - 7 * 86400000);
+        else if (dateFilter === "30d") fromDate = new Date(now.getTime() - 30 * 86400000);
+        
+        if (fromDate) query = query.gte("created_at", fromDate.toISOString());
+      }
+
+      // Dynamic filters
+      if (categoryFilter !== "all" && Object.keys(dynamicFilters).length > 0) {
+        const activeFilters = Object.entries(dynamicFilters).reduce((acc, [k, v]) => {
+            if (v !== "" && v !== false) acc[k] = v;
+            return acc;
+        }, {});
+        if (Object.keys(activeFilters).length > 0) query = query.contains("parameters", activeFilters);
+      }
+      
+      if (barterFilter === "yes") query = query.contains("parameters", { barter: true });
+
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      setMapListings(data || []);
+    } catch (err) {
+      console.error("Error fetching map listings:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function fetchPage(pageIndex, { append = false } = {}) {
+    // If in map mode, we use fetchMapListings instead
+    if (viewMode === 'map') {
+        return fetchMapListings();
+    }
+
     const from = pageIndex * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
 
@@ -496,6 +566,7 @@ export default function FeedPageClient() {
     radiusFilter,
     userLocation,
     lang,
+    viewMode,
   ]);
 
   async function handleLoadMore() {
@@ -869,8 +940,8 @@ export default function FeedPageClient() {
                     {showSearchHistory && searchHistory.length > 0 && (
                         <div className="absolute top-full left-0 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 mt-1 max-h-60 overflow-y-auto">
                             <div className="flex justify-between items-center px-3 py-2 border-b border-gray-100 bg-gray-50">
-                                <span className="text-[10px] font-semibold text-gray-500">Недавние</span>
-                                <button onClick={(e) => { e.preventDefault(); clearSearchHistory(); setSearchHistory([]); }} className="text-[10px] text-red-500 hover:underline">Очистить</button>
+                                <span className="text-xs font-semibold text-gray-500">Недавние</span>
+                                <button onClick={(e) => { e.preventDefault(); clearSearchHistory(); setSearchHistory([]); }} className="text-xs text-red-500 hover:underline">Очистить</button>
                             </div>
                             {searchHistory.map((item, idx) => (
                                 <div key={idx} className="flex justify-between items-center px-3 py-2 hover:bg-gray-50 cursor-pointer border-b border-gray-50 last:border-0" onClick={() => handleHistoryClick(item)}>
@@ -895,10 +966,10 @@ export default function FeedPageClient() {
 
               {/* Популярные запросы */}
               <div className="mt-1">
-                <div className="text-[11px] text-black/60 mb-1">
+                <div className="text-xs text-black/60 mb-1">
                   {txt.popularQueriesLabel}
                 </div>
-                <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar text-[11px]">
+                <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar text-xs">
                   {popularQueries.map((q) => (
                     <button
                       key={q}
@@ -928,7 +999,7 @@ export default function FeedPageClient() {
         {/* Переключатель вида и счетчик */}
         <div className="flex justify-between items-center mb-3 mt-2">
             <h2 className="text-xs font-medium text-gray-400">
-                {!loading && `${listings.length} ${listings.length % 10 === 1 && listings.length % 100 !== 11 ? 'объявление' : 'объявлений'}`}
+                {!loading && `${viewMode === 'map' ? mapListings.length : listings.length} ${listings.length % 10 === 1 && listings.length % 100 !== 11 ? 'объявление' : 'объявлений'}`}
             </h2>
             <div className="bg-gray-100 p-1 rounded-lg flex text-xs font-medium">
                 <button 
@@ -957,13 +1028,13 @@ export default function FeedPageClient() {
             <div className="grid grid-cols-2 gap-2">
               {[...Array(6)].map((_, i) => <ListingCardSkeleton key={i} />)}
             </div>
-        ) : listings.length === 0 ? (
+        ) : listings.length === 0 && viewMode === 'list' ? (
           <div className="text-center py-10 text-gray-500">
             <p className="text-lg">Ничего не найдено 😔</p>
             <p className="text-sm mt-2">Попробуйте изменить параметры поиска</p>
           </div>
         ) : viewMode === 'map' ? (
-            <MapComponent listings={listings} userLocation={userLocation} />
+            <MapComponent listings={mapListings} userLocation={userLocation} />
         ) : (
           <div className="grid grid-cols-2 gap-2">
             {listings.map((listing) => (
@@ -972,7 +1043,7 @@ export default function FeedPageClient() {
           </div>
         )}
 
-        {hasMore && listings.length > 0 && (
+        {hasMore && listings.length > 0 && viewMode === 'list' && (
           <div className="mt-4 mb-6 flex justify-center">
             <button
               type="button"

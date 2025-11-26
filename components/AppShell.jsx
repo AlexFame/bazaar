@@ -308,7 +308,7 @@ export default function AppShell({ children }) {
     <div className="w-full min-h-[100dvh] bg-white dark:bg-black flex flex-col items-center transition-colors duration-300">
       {/* Шапка - скрываем в чате */}
       {!isChatConversation && (
-        <header className="w-full bg-white dark:bg-black pt-3 pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
+        <header className="w-full bg-white dark:bg-black pt-6 pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
           <div className="w-full max-w-[520px] px-3 mx-auto flex flex-col gap-3">
             {/* Текст сверху */}
             <div className="text-center text-xs font-semibold text-black/80 dark:text-white/80">
@@ -403,7 +403,7 @@ export default function AppShell({ children }) {
 
       {!isChatConversation && (
         <footer className="w-full max-w-[520px] mx-auto text-center text-[11px] py-5 opacity-60">
-          Bazaar © 2025
+          Bazaar © 2025 • <a href="https://t.me/bazaar_support" target="_blank" rel="noopener noreferrer" className="hover:underline">Поддержка</a>
         </footer>
       )}
       

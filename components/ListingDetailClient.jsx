@@ -13,6 +13,7 @@ import SimilarListings from "@/components/SimilarListings";
 import BackButton from "@/components/BackButton";
 import ReportButton from "@/components/ReportButton";
 import { translateText } from "@/lib/translation";
+import ListingComments from "@/components/ListingComments";
 
 // Строим ссылку по введённому контакту
 function buildContactLink(raw) {
@@ -604,6 +605,9 @@ export default function ListingDetailClient({ id }) {
                   </button>
                 </div>
               )}
+
+              {/* Q&A Section */}
+              <ListingComments listingId={listing.id} ownerId={listing.created_by} />
 
               {/* ПОХОЖИЕ ОБЪЯВЛЕНИЯ */}
               <SimilarListings categoryId={listing.category_key} currentId={listing.id} />
