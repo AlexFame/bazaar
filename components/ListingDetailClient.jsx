@@ -233,8 +233,11 @@ export default function ListingDetailClient({ id }) {
       };
 
       try {
-          // 1. Try to share with image
-          if (imageUrls && imageUrls.length > 0 && navigator.canShare) {
+          // Detect Android
+          const isAndroid = /Android/i.test(navigator.userAgent);
+
+          // 1. Try to share with image (Skip on Android as it often fails in WebViews)
+          if (!isAndroid && imageUrls && imageUrls.length > 0 && navigator.canShare) {
              try {
                  const response = await fetch(imageUrls[0]);
                  const blob = await response.blob();
