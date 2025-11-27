@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { getTelegramUser } from "@/lib/telegram";
 import Image from "next/image";
 
 export default function ListingComments({ listingId, ownerId }) {
@@ -15,9 +14,9 @@ export default function ListingComments({ listingId, ownerId }) {
   useEffect(() => {
     // Check current user
     async function checkUser() {
-        const tgUser = getTelegramUser();
-        if (tgUser) {
-            const { data } = await supabase.from("profiles").select("*").eq("tg_user_id", tgUser.id).single();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            const { data } = await supabase.from("profiles").select("*").eq("id", user.id).single();
             setCurrentUser(data);
         }
     }
@@ -62,7 +61,7 @@ export default function ListingComments({ listingId, ownerId }) {
       loadComments();
     } catch (err) {
       console.error("Error posting comment:", err);
-      alert("Не удалось отправить комментарий");
+      alert("Не удалось отправить комментарий: " + (err.message || "Неизвестная ошибка"));
     } finally {
       setSubmitting(false);
     }

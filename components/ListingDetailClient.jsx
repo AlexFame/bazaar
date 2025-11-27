@@ -233,7 +233,8 @@ export default function ListingDetailClient({ id }) {
       };
 
       try {
-          if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+          // Check if Share API is supported and can share this data
+          if (navigator.share) {
               await navigator.share(shareData);
           } else {
               throw new Error("Share API not supported");
