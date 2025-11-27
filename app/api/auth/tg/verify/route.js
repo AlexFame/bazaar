@@ -132,12 +132,15 @@ export async function POST(req) {
     }
 
     // 3. Upsert profile to ensure it's up to date
+    const avatar_url = data.user.photo_url || null; // Get avatar from Telegram
     const { data: profile, error: profileErr } = await supa
         .from('profiles')
         .upsert({ 
             id: authUser.id, 
             tg_user_id, 
-            tg_username
+            tg_username,
+            avatar_url, // Save Telegram avatar
+            full_name: data.user.first_name + (data.user.last_name ? ` ${data.user.last_name}` : '')
             // updated_at removed to avoid schema error
         })
         .select()

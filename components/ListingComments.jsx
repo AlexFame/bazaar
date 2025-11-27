@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
+import { validateComment } from "@/lib/moderation";
 
 export default function ListingComments({ listingId, ownerId }) {
   const [comments, setComments] = useState([]);
@@ -44,6 +45,13 @@ export default function ListingComments({ listingId, ownerId }) {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!newComment.trim() || !currentUser) return;
+
+    // Validate comment
+    const validation = validateComment(newComment);
+    if (!validation.valid) {
+      alert(validation.error);
+      return;
+    }
 
     setSubmitting(true);
     try {

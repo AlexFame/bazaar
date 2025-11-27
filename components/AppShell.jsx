@@ -356,6 +356,26 @@ export default function AppShell({ children }) {
                 </Link>
               </nav>
 
+              {/* Messages icon with badge */}
+              <Link href="/messages">
+                <button
+                  className={`${navBtn} relative ${
+                    pathname.startsWith("/messages")
+                      ? "bg-black text-white dark:bg-white dark:text-black"
+                      : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
+                  }`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                  </svg>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+              </Link>
+
               {/* <ThemeToggle /> */}
               <LangSwitcher />
             </div>

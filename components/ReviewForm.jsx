@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getTelegramUser } from "@/lib/telegram";
+import { validateComment } from "@/lib/moderation";
 
 export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
   const [rating, setRating] = useState(5);
@@ -36,6 +37,15 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
       if (reviewerProfile.id === targetUserId) {
         alert("Вы не можете оставить отзыв самому себе.");
         return;
+      }
+
+      // Validate comment if provided
+      if (comment.trim()) {
+        const validation = validateComment(comment);
+        if (!validation.valid) {
+          alert(validation.error);
+          return;
+        }
       }
 
       // Insert review
