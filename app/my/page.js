@@ -72,6 +72,7 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true);
   const [tgUser, setTgUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const loadListings = async () => {
     const tgUserId = getUserId();
@@ -144,7 +145,27 @@ export default function MyPage() {
     }
 
     loadListings();
+    loadUnreadCount();
   }, []);
+
+  const loadUnreadCount = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { count, error } = await supabase
+        .from("messages")
+        .select("*", { count: "exact", head: true })
+        .eq("recipient_id", user.id)
+        .eq("read", false);
+
+      if (!error && count !== null) {
+        setUnreadCount(count);
+      }
+    } catch (err) {
+      console.error("Error loading unread count:", err);
+    }
+  };
 
   const handleDelete = () => {
     // Refresh listings after deletion
@@ -245,10 +266,20 @@ export default function MyPage() {
         )}
 
         {/* Кнопки действий */}
-        <div className={`mb-3 grid ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'} gap-2`}>
+        <div className={`mb-3 grid ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'} gap-2`}>
           <Link href="/create">
             <button className="w-full py-2.5 rounded-full bg-black text-white text-sm font-semibold">
               {t.createBtn}
+            </button>
+          </Link>
+          <Link href="/messages">
+            <button className="w-full py-2.5 rounded-full bg-white border border-gray-300 text-black text-sm font-semibold hover:bg-gray-50 transition-colors relative">
+               💬 Сообщения
+               {unreadCount > 0 && (
+                 <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                   {unreadCount > 9 ? '9+' : unreadCount}
+                 </span>
+               )}
             </button>
           </Link>
           <Link href="/favorites">
