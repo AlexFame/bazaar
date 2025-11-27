@@ -233,11 +233,12 @@ export default function ListingDetailClient({ id }) {
       };
 
       try {
-          // Detect Android
-          const isAndroid = /Android/i.test(navigator.userAgent);
+          // Detect iOS (iPhone/iPad)
+          const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-          // 1. Try to share with image (Skip on Android as it often fails in WebViews)
-          if (!isAndroid && imageUrls && imageUrls.length > 0 && navigator.canShare) {
+          // 1. Try to share with image (Only on iOS where it works reliably)
+          // On Android and Desktop (Mac), file sharing often hides "Copy Link" or breaks the menu
+          if (isIOS && imageUrls && imageUrls.length > 0 && navigator.canShare) {
              try {
                  const response = await fetch(imageUrls[0]);
                  const blob = await response.blob();
