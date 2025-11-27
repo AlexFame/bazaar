@@ -308,7 +308,7 @@ export default function AppShell({ children }) {
     <div className="w-full min-h-[100dvh] dark:bg-black flex flex-col items-center transition-colors duration-300">
       {/* Шапка - скрываем в чате */}
       {!isChatConversation && (
-        <header className="w-full dark:bg-black pt-[calc(env(safe-area-inset-top)+1rem)] pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
+        <header className="w-full dark:bg-black pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
           <div className="w-full max-w-[520px] px-3 mx-auto flex flex-col gap-3">
             {/* Текст сверху */}
             <div className="text-center text-xs font-semibold text-black/80 dark:text-white/80 break-words leading-tight">
