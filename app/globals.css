@@ -43,7 +43,7 @@ html.dark {
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: #F0F8FF; /* Azure-like background */
+  background: #f0ffff; /* Azure (Crayola) background */
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100dvh;
 }
