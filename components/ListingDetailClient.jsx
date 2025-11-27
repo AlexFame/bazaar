@@ -233,7 +233,29 @@ export default function ListingDetailClient({ id }) {
       };
 
       try {
-          // Check if Share API is supported and can share this data
+          // Try to share with image if available
+          if (imageUrls && imageUrls.length > 0 && navigator.canShare) {
+             try {
+                 const response = await fetch(imageUrls[0]);
+                 const blob = await response.blob();
+                 const file = new File([blob], "listing.jpg", { type: blob.type });
+                 
+                 const shareDataWithImage = {
+                     files: [file],
+                     title: listing.title,
+                     text: `${listing.title} - ${listing.price} €\n${url}`
+                 };
+                 
+                 if (navigator.canShare(shareDataWithImage)) {
+                     await navigator.share(shareDataWithImage);
+                     return;
+                 }
+             } catch (e) {
+                 console.warn("Failed to fetch or share image:", e);
+             }
+          }
+
+          // Fallback: Share without image
           if (navigator.share) {
               await navigator.share(shareData);
           } else {
