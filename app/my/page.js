@@ -266,30 +266,30 @@ export default function MyPage() {
         )}
 
         {/* Кнопки действий */}
-        <div className={`mb-3 grid ${isAdmin ? 'grid-cols-4' : 'grid-cols-3'} gap-2`}>
+        <div className="mb-3 flex flex-col gap-2">
           <Link href="/create">
-            <button className="w-full py-2.5 rounded-full bg-black text-white text-sm font-semibold">
-              {t.createBtn}
+            <button className="w-full py-3 rounded-full bg-black text-white text-sm font-semibold">
+              ➕ {t.createBtn}
             </button>
           </Link>
           <Link href="/messages">
-            <button className="w-full py-2.5 rounded-full bg-white border border-gray-300 text-black text-sm font-semibold hover:bg-gray-50 transition-colors relative">
+            <button className="w-full py-3 rounded-full bg-white border border-gray-300 text-black text-sm font-semibold hover:bg-gray-50 transition-colors relative">
                💬 Сообщения
                {unreadCount > 0 && (
-                 <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
+                 <span className="absolute top-2 right-4 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                    {unreadCount > 9 ? '9+' : unreadCount}
                  </span>
                )}
             </button>
           </Link>
           <Link href="/favorites">
-            <button className="w-full py-2.5 rounded-full bg-white border border-gray-300 text-black text-sm font-semibold hover:bg-gray-50 transition-colors">
+            <button className="w-full py-3 rounded-full bg-white border border-gray-300 text-black text-sm font-semibold hover:bg-gray-50 transition-colors">
                ❤️ Избранное
             </button>
           </Link>
           {isAdmin && (
             <Link href="/admin">
-              <button className="w-full py-2.5 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+              <button className="w-full py-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all">
                  🛡️ Админка
               </button>
             </Link>
