@@ -233,7 +233,7 @@ export default function ListingDetailClient({ id }) {
       };
 
       try {
-          // Try to share with image if available
+          // 1. Try to share with image
           if (imageUrls && imageUrls.length > 0 && navigator.canShare) {
              try {
                  const response = await fetch(imageUrls[0]);
@@ -248,24 +248,34 @@ export default function ListingDetailClient({ id }) {
                  
                  if (navigator.canShare(shareDataWithImage)) {
                      await navigator.share(shareDataWithImage);
-                     return;
+                     return; // Success
                  }
              } catch (e) {
-                 console.warn("Failed to fetch or share image:", e);
+                 // Ignore image share error, fall back to text share
+                 if (e.name !== 'AbortError') {
+                    console.warn("Failed to share image, falling back to text:", e);
+                 } else {
+                    return; // User cancelled
+                 }
              }
           }
 
-          // Fallback: Share without image
+          // 2. Fallback: Share text only
           if (navigator.share) {
               await navigator.share(shareData);
           } else {
               throw new Error("Share API not supported");
           }
       } catch (err) {
-          console.log("Share failed or not supported, falling back to clipboard:", err);
+          // If user cancelled, do nothing
+          if (err.name === 'AbortError') return;
+
+          console.log("Share failed, copying to clipboard:", err);
+          
+          // 3. Final fallback: Clipboard
           try {
               await navigator.clipboard.writeText(url);
-              alert(t("link_copied") || "Ссылка скопирована!");
+              alert(t.link_copied || "Ссылка скопирована!");
           } catch (clipboardErr) {
               console.error("Clipboard failed:", clipboardErr);
               alert("Не удалось поделиться ссылкой");
