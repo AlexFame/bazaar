@@ -14,6 +14,7 @@ import BackButton from "@/components/BackButton";
 import ReportButton from "@/components/ReportButton";
 import { translateText } from "@/lib/translation";
 import ListingComments from "@/components/ListingComments";
+import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
 // Строим ссылку по введённому контакту
 function buildContactLink(raw) {
