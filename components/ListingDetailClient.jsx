@@ -478,14 +478,24 @@ export default function ListingDetailClient({ id }) {
                       </button>
                       
                       <div className="relative w-full h-full flex items-center justify-center">
-                         <div className="relative w-full h-full max-w-4xl max-h-[90vh]">
+                         <div 
+                           className="relative w-full h-full max-w-4xl max-h-[90vh]"
+                           style={{
+                             touchAction: 'pinch-zoom',
+                             overflow: 'hidden',
+                           }}
+                           onClick={(e) => e.stopPropagation()}
+                         >
                            <Image
                             src={imageUrls[currentIndex]}
                             alt="Full size"
                             fill
                             className="object-contain"
                             sizes="100vw"
-                            onClick={() => setIsLightboxOpen(false)} 
+                            style={{
+                              touchAction: 'pinch-zoom',
+                              userSelect: 'none',
+                            }}
                           />
                          </div>
                         
@@ -516,6 +526,11 @@ export default function ListingDetailClient({ id }) {
                             </button>
                           </>
                         )}
+                        
+                        {/* Zoom hint */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/40 px-3 py-1 rounded-full">
+                          Pinch to zoom
+                        </div>
                       </div>
                     </div>
                   )}

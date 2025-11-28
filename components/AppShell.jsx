@@ -11,6 +11,7 @@ import { getSuggestions } from "@/lib/searchUtils";
 
 import { supabase } from "@/lib/supabaseClient";
 import Toast from "./Toast";
+import OnboardingTutorial from "./OnboardingTutorial";
 
 import TelegramThemeSync from "@/components/TelegramThemeSync";
 
@@ -408,6 +409,7 @@ export default function AppShell({ children }) {
       )}
       
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
+      <OnboardingTutorial />
     </div>
   );
 }
