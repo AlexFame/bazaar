@@ -186,16 +186,16 @@ export default function ChatWindowClient({ conversationId }) {
         prev.map(m => m.id === optimisticMessage.id ? data : m)
       );
 
-      // Send Push Notification (Fire and forget)
+      // Send Push Notification via Telegram (Fire and forget)
       if (otherUser?.id) {
-        console.log(`🔔 [ChatWindow] Sending notification to ${otherUser.id}`);
-        fetch("/api/notifications/send", {
+        console.log(`🔔 [ChatWindow] Sending Telegram notification to ${otherUser.id}`);
+        fetch("/api/notifications/telegram", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             recipientId: otherUser.id,
-            message: content,
-            listingTitle: listing?.title || "Товар"
+            message: `💬 Новое сообщение: ${content}`,
+            type: "new_message"
           }),
         })
         .then(async res => {

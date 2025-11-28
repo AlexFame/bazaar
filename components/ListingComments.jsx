@@ -77,13 +77,13 @@ export default function ListingComments({ listingId, ownerId }) {
           .eq("id", listingId)
           .single();
 
-        fetch("/api/notifications/send", {
+        fetch("/api/notifications/telegram", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             recipientId: ownerId,
-            message: `Новый вопрос к вашему объявлению: ${newComment.trim()}`,
-            listingTitle: listing?.title || "Объявление"
+            message: `❓ Новый вопрос к объявлению "${listing?.title || "Объявление"}": ${newComment.trim()}`,
+            type: "new_comment"
           }),
         }).catch(err => console.error("Notification error:", err));
       }
