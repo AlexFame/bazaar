@@ -9,12 +9,13 @@ export default function OnboardingTutorial() {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
+    // DISABLED BY DEFAULT - uncomment to enable for new users
     // Check if user has already seen the tutorial
-    const hasSeenTutorial = localStorage.getItem("hasSeenOnboarding");
-    if (!hasSeenTutorial) {
-      // Show tutorial after a short delay
-      setTimeout(() => setIsVisible(true), 1000);
-    }
+    // const hasSeenTutorial = localStorage.getItem("hasSeenOnboarding");
+    // if (!hasSeenTutorial) {
+    //   // Show tutorial after a short delay
+    //   setTimeout(() => setIsVisible(true), 1000);
+    // }
   }, []);
 
   const steps = [
@@ -90,12 +91,12 @@ export default function OnboardingTutorial() {
 
         {/* Title */}
         <h2 className="text-xl font-bold text-center mb-3">
-          {t[step.titleKey] || step.titleKey}
+          {t(step.titleKey)}
         </h2>
 
         {/* Description */}
         <p className="text-sm text-gray-600 text-center mb-6 leading-relaxed">
-          {t[step.descKey] || step.descKey}
+          {t(step.descKey)}
         </p>
 
         {/* Buttons */}
@@ -105,7 +106,7 @@ export default function OnboardingTutorial() {
               onClick={() => setCurrentStep(currentStep - 1)}
               className="flex-1 py-3 px-4 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition-colors"
             >
-              {t.onboarding_back || "Назад"}
+              {t("onboarding_back")}
             </button>
           )}
           
@@ -113,7 +114,7 @@ export default function OnboardingTutorial() {
             onClick={handleSkip}
             className="flex-1 py-3 px-4 rounded-full border border-gray-300 text-sm font-medium hover:bg-gray-50 transition-colors"
           >
-            {t.onboarding_skip || "Пропустить"}
+            {t("onboarding_skip")}
           </button>
 
           <button
@@ -121,8 +122,8 @@ export default function OnboardingTutorial() {
             className="flex-1 py-3 px-4 rounded-full bg-black text-white text-sm font-medium hover:bg-gray-800 transition-colors"
           >
             {currentStep === steps.length - 1
-              ? t.onboarding_start || "Начать!"
-              : t.onboarding_next || "Далее"}
+              ? t("onboarding_start")
+              : t("onboarding_next")}
           </button>
         </div>
       </div>
