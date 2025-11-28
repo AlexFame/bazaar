@@ -16,7 +16,45 @@ import { translateText } from "@/lib/translation";
 import ListingComments from "@/components/ListingComments";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
-// ... (helper functions remain unchanged)
+// Строим ссылку по введённому контакту
+function buildContactLink(raw) {
+  if (!raw) return null;
+
+  const contact = raw.trim();
+
+  // Телеграм: @username
+  if (contact.startsWith("@")) {
+    const username = contact.slice(1).split(" ")[0];
+    if (username) return `https://t.me/${username}`;
+  }
+
+  // Телеграм: t.me/username
+  if (contact.includes("t.me/")) {
+    return contact.startsWith("http") ? contact : `https://${contact}`;
+  }
+
+  // Телефон: оставляем только цифры и +
+  const phone = contact.replace(/[^\d+]/g, "");
+  if (phone.length >= 6) {
+    return `tel:${phone}`;
+  }
+
+  return null;
+}
+
+// Определяем, что за контакт (телега / телефон)
+function detectType(raw) {
+  if (!raw) return { isPhone: false, isTelegram: false };
+
+  const c = raw.trim();
+
+  const isTelegram = c.startsWith("@") || c.includes("t.me/");
+
+  const cleaned = c.replace(/[^\d+]/g, "");
+  const isPhone = cleaned.length >= 6;
+
+  return { isPhone, isTelegram };
+}
 
 export default function ListingDetailClient({ id }) {
   const { t, lang } = useLang();
