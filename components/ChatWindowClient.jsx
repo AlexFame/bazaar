@@ -228,7 +228,7 @@ export default function ChatWindowClient({ conversationId }) {
   return (
     <div className="flex flex-col h-[100dvh] max-w-[520px] mx-auto bg-white dark:bg-black">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 p-3 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black sticky top-0 z-10">
+      <div className="flex-shrink-0 flex items-center gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black sticky top-0 z-10">
         <BackButton />
         {otherUser && (
           <div className="flex items-center gap-2 flex-1">
@@ -289,7 +289,7 @@ export default function ChatWindowClient({ conversationId }) {
       </div>
 
       {/* Input Area - Always visible */}
-      <div className="flex-shrink-0 p-3 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 pb-safe z-50 relative">
+      <div className="flex-shrink-0 p-3 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 pb-[calc(env(safe-area-inset-bottom)+12px)] z-50 relative">
         <form onSubmit={handleSend} className="flex items-end gap-2">
           <textarea
             ref={textareaRef}
