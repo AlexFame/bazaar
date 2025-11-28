@@ -302,7 +302,7 @@ export default function ListingDetailClient({ id }) {
             {/* Share Button */}
             <button 
               onClick={handleShare}
-              className="flex items-center justify-center gap-2 px-4 py-2 bg-[#F2F3F7] rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
+              className="flex items-center justify-center gap-2 px-3 py-1.5 bg-[#F2F3F7] rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
             >
               <span>📤</span>
               <span>{t("share")}</span>
