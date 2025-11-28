@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import { validateComment } from "@/lib/moderation";
+import { useLang } from "@/lib/i18n-client";
 
 export default function ListingComments({ listingId, ownerId }) {
+  const { t } = useLang();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -90,14 +92,14 @@ export default function ListingComments({ listingId, ownerId }) {
       loadComments();
     } catch (err) {
       console.error("Error posting comment:", err);
-      alert("Не удалось отправить комментарий: " + (err.message || "Неизвестная ошибка"));
+      alert((t.send_comment_error || "Не удалось отправить комментарий") + ": " + (err.message || "Неизвестная ошибка"));
     } finally {
       setSubmitting(false);
     }
   }
 
   async function handleDelete(commentId) {
-    if (!confirm("Удалить комментарий?")) return;
+    if (!confirm(t.confirm_delete_comment || "Удалить комментарий?")) return;
 
     try {
       const { error } = await supabase
@@ -109,7 +111,7 @@ export default function ListingComments({ listingId, ownerId }) {
       loadComments();
     } catch (err) {
       console.error("Error deleting comment:", err);
-      alert("Не удалось удалить комментарий");
+      alert(t.delete_comment_error || "Не удалось удалить комментарий");
     }
   }
 
@@ -134,20 +136,20 @@ export default function ListingComments({ listingId, ownerId }) {
       loadComments();
     } catch (err) {
       console.error("Error updating comment:", err);
-      alert("Не удалось обновить комментарий");
+      alert(t.update_comment_error || "Не удалось обновить комментарий");
     }
   }
 
-  if (loading) return <div className="py-4 text-center text-gray-500 text-xs">Загрузка комментариев...</div>;
+  if (loading) return <div className="py-4 text-center text-gray-500 text-xs">{t.loadingMore || "Загрузка..."}</div>;
 
   return (
     <div className="mt-4 border-t border-gray-100 pt-4">
-      <h3 className="text-sm font-semibold mb-3">Вопросы и обсуждение ({comments.length})</h3>
+      <h3 className="text-sm font-semibold mb-3">{t.questions_title || "Вопросы и обсуждение"} ({comments.length})</h3>
 
       {/* List */}
       <div className="space-y-4 mb-4">
         {comments.length === 0 && (
-            <p className="text-xs text-gray-400 italic">Пока нет вопросов. Будьте первым!</p>
+            <p className="text-xs text-gray-400 italic">{t.no_questions || "Пока нет вопросов. Будьте первым!"}</p>
         )}
         
         {comments.map((comment) => (
@@ -164,10 +166,10 @@ export default function ListingComments({ listingId, ownerId }) {
             <div className="flex-1">
                 <div className="flex items-baseline gap-2">
                     <span className="text-xs font-bold">
-                        {comment.profiles?.full_name || comment.profiles?.tg_username || "Пользователь"}
+                        {comment.profiles?.full_name || comment.profiles?.tg_username || (t.user_default || "Пользователь")}
                     </span>
                     {comment.user_id === ownerId && (
-                        <span className="text-[10px] bg-black text-white px-1.5 rounded-sm">Продавец</span>
+                        <span className="text-[10px] bg-black text-white px-1.5 rounded-sm">{t.seller_badge || "Продавец"}</span>
                     )}
                     <span className="text-[10px] text-gray-400">
                         {new Date(comment.created_at).toLocaleDateString()}
@@ -219,7 +221,7 @@ export default function ListingComments({ listingId, ownerId }) {
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Задайте вопрос продавцу..."
+                placeholder={t.ask_placeholder || "Задайте вопрос продавцу..."}
                 className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-xs focus:outline-none focus:border-black"
                 disabled={submitting}
             />
@@ -233,7 +235,7 @@ export default function ListingComments({ listingId, ownerId }) {
         </form>
       ) : (
         <div className="bg-gray-50 rounded-lg p-3 text-center text-xs text-gray-500">
-            Войдите через Telegram, чтобы задать вопрос.
+            {t.login_to_ask || "Войдите через Telegram, чтобы задать вопрос."}
         </div>
       )}
     </div>

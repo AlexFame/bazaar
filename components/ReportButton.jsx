@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { useLang } from "@/lib/i18n-client";
 
 export default function ReportButton({ targetId, targetType = "listing" }) {
+  const { t } = useLang();
   const [isOpen, setIsOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,7 +20,7 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-          setError("Войдите, чтобы отправить жалобу");
+          setError(t.login_review || "Войдите, чтобы отправить жалобу");
           setLoading(false);
           return;
       }
@@ -44,7 +46,7 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
 
     } catch (err) {
       console.error("Report error:", err);
-      setError("Ошибка отправки жалобы");
+      setError(t.report_error || "Ошибка отправки жалобы");
     } finally {
       setLoading(false);
     }
@@ -56,7 +58,7 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
         onClick={() => setIsOpen(true)}
         className="text-xs text-gray-400 hover:text-red-500 underline"
       >
-        Пожаловаться
+        {t.report_button || "Пожаловаться"}
       </button>
     );
   }
@@ -70,18 +72,18 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
         >
             ✕
         </button>
-        <h3 className="font-semibold mb-3">Пожаловаться</h3>
+        <h3 className="font-semibold mb-3">{t.report_button || "Пожаловаться"}</h3>
         
         {success ? (
             <div className="text-green-600 text-center py-4">
-                Спасибо! Жалоба отправлена.
+                {t.report_success || "Спасибо! Жалоба отправлена."}
             </div>
         ) : (
             <form onSubmit={handleSubmit}>
                 <textarea
                     className="w-full border border-gray-300 rounded-xl p-3 text-sm mb-3 resize-none focus:outline-none focus:border-black"
                     rows={3}
-                    placeholder="Опишите причину..."
+                    placeholder={t.report_reason_ph || "Опишите причину..."}
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     required
@@ -95,14 +97,14 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
                         onClick={() => setIsOpen(false)}
                         className="flex-1 py-2 rounded-xl border border-gray-300 text-sm hover:bg-gray-50"
                     >
-                        Отмена
+                        {t.cancel || "Отмена"}
                     </button>
                     <button
                         type="submit"
                         disabled={loading}
                         className="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-medium disabled:opacity-50 hover:bg-red-600"
                     >
-                        {loading ? "..." : "Отправить"}
+                        {loading ? "..." : (t.send || "Отправить")}
                     </button>
                 </div>
             </form>
