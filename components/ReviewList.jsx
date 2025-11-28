@@ -17,7 +17,7 @@ export default function ReviewList({ reviews }) {
         <div key={review.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden relative">
+                <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden relative">
                 {review.reviewer?.avatar_url ? (
                   <Image
                     src={review.reviewer.avatar_url}
@@ -27,13 +27,13 @@ export default function ReviewList({ reviews }) {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-400">
-                    {(review.reviewer?.username || "U")[0].toUpperCase()}
+                    {(review.reviewer?.full_name || review.reviewer?.tg_username || "U")[0].toUpperCase()}
                   </div>
                 )}
               </div>
               <div>
                 <div className="text-xs font-bold">
-                  {review.reviewer?.username || "Пользователь"}
+                  {review.reviewer?.full_name || review.reviewer?.tg_username || "Пользователь"}
                 </div>
                 <div className="text-[10px] text-gray-400">
                   {new Date(review.created_at).toLocaleDateString()}

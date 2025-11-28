@@ -69,6 +69,75 @@ export default function ListingDetailClient({ id }) {
   
   // Translation state
   const [translated, setTranslated] = useState({ title: "", description: "" });
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [profileId, setProfileId] = useState(null);
+
+  // Load favorite status
+  useEffect(() => {
+    if (!id) return;
+
+    async function loadFavoriteStatus() {
+      const tgUser = getTelegramUser();
+      if (!tgUser?.id) return;
+
+      try {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("tg_user_id", tgUser.id)
+          .maybeSingle();
+
+        if (!profileData) return;
+        setProfileId(profileData.id);
+
+        const { data: favoriteData } = await supabase
+          .from("favorites")
+          .select("id")
+          .eq("profile_id", profileData.id)
+          .eq("listing_id", id)
+          .maybeSingle();
+
+        setIsFavorite(!!favoriteData);
+      } catch (e) {
+        console.error("Error loading favorite status:", e);
+      }
+    }
+
+    loadFavoriteStatus();
+  }, [id]);
+
+  const handleFavoriteClick = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!profileId) {
+        alert("Пожалуйста, войдите через Telegram, чтобы добавлять в избранное");
+        return;
+    }
+
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        await supabase
+          .from("favorites")
+          .delete()
+          .eq("profile_id", profileId)
+          .eq("listing_id", id);
+        setIsFavorite(false);
+      } else {
+        // Add to favorites
+        await supabase
+          .from("favorites")
+          .insert({
+            profile_id: profileId,
+            listing_id: id,
+          });
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -137,6 +206,18 @@ export default function ListingDetailClient({ id }) {
     }
 
     loadListing();
+
+    // Save to recently viewed
+    try {
+        const viewed = JSON.parse(localStorage.getItem("recently_viewed") || "[]");
+        // Remove current id if exists to move it to top
+        const filtered = viewed.filter(v => v !== id);
+        // Add to front and limit to 10
+        const newViewed = [id, ...filtered].slice(0, 10);
+        localStorage.setItem("recently_viewed", JSON.stringify(newViewed));
+    } catch (e) {
+        console.error("Error saving recently viewed:", e);
+    }
 
     // Логика подсчета просмотров
     const viewedKey = `viewed_listing_${id}`;
@@ -325,37 +406,55 @@ export default function ListingDetailClient({ id }) {
               {/* ГАЛЕРЕЯ */}
               {imageUrls.length > 0 && (
                 <>
-                  <div
-                    className="w-full flex gap-3 overflow-x-auto pb-2 no-scrollbar"
-                    style={{
-                      scrollSnapType: "x mandatory",
-                      WebkitOverflowScrolling: "touch",
-                      msOverflowStyle: "none",
-                      scrollbarWidth: "none",
-                    }}
-                    onScroll={handleScroll}
-                  >
-                    {imageUrls.map((url, i) => (
-                      <div 
-                        key={i}
-                        className="w-full flex-shrink-0 cursor-pointer bg-gray-50 rounded-2xl overflow-hidden relative h-[300px]"
-                        style={{ scrollSnapAlign: "center" }}
-                        onClick={() => {
-                          setCurrentIndex(i);
-                          setIsLightboxOpen(true);
-                        }}
+                  <div className="relative">
+                    <button
+                      onClick={handleFavoriteClick}
+                      className="absolute top-3 right-3 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 transition-transform"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill={isFavorite ? "#ef4444" : "none"}
+                        stroke={isFavorite ? "#ef4444" : "currentColor"}
+                        strokeWidth="2"
+                        className="w-5 h-5 text-black"
                       >
-                        <Image
-                          src={url}
-                          alt={`Фото ${i + 1}`}
-                          fill
-                          className="object-contain"
-                          sizes="(max-width: 768px) 100vw, 520px"
-                          placeholder="blur"
-                          blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN88/7dfwAIuQNS4g0U2AAAAABJRU5ErkJggg=="
-                        />
-                      </div>
-                    ))}
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                      </svg>
+                    </button>
+
+                    <div
+                      className="w-full flex gap-3 overflow-x-auto pb-2 no-scrollbar"
+                      style={{
+                        scrollSnapType: "x mandatory",
+                        WebkitOverflowScrolling: "touch",
+                        msOverflowStyle: "none",
+                        scrollbarWidth: "none",
+                      }}
+                      onScroll={handleScroll}
+                    >
+                      {imageUrls.map((url, i) => (
+                        <div 
+                          key={i}
+                          className="w-full flex-shrink-0 cursor-pointer bg-gray-50 rounded-2xl overflow-hidden relative h-[300px]"
+                          style={{ scrollSnapAlign: "center" }}
+                          onClick={() => {
+                            setCurrentIndex(i);
+                            setIsLightboxOpen(true);
+                          }}
+                        >
+                          <Image
+                            src={url}
+                            alt={`Фото ${i + 1}`}
+                            fill
+                            className="object-contain"
+                            sizes="(max-width: 768px) 100vw, 520px"
+                            placeholder="blur"
+                            blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN88/7dfwAIuQNS4g0U2AAAAABJRU5ErkJggg=="
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Lightbox Modal */}

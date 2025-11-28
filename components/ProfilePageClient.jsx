@@ -45,7 +45,7 @@ export default function ProfilePageClient({ profileId }) {
         try {
             const { data: reviewsData } = await supabase
                 .from("reviews")
-                .select("*, reviewer:profiles!reviewer_id(username, avatar_url)")
+                .select("*, reviewer:profiles!reviewer_id(full_name, tg_username, avatar_url)")
                 .eq("target_id", profileId)
                 .order("created_at", { ascending: false });
             
@@ -110,13 +110,13 @@ export default function ProfilePageClient({ profileId }) {
                 {profile.avatar_url ? (
                     <Image 
                         src={profile.avatar_url} 
-                        alt={profile.username || "User"} 
+                        alt={profile.full_name || profile.tg_username || "User"} 
                         fill 
                         className="object-cover"
                     />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-blue-100 to-purple-100 text-blue-500">
-                        {(profile.username || "U")[0].toUpperCase()}
+                        {(profile.full_name || profile.tg_username || "U")[0].toUpperCase()}
                     </div>
                 )}
             </div>
@@ -124,7 +124,7 @@ export default function ProfilePageClient({ profileId }) {
             {/* Name & Verification */}
             <div className="flex items-center gap-1 mb-1">
                 <h1 className="text-xl font-bold text-black">
-                    {profile.username || `User ${profile.id.slice(0,4)}`}
+                    {profile.full_name || profile.tg_username || `User ${profile.id.slice(0,4)}`}
                 </h1>
                 {profile.is_verified && (
                     <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">

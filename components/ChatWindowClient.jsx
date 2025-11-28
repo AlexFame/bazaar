@@ -98,29 +98,32 @@ export default function ChatWindowClient({ conversationId }) {
         .on(
           "postgres_changes",
           {
-            event: "INSERT",
+            event: "*", // Listen for INSERT and UPDATE
             schema: "public",
             table: "messages",
             filter: `conversation_id=eq.${conversationId}`,
           },
           (payload) => {
-            // Prevent duplicates: check if message already exists
-            setMessages((prev) => {
-              const exists = prev.some(m => m.id === payload.new.id);
-              if (exists) {
-                console.log("⚠️ Duplicate message prevented:", payload.new.id);
-                return prev;
-              }
-              return [...prev, payload.new];
-            });
-            
-            // Mark as read immediately if I'm looking at the chat
-            if (payload.new.sender_id !== user.id) {
-                supabase
-                    .from('messages')
-                    .update({ is_read: true })
-                    .eq('id', payload.new.id)
-                    .then();
+            if (payload.eventType === "INSERT") {
+                // Prevent duplicates: check if message already exists
+                setMessages((prev) => {
+                  const exists = prev.some(m => m.id === payload.new.id);
+                  if (exists) {
+                    return prev;
+                  }
+                  return [...prev, payload.new];
+                });
+                
+                // Mark as read immediately if I'm looking at the chat
+                if (payload.new.sender_id !== user.id) {
+                    supabase
+                        .from('messages')
+                        .update({ is_read: true })
+                        .eq('id', payload.new.id)
+                        .then();
+                }
+            } else if (payload.eventType === "UPDATE") {
+                setMessages((prev) => prev.map(m => m.id === payload.new.id ? payload.new : m));
             }
           }
         )
@@ -153,7 +156,8 @@ export default function ChatWindowClient({ conversationId }) {
       sender_id: user.id,
       content: content,
       created_at: new Date().toISOString(),
-      is_optimistic: true
+      is_optimistic: true,
+      is_read: false
     };
     
     setMessages(prev => [...prev, optimisticMessage]);
@@ -278,8 +282,17 @@ export default function ChatWindowClient({ conversationId }) {
                 }`}
               >
                 <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                <div className={`text-[9px] mt-1 text-right ${isMe ? "text-white/60 dark:text-black/60" : "text-black/40 dark:text-white/40"}`}>
-                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <div className={`text-[9px] mt-1 flex items-center justify-end gap-1 ${isMe ? "text-white/60 dark:text-black/60" : "text-black/40 dark:text-white/40"}`}>
+                    <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    {isMe && (
+                        <span>
+                            {msg.is_read ? (
+                                <span className="text-blue-400 dark:text-blue-600">✓✓</span>
+                            ) : (
+                                <span>✓</span>
+                            )}
+                        </span>
+                    )}
                 </div>
               </div>
             </div>

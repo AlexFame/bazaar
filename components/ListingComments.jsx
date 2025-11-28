@@ -190,16 +190,16 @@ export default function ListingComments({ listingId, ownerId }) {
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-xs text-gray-800 mt-0.5">{comment.content}</p>
                     {currentUser?.id === comment.user_id && (
-                      <div className="flex gap-1">
+                      <div className="flex gap-2">
                         <button 
                           onClick={() => { setEditingId(comment.id); setEditContent(comment.content); }}
-                          className="text-xs text-gray-400 hover:text-black"
+                          className="text-base text-gray-400 hover:text-black p-1"
                         >
                           ✎
                         </button>
                         <button 
                           onClick={() => handleDelete(comment.id)}
-                          className="text-xs text-gray-400 hover:text-red-600"
+                          className="text-base text-gray-400 hover:text-red-600 p-1"
                         >
                           🗑
                         </button>
