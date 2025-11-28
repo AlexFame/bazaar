@@ -18,7 +18,7 @@ export default function ReviewList({ reviews }) {
           <div className="flex justify-between items-start mb-2">
             <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-gray-100 overflow-hidden relative">
-                {review.reviewer?.avatar_url ? (
+                {review.reviewer?.avatar_url && review.reviewer.avatar_url.startsWith("http") ? (
                   <Image
                     src={review.reviewer.avatar_url}
                     alt="Avatar"

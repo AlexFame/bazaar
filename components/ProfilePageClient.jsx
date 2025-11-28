@@ -42,16 +42,21 @@ export default function ProfilePageClient({ profileId }) {
         setListings(listingsData || []);
 
         // 3. Reviews (Try to fetch if table exists)
+        // 3. Reviews (Try to fetch if table exists)
         try {
-            const { data: reviewsData } = await supabase
+            const { data: reviewsData, error: reviewsError } = await supabase
                 .from("reviews")
                 .select("*, reviewer:profiles!reviewer_id(full_name, tg_username, avatar_url)")
                 .eq("target_id", profileId)
                 .order("created_at", { ascending: false });
             
-            if (reviewsData) setReviews(reviewsData);
+            if (reviewsError) {
+                console.warn("Error fetching reviews (table might be missing):", reviewsError);
+            } else if (reviewsData) {
+                setReviews(reviewsData);
+            }
         } catch (e) {
-            console.log("Reviews table might not exist yet or empty", e);
+            console.log("Reviews fetch exception:", e);
         }
 
       } catch (err) {
