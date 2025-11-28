@@ -17,54 +17,53 @@ export default function ProfilePageClient({ profileId }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("listings"); // 'listings' | 'reviews'
 
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
+  async function loadData() {
+    setLoading(true);
+    try {
+      // 1. Profile
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", profileId)
+        .single();
+      
+      if (profileError) throw profileError;
+      setProfile(profileData);
+
+      // 2. Listings
+      const { data: listingsData } = await supabase
+        .from("listings")
+        .select("*, profiles:created_by(*)")
+        .eq("created_by", profileId)
+        .order("created_at", { ascending: false });
+      
+      setListings(listingsData || []);
+
+      // 3. Reviews (Try to fetch if table exists)
       try {
-        // 1. Profile
-        const { data: profileData, error: profileError } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", profileId)
-          .single();
-        
-        if (profileError) throw profileError;
-        setProfile(profileData);
-
-        // 2. Listings
-        const { data: listingsData } = await supabase
-          .from("listings")
-          .select("*, profiles:created_by(*)")
-          .eq("created_by", profileId)
-          // .eq("status", "active") // Uncomment if status column exists and is used
-          .order("created_at", { ascending: false });
-        
-        setListings(listingsData || []);
-
-        // 3. Reviews (Try to fetch if table exists)
-        // 3. Reviews (Try to fetch if table exists)
-        try {
-            const { data: reviewsData, error: reviewsError } = await supabase
-                .from("reviews")
-                .select("*, reviewer:profiles!reviewer_id(full_name, tg_username, avatar_url)")
-                .eq("target_id", profileId)
-                .order("created_at", { ascending: false });
-            
-            if (reviewsError) {
-                console.warn("Error fetching reviews (table might be missing):", reviewsError);
-            } else if (reviewsData) {
-                setReviews(reviewsData);
-            }
-        } catch (e) {
-            console.log("Reviews fetch exception:", e);
-        }
-
-      } catch (err) {
-        console.error("Error loading profile:", err);
-      } finally {
-        setLoading(false);
+          const { data: reviewsData, error: reviewsError } = await supabase
+              .from("reviews")
+              .select("*, reviewer:profiles!reviewer_id(full_name, tg_username, avatar_url)")
+              .eq("target_id", profileId)
+              .order("created_at", { ascending: false });
+          
+          if (reviewsError) {
+              console.warn("Error fetching reviews (table might be missing):", reviewsError);
+          } else if (reviewsData) {
+              setReviews(reviewsData);
+          }
+      } catch (e) {
+          console.log("Reviews fetch exception:", e);
       }
+
+    } catch (err) {
+      console.error("Error loading profile:", err);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     loadData();
   }, [profileId]);
 
