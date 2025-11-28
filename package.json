@@ -13,6 +13,7 @@
     "test:headed": "playwright test --headed"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.27.0",
     "@supabase/supabase-js": "^2.45.1",
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.0",

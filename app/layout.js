@@ -1,6 +1,7 @@
 import "../styles/globals.css";
 import Providers from "./providers";
 import AppShell from "@/components/AppShell";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { Suspense } from "react";
 import Script from "next/script";
 
@@ -64,14 +65,15 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className="min-h-screen">
-        <Providers>
-          <div className="telegram-container">
-            {/* ВОТ ЭТО НОВОЕ */}
-            <Suspense fallback={null}>
-              <AppShell>{children}</AppShell>
-            </Suspense>
-          </div>
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            <div className="telegram-container">
+              <Suspense fallback={null}>
+                <AppShell>{children}</AppShell>
+              </Suspense>
+            </div>
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );
