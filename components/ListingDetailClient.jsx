@@ -295,7 +295,7 @@ export default function ListingDetailClient({ id }) {
     <>
     <div className="w-full flex justify-center mt-3">
       <div className="w-full max-w-[520px] px-3">
-        <div className="mb-3 flex justify-between items-center">
+        <div className="mb-3 flex items-center gap-3">
           <BackButton />
           
           <div className="flex gap-2">
