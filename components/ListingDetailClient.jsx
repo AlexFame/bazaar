@@ -305,7 +305,7 @@ export default function ListingDetailClient({ id }) {
               className="flex items-center justify-center gap-2 px-4 py-2 bg-[#F2F3F7] rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
             >
               <span>📤</span>
-              <span>{t.share}</span>
+              <span>{t("share")}</span>
             </button>
             
             {/* Report Button */}
