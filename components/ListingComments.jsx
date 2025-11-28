@@ -11,6 +11,8 @@ export default function ListingComments({ listingId, ownerId }) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editContent, setEditContent] = useState("");
 
   useEffect(() => {
     // Check current user
@@ -65,6 +67,25 @@ export default function ListingComments({ listingId, ownerId }) {
 
       if (error) throw error;
 
+      // Send notification to seller
+      if (ownerId && ownerId !== currentUser.id) {
+        const { data: listing } = await supabase
+          .from("listings")
+          .select("title")
+          .eq("id", listingId)
+          .single();
+
+        fetch("/api/notifications/send", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipientId: ownerId,
+            message: `Новый вопрос к вашему объявлению: ${newComment.trim()}`,
+            listingTitle: listing?.title || "Объявление"
+          }),
+        }).catch(err => console.error("Notification error:", err));
+      }
+
       setNewComment("");
       loadComments();
     } catch (err) {
@@ -72,6 +93,48 @@ export default function ListingComments({ listingId, ownerId }) {
       alert("Не удалось отправить комментарий: " + (err.message || "Неизвестная ошибка"));
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleDelete(commentId) {
+    if (!confirm("Удалить комментарий?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("listing_comments")
+        .delete()
+        .eq("id", commentId);
+
+      if (error) throw error;
+      loadComments();
+    } catch (err) {
+      console.error("Error deleting comment:", err);
+      alert("Не удалось удалить комментарий");
+    }
+  }
+
+  async function handleEdit(commentId) {
+    if (!editContent.trim()) return;
+
+    const validation = validateComment(editContent);
+    if (!validation.valid) {
+      alert(validation.error);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("listing_comments")
+        .update({ content: editContent.trim(), updated_at: new Date().toISOString() })
+        .eq("id", commentId);
+
+      if (error) throw error;
+      setEditingId(null);
+      setEditContent("");
+      loadComments();
+    } catch (err) {
+      console.error("Error updating comment:", err);
+      alert("Не удалось обновить комментарий");
     }
   }
 
@@ -110,7 +173,40 @@ export default function ListingComments({ listingId, ownerId }) {
                         {new Date(comment.created_at).toLocaleDateString()}
                     </span>
                 </div>
-                <p className="text-xs text-gray-800 mt-0.5">{comment.content}</p>
+                
+                {editingId === comment.id ? (
+                  <div className="flex gap-2 mt-1">
+                    <input
+                      type="text"
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="flex-1 border border-gray-300 rounded px-2 py-1 text-xs"
+                      autoFocus
+                    />
+                    <button onClick={() => handleEdit(comment.id)} className="text-xs text-green-600">✓</button>
+                    <button onClick={() => { setEditingId(null); setEditContent(""); }} className="text-xs text-red-600">✕</button>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-xs text-gray-800 mt-0.5">{comment.content}</p>
+                    {currentUser?.id === comment.user_id && (
+                      <div className="flex gap-1">
+                        <button 
+                          onClick={() => { setEditingId(comment.id); setEditContent(comment.content); }}
+                          className="text-xs text-gray-400 hover:text-black"
+                        >
+                          ✎
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(comment.id)}
+                          className="text-xs text-gray-400 hover:text-red-600"
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
             </div>
           </div>
         ))}
