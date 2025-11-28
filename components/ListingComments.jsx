@@ -94,14 +94,14 @@ export default function ListingComments({ listingId, ownerId }) {
                     <Image src={comment.profiles.avatar_url} alt="Avatar" fill className="object-cover" />
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500">
-                        {(comment.profiles?.username || "U")[0].toUpperCase()}
+                        {(comment.profiles?.full_name || comment.profiles?.tg_username || "U")[0].toUpperCase()}
                     </div>
                 )}
             </div>
             <div className="flex-1">
                 <div className="flex items-baseline gap-2">
                     <span className="text-xs font-bold">
-                        {comment.profiles?.username || "Пользователь"}
+                        {comment.profiles?.full_name || comment.profiles?.tg_username || "Пользователь"}
                     </span>
                     {comment.user_id === ownerId && (
                         <span className="text-[10px] bg-black text-white px-1.5 rounded-sm">Продавец</span>
