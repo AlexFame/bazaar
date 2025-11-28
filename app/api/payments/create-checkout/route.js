@@ -13,6 +13,13 @@ export async function POST(request) {
       );
     }
 
+    if (!stripe) {
+      return NextResponse.json(
+        { error: "Payment system is not configured" },
+        { status: 503 }
+      );
+    }
+
     // Get current user
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {

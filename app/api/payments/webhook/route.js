@@ -7,6 +7,10 @@ export async function POST(request) {
   const body = await request.text();
   const signature = headers().get("stripe-signature");
 
+  if (!stripe) {
+    return NextResponse.json({ error: "Payment system is not configured" }, { status: 503 });
+  }
+
   if (!signature) {
     return NextResponse.json({ error: "No signature" }, { status: 400 });
   }

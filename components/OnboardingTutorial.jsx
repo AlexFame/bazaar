@@ -9,12 +9,11 @@ export default function OnboardingTutorial() {
   const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
-    // DISABLED BY DEFAULT - uncomment to enable for new users
     // Check if user has already seen the tutorial
     // const hasSeenTutorial = localStorage.getItem("hasSeenOnboarding");
     // if (!hasSeenTutorial) {
-    //   // Show tutorial after a short delay
-    //   setTimeout(() => setIsVisible(true), 1000);
+      // Show tutorial after a short delay
+      setTimeout(() => setIsVisible(true), 1000);
     // }
   }, []);
 
