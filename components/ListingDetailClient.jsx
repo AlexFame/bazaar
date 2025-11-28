@@ -463,6 +463,7 @@ export default function ListingDetailClient({ id }) {
                   </div>
 
                   {/* Lightbox Modal */}
+                  {/* Lightbox Modal */}
                   {isLightboxOpen && (
                     <div 
                       className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
@@ -477,33 +478,50 @@ export default function ListingDetailClient({ id }) {
                         </svg>
                       </button>
                       
-                      <div className="relative w-full h-full flex items-center justify-center">
-                         <div 
-                           className="relative w-full h-full max-w-4xl max-h-[90vh]"
-                           style={{
-                             touchAction: 'pinch-zoom',
-                             overflow: 'hidden',
-                           }}
-                           onClick={(e) => e.stopPropagation()}
-                         >
-                           <Image
-                            src={imageUrls[currentIndex]}
-                            alt="Full size"
-                            fill
-                            className="object-contain"
-                            sizes="100vw"
-                            style={{
-                              touchAction: 'pinch-zoom',
-                              userSelect: 'none',
-                            }}
-                          />
-                         </div>
+                      <div 
+                        className="relative w-full h-full flex items-center justify-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <TransformWrapper
+                          initialScale={1}
+                          minScale={1}
+                          maxScale={4}
+                          centerOnInit
+                          onPanningStop={(e) => {
+                            // Optional: handle panning limits if needed
+                          }}
+                        >
+                          {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+                            <TransformComponent
+                              wrapperClass="!w-full !h-full flex items-center justify-center"
+                              contentClass="!w-full !h-full flex items-center justify-center"
+                            >
+                              <div className="relative w-full h-full max-w-4xl max-h-[90vh] flex items-center justify-center">
+                                <Image
+                                  src={imageUrls[currentIndex]}
+                                  alt="Full size"
+                                  fill
+                                  className="object-contain"
+                                  sizes="100vw"
+                                  onClick={() => {
+                                    // Double tap/click to reset zoom or close if already at 1x
+                                    if (rest.state?.scale > 1) {
+                                      resetTransform();
+                                    } else {
+                                      setIsLightboxOpen(false);
+                                    }
+                                  }}
+                                />
+                              </div>
+                            </TransformComponent>
+                          )}
+                        </TransformWrapper>
                         
                         {/* Navigation arrows if multiple images */}
                         {imageUrls.length > 1 && (
                           <>
                             <button 
-                                className="absolute left-2 text-white p-2 bg-black/20 rounded-full hover:bg-black/40"
+                                className="absolute left-2 text-white p-2 bg-black/20 rounded-full hover:bg-black/40 z-10"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setCurrentIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
@@ -514,7 +532,7 @@ export default function ListingDetailClient({ id }) {
                                 </svg>
                             </button>
                             <button 
-                                className="absolute right-2 text-white p-2 bg-black/20 rounded-full hover:bg-black/40"
+                                className="absolute right-2 text-white p-2 bg-black/20 rounded-full hover:bg-black/40 z-10"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setCurrentIndex((prev) => (prev + 1) % imageUrls.length);
@@ -526,11 +544,6 @@ export default function ListingDetailClient({ id }) {
                             </button>
                           </>
                         )}
-                        
-                        {/* Zoom hint */}
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/40 px-3 py-1 rounded-full">
-                          Pinch to zoom
-                        </div>
                       </div>
                     </div>
                   )}
