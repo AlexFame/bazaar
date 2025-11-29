@@ -803,7 +803,7 @@ export default function ListingDetailClient({ id }) {
                       className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                     >
                       <span>🚀</span>
-                      <span>Продвинуть объявление</span>
+                      <span>{t("premium_services_title")}</span>
                     </button>
                   </div>
                   
