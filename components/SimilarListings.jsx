@@ -4,7 +4,10 @@ import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { ListingCardSkeleton } from "./SkeletonLoader";
 
+import { useLang } from "@/lib/i18n-client";
+
 export default function SimilarListings({ categoryId, currentId }) {
+  const { t } = useLang();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,7 +39,7 @@ export default function SimilarListings({ categoryId, currentId }) {
 
   return (
     <div className="mt-8 mb-8">
-      <h2 className="text-xl font-bold mb-4">Похожие объявления</h2>
+      <h2 className="text-xl font-bold mb-4">{t("similar_ads") || "Похожие объявления"}</h2>
       <div className="grid grid-cols-2 gap-2">
         {loading
           ? [...Array(2)].map((_, i) => <div key={i} className="overflow-hidden"><ListingCardSkeleton /></div>)
