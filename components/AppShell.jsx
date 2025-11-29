@@ -328,7 +328,7 @@ export default function AppShell({ children }) {
             </div>
 
             {/* НАВИГАЦИЯ + ЯЗЫК */}
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 w-full">
               <nav className="flex gap-2 items-center justify-center">
                 {/* Главная */}
                 <Link href="/">
