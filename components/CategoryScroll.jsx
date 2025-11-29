@@ -14,7 +14,7 @@ export default function CategoryScroll() {
   const secondRow = CATEGORY_DEFS.slice(8);
 
   const handleCategoryClick = (key) => {
-      const params = new URLSearchParams(window.location.search);
+      const params = new URLSearchParams(searchParams.toString());
       if (currentCategory === key) {
           params.delete("category"); // Toggle off
       } else {

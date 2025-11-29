@@ -404,7 +404,7 @@ export default function AppShell({ children }) {
 
       {!isChatConversation && (
         <footer className="w-full max-w-[520px] mx-auto text-center text-[11px] py-5 opacity-60">
-          Bazaar © 2025 • <a href="https://t.me/bazaar_support" target="_blank" rel="noopener noreferrer" className="hover:underline">{t("footer_support")}</a>
+          Bazaar © 2025 • <a href="https://t.me/" target="_blank" rel="noopener noreferrer" className="hover:underline">{t("footer_support")}</a>
         </footer>
       )}
       

@@ -509,39 +509,45 @@ export default function ListingDetailClient({ id }) {
                                   fill
                                   className="object-contain"
                                   sizes="100vw"
-                                  onClick={(e) => {
-                                    // Prevent default to avoid ghost clicks
-                                    e.preventDefault();
-                                    
-                                    const now = Date.now();
-                                    const DOUBLE_TAP_DELAY = 300;
+                                    onClick={(e) => {
+                                      // Prevent default to avoid ghost clicks
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      
+                                      const now = Date.now();
+                                      const DOUBLE_TAP_DELAY = 300;
 
-                                    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-                                      // DOUBLE TAP
-                                      if (tapTimeoutRef.current) {
-                                        clearTimeout(tapTimeoutRef.current);
-                                        tapTimeoutRef.current = null;
-                                      }
-                                      lastTapRef.current = 0;
-
-                                      // Check scale robustly (support different library versions)
-                                      const currentScale = rest.instance?.transformState?.scale || rest.state?.scale || 1;
-
-                                      if (currentScale > 1) {
-                                        resetTransform();
-                                      } else {
-                                        // Zoom in significantly (default step is usually small)
-                                        zoomIn(2); 
-                                      }
-                                    } else {
-                                      // SINGLE TAP
-                                      lastTapRef.current = now;
-                                      tapTimeoutRef.current = setTimeout(() => {
-                                        setIsLightboxOpen(false);
+                                      if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+                                        // DOUBLE TAP
+                                        if (tapTimeoutRef.current) {
+                                          clearTimeout(tapTimeoutRef.current);
+                                          tapTimeoutRef.current = null;
+                                        }
                                         lastTapRef.current = 0;
-                                      }, DOUBLE_TAP_DELAY);
-                                    }
-                                  }}
+
+                                        // Check scale robustly
+                                        const currentScale = rest.instance?.transformState?.scale || rest.state?.scale || 1;
+
+                                        if (currentScale > 1) {
+                                          resetTransform();
+                                        } else {
+                                          zoomIn(2); 
+                                        }
+                                      } else {
+                                        // SINGLE TAP
+                                        lastTapRef.current = now;
+                                        tapTimeoutRef.current = setTimeout(() => {
+                                          // Only close if not zoomed in? No, user wants single tap to close.
+                                          // But if zoomed in, single tap usually does nothing or pans.
+                                          // Let's check scale.
+                                          const currentScale = rest.instance?.transformState?.scale || rest.state?.scale || 1;
+                                          if (currentScale <= 1.1) {
+                                              setIsLightboxOpen(false);
+                                          }
+                                          lastTapRef.current = 0;
+                                        }, DOUBLE_TAP_DELAY);
+                                      }
+                                    }}
                                 />
                               </div>
                             </TransformComponent>

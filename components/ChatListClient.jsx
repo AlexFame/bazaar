@@ -155,7 +155,18 @@ export default function ChatListClient() {
                       </h3>
                       <div className="flex flex-col items-end">
                         <span className={`text-[10px] whitespace-nowrap ml-2 ${unread > 0 ? 'text-blue-600 font-medium' : 'text-gray-400'}`}>
-                            {new Date(conv.updated_at).toLocaleDateString()}
+                            {(() => {
+                                const date = new Date(conv.updated_at);
+                                const now = new Date();
+                                const isToday = date.toDateString() === now.toDateString();
+                                const yesterday = new Date(now);
+                                yesterday.setDate(yesterday.getDate() - 1);
+                                const isYesterday = date.toDateString() === yesterday.toDateString();
+                                
+                                if (isToday) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                if (isYesterday) return "Вчера";
+                                return date.toLocaleDateString([], { day: 'numeric', month: 'short' });
+                            })()}
                         </span>
                         {unread > 0 && (
                             <span className="bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center mt-1">

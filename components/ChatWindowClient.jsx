@@ -265,36 +265,43 @@ export default function ChatWindowClient({ conversationId }) {
 
       {/* Messages Area */}
       <div 
-        className="flex-1 overflow-y-auto p-3 space-y-3 pb-4"
+        className="flex-1 overflow-y-auto p-3 space-y-1 pb-4"
       >
-        {messages.map((msg) => {
+        {messages.map((msg, index) => {
           const isMe = msg.sender_id === user?.id;
+          const showDate = index === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[index - 1].created_at).toDateString();
+          
           return (
-            <div
-              key={msg.id}
-              className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-            >
-              <div
-                className={`max-w-[75%] px-4 py-2 rounded-2xl text-sm ${
-                  isMe
-                    ? "bg-black dark:bg-white text-white dark:text-black rounded-br-none"
-                    : "bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-bl-none"
-                }`}
-              >
-                <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                <div className={`text-[9px] mt-1 flex items-center justify-end gap-1 ${isMe ? "text-white/60 dark:text-black/60" : "text-black/40 dark:text-white/40"}`}>
-                    <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    {isMe && (
-                        <span>
-                            {msg.is_read ? (
-                                <span className="text-blue-400 dark:text-blue-600">✓✓</span>
-                            ) : (
-                                <span>✓</span>
-                            )}
+            <div key={msg.id} className="flex flex-col">
+                {showDate && (
+                    <div className="flex justify-center my-4">
+                        <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full">
+                            {new Date(msg.created_at).toLocaleDateString([], { day: 'numeric', month: 'long' })}
                         </span>
-                    )}
+                    </div>
+                )}
+                <div
+                  className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2`}
+                >
+                  <div
+                    className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm relative group ${
+                      isMe
+                        ? "bg-black dark:bg-white text-white dark:text-black rounded-br-none"
+                        : "bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-bl-none"
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap break-words min-w-[20px]">{msg.content || <span className="italic opacity-50">Пустое сообщение</span>}</p>
+                    <div className={`text-[9px] mt-1 flex items-center justify-end gap-1 ${isMe ? "text-white/60 dark:text-black/60" : "text-black/40 dark:text-white/40"}`}>
+                        <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        {isMe && msg.is_read && (
+                            <span className="ml-1 font-medium">Прочитано</span>
+                        )}
+                        {isMe && !msg.is_read && (
+                             <span>✓</span>
+                        )}
+                    </div>
+                  </div>
                 </div>
-              </div>
             </div>
           );
         })}
