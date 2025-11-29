@@ -230,7 +230,16 @@ export default function ChatWindowClient({ conversationId }) {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-[520px] mx-auto bg-white dark:bg-black overflow-hidden" style={{ touchAction: 'pan-y' }}>
+    <div 
+      className="flex flex-col h-[100dvh] w-full max-w-[520px] mx-auto bg-white dark:bg-black" 
+      style={{ 
+        touchAction: 'pan-y',
+        overflowX: 'hidden',
+        position: 'relative',
+        width: '100%',
+        maxWidth: '520px'
+      }}
+    >
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black sticky top-0 z-10">
         <BackButton />
