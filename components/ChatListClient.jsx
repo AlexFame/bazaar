@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import BackButton from "./BackButton";
+import { useLang } from "@/lib/i18n-client";
 
 export default function ChatListClient() {
   const router = useRouter();
+  const { t } = useLang();
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -103,7 +105,7 @@ export default function ChatListClient() {
     <div className="min-h-screen bg-white animate-fade-in pb-20">
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3 flex items-center gap-3">
         <BackButton />
-        <h1 className="text-lg font-bold">Сообщения</h1>
+        <h1 className="text-lg font-bold">{t("navbar_messages")}</h1>
       </div>
 
       <div className="px-4 py-2">
