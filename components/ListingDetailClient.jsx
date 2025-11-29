@@ -510,7 +510,6 @@ export default function ListingDetailClient({ id }) {
                                   className="object-contain"
                                   sizes="100vw"
                                     onClick={(e) => {
-                                      // Prevent default to avoid ghost clicks
                                       e.preventDefault();
                                       e.stopPropagation();
                                       
@@ -518,32 +517,25 @@ export default function ListingDetailClient({ id }) {
                                       const DOUBLE_TAP_DELAY = 300;
 
                                       if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-                                        // DOUBLE TAP
+                                        // DOUBLE TAP - toggle zoom
                                         if (tapTimeoutRef.current) {
                                           clearTimeout(tapTimeoutRef.current);
                                           tapTimeoutRef.current = null;
                                         }
                                         lastTapRef.current = 0;
 
-                                        // Check scale robustly
                                         const currentScale = rest.instance?.transformState?.scale || rest.state?.scale || 1;
 
-                                        if (currentScale > 1) {
+                                        if (currentScale > 1.1) {
                                           resetTransform();
                                         } else {
                                           zoomIn(2); 
                                         }
                                       } else {
-                                        // SINGLE TAP
+                                        // SINGLE TAP - close lightbox
                                         lastTapRef.current = now;
                                         tapTimeoutRef.current = setTimeout(() => {
-                                          // Only close if not zoomed in? No, user wants single tap to close.
-                                          // But if zoomed in, single tap usually does nothing or pans.
-                                          // Let's check scale.
-                                          const currentScale = rest.instance?.transformState?.scale || rest.state?.scale || 1;
-                                          if (currentScale <= 1.1) {
-                                              setIsLightboxOpen(false);
-                                          }
+                                          setIsLightboxOpen(false);
                                           lastTapRef.current = 0;
                                         }, DOUBLE_TAP_DELAY);
                                       }
