@@ -215,400 +215,122 @@ export default function CreateListingClient({ onCreated, editId }) {
     }
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleSubmit(e, status = 'active') {
+    if (e) e.preventDefault();
 
-    setErrorMsg("");
-    setSuccessMsg("");
+    if (!checkTelegramAccountAge()) {
+      alert("Ваш аккаунт Telegram слишком новый для публикации объявлений.");
+      return;
+    }
 
-    // Honeypot check - if filled, it's a bot
-    if (honeypot) {
-        console.warn("🤖 Bot detected via honeypot field");
-        setErrorMsg("Ошибка отправки формы. Попробуйте позже.");
+    // Basic validation
+    if (!title.trim() || !price.trim()) {
+      alert("Заполните обязательные поля (Заголовок, Цена)");
+      return;
+    }
+
+    // Content moderation
+    if (!checkContent(title) || !checkContent(description)) {
+      alert("Ваше объявление содержит запрещенные слова.");
+      return;
+    }
+
+    if (hasEmoji(title)) {
+      alert("В заголовке нельзя использовать эмодзи.");
+      return;
+    }
+
+    if (!validateTitle(title)) {
+        alert("Заголовок слишком короткий (минимум 3 символа).");
         return;
     }
 
-    // Check Telegram account age (anti-bot measure)
-    if (!editId) { // Skip for edits
-        const accountCheck = checkTelegramAccountAge(7); // Minimum 7 days
-        if (!accountCheck.allowed) {
-            console.warn("🤖 Bot detected: new Telegram account");
-            setErrorMsg(accountCheck.reason);
+    if (!validateDescription(description)) {
+        alert("Описание слишком короткое (минимум 10 символов).");
+        return;
+    }
+
+    if (!validatePrice(price)) {
+        alert("Цена указана некорректно.");
+        return;
+    }
+
+    // Image moderation
+    for (const img of images) {
+        if (!checkImage(img.file)) {
+            alert(`Файл ${img.file.name} слишком большой или имеет недопустимый формат.`);
             return;
         }
-    }
-
-    // Auto-Moderation for Text
-    const contentCheck = checkContent(title + " " + description);
-    if (!contentCheck.safe) {
-        setErrorMsg(`Объявление содержит недопустимые слова: ${contentCheck.flagged.join(", ")}`);
-        return;
-    }
-
-    // Validate title
-    const titleValidation = validateTitle(title);
-    if (!titleValidation.valid) {
-        setErrorMsg(titleValidation.error);
-        return;
-    }
-
-    // Check for emojis in title
-    if (hasEmoji(title)) {
-        setErrorMsg("Эмодзи в заголовке запрещены. Используйте только текст.");
-        return;
-    }
-
-    // Validate description
-    const descValidation = validateDescription(description);
-    if (!descValidation.valid) {
-        setErrorMsg(descValidation.error);
-        return;
-    }
-
-    // Validate price
-    const priceValidation = validatePrice(price, listingType);
-    if (!priceValidation.valid) {
-        setErrorMsg(priceValidation.error);
-        return;
-    }
-
-    if (!contacts.trim()) {
-      setErrorMsg("Укажите способ связи (телефон или Telegram).");
-      return;
     }
 
     setLoading(true);
 
     try {
-      // 0. Проверка авторизации и авто-логин если нужно
-      const { data: { session } } = await supabase.auth.getSession();
-      const tgUser = getTelegramUser();
+      const user = getTelegramUser();
+      const userId = getUserId();
 
-      if (!session) {
-          console.log("⚠️ [Create Listing] No active session. Attempting to restore...");
-          if (tgUser && window.Telegram?.WebApp?.initData) {
-               try {
-                   const res = await fetch("/api/auth/tg/verify", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ initData: window.Telegram.WebApp.initData }),
-                   });
-                   
-                   if (res.ok) {
-                       const { token } = await res.json();
-                       // Устанавливаем сессию
-                       const { error } = await supabase.auth.setSession({
-                           access_token: token,
-                           refresh_token: token, // Используем тот же токен как refresh (если поддерживается)
-                       });
-                       if (error) throw error;
-                       console.log("✅ [Create Listing] Session restored");
-                   } else {
-                       throw new Error("Auth failed");
-                   }
-               } catch (e) {
-                   console.error("❌ [Create Listing] Auth failed:", e);
-                   setErrorMsg("Ошибка авторизации. Попробуйте обновить страницу.");
-                   setLoading(false);
-                   return;
-               }
-           } else {
-               setErrorMsg("Войдите в систему, чтобы создать объявление.");
-               setLoading(false);
-               return;
-           }
-      }
-
-      // Rate limiting: Check how many listings user created recently
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user && !editId) { // Skip rate limit check when editing
-          const now = new Date();
-          const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
-          const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-          // Check listings in last hour
-          const { data: recentListings, error: recentError } = await supabase
-              .from("listings")
-              .select("id, created_at")
-              .eq("created_by", user.id)
-              .gte("created_at", oneHourAgo.toISOString());
-
-          if (recentError) {
-              console.error("Error checking rate limit:", recentError);
-          } else if (recentListings && recentListings.length >= 3) {
-              setErrorMsg("Вы создали слишком много объявлений за последний час. Подождите немного.");
-              setLoading(false);
-              return;
-          }
-
-          // Check listings in last day
-          const { data: dailyListings, error: dailyError } = await supabase
-              .from("listings")
-              .select("id")
-              .eq("created_by", user.id)
-              .gte("created_at", oneDayAgo.toISOString());
-
-          if (dailyError) {
-              console.error("Error checking daily limit:", dailyError);
-          } else if (dailyListings && dailyListings.length >= 10) {
-              setErrorMsg("Вы достигли дневного лимита объявлений (10 в день). Попробуйте завтра.");
-              setLoading(false);
-              return;
-          }
-      }
-      const dbType = listingType;
-
-      // данные телеграма для личного кабинета
-      let profileId = null;
-
-      if (tgUser?.id) {
-          // 1. Проверяем, есть ли профиль
-          let { data: existingProfile, error: selectError } = await supabase
-              .from("profiles")
-              .select("id")
-              .eq("tg_user_id", tgUser.id)
-              .maybeSingle();
-
-          if (existingProfile) {
-              profileId = existingProfile.id;
-              console.log("✅ [Create Listing] Found existing profile:", profileId);
-          } else {
-              // 2. Если нет, создаем
-              console.log("📝 [Create Listing] Creating new profile for tg_user_id:", tgUser.id);
-              const { data: newProfile, error: createProfileError } = await supabase
-                  .from("profiles")
-                  .insert({
-                      tg_user_id: tgUser.id,
-                      tg_username: tgUser.username || null,
-                      full_name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ") || null,
-                  })
-                  .select("id")
-                  .maybeSingle();
-              
-              if (createProfileError) {
-                  console.error("❌ [Create Listing] Ошибка создания профиля:", createProfileError);
-                  
-                  // Если ошибка уникальности, попробуем найти профиль еще раз
-                  if (createProfileError.code === '23505') {
-                      console.log("🔄 [Create Listing] Unique constraint error, retrying select...");
-                      const { data: retryProfile } = await supabase
-                          .from("profiles")
-                          .select("id")
-                          .eq("tg_user_id", tgUser.id)
-                          .maybeSingle();
-                      
-                      if (retryProfile) {
-                          profileId = retryProfile.id;
-                          console.log("✅ [Create Listing] Found profile on retry:", profileId);
-                      } else {
-                          setErrorMsg("Не удалось создать профиль. Попробуйте перезагрузить страницу.");
-                          return;
-                      }
-                  } else {
-                      setErrorMsg(`Ошибка создания профиля: ${createProfileError.message}`);
-                      return;
-                  }
-              } else {
-                  profileId = newProfile?.id;
-                  console.log("✅ [Create Listing] Created new profile:", profileId);
-              }
-          }
-      }
-
-      console.log("🔍 [Create Listing] Resolved profileId:", profileId);
-      console.log("🔍 [Create Listing] Telegram User:", tgUser);
-
-      if (!profileId) {
-        console.error("❌ [Create Listing] No profileId - cannot create listing");
-        setErrorMsg("Не удалось определить ваш профиль. Попробуйте перезагрузить страницу.");
+      if (!userId) {
+        alert("Ошибка авторизации. Попробуйте перезагрузить страницу.");
+        setLoading(false);
         return;
       }
 
-      // Собираем параметры, добавляем бартер
-      const finalParameters = { ...parameters };
-      if (isBarter) {
-        finalParameters.barter = true;
-      }
+      // 1. Upload images
+      const uploadedPaths = [];
+      for (const img of images) {
+        const fileExt = img.file.name.split(".").pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${userId}/${fileName}`;
 
-      let listing;
-      let listingError;
-
-      if (editId) {
-        // Режим редактирования - обновляем существующее объявление
-        console.log("📝 [Edit Listing] Updating listing:", editId);
-        
-        const { data, error } = await supabase
+        const { error: uploadError } = await supabase.storage
           .from("listings")
-          .update({
-            title: title.trim(),
-            description: description.trim() || null,
-            price: price ? Number(price) : null,
-            location_text: location.trim() || null,
-            contacts: contacts.trim() || "EMPTY",
-            type: dbType,
-            category_key: categoryKey || null,
-            condition: condition,
-            parameters: finalParameters,
-            latitude: coordinates?.lat || null,
-            longitude: coordinates?.lng || null,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", editId)
-          .select()
-          .single();
-        
-        listing = data;
-        listingError = error;
-      } else {
-        // Режим создания - создаём новое объявление
-        console.log("📝 [Create Listing] Creating listing with created_by:", profileId);
-        
-        const { data, error } = await supabase
-          .from("listings")
-          .insert({
-            title: title.trim(),
-            description: description.trim() || null,
-            price: price ? Number(price) : null,
-            location_text: location.trim() || null,
-            contacts: contacts.trim() || "EMPTY",
-            type: dbType,
-            category_key: categoryKey || null,
-            created_by: profileId,
-            condition: condition,
-            parameters: finalParameters,
-            latitude: coordinates?.lat || null,
-            longitude: coordinates?.lng || null,
-          })
-          .select()
-          .single();
-        
-        listing = data;
-        listingError = error;
-      }
+          .upload(filePath, img.file);
 
-      if (listingError) {
-        console.error(editId ? "❌ [Edit Listing] Ошибка обновления объявления:" : "❌ [Create Listing] Ошибка вставки объявления:", listingError);
-        setErrorMsg(`Ошибка при сохранении: ${listingError.message} (${listingError.details || "no details"})`);
-        return;
-      }
-
-      console.log(editId ? "✅ [Edit Listing] Listing updated successfully:" : "✅ [Create Listing] Listing created successfully:", listing);
-      console.log("📋 [Listing] Listing ID:", listing?.id);
-
-      // --- ОБРАБОТКА ИЗОБРАЖЕНИЙ ---
-      if (listing) {
-        const listingId = listing.id;
-        let mainImagePath = null;
-        let hadUploadError = false;
-
-        // 1. Удаление изображений (только для редактирования)
-        if (editId) {
-            const currentExistingIds = images
-                .filter(img => img.type === 'existing')
-                .map(img => img.id);
-            
-            const idsToDelete = initialImageIds.filter(id => !currentExistingIds.includes(id));
-            
-            if (idsToDelete.length > 0) {
-                console.log("🗑️ Deleting images:", idsToDelete);
-                // Удаляем из БД
-                const { error: deleteError } = await supabase
-                    .from('listing_images')
-                    .delete()
-                    .in('id', idsToDelete);
-                
-                if (deleteError) console.error("Error deleting images from DB:", deleteError);
-                
-                // Удаляем файлы из Storage (опционально, можно оставить для истории или чистить кроном)
-                // Для простоты пока не удаляем файлы физически, чтобы не сломать если что-то пойдет не так
-            }
+        if (uploadError) {
+          console.error("Upload error:", uploadError);
+          continue;
         }
-
-        // 2. Загрузка новых и обновление позиций
-        for (let index = 0; index < images.length; index++) {
-            const img = images[index];
-            let filePath = img.path;
-
-            if (img.type === 'new') {
-                const file = img.file;
-                const ext = file.name && file.name.includes(".") ? file.name.split(".").pop() : "jpg";
-                const fileName = `${listingId}-${Date.now()}-${index}.${ext}`; // Unique name
-                filePath = `listing-${listingId}/${fileName}`;
-
-                const { error: uploadError } = await supabase.storage
-                    .from("listing-images")
-                    .upload(filePath, file, {
-                        cacheControl: "3600",
-                        upsert: true,
-                    });
-
-                if (uploadError) {
-                    console.error("Ошибка загрузки картинки:", uploadError);
-                    hadUploadError = true;
-                    continue;
-                }
-                
-                // Создаем запись в БД для нового фото
-                await supabase.from('listing_images').insert({
-                    listing_id: listingId,
-                    file_path: filePath,
-                    position: index
-                });
-            } else {
-                // Обновляем позицию для существующего фото
-                await supabase.from('listing_images')
-                    .update({ position: index })
-                    .eq('id', img.id);
-            }
-
-            if (index === 0) mainImagePath = filePath;
-        }
-
-        // Обновляем main_image_path
-        if (mainImagePath) {
-          const { error: updateError } = await supabase
+        
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
             .from("listings")
-            .update({ main_image_path: mainImagePath })
-            .eq("id", listing.id);
-
-          if (updateError) {
-            console.error("Ошибка обновления main_image_path:", updateError);
-          }
-        }
-
-        if (hadUploadError) {
-          setErrorMsg(
-            "Объявление сохранено, но часть изображений не удалось загрузить."
-          );
-        }
+            .getPublicUrl(filePath);
+            
+        uploadedPaths.push(publicUrl);
       }
 
-      setSuccessMsg(editId ? "Объявление успешно обновлено!" : "Объявление успешно опубликовано!");
+      // 2. Insert listing
+      const { error } = await supabase.from("listings").insert({
+        title,
+        description,
+        price: Number(price),
+        currency: "UAH",
+        category_key: categoryKey,
+        type: listingType,
+        condition: listingType === "service" ? "new" : condition, // Default for services
+        main_image_path: uploadedPaths[0] || null,
+        image_path: uploadedPaths, // Array of all images
+        location_text: location,
+        latitude: coordinates?.lat || null,
+        longitude: coordinates?.lng || null,
+        created_by: userId,
+        parameters: dynamicValues, // JSONB
+        status: status // 'active' or 'draft'
+      });
 
-      setTitle("");
-      setDescription("");
-      setPrice("");
-      setLocation("");
-      setContacts("");
-      setImageFiles([]);
-      setImagePreviews([]);
-      setListingType("buy");
-      setCategoryKey(CATEGORY_DEFS[0]?.key || "kids");
-      setParameters({});
-      setCondition("new");
-      setIsBarter(false);
+      if (error) throw error;
 
-      if (onCreated) onCreated();
-
-      if (closeTimeoutRef.current) {
-        clearTimeout(closeTimeoutRef.current);
+      if (status === 'draft') {
+        alert("Объявление сохранено в черновики!");
+      } else {
+        alert("Объявление опубликовано!");
       }
-      closeTimeoutRef.current = setTimeout(() => {
-        setSuccessMsg("");
-      }, 3000);
+      
+      // Reset form or redirect
+      window.location.href = "/"; 
     } catch (err) {
-      console.error("Неожиданная ошибка при создании:", err);
-      setErrorMsg("Произошла неожиданная ошибка.");
+      console.error("Error creating listing:", err);
+      alert("Ошибка при создании объявления: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -1033,13 +755,23 @@ export default function CreateListingClient({ onCreated, editId }) {
           </label>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full mt-3 bg-black text-white text-sm rounded-full py-2 disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          {loading ? t("btn_publish") + "..." : t("btn_publish")}
-        </button>
+        <div className="flex gap-2 mt-3">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={(e) => handleSubmit(e, 'draft')}
+            className="flex-1 bg-white border border-black text-black text-sm rounded-full py-2 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+          >
+            {loading ? "Сохраняем..." : "В черновик"}
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 bg-black text-white text-sm rounded-full py-2 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+          >
+            {loading ? t("btn_publish") + "..." : t("btn_publish")}
+          </button>
+        </div>
       </form>
     </section>
   );

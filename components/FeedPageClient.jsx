@@ -334,6 +334,7 @@ export default function FeedPageClient() {
         .select("id, title, price, image_path, latitude, longitude, created_at, is_vip")
         .not("latitude", "is", null)
         .not("longitude", "is", null)
+        .eq("status", "active")
         .order("created_at", { ascending: false });
 
       // Apply same filters as main list
@@ -410,6 +411,7 @@ export default function FeedPageClient() {
         .select("*, profiles!listings_created_by_fkey(*)")
         .order("is_vip", { ascending: false })
         .order("created_at", { ascending: false })
+        .eq("status", "active")
         .range(from, to);
 
       const term = (searchTerm || "").trim();
@@ -652,7 +654,7 @@ export default function FeedPageClient() {
     { value: "all", label: txt.typeAny },
     { value: "sell", label: txt.typeSell },
     { value: "buy", label: txt.typeBuy },
-    { value: "services", label: txt.typeServices },
+    { value: "service", label: txt.typeServices },
     { value: "free", label: txt.typeFree },
   ];
 

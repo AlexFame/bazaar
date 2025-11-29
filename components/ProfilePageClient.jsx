@@ -35,6 +35,7 @@ export default function ProfilePageClient({ profileId }) {
         .from("listings")
         .select("*, profiles:created_by(*)")
         .eq("created_by", profileId)
+        .eq("status", "active")
         .order("created_at", { ascending: false });
       
       setListings(listingsData || []);
