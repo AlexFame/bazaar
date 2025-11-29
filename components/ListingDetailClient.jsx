@@ -12,6 +12,7 @@ import { ListingDetailSkeleton } from "@/components/SkeletonLoader";
 import SimilarListings from "@/components/SimilarListings";
 import BackButton from "@/components/BackButton";
 import ReportButton from "@/components/ReportButton";
+import PremiumServicesModal from "@/components/PremiumServicesModal";
 import { translateText } from "@/lib/translation";
 import ListingComments from "@/components/ListingComments";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
@@ -76,6 +77,7 @@ export default function ListingDetailClient({ id }) {
   const [translated, setTranslated] = useState({ title: "", description: "" });
   const [isFavorite, setIsFavorite] = useState(false);
   const [profileId, setProfileId] = useState(null);
+  const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
 
   // Load favorite status
   useEffect(() => {
@@ -793,20 +795,34 @@ export default function ListingDetailClient({ id }) {
 
               {/* КНОПКИ РЕДАКТИРОВАНИЯ И УДАЛЕНИЯ (только для владельца) */}
               {isOwner && (
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-100">
-                  <button
-                    onClick={handleEdit}
-                    className="flex-1 py-2 px-3 bg-black text-white text-xs font-semibold rounded-full hover:bg-black/80 transition-colors"
-                  >
-                    {t("edit")}
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="flex-1 py-2 px-3 bg-red-600 text-white text-xs font-semibold rounded-full hover:bg-red-700 transition-colors"
-                  >
-                    {t("delete")}
-                  </button>
-                </div>
+                <>
+                  {/* Promote button */}
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => setIsPremiumModalOpen(true)}
+                      className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    >
+                      <span>🚀</span>
+                      <span>Продвинуть объявление</span>
+                    </button>
+                  </div>
+                  
+                  {/* Edit/Delete buttons */}
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={handleEdit}
+                      className="flex-1 py-2 px-3 bg-black text-white text-xs font-semibold rounded-full hover:bg-black/80 transition-colors"
+                    >
+                      {t("edit")}
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      className="flex-1 py-2 px-3 bg-red-600 text-white text-xs font-semibold rounded-full hover:bg-red-700 transition-colors"
+                    >
+                      {t("delete")}
+                    </button>
+                  </div>
+                </>
               )}
 
               {/* Q&A Section */}
@@ -882,6 +898,13 @@ export default function ListingDetailClient({ id }) {
         </div>
       </div>
     )}
+    
+    {/* Premium Services Modal */}
+    <PremiumServicesModal
+      listingId={id}
+      isOpen={isPremiumModalOpen}
+      onClose={() => setIsPremiumModalOpen(false)}
+    />
     </>
   );
 }
