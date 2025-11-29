@@ -492,6 +492,7 @@ export default function ListingDetailClient({ id }) {
                           minScale={1}
                           maxScale={4}
                           centerOnInit
+                          doubleClick={{ disabled: true }}
                           onPanningStop={(e) => {
                             // Optional: handle panning limits if needed
                           }}
@@ -523,7 +524,10 @@ export default function ListingDetailClient({ id }) {
                                       }
                                       lastTapRef.current = 0;
 
-                                      if (rest.state?.scale > 1) {
+                                      // Check scale robustly (support different library versions)
+                                      const currentScale = rest.instance?.transformState?.scale || rest.state?.scale || 1;
+
+                                      if (currentScale > 1) {
                                         resetTransform();
                                       } else {
                                         // Zoom in significantly (default step is usually small)
