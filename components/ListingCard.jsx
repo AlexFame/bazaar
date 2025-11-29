@@ -129,7 +129,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
           .select("id")
           .eq("profile_id", profileData.id)
           .eq("listing_id", listing.id)
-          .single();
+          .maybeSingle();
 
         setIsFavorite(!!favoriteData);
       } catch (e) {
