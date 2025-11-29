@@ -48,7 +48,8 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
       const data = await response.json();
 
       if (!data.success) {
-        alert("Ошибка создания платежа");
+        console.error("Payment creation failed:", data);
+        alert(`Ошибка создания платежа: ${data.error}\n${data.details?.description || JSON.stringify(data.details) || ""}`);
         setPurchasing(null);
         return;
       }
