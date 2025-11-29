@@ -317,32 +317,37 @@ export default function ChatWindowClient({ conversationId }) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area - Always visible */}
-      <div className="flex-shrink-0 p-3 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 pb-[calc(env(safe-area-inset-bottom)+12px)] z-50 relative w-full">
-        <form onSubmit={handleSend} className="flex items-end gap-2 w-full">
+      {/* Input Area */}
+      <div className="flex-shrink-0 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] sticky bottom-0 z-10 w-full max-w-[520px] mx-auto">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }}
+          className="flex items-end gap-2 w-full"
+        >
           <textarea
             ref={textareaRef}
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Написать сообщение..."
-            className="flex-1 bg-gray-100 dark:bg-gray-800 dark:text-white rounded-2xl px-4 py-3 text-base outline-none resize-none max-h-32 min-h-[44px] placeholder-gray-500 dark:placeholder-gray-400"
+            onKeyDown={handleKeyDown}
+            placeholder={t("chat_placeholder") || "Написать сообщение..."}
+            className="flex-1 bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-2xl px-4 py-3 text-sm resize-none max-h-32 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white min-w-0 w-full"
             rows={1}
-            onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSend(e);
-                }
-            }}
+            style={{ minHeight: "44px" }}
           />
           <button
             type="submit"
-            disabled={!newMessage.trim() || isSending}
-            className="w-11 h-11 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-opacity mb-[1px] flex-shrink-0"
+            disabled={!newMessage.trim() || sending}
+            className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            {sending ? (
+              <div className="w-5 h-5 border-2 border-white dark:border-black border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-0.5">
+                <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+              </svg>
+            )}
           </button>
         </form>
       </div>
