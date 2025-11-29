@@ -230,13 +230,13 @@ export default function ChatWindowClient({ conversationId }) {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] max-w-[520px] mx-auto bg-white dark:bg-black">
+    <div className="flex flex-col h-[100dvh] w-full max-w-[520px] mx-auto bg-white dark:bg-black overflow-hidden" style={{ touchAction: 'pan-y' }}>
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black sticky top-0 z-10">
         <BackButton />
         {otherUser && (
-          <div className="flex items-center gap-2 flex-1">
-            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0">
               {otherUser.avatar_url ? (
                 <img src={otherUser.avatar_url} alt={otherUser.full_name} className="w-full h-full object-cover" />
               ) : (
@@ -265,14 +265,14 @@ export default function ChatWindowClient({ conversationId }) {
 
       {/* Messages Area */}
       <div 
-        className="flex-1 overflow-y-auto p-3 space-y-1 pb-4"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-4 w-full"
       >
         {messages.map((msg, index) => {
           const isMe = msg.sender_id === user?.id;
           const showDate = index === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[index - 1].created_at).toDateString();
           
           return (
-            <div key={msg.id} className="flex flex-col">
+            <div key={msg.id} className="flex flex-col w-full">
                 {showDate && (
                     <div className="flex justify-center my-4">
                         <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full">
@@ -281,7 +281,7 @@ export default function ChatWindowClient({ conversationId }) {
                     </div>
                 )}
                 <div
-                  className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2`}
+                  className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2 w-full`}
                 >
                   <div
                     className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm relative group ${
@@ -290,7 +290,7 @@ export default function ChatWindowClient({ conversationId }) {
                         : "bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-bl-none"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words min-w-[20px]">{msg.content || <span className="italic opacity-50">Пустое сообщение</span>}</p>
+                    <p className="whitespace-pre-wrap break-words break-all min-w-[20px]">{msg.content || <span className="italic opacity-50">Пустое сообщение</span>}</p>
                     <div className={`text-[9px] mt-1 flex items-center justify-end gap-1 ${isMe ? "text-white/60 dark:text-black/60" : "text-black/40 dark:text-white/40"}`}>
                         <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         {isMe && msg.is_read && (
@@ -309,8 +309,8 @@ export default function ChatWindowClient({ conversationId }) {
       </div>
 
       {/* Input Area - Always visible */}
-      <div className="flex-shrink-0 p-3 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 pb-[calc(env(safe-area-inset-bottom)+12px)] z-50 relative">
-        <form onSubmit={handleSend} className="flex items-end gap-2">
+      <div className="flex-shrink-0 p-3 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 pb-[calc(env(safe-area-inset-bottom)+12px)] z-50 relative w-full">
+        <form onSubmit={handleSend} className="flex items-end gap-2 w-full">
           <textarea
             ref={textareaRef}
             value={newMessage}
@@ -328,7 +328,7 @@ export default function ChatWindowClient({ conversationId }) {
           <button
             type="submit"
             disabled={!newMessage.trim() || isSending}
-            className="w-11 h-11 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-opacity mb-[1px]"
+            className="w-11 h-11 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-opacity mb-[1px] flex-shrink-0"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
