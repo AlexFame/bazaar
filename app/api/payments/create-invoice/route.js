@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -7,33 +8,77 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const BOT_TOKEN = process.env.TG_BOT_TOKEN;
 const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
+// Helper to validate Telegram initData
+function validateTelegramWebAppData(initData) {
+  if (!initData) return null;
+  if (!BOT_TOKEN) return null;
+
+  try {
+    const urlParams = new URLSearchParams(initData);
+    const hash = urlParams.get("hash");
+    urlParams.delete("hash");
+
+    const params = [];
+    for (const [key, value] of urlParams.entries()) {
+      params.push(`${key}=${value}`);
+    }
+    params.sort();
+
+    const dataCheckString = params.join("\n");
+    const secretKey = crypto
+      .createHmac("sha256", "WebAppData")
+      .update(BOT_TOKEN)
+      .digest();
+    const calculatedHash = crypto
+      .createHmac("sha256", secretKey)
+      .update(dataCheckString)
+      .digest("hex");
+
+    if (calculatedHash === hash) {
+      const userStr = urlParams.get("user");
+      if (userStr) {
+        return JSON.parse(userStr);
+      }
+    }
+  } catch (e) {
+    console.error("Telegram validation error:", e);
+  }
+  return null;
+}
+
 export async function POST(request) {
   try {
-    const { serviceId, listingId } = await request.json();
+    const { serviceId, listingId, initData } = await request.json();
 
     // Create authenticated Supabase client
     const authHeader = request.headers.get('Authorization');
     
-    if (!authHeader) {
-        return NextResponse.json({ error: "Missing Authorization header" }, { status: 401 });
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    // We allow missing auth header if initData is present and valid
+    // But we still need a supabase client. If no auth header, use anon client.
+    
+    const supabaseOptions = authHeader ? {
       global: {
         headers: {
           Authorization: authHeader,
         },
       },
-    });
+    } : {};
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, supabaseOptions);
 
-    if (authError || !user) {
-      console.error("Auth error:", authError);
+    // Get authenticated user (Supabase Auth)
+    let user = null;
+    if (authHeader) {
+        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+        if (!authError && authUser) {
+            user = authUser;
+        }
+    }
+
+    // Validate Telegram initData
+    const tgUser = validateTelegramWebAppData(initData);
+    
+    if (!user && !tgUser) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -53,7 +98,6 @@ export async function POST(request) {
     }
 
     // Get listing details
-    // First, fetch the listing to see if it exists
     const { data: listing, error: listingError } = await supabase
       .from("listings")
       .select("*")
@@ -69,41 +113,48 @@ export async function POST(request) {
     }
 
     // Verify ownership
-    // We check if created_by matches user.id OR if there's a profile linked to user.id that matches
-    let isOwner = listing.created_by === user.id;
+    let isOwner = false;
+    let finalUserId = user?.id; // This will be used for the transaction record
 
-    if (!isOwner) {
-        // Try to fetch profile to see if ID differs (e.g. if profiles table uses different IDs)
+    // 1. Check via Supabase Auth
+    if (user && listing.created_by === user.id) {
+        isOwner = true;
+    }
+
+    // 2. Check via Profile linked to Supabase Auth
+    if (!isOwner && user) {
         const { data: profile } = await supabase
             .from('profiles')
             .select('id')
-            .eq('id', user.id) // Assuming 1:1 mapping on ID
+            .eq('id', user.id)
             .single();
         
         if (profile && listing.created_by === profile.id) {
             isOwner = true;
-        } else {
-             // Fallback: check by tg_user_id if available in user_metadata
-             // This handles cases where profiles are linked via Telegram ID
-             const tgUserId = user.user_metadata?.tg_user_id || user.user_metadata?.sub; // 'sub' is sometimes used for TG ID in some auth providers
-             if (tgUserId) {
-                 const { data: profileByTg } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('tg_user_id', tgUserId)
-                    .single();
-                 
-                 if (profileByTg && listing.created_by === profileByTg.id) {
-                     isOwner = true;
-                 }
-             }
+        }
+    }
+
+    // 3. Check via Telegram InitData (The most reliable for WebApp users)
+    if (!isOwner && tgUser) {
+        const { data: profileByTg } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('tg_user_id', tgUser.id)
+            .single();
+            
+        if (profileByTg && listing.created_by === profileByTg.id) {
+            isOwner = true;
+            // If we found the user via TG but not Supabase Auth, we should use the profile ID for the transaction
+            // But payment_transactions.user_id references profiles(id).
+            finalUserId = profileByTg.id;
         }
     }
 
     if (!isOwner) {
         console.error("Ownership mismatch:", { 
             listingCreator: listing.created_by, 
-            userId: user.id 
+            userId: user?.id,
+            tgUserId: tgUser?.id
         });
         return NextResponse.json(
             { error: "Access denied: You are not the owner of this listing" },
@@ -111,11 +162,30 @@ export async function POST(request) {
         );
     }
 
+    if (!finalUserId) {
+        return NextResponse.json(
+            { error: "Could not identify user for transaction" },
+            { status: 500 }
+        );
+    }
+
     // Create payment transaction record
-    const { data: transaction, error: transactionError } = await supabase
+    // We use the anon client with service role key if needed, or just the current client.
+    // BUT if the user is not authenticated via Supabase (only TG), RLS might block insert if we use anon client without auth header.
+    // However, we fixed RLS to allow insert if auth.uid() = user_id.
+    // If we rely on TG auth only, we don't have auth.uid().
+    // So we need to use SERVICE_ROLE_KEY to bypass RLS for this insert if we are trusting TG data.
+    // Or we assume the user is logged in via Supabase too.
+    
+    // Since we are in a server route, we can use SERVICE_ROLE_KEY for the transaction insert to be safe.
+    // This is better than relying on RLS for this specific system operation.
+    
+    const supabaseAdmin = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+    const { data: transaction, error: transactionError } = await supabaseAdmin
       .from("payment_transactions")
       .insert({
-        user_id: user.id, 
+        user_id: finalUserId, 
         listing_id: listingId,
         service_id: serviceId,
         amount_stars: service.price_stars,
@@ -123,7 +193,7 @@ export async function POST(request) {
         invoice_payload: JSON.stringify({
           serviceId,
           listingId,
-          userId: user.id,
+          userId: finalUserId,
         }),
       })
       .select()

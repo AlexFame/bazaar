@@ -39,7 +39,11 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
-      if (!token) {
+      // Get Telegram initData
+      const tg = getTG();
+      const initData = tg?.initData;
+
+      if (!token && !initData) {
         alert("Пожалуйста, войдите в систему");
         setPurchasing(null);
         return;
@@ -50,11 +54,12 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           serviceId: service.id,
           listingId,
+          initData, // Send initData for verification
         }),
       });
 
@@ -68,7 +73,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
       }
 
       // Open Telegram payment
-      const tg = getTG();
+      // tg is already defined above
       if (tg?.openInvoice) {
         tg.openInvoice(data.invoiceLink, (status) => {
           if (status === "paid") {
