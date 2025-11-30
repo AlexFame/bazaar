@@ -35,10 +35,23 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
     setPurchasing(service.id);
 
     try {
+      // Get session for auth
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        alert("Пожалуйста, войдите в систему");
+        setPurchasing(null);
+        return;
+      }
+
       // Create invoice
       const response = await fetch("/api/payments/create-invoice", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           serviceId: service.id,
           listingId,
