@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "@/components/ListingCard";
 import { ListingCardSkeleton } from "@/components/SkeletonLoader";
@@ -17,7 +17,7 @@ export default function ProfilePageClient({ profileId }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("listings"); // 'listings' | 'reviews'
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       // 1. Profile
@@ -62,7 +62,7 @@ export default function ProfilePageClient({ profileId }) {
     } finally {
       setLoading(false);
     }
-  }
+  }, [profileId]);
 
   useEffect(() => {
     loadData();
