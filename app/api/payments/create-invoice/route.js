@@ -217,12 +217,11 @@ export async function POST(request) {
         listingId,
         serviceId,
       }),
-      provider_token: "", // Empty for Telegram Stars
       currency: "XTR", // Telegram Stars
       prices: [
         {
           label: service.name_ru,
-          amount: service.price_stars,
+          amount: service.price_stars, // For XTR, amount is the number of stars directly
         },
       ],
     };
