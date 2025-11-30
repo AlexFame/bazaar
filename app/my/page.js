@@ -270,6 +270,7 @@ export default function MyPage() {
                   showActions={true}
                   onDelete={() => handleDelete(listing.id)}
                   onPromote={() => handlePromote(listing.id)}
+                  onAnalytics={() => router.push(`/my/analytics/${listing.id}`)}
                 />
               ))}
             </div>

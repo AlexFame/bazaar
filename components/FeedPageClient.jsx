@@ -151,6 +151,9 @@ const PriceSlider = ({ min, max, onChange, minLimit = 0, maxLimit = 100000 }) =>
 
 export default function FeedPageClient() {
   const { lang, t } = useLang();
+  
+  // ... existing code ...
+
   const txt = {
       searchPlaceholder: t("searchPlaceholder"),
       locationPlaceholder: t("locationPlaceholder"),
@@ -198,6 +201,8 @@ export default function FeedPageClient() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [isLive, setIsLive] = useState(false); // Pulsating feed indicator
+  const lastRefreshRef = useRef(Date.now());
 
   // фильтры
   const [searchTerm, setSearchTerm] = useState(urlQuery);
@@ -410,7 +415,8 @@ export default function FeedPageClient() {
         .from("listings")
         .select("*, profiles!listings_created_by_fkey(*)")
         .order("is_vip", { ascending: false })
-        .order("created_at", { ascending: false })
+        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false }) // Fallback
         .eq("status", "active")
         .range(from, to);
 
@@ -545,7 +551,24 @@ export default function FeedPageClient() {
       if (!append) setLoading(false);
       if (append) setLoadingMore(false);
     }
-  }
+
+  // Pulsating Feed Logic: Auto-refresh every 30s if on first page and no active search/filters
+  useEffect(() => {
+      if (hasSearchQuery || categoryFilter !== 'all' || typeFilter !== 'all' || page > 0) return;
+
+      const interval = setInterval(() => {
+          // Only refresh if user hasn't scrolled down too much (to avoid jumping)
+          if (window.scrollY < 200) {
+              console.log("🔄 Pulsating Feed: Refreshing...");
+              setIsLive(true);
+              fetchPage(0, { append: false }).then(() => {
+                  setTimeout(() => setIsLive(false), 2000); // Hide indicator after 2s
+              });
+          }
+      }, 30000); // 30 seconds
+
+      return () => clearInterval(interval);
+  }, [hasSearchQuery, categoryFilter, typeFilter, page]);
 
   // первоначальная загрузка и обновление при изменении фильтров
   useEffect(() => {
@@ -1038,11 +1061,22 @@ export default function FeedPageClient() {
         ) : viewMode === 'map' ? (
             <MapComponent listings={mapListings} userLocation={userLocation} />
         ) : (
-          <div className="grid grid-cols-2 gap-2">
-            {listings.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
-            ))}
-          </div>
+          <>
+            {/* Live Indicator */}
+            {isLive && (
+                <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-black/80 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 shadow-lg animate-pulse">
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    LIVE UPDATE
+                </div>
+            )}
+
+            {/* Список объявлений */}
+            <div className="grid grid-cols-2 gap-2">
+              {listings.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          </>
         )}
 
         {hasMore && listings.length > 0 && viewMode === 'list' && (

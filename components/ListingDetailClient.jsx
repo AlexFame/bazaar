@@ -16,6 +16,7 @@ import PremiumServicesModal from "@/components/PremiumServicesModal";
 import { translateText } from "@/lib/translation";
 import ListingComments from "@/components/ListingComments";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 // Строим ссылку по введённому контакту
 function buildContactLink(raw) {
@@ -55,6 +56,50 @@ function detectType(raw) {
   const isPhone = cleaned.length >= 6;
 
   return { isPhone, isTelegram };
+}
+
+function formatLastSeen(lastSeen, lang) {
+  if (!lastSeen) return null;
+  const date = new Date(lastSeen);
+  const now = new Date();
+  const diffMinutes = Math.floor((now - date) / 60000);
+
+  if (diffMinutes < 5) return lang === 'en' ? 'Online' : 'Онлайн';
+  if (diffMinutes < 60) return lang === 'en' ? `Was online ${diffMinutes}m ago` : `Был(а) ${diffMinutes} мин. назад`;
+  if (diffMinutes < 24 * 60) {
+      const hours = Math.floor(diffMinutes / 60);
+      return lang === 'en' ? `Was online ${hours}h ago` : `Был(а) ${hours} ч. назад`;
+  }
+  return null; // Too old to show
+}
+
+function getSellerActivityStats(lastSeen, lang) {
+    if (!lastSeen) return null;
+    const date = new Date(lastSeen);
+    const now = new Date();
+    const diffMinutes = Math.floor((now - date) / 60000);
+
+    // Logic for "Very Active" / "Replies Fast"
+    // If online in last 15 min -> Very Active
+    // If online in last 2 hours -> Replies fast
+    
+    if (diffMinutes < 15) {
+        return {
+            label: lang === 'en' ? 'Very active' : 'Очень активен',
+            sub: lang === 'en' ? 'Replies in ~5 min' : 'Отвечает за ~5 мин',
+            color: 'text-green-600 bg-green-50'
+        };
+    }
+    
+    if (diffMinutes < 120) {
+        return {
+            label: lang === 'en' ? 'Usually replies fast' : 'Обычно отвечает быстро',
+            sub: lang === 'en' ? 'Replies in ~30 min' : 'Отвечает за ~30 мин',
+            color: 'text-blue-600 bg-blue-50'
+        };
+    }
+
+    return null;
 }
 
 export default function ListingDetailClient({ id }) {
@@ -679,6 +724,21 @@ export default function ListingDetailClient({ id }) {
                               )}
                           </div>
                           <div className="text-xs text-gray-500">{t("view_profile")}</div>
+                              <div className="text-[10px] text-green-600 font-medium mt-0.5">
+                                  {formatLastSeen(listing.profiles.last_seen, lang)}
+                              </div>
+                          )}
+                          
+                          {/* Seller Activity Stats */}
+                          {(() => {
+                              const stats = getSellerActivityStats(listing.profiles.last_seen, lang);
+                              if (!stats) return null;
+                              return (
+                                  <div className={`text-[10px] px-1.5 py-0.5 rounded-md inline-block mt-1 ${stats.color}`}>
+                                      <span className="font-bold">{stats.label}</span> • {stats.sub}
+                                  </div>
+                              );
+                          })()}
                       </div>
                   </Link>
               )}
@@ -724,6 +784,9 @@ export default function ListingDetailClient({ id }) {
                     const handleWriteToSeller = async (e) => {
                         e.preventDefault();
                         console.log("Starting handleWriteToSeller...");
+                        
+                        // Track message click
+                        trackAnalyticsEvent(listing.id, 'message_click');
                         
                         const { data: { user } } = await supabase.auth.getUser();
                         console.log("User:", user?.id);
@@ -786,6 +849,7 @@ export default function ListingDetailClient({ id }) {
                         {phoneLink && (
                           <a
                             href={phoneLink}
+                            onClick={() => trackAnalyticsEvent(listing.id, 'contact_click', { contact_type: 'phone' })}
                             className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-white border border-black text-black text-center hover:bg-gray-50 transition-colors"
                           >
                             {t("msg_call")}

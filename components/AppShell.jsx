@@ -49,6 +49,34 @@ export default function AppShell({ children }) {
       return () => subscription.unsubscribe();
   }, []);
 
+  // Update last_seen on activity
+  useEffect(() => {
+      if (!currentUser) return;
+
+      const updateLastSeen = async () => {
+          try {
+              // We use a simple RPC or direct update if policy allows.
+              // Since we added a function 'update_last_seen', let's try to use it, 
+              // or just update directly if RLS allows users to update their own profile.
+              // Assuming RLS allows update of own profile:
+              await supabase
+                  .from('profiles')
+                  .update({ last_seen: new Date().toISOString() })
+                  .eq('id', currentUser.id);
+          } catch (e) {
+              console.error("Error updating last_seen:", e);
+          }
+      };
+
+      // Update on mount (initial load)
+      updateLastSeen();
+
+      // Set up interval to update every 5 minutes if user is active
+      const interval = setInterval(updateLastSeen, 5 * 60 * 1000);
+
+      return () => clearInterval(interval);
+  }, [currentUser, pathname]); // Also update on route change
+
   // Подтягиваем q из URL в инпут и сбрасываем подсказки
   useEffect(() => {
     const q = searchParams.get("q") || "";
@@ -356,6 +384,15 @@ export default function AppShell({ children }) {
                   </button>
                 </Link>
               </nav>
+
+              {/* Create Button (Central) */}
+              <Link href="/my/create">
+                  <button className="w-12 h-12 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                      </svg>
+                  </button>
+              </Link>
 
               {/* Favorites */}
               <Link href="/favorites">

@@ -22,6 +22,8 @@ body {
     Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
   overflow-x: hidden;
   position: relative;
+  font-size: 17px; /* Increased from default 16px */
+  line-height: 1.6; /* Better readability */
 }
 
 /* Контейнер */

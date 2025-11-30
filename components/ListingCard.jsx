@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { getUserId } from "@/lib/userId";
 import { translateText } from "@/lib/translation";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 
 const typeLabels = {
   ru: {
@@ -86,7 +87,7 @@ function formatDate(createdAt, lang) {
   });
 }
 
-export default function ListingCard({ listing, showActions, onDelete, onPromote }) {
+export default function ListingCard({ listing, showActions, onDelete, onPromote, onAnalytics }) {
   const { lang } = useLang();
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState(null);
@@ -164,6 +165,11 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
   const typeText = typeMap[typeKey] || typeMap.unknown;
   const dateText = formatDate(listing?.created_at, lang);
 
+  // Micro-labels logic
+  const isNew = listing?.created_at && (new Date() - new Date(listing.created_at)) < 24 * 60 * 60 * 1000;
+  const isPopular = (listing?.views_count || 0) > 50;
+  const isVerified = listing?.profiles?.is_verified;
+
   const handleFavoriteClick = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -188,6 +194,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
             listing_id: listing.id,
           });
         setIsFavorite(true);
+        trackAnalyticsEvent(listing.id, 'favorite_add');
       }
     } catch (error) {
       console.error("Error toggling favorite:", error);
@@ -234,6 +241,18 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
         {isVip && (
             <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 text-black text-[10px] font-bold rounded-full shadow-sm flex items-center gap-1">
                 <span>👑</span> VIP
+            </div>
+        )}
+
+        {/* Micro-labels (New / Popular) - only show if NOT VIP to avoid clutter, or stack them */}
+        {!isVip && isNew && (
+            <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow-sm">
+                🔥 New
+            </div>
+        )}
+        {!isVip && !isNew && isPopular && (
+            <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full shadow-sm">
+                ⚡ Popular
             </div>
         )}
 
@@ -335,6 +354,18 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote 
         {/* Edit/Delete buttons */}
         {showActions && (
           <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-gray-100 dark:border-white/10">
+            {onAnalytics && (
+                <button
+                  onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onAnalytics();
+                  }}
+                  className="w-full py-1.5 px-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[11px] font-medium rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors mb-2"
+                >
+                  📊 Статистика
+                </button>
+            )}
             {onPromote && !isVip && (
                 <button
                   onClick={(e) => {
