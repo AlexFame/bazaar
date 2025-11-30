@@ -84,6 +84,8 @@ export default function ListingDetailClient({ id }) {
     if (!id) return;
 
     async function loadFavoriteStatus() {
+      if (typeof getTelegramUser !== 'function') return;
+      
       const tgUser = getTelegramUser();
       if (!tgUser?.id) return;
 
@@ -198,16 +200,18 @@ export default function ListingDetailClient({ id }) {
         setCurrentIndex(0);
 
         // Проверяем, является ли текущий пользователь владельцем объявления
-        const tgUser = getTelegramUser();
-        if (tgUser?.id) {
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("tg_user_id", tgUser.id)
-            .maybeSingle();
-          
-          if (profile && listingData.created_by === profile.id) {
-            setIsOwner(true);
+        if (typeof getTelegramUser === 'function') {
+          const tgUser = getTelegramUser();
+          if (tgUser?.id) {
+            const { data: profile } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq("tg_user_id", tgUser.id)
+              .maybeSingle();
+            
+            if (profile && listingData.created_by === profile.id) {
+              setIsOwner(true);
+            }
           }
         }
       } catch (err) {
