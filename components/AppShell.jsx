@@ -356,8 +356,8 @@ export default function AppShell({ children }) {
             </div>
 
             {/* НАВИГАЦИЯ + ЯЗЫК */}
-            <div className="flex items-center justify-center gap-2 w-full">
-              <nav className="flex gap-2 items-center justify-center">
+            <div className="flex items-center justify-between gap-2 w-full">
+              <nav className="flex gap-2 items-center justify-center flex-1">
                 {/* Главная */}
                 <Link href="/">
                   <button
@@ -383,51 +383,51 @@ export default function AppShell({ children }) {
                     {t("navbar_myAds")}
                   </button>
                 </Link>
-              </nav>
+                
+                {/* Create Button */}
+                <Link href="/create">
+                    <button className="w-8 h-8 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shadow-md hover:scale-105 transition-transform">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                    </button>
+                </Link>
 
-              {/* Create Button (Central) */}
-              <Link href="/my/create">
-                  <button className="w-12 h-12 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shadow-lg hover:scale-105 transition-transform">
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                      </svg>
+                {/* Favorites */}
+                <Link href="/favorites">
+                  <button
+                    className={`${navBtn} ${
+                      pathname === "/favorites"
+                        ? "text-red-500 bg-red-50 dark:bg-red-900/20"
+                        : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white hover:text-red-500 dark:hover:text-red-400"
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill={pathname === "/favorites" ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
                   </button>
-              </Link>
+                </Link>
 
-              {/* Favorites */}
-              <Link href="/favorites">
-                <button
-                  className={`${navBtn} ${
-                    pathname === "/favorites"
-                      ? "text-red-500 bg-red-50 dark:bg-red-900/20"
-                      : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white hover:text-red-500 dark:hover:text-red-400"
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill={pathname === "/favorites" ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                  </svg>
-                </button>
-              </Link>
-
-              {/* Messages icon with badge */}
-              <Link href="/messages">
-                <button
-                  className={`${navBtn} relative ${
-                    pathname.startsWith("/messages")
-                      ? "bg-black text-white dark:bg-white dark:text-black"
-                      : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
-                  }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                  </svg>
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </button>
-              </Link>
+                {/* Messages icon with badge */}
+                <Link href="/messages">
+                  <button
+                    className={`${navBtn} relative ${
+                      pathname.startsWith("/messages")
+                        ? "bg-black text-white dark:bg-white dark:text-black"
+                        : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
+                    }`}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                    </svg>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                </Link>
+              </nav>
 
               {/* <ThemeToggle /> */}
               <LangSwitcher />

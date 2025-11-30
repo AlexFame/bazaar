@@ -108,26 +108,15 @@ export default function AnalyticsPage() {
           .gte("date", thirtyDaysAgo.toISOString().split('T')[0])
           .order("date", { ascending: true });
 
-        if (statsError) console.error("Error loading stats:", statsError);
+        if (statsError) {
+          console.error("Error loading stats:", statsError);
+          // Don't fail if stats table doesn't exist, just show empty stats
+        }
 
         const loadedStats = statsData || [];
         setStats(loadedStats);
 
         // Calculate totals
-        const totals = loadedStats.reduce((acc, curr) => ({
-          views: acc.views + (curr.views_count || 0),
-          contacts: acc.contacts + (curr.contact_clicks || 0),
-          messages: acc.messages + (curr.message_clicks || 0),
-          favorites: acc.favorites + (curr.favorite_adds || 0)
-        }), { 
-          views: listingData.views_count || 0, // Use total views from listing for base
-          contacts: 0, 
-          messages: 0, 
-          favorites: 0 
-        });
-        
-        // Adjust totals from daily stats if needed, but listing.views_count is the source of truth for total views
-        // For other metrics, we sum up daily stats
         setTotalStats({
             views: listingData.views_count || 0,
             contacts: loadedStats.reduce((sum, d) => sum + (d.contact_clicks || 0), 0),
@@ -137,6 +126,7 @@ export default function AnalyticsPage() {
 
       } catch (error) {
         console.error("Error:", error);
+        // Don't redirect on error, just show what we have
       } finally {
         setLoading(false);
       }
