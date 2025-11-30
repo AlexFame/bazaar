@@ -724,6 +724,7 @@ export default function ListingDetailClient({ id }) {
                               )}
                           </div>
                           <div className="text-xs text-gray-500">{t("view_profile")}</div>
+                          {listing.profiles.last_seen && (
                               <div className="text-[10px] text-green-600 font-medium mt-0.5">
                                   {formatLastSeen(listing.profiles.last_seen, lang)}
                               </div>
