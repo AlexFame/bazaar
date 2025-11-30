@@ -212,11 +212,7 @@ export async function POST(request) {
     const invoiceData = {
       title: service.name_ru,
       description: service.description_ru || `Продвижение объявления "${listing.title}"`,
-      payload: JSON.stringify({
-        transactionId: transaction.id,
-        listingId,
-        serviceId,
-      }),
+      payload: transaction.id, // Just the transaction ID (max 128 bytes)
       currency: "XTR", // Telegram Stars
       prices: [
         {
