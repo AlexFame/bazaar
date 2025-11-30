@@ -170,19 +170,13 @@ export async function POST(request) {
     }
 
     // Create payment transaction record
-    // We use the anon client with service role key if needed, or just the current client.
-    // BUT if the user is not authenticated via Supabase (only TG), RLS might block insert if we use anon client without auth header.
-    // However, we fixed RLS to allow insert if auth.uid() = user_id.
-    // If we rely on TG auth only, we don't have auth.uid().
-    // So we need to use SERVICE_ROLE_KEY to bypass RLS for this insert if we are trusting TG data.
-    // Or we assume the user is logged in via Supabase too.
-    
-    // Since we are in a server route, we can use SERVICE_ROLE_KEY for the transaction insert to be safe.
-    // This is better than relying on RLS for this specific system operation.
-    
-    const supabaseAdmin = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    // Use service role key if available to bypass RLS, otherwise use regular client
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseForInsert = serviceRoleKey 
+        ? createClient(supabaseUrl, serviceRoleKey)
+        : supabase;
 
-    const { data: transaction, error: transactionError } = await supabaseAdmin
+    const { data: transaction, error: transactionError } = await supabaseForInsert
       .from("payment_transactions")
       .insert({
         user_id: finalUserId, 
