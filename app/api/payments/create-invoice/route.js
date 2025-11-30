@@ -52,55 +52,62 @@ export async function POST(request) {
       );
     }
 
-    // Get listing details (verify ownership)
+    // Get listing details
+    // First, fetch the listing to see if it exists
     const { data: listing, error: listingError } = await supabase
       .from("listings")
       .select("*")
       .eq("id", listingId)
-      .eq("created_by", user.id) // Ensure user owns the listing (using created_by instead of user_id based on schema)
       .single();
 
-    // Note: The schema uses 'created_by' for listings, but 'user_id' for payment_transactions.
-    // Let's double check listing schema. In ListingDetailClient it uses listing.created_by.
-    // In create_listings_table.sql (which I couldn't read but saw in other files), it's likely created_by.
-    // The previous code used .eq("user_id", user.id) which might have been wrong if the column is created_by!
-    // Let's check ListingDetailClient again.
-    // Line 212: if (profile && listingData.created_by === profile.id)
-    // So the column is definitely `created_by`.
-    // Wait, `created_by` references `profiles(id)`. `user.id` is `auth.users(id)`.
-    // Usually profiles.id == auth.users.id.
-    // Let's verify if I need to fetch profile first.
-    
-    // In ProfilePageClient: .eq("id", profileId) where profileId comes from props.
-    // In ListingDetailClient: .eq("tg_user_id", tgUser.id) -> gets profile.id.
-    
-    // If `created_by` is a UUID referencing `profiles`, and `profiles.id` matches `auth.users.id`, then `user.id` is fine.
-    // If `profiles.id` is different, I need to fetch profile first.
-    // Standard Supabase setup: profiles.id references auth.users.id.
-    // Let's assume they match for now. If not, I'll see an error.
-    
-    // Actually, looking at previous code:
-    // .eq("user_id", user.id) was used.
-    // But ListingDetailClient uses `created_by`.
-    // I will use `created_by` here to be safe, but I suspect I might need to map user.id to profile.id if they differ.
-    // However, usually they are the same.
-    
-    // Let's check if I can get profile from user.id
-    const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single();
-    // If profile exists with same ID, then they match.
-    
-    // Let's stick to the previous logic but fix the column name if it was wrong.
-    // The previous code had: .eq("user_id", user.id)
-    // But the table likely has `created_by`.
-    // I will try to use `created_by` and `user.id`.
-
     if (listingError || !listing) {
-        // Try fetching with created_by if user_id failed (or vice versa)
-        // But better to be precise.
-        console.error("Listing fetch error:", listingError);
+      console.error("Listing fetch error:", listingError);
+      return NextResponse.json(
+        { error: "Listing not found" },
+        { status: 404 }
+      );
+    }
+
+    // Verify ownership
+    // We check if created_by matches user.id OR if there's a profile linked to user.id that matches
+    let isOwner = listing.created_by === user.id;
+
+    if (!isOwner) {
+        // Try to fetch profile to see if ID differs (e.g. if profiles table uses different IDs)
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', user.id) // Assuming 1:1 mapping on ID
+            .single();
+        
+        if (profile && listing.created_by === profile.id) {
+            isOwner = true;
+        } else {
+             // Fallback: check by tg_user_id if available in user_metadata
+             // This handles cases where profiles are linked via Telegram ID
+             const tgUserId = user.user_metadata?.tg_user_id || user.user_metadata?.sub; // 'sub' is sometimes used for TG ID in some auth providers
+             if (tgUserId) {
+                 const { data: profileByTg } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('tg_user_id', tgUserId)
+                    .single();
+                 
+                 if (profileByTg && listing.created_by === profileByTg.id) {
+                     isOwner = true;
+                 }
+             }
+        }
+    }
+
+    if (!isOwner) {
+        console.error("Ownership mismatch:", { 
+            listingCreator: listing.created_by, 
+            userId: user.id 
+        });
         return NextResponse.json(
-            { error: "Listing not found or access denied" },
-            { status: 404 }
+            { error: "Access denied: You are not the owner of this listing" },
+            { status: 403 }
         );
     }
 
@@ -108,7 +115,7 @@ export async function POST(request) {
     const { data: transaction, error: transactionError } = await supabase
       .from("payment_transactions")
       .insert({
-        user_id: user.id, // This references profiles(id) which should be user.id
+        user_id: user.id, 
         listing_id: listingId,
         service_id: serviceId,
         amount_stars: service.price_stars,
