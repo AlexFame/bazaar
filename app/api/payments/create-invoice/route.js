@@ -170,13 +170,20 @@ export async function POST(request) {
     }
 
     // Create payment transaction record
-    // Use service role key if available to bypass RLS, otherwise use regular client
+    // MUST use service role key to bypass RLS when using Telegram auth
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const supabaseForInsert = serviceRoleKey 
-        ? createClient(supabaseUrl, serviceRoleKey)
-        : supabase;
+    
+    if (!serviceRoleKey) {
+        console.error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+        return NextResponse.json(
+            { error: "Server configuration error" },
+            { status: 500 }
+        );
+    }
+    
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    const { data: transaction, error: transactionError } = await supabaseForInsert
+    const { data: transaction, error: transactionError } = await supabaseAdmin
       .from("payment_transactions")
       .insert({
         user_id: finalUserId, 
