@@ -171,10 +171,10 @@ export async function POST(request) {
 
     // Create payment transaction record
     // MUST use service role key to bypass RLS when using Telegram auth
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY;
     
     if (!serviceRoleKey) {
-        console.error("SUPABASE_SERVICE_ROLE_KEY is not configured");
+        console.error("SUPABASE_SERVICE_ROLE is not configured");
         return NextResponse.json(
             { error: "Server configuration error" },
             { status: 500 }
