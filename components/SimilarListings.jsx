@@ -21,7 +21,7 @@ export default function SimilarListings({ categoryId, currentId }) {
       const { data, error } = await supabase
         .from("listings")
         .select("*, profiles:created_by(*)")
-        .eq("category", categoryId)
+        .eq("category_key", categoryId)
         .neq("id", currentId)
         .order("created_at", { ascending: false })
         .limit(4);
