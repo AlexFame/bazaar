@@ -154,8 +154,45 @@ const PriceSlider = ({ min, max, onChange, minLimit = 0, maxLimit = 100000 }) =>
 
 export default function FeedPageClient({ forcedCategory = null }) {
   const { lang, t } = useLang();
+  const router = useRouter();
   
-  // ... existing code ...
+  const txt = {
+      searchPlaceholder: t("searchPlaceholder"),
+      locationPlaceholder: t("locationPlaceholder"),
+      priceFrom: t("priceFrom"),
+      priceTo: t("priceTo"),
+      allCategories: t("allCategories"),
+      typeAny: t("typeAny"),
+      typeBuy: t("typeBuy"),
+      typeSell: t("typeSell"),
+      typeServices: t("typeServices"),
+      typeFree: t("typeFree"),
+      dateAll: t("dateAll"),
+      dateToday: t("dateToday"),
+      date3d: t("date3d"),
+      date7d: t("date7d"),
+      date30d: t("date30d"),
+      popularQueriesLabel: t("popularQueriesLabel"),
+      loading: t("loading"),
+      empty: t("empty"),
+      loadMore: t("loadMore"),
+      loadingMore: t("loadingMore"),
+      conditionAny: t("conditionAny"),
+      conditionNew: t("conditionNew"),
+      conditionUsed: t("conditionUsed"),
+      conditionLikeNew: t("conditionLikeNew"),
+      barter: t("barter"),
+      withPhoto: t("withPhoto"),
+      yes: t("yes"),
+      no: t("no"),
+      filters: t("filters"),
+      category: t("category"),
+      price: t("price"),
+      condition: t("condition"),
+      type: t("type"),
+      more: t("more"),
+      foundInCategory: t("foundInCategory"),
+  };
 
   const searchParams = useSearchParams();
   const urlQuery = (searchParams.get("q") || "").trim();
