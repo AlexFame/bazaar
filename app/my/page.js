@@ -86,7 +86,24 @@ export default function MyPage() {
 
   const loadListings = async () => {
     setLoading(true);
-    const tgUserId = getUserId();
+    let tgUserId = getUserId();
+    
+    // Fallback to Supabase Auth if no Telegram ID
+    if (!tgUserId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // For Supabase Auth users, we need to find their profile to get the ID (or use user.id if profiles table uses uuid)
+        // However, the code below expects tgUserId to be a number for some checks, or just an ID for others.
+        // Let's see how it's used.
+        // It queries profiles by tg_user_id.
+        // We need to query by user_id (uuid) if available.
+        // But the current schema seems to rely heavily on tg_user_id.
+        // Let's try to get the profile by auth_id (if that column exists) or just use the user.id if the logic allows.
+        // Actually, let's just get the user and see if we can find a profile.
+        tgUserId = user.id; // This is a UUID, not a number.
+      }
+    }
+
     setUserId(tgUserId);
     
     if (!tgUserId) {

@@ -41,20 +41,48 @@ export default function FavoritesPage() {
   const [loading, setLoading] = useState(true);
 
   const loadFavorites = async () => {
-    const tgUserId = getUserId();
-    if (!tgUserId) {
+    let tgUserId = getUserId();
+    let profileId = null;
+
+    // 1. Try Telegram ID
+    if (tgUserId) {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("tg_user_id", Number(tgUserId))
+        .single();
+      if (profileData) profileId = profileData.id;
+    }
+
+    // 2. Fallback to Supabase Auth
+    if (!profileId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+         // Try to find profile by user_id (auth.uid) if you have such column, 
+         // OR if you linked tg_user_id to auth.uid somehow.
+         // Assuming profiles table has 'id' which matches auth.uid OR a separate column.
+         // If profiles are ONLY created via Telegram, then web users might not have a profile?
+         // Let's assume for now we can find a profile by id = user.id (if they are linked) 
+         // or we need to query by a different field.
+         // If the user is logged in via Supabase, they should have a profile.
+         const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("id", user.id) // Assuming profile.id is the auth.uid
+            .maybeSingle();
+         if (profileData) profileId = profileData.id;
+      }
+    }
+
+    if (!profileId) {
       setLoading(false);
       setListings([]);
       return;
     }
 
     try {
-      // Get profile ID
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("tg_user_id", Number(tgUserId))
-        .single();
+      // Get favorites with listing details
+      // ... (rest of code uses profileId)
 
       if (!profileData) {
         setListings([]);

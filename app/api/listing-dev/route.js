@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabaseAdmin";
-import { getUserId } from "@/lib/telegram";
+// import { getUserId } from "@/lib/telegram"; // Client-side only
 
 export async function POST(req) {
   try {
@@ -9,8 +9,8 @@ export async function POST(req) {
       return NextResponse.json({ error: "Пустой запрос" }, { status: 400 });
     }
 
-    // Получаем user_id из Telegram Mini App
-    const owner_id = getUserId() || null;
+    // Получаем user_id из Telegram Mini App (passed in body for dev/api)
+    const owner_id = body.owner_id || null;
 
     // Если нет owner_id — пользователь не открыл через Telegram
     if (!owner_id) {

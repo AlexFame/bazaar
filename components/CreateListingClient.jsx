@@ -528,6 +528,10 @@ export default function CreateListingClient({ onCreated, editId }) {
                       onClick={() => {
                         setListingType(opt.value);
                         setDropdownOpen(false);
+                        // Auto-select Business category if Service type is selected
+                        if (opt.value === "service") {
+                          setCategoryKey("business");
+                        }
                       }}
                       className={`block w-full text-left px-3 py-1.5 ${
                         listingType === opt.value

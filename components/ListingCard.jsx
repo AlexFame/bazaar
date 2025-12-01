@@ -112,29 +112,38 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   // Load favorite status
   useEffect(() => {
     async function loadFavoriteStatus() {
+      let profileIdToUse = null;
+      
+      // 1. Try Telegram ID
       const tgUserId = getUserId();
-      if (!tgUserId) return;
-
-      try {
+      if (tgUserId) {
         const { data: profileData } = await supabase
           .from("profiles")
           .select("id")
           .eq("tg_user_id", Number(tgUserId))
           .single();
+        if (profileData) profileIdToUse = profileData.id;
+      }
 
-        if (!profileData) return;
-        setProfileId(profileData.id);
+      // 2. Fallback to Supabase Auth
+      if (!profileIdToUse) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) profileIdToUse = user.id;
+      }
 
+      if (!profileIdToUse) return;
+      setProfileId(profileIdToUse);
+
+      try {
         const { data: favoriteData } = await supabase
           .from("favorites")
           .select("id")
-          .eq("profile_id", profileData.id)
+          .eq("profile_id", profileIdToUse)
           .eq("listing_id", listing.id)
           .maybeSingle();
 
         setIsFavorite(!!favoriteData);
       } catch (e) {
-        // Not favorited or error
         setIsFavorite(false);
       }
     }

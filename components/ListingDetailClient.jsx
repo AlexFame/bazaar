@@ -129,25 +129,35 @@ export default function ListingDetailClient({ id }) {
     if (!id) return;
 
     async function loadFavoriteStatus() {
-      if (typeof getTelegramUser !== 'function') return;
-      
-      const tgUser = getTelegramUser();
-      if (!tgUser?.id) return;
+      let profileIdToUse = null;
+
+      // 1. Try Telegram User
+      if (typeof getTelegramUser === 'function') {
+        const tgUser = getTelegramUser();
+        if (tgUser?.id) {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("tg_user_id", tgUser.id)
+            .maybeSingle();
+          if (profileData) profileIdToUse = profileData.id;
+        }
+      }
+
+      // 2. Fallback to Supabase Auth
+      if (!profileIdToUse) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) profileIdToUse = user.id;
+      }
+
+      if (!profileIdToUse) return;
+      setProfileId(profileIdToUse);
 
       try {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("tg_user_id", tgUser.id)
-          .maybeSingle();
-
-        if (!profileData) return;
-        setProfileId(profileData.id);
-
         const { data: favoriteData } = await supabase
           .from("favorites")
           .select("id")
-          .eq("profile_id", profileData.id)
+          .eq("profile_id", profileIdToUse)
           .eq("listing_id", id)
           .maybeSingle();
 
@@ -245,19 +255,27 @@ export default function ListingDetailClient({ id }) {
         setCurrentIndex(0);
 
         // Проверяем, является ли текущий пользователь владельцем объявления
+        // Check owner
+        let currentUserId = null;
         if (typeof getTelegramUser === 'function') {
           const tgUser = getTelegramUser();
           if (tgUser?.id) {
-            const { data: profile } = await supabase
+             const { data: profile } = await supabase
               .from("profiles")
               .select("id")
               .eq("tg_user_id", tgUser.id)
               .maybeSingle();
-            
-            if (profile && listingData.created_by === profile.id) {
-              setIsOwner(true);
-            }
+             if (profile) currentUserId = profile.id;
           }
+        }
+
+        if (!currentUserId) {
+           const { data: { user } } = await supabase.auth.getUser();
+           if (user) currentUserId = user.id;
+        }
+
+        if (currentUserId && listingData.created_by === currentUserId) {
+          setIsOwner(true);
         }
       } catch (err) {
         console.error("Ошибка:", err);
