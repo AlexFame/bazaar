@@ -34,7 +34,7 @@ export default function BottomNavigation() {
             <HomeIcon className="w-6 h-6 text-gray-500" />
           )}
           <span className={`text-[10px] font-medium ${isActive("/") ? "text-black" : "text-gray-500"}`}>
-            {t("navbar_brand") || "Главная"}
+            Главная
           </span>
         </Link>
 
@@ -80,7 +80,7 @@ export default function BottomNavigation() {
             <UserIcon className="w-6 h-6 text-gray-500" />
           )}
           <span className={`text-[10px] font-medium ${isActive("/my") ? "text-black" : "text-gray-500"}`}>
-            {t("navbar_profile") || "Профиль"}
+            Профиль
           </span>
         </Link>
       </div>

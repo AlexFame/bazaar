@@ -4,25 +4,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { useLang } from "@/lib/i18n-client";
-import { useTheme } from "next-themes";
-
-// быстрее: 6 секунд на один слайд
-const SLIDE_DURATION = 6000;
 
 export default function PopularListingsScroll() {
   const { lang, t } = useLang();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const { theme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // грузим популярные объявления
+  // Load popular listings
   useEffect(() => {
     let cancelled = false;
 
@@ -31,19 +19,24 @@ export default function PopularListingsScroll() {
       try {
         const { data, error } = await supabase
           .from("listings")
-          .select("*")
-          .order("created_at", { ascending: false })
+          .select(`
+            *,
+            listing_images(image_path),
+            profiles:created_by(is_verified, username, first_name, last_name, avatar_url)
+          `)
+          .eq("status", "active")
+          .order("views_count", { ascending: false })
           .limit(12);
 
         if (error) {
-          console.error("Ошибка загрузки популярных объявлений:", error);
+          console.error("Error loading popular listings:", error);
           if (!cancelled) setItems([]);
           return;
         }
 
         if (!cancelled) setItems(Array.isArray(data) ? data : []);
       } catch (e) {
-        console.error("Ошибка:", e);
+        console.error("Error:", e);
         if (!cancelled) setItems([]);
       } finally {
         if (!cancelled) setLoading(false);
@@ -54,96 +47,17 @@ export default function PopularListingsScroll() {
     return () => (cancelled = true);
   }, []);
 
-  // автопереключение
-  useEffect(() => {
-    if (!items.length) return;
-
-    setCurrentIndex(0);
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => {
-        const next = (prev + 1) % Math.ceil(items.length / 2);
-        return next;
-      });
-    }, SLIDE_DURATION);
-
-    return () => clearInterval(interval);
-  }, [items.length]);
-
   if (loading || !items.length) return null;
 
-  const title = t("popularListings");
-
-  // разбиваем на группы по 2
-  const slides = [];
-  for (let i = 0; i < items.length; i += 2) {
-    slides.push(items.slice(i, i + 2));
-  }
-
-  // Determine if dark mode is active
-  const isDark = mounted && (theme === "dark" || resolvedTheme === "dark");
-
   return (
-    <div className="w-full flex justify-center mt-3">
-      <div className="w-full max-w-[520px] px-3">
-        <div className="flex items-center justify-between mb-1 px-0.5">
-          <p className="text-sm font-semibold">{title}</p>
-        </div>
-
-        {/* СЛАЙДЕР ПО 2 КАРТОЧКИ */}
-        <div className="relative w-full overflow-hidden">
-          <div
-            className="flex transition-transform duration-700 ease-out"
-            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
-          >
-            {slides.map((pair, idx) => (
-              <div
-                key={idx}
-                className="w-full flex-shrink-0 grid grid-cols-2 gap-2"
-              >
-                {pair.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
-            ))}
+    <div className="mb-6">
+      <h2 className="text-lg font-bold px-4 mb-3">Популярное</h2>
+      <div className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar snap-x snap-mandatory">
+        {items.map((listing) => (
+          <div key={listing.id} className="min-w-[160px] w-[160px] snap-center">
+            <ListingCard listing={listing} compact />
           </div>
-        </div>
-
-        {/* прогресс */}
-        {slides.length > 1 && (
-          <div 
-            className={`mt-2 h-1 w-full rounded-full overflow-hidden transition-colors duration-300 ${
-              isDark ? "bg-white/20" : "bg-black/10"
-            }`}
-          >
-            <div
-              key={currentIndex}
-              className={`h-full progress-bar transition-colors duration-300 ${
-                isDark ? "bg-white" : "bg-black"
-              }`}
-              style={{ animationDuration: `${SLIDE_DURATION}ms` }}
-            />
-          </div>
-        )}
-
-        <style jsx>{`
-          .progress-bar {
-            width: 0%;
-            animation-name: progressFill;
-            animation-timing-function: linear;
-            animation-iteration-count: 1;
-            animation-fill-mode: forwards;
-          }
-
-          @keyframes progressFill {
-            from {
-              width: 0%;
-            }
-            to {
-              width: 100%;
-            }
-          }
-        `}</style>
+        ))}
       </div>
     </div>
   );

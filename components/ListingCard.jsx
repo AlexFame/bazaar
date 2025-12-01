@@ -232,15 +232,15 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
   return (
     <Link href={`/listing/${listing.id}`}>
-      <article className={`bg-white rounded-3xl overflow-hidden transition-all hover:shadow-airbnb-hover group ${
-        isVip 
-          ? 'shadow-airbnb ring-2 ring-yellow-200' 
+      <article className={`bg-white rounded-3xl overflow-hidden transition-all hover:shadow-airbnb-hover group relative ${
+        isVip
+          ? 'shadow-airbnb ring-2 ring-gradient-to-r from-purple-400 to-pink-400'
           : 'shadow-airbnb'
       }`}>
-        {/* VIP Badge */}
+        {/* VIP Badge - Modern gradient design */}
         {isVip && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-gradient-to-r from-yellow-300 to-yellow-500 text-black text-xs font-bold rounded-full shadow-md flex items-center gap-1">
-                <span>👑</span> VIP
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-lg shadow-lg">
+                ⭐ VIP
             </div>
         )}
 
