@@ -604,6 +604,15 @@ export default function FeedPageClient({ forcedCategory = null }) {
     await fetchPage(page + 1, { append: true });
   }
 
+  function handleSearchSubmit(e) {
+    e.preventDefault();
+    // Search is handled by searchTerm state changes
+    // Just blur the input to hide keyboard on mobile
+    if (searchInputRef.current) {
+      searchInputRef.current.blur();
+    }
+  }
+
   function handlePopularClick(term) {
     setSearchTerm(term);
   }
