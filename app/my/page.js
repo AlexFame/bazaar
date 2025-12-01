@@ -201,13 +201,18 @@ export default function MyPage() {
                       {tgUser.first_name}
                       {tgUser.last_name ? ` ${tgUser.last_name}` : ""}
                     </span>
-                    {tgUser.username && (
-                      <span className="text-xs text-gray-500">
-                        @{tgUser.username}
-                      </span>
-                    )}
+
                   </div>
                 </div>
+            </div>
+        )}
+
+        {/* Admin Panel Button */}
+        {isAdmin && (
+            <div className="mb-3">
+                <Link href="/admin" className="w-full py-2 bg-gray-800 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2">
+                    🛡️ Админ-панель
+                </Link>
             </div>
         )}
 

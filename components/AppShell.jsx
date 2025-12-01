@@ -356,12 +356,12 @@ export default function AppShell({ children }) {
             </div>
 
             {/* НАВИГАЦИЯ + ЯЗЫК */}
-            <div className="flex items-center justify-between gap-2 w-full">
-              <nav className="flex gap-2 items-center justify-center flex-1">
+            <div className="flex items-center justify-between gap-1 w-full overflow-hidden">
+              <nav className="flex gap-1 items-center justify-center flex-1 min-w-0">
                 {/* Главная */}
                 <Link href="/">
                   <button
-                    className={`${navBtn} ${
+                    className={`flex-1 text-center px-2 py-2 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap flex items-center justify-center gap-1 ${
                       pathname === "/"
                         ? "bg-black text-white dark:bg-white dark:text-black"
                         : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
@@ -374,7 +374,7 @@ export default function AppShell({ children }) {
                 {/* Личный кабинет */}
                 <Link href="/my">
                   <button
-                    className={`${navBtn} ${
+                    className={`flex-1 text-center px-2 py-2 rounded-full text-[10px] font-medium transition-colors whitespace-nowrap flex items-center justify-center gap-1 ${
                       pathname === "/my"
                         ? "bg-black text-white dark:bg-white dark:text-black"
                         : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"

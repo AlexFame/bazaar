@@ -543,10 +543,8 @@ export default function ListingDetailClient({ id }) {
                           minScale={1}
                           maxScale={4}
                           centerOnInit
-                          doubleClick={{ disabled: true }}
-                          onPanningStop={(e) => {
-                            // Optional: handle panning limits if needed
-                          }}
+                          doubleClick={{ disabled: false, mode: "toggle" }}
+                          pinch={{ disabled: true }}
                         >
                           {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
                             <TransformComponent
@@ -560,37 +558,6 @@ export default function ListingDetailClient({ id }) {
                                   fill
                                   className="object-contain"
                                   sizes="100vw"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      
-                                      const now = Date.now();
-                                      const DOUBLE_TAP_DELAY = 300;
-
-                                      if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
-                                        // DOUBLE TAP - toggle zoom
-                                        if (tapTimeoutRef.current) {
-                                          clearTimeout(tapTimeoutRef.current);
-                                          tapTimeoutRef.current = null;
-                                        }
-                                        lastTapRef.current = 0;
-
-                                        const currentScale = rest.instance?.transformState?.scale || rest.state?.scale || 1;
-
-                                        if (currentScale > 1.1) {
-                                          resetTransform();
-                                        } else {
-                                          zoomIn(2); 
-                                        }
-                                      } else {
-                                        // SINGLE TAP - close lightbox
-                                        lastTapRef.current = now;
-                                        tapTimeoutRef.current = setTimeout(() => {
-                                          setIsLightboxOpen(false);
-                                          lastTapRef.current = 0;
-                                        }, DOUBLE_TAP_DELAY);
-                                      }
-                                    }}
                                 />
                               </div>
                             </TransformComponent>

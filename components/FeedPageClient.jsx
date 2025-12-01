@@ -413,10 +413,13 @@ export default function FeedPageClient() {
     try {
       let query = supabase
         .from("listings")
-        .select("*, profiles!listings_created_by_fkey(*)")
+        .select(`
+          *,
+          listing_images(image_path),
+          profiles:created_by(is_verified, username, first_name, last_name, avatar_url)
+        `)
         .order("is_vip", { ascending: false })
-        .order("updated_at", { ascending: false })
-        .order("created_at", { ascending: false }) // Fallback
+        .order("created_at", { ascending: false }) // Reverted to created_at to fix missing listings
         .eq("status", "active")
         .range(from, to);
 
