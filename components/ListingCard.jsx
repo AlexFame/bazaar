@@ -232,26 +232,26 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
   return (
     <Link href={`/listing/${listing.id}`}>
-      <article className={`bg-white dark:bg-[#171717] rounded-2xl p-2 shadow-sm flex flex-col h-full relative transition-all ${
+      <article className={`bg-white rounded-3xl overflow-hidden transition-all hover:shadow-airbnb-hover group ${
         isVip 
-          ? 'border-2 border-yellow-400 ring-2 ring-yellow-100 dark:ring-yellow-900 shadow-md' 
-          : 'border border-black/10 dark:border-white/10 dark:shadow-none'
+          ? 'shadow-airbnb ring-2 ring-yellow-200' 
+          : 'shadow-airbnb'
       }`}>
         {/* VIP Badge */}
         {isVip && (
-            <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-gradient-to-r from-yellow-300 to-yellow-500 text-black text-[10px] font-bold rounded-full shadow-sm flex items-center gap-1">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-gradient-to-r from-yellow-300 to-yellow-500 text-black text-xs font-bold rounded-full shadow-md flex items-center gap-1">
                 <span>👑</span> VIP
             </div>
         )}
 
-        {/* Micro-labels (New / Popular) - only show if NOT VIP to avoid clutter, or stack them */}
+        {/* Micro-labels (New / Popular) */}
         {!isVip && isNew && (
-            <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-green-500 text-white text-[10px] font-bold rounded-full shadow-sm">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-md">
                 🔥 New
             </div>
         )}
         {!isVip && !isNew && isPopular && (
-            <div className="absolute top-2 left-2 z-10 px-2 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full shadow-sm">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full shadow-md">
                 ⚡ Popular
             </div>
         )}
@@ -259,7 +259,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
         {/* Heart button */}
         <button
           onClick={handleFavoriteClick}
-          className="absolute top-2 right-2 z-10 p-1.5 bg-white/90 dark:bg-black/50 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 transition-transform"
+          className="absolute top-3 right-3 z-10 p-2 bg-white/95 backdrop-blur-sm rounded-full shadow-md hover:scale-110 transition-transform"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -267,27 +267,27 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             fill={isFavorite ? "#ef4444" : "none"}
             stroke={isFavorite ? "#ef4444" : "currentColor"}
             strokeWidth="2"
-            className="w-4 h-4 text-black dark:text-white"
+            className="w-5 h-5 text-gray-700"
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
           </svg>
         </button>
 
-        <div className="aspect-square w-full bg-gray-100 dark:bg-gray-800 relative overflow-hidden rounded-xl">
+        <div className="aspect-square w-full bg-gray-100 relative overflow-hidden">
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt={listing.title || "Listing"}
               fill
-              className="object-cover"
+              className="object-cover group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
               placeholder="blur"
               blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN88/7dfwAIuQNS4g0U2AAAAABJRU5ErkJggg=="
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-600">
+            <div className="w-full h-full flex items-center justify-center text-gray-300">
               <svg
-                className="w-8 h-8"
+                className="w-10 h-10"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -303,7 +303,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
           )}
         </div>
 
-        <div className="flex-1 flex flex-col">
+        <div className="p-3">
           {/* Тип + дата */}
           <div className="flex items-center justify-between mb-1 mt-2">
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-[11px] font-medium">

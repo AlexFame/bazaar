@@ -12,6 +12,7 @@ import { getSuggestions } from "@/lib/searchUtils";
 import { supabase } from "@/lib/supabaseClient";
 import Toast from "./Toast";
 import OnboardingTutorial from "./OnboardingTutorial";
+import BottomNavigation from "./BottomNavigation";
 
 import TelegramThemeSync from "@/components/TelegramThemeSync";
 
@@ -334,131 +335,14 @@ export default function AppShell({ children }) {
   const isChatConversation = pathname.startsWith("/messages/") && pathname !== "/messages";
 
   return (
-    <div className="w-full min-h-[100dvh] dark:bg-black flex flex-col items-center transition-colors duration-300">
-      {/* Шапка - скрываем в чате */}
-      {!isChatConversation && (
-        <header className="w-full dark:bg-black pt-[calc(env(safe-area-inset-top)+2.5rem)] pb-3 border-b border-black/5 dark:border-white/10 transition-colors duration-300">
-          <div className="w-full max-w-[520px] px-3 mx-auto flex flex-col gap-3">
-            {/* Текст сверху */}
-            <div className="text-center text-xs font-semibold text-black/80 dark:text-white/80 break-words leading-tight">
-              Bazaar
-            </div>
-
-            {/* Поиск - с анимацией скрытия/появления */}
-            <div 
-              className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                  pathname === "/" ? "max-h-16 opacity-100 mb-0" : "max-h-0 opacity-0 mb-0"
-              }`}
-            >
-              <form onSubmit={handleSearchSubmit} className="w-full">
-                  {renderSearchBar(headerSearchRef)}
-              </form>
-            </div>
-
-            {/* НАВИГАЦИЯ + ЯЗЫК */}
-            <div className="flex items-center justify-between gap-2 w-full overflow-hidden">
-              <nav className="flex gap-2 items-center justify-center flex-1 min-w-0">
-                {/* Главная */}
-                <Link href="/">
-                  <button
-                    className={`flex-1 text-center px-2 py-2 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex items-center justify-center gap-1 ${
-                      pathname === "/"
-                        ? "bg-black text-white dark:bg-white dark:text-black"
-                        : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
-                    }`}
-                  >
-                    {t("navbar_brand")}
-                  </button>
-                </Link>
-
-                {/* Личный кабинет */}
-                <Link href="/my">
-                  <button
-                    className={`flex-1 text-center px-2 py-2 rounded-full text-xs font-medium transition-colors whitespace-nowrap flex items-center justify-center gap-1 ${
-                      pathname === "/my"
-                        ? "bg-black text-white dark:bg-white dark:text-black"
-                        : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
-                    }`}
-                  >
-                    {t("navbar_myAds")}
-                  </button>
-                </Link>
-                
-                {/* Create Button */}
-                <Link href="/create">
-                    <button className="w-8 h-8 rounded-full bg-black text-white dark:bg-white dark:text-black flex items-center justify-center shadow-md hover:scale-105 transition-transform">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                    </button>
-                </Link>
-
-                {/* Favorites */}
-                <Link href="/favorites">
-                  <button
-                    className={`${navBtn} ${
-                      pathname === "/favorites"
-                        ? "text-red-500 bg-red-50 dark:bg-red-900/20"
-                        : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white hover:text-red-500 dark:hover:text-red-400"
-                    }`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill={pathname === "/favorites" ? "currentColor" : "none"} viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                    </svg>
-                  </button>
-                </Link>
-
-                {/* Messages icon with badge */}
-                <Link href="/messages">
-                  <button
-                    className={`${navBtn} relative ${
-                      pathname.startsWith("/messages")
-                        ? "bg-black text-white dark:bg-white dark:text-black"
-                        : "bg-[#F2F3F7] text-black dark:bg-[#262626] dark:text-white"
-                    }`}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-                    </svg>
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
-                    )}
-                  </button>
-                </Link>
-              </nav>
-
-              {/* <ThemeToggle /> */}
-              <LangSwitcher />
-            </div>
-          </div>
-        </header>
-      )}
-
-      {/* Липкая панель поиска - только на главной */}
-      {pathname === "/" && !isChatConversation && (
-        <div
-            className={`fixed top-2 left-1/2 -translate-x-1/2 w-full max-w-[520px] px-3 z-30 transition-all duration-200 ${
-            showFloatingSearch
-                ? "opacity-100 translate-y-0 pointer-events-auto"
-                : "opacity-0 -translate-y-4 pointer-events-none"
-            }`}
-        >
-            <form onSubmit={handleSearchSubmit}>{renderSearchBar(floatingSearchRef)}</form>
-        </div>
-      )}
-
-      {/* Контент - убираем отступы в чате */}
-      <main className={`flex-1 w-full max-w-[520px] mx-auto ${isChatConversation ? "p-0" : "px-3 pb-4"}`}>
+    <div className="min-h-screen flex flex-col bg-airbnb-gray">
+      {/* Main Content */}
+      <main className="flex-1 w-full max-w-[520px] mx-auto bg-white min-h-screen relative shadow-2xl pb-20">
         {children}
       </main>
 
-      {!isChatConversation && (
-        <footer className="w-full max-w-[520px] mx-auto text-center text-[11px] py-5 opacity-60">
-          Bazaar © 2025 • <a href="https://t.me/" target="_blank" rel="noopener noreferrer" className="hover:underline">{t("footer_support")}</a>
-        </footer>
-      )}
+      {/* Bottom Navigation */}
+      <BottomNavigation />
       
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
       <OnboardingTutorial />

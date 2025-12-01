@@ -31,6 +31,20 @@ module.exports = {
         "brand-purple": "#6F3CF6",
         "brand-purple-dark": "#582DCB",
         "brand-purple-light": "#E6D9FF",
+
+        // Airbnb Style
+        "airbnb-red": "#FF385C",
+        "airbnb-gray": "#F7F7F7",
+        "airbnb-text": "#222222",
+        "airbnb-text-secondary": "#717171",
+      },
+      boxShadow: {
+        'airbnb': '0 6px 16px rgba(0,0,0,0.12)',
+        'airbnb-hover': '0 6px 20px rgba(0,0,0,0.15)',
+      },
+      borderRadius: {
+        '3xl': '1.5rem',
+        '4xl': '2rem',
       },
     },
   },
