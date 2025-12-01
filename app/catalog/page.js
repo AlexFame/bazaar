@@ -47,10 +47,10 @@ export default function CatalogPage() {
             href={`/category/${cat.key}`}
             className="group relative flex flex-col items-center justify-center p-6 bg-white rounded-3xl hover:shadow-airbnb-hover transition-all duration-300 active:scale-95 shadow-airbnb border border-gray-100"
           >
-            {/* Large Icon/Emoji */}
-            <div className="relative w-full flex items-center justify-center mb-4">
-              <div className="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <span className="text-6xl drop-shadow-sm">
+            {/* Icon/Emoji */}
+            <div className="relative w-full flex items-center justify-center mb-3">
+              <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <span className="text-4xl drop-shadow-sm">
                   {cat.icon}
                 </span>
               </div>

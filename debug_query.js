@@ -1,4 +1,3 @@
-
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 
@@ -6,36 +5,33 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function inspectColumns() {
-  console.log('--- Inspecting columns ---');
+async function findCroatiaListing() {
+  console.log('--- Searching for Croatia listing ---');
   
-  // 1. listing_images
-  const { data: images, error: imgError } = await supabase
-    .from('listing_images')
-    .select('*')
-    .limit(1);
+  // Search by title
+  const { data: byTitle, error: titleError } = await supabase
+    .from('listings')
+    .select('id, title, type, category_key')
+    .ilike('title', '%хорват%');
 
-  if (imgError) {
-    console.error('listing_images Error:', imgError);
-  } else if (images.length > 0) {
-    console.log('listing_images columns:', Object.keys(images[0]));
+  if (titleError) {
+    console.error('Title search error:', titleError);
   } else {
-    console.log('listing_images is empty');
+    console.log('Found by title:', byTitle);
   }
 
-  // 2. profiles
-  const { data: profiles, error: profError } = await supabase
-    .from('profiles')
-    .select('*')
-    .limit(1);
+  // Search all services
+  const { data: services, error: servError } = await supabase
+    .from('listings')
+    .select('id, title, type, category_key')
+    .eq('type', 'services')
+    .limit(10);
 
-  if (profError) {
-    console.error('profiles Error:', profError);
-  } else if (profiles.length > 0) {
-    console.log('profiles columns:', Object.keys(profiles[0]));
+  if (servError) {
+    console.error('Services search error:', servError);
   } else {
-    console.log('profiles is empty');
+    console.log('\nAll services (first 10):', services);
   }
 }
 
-inspectColumns();
+findCroatiaListing();

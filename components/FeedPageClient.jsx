@@ -1338,14 +1338,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
         )}
 
         {/* Popular Listings (Horizontal) */}
-        {!hasSearchQuery && categoryFilter === "all" && (
+        {categoryFilter === "all" && (
           <div className="mt-6">
             <PopularListingsScroll />
           </div>
         )}
 
         {/* Recently Viewed (Horizontal) */}
-        {!hasSearchQuery && categoryFilter === "all" && (
+        {categoryFilter === "all" && (
           <RecentlyViewedScroll />
         )}
 
@@ -1355,6 +1355,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
             {hasSearchQuery
               ? "Результаты"
               : categoryFilter !== "all"
+              ? "Объявления"
+              : typeFilter !== "all"
               ? "Объявления"
               : "Свежее"}
           </h2>
