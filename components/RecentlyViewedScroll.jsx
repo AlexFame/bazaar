@@ -106,7 +106,7 @@ export default function RecentlyViewedScroll() {
       <h2 className="text-lg font-bold px-4 mb-3">Недавно просмотренные</h2>
       <div className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar snap-x snap-mandatory">
         {listings.map((listing) => (
-          <div key={listing.id} className="min-w-[160px] w-[160px] snap-center">
+          <div key={listing.id} className="min-w-[calc(50%-6px)] w-[calc(50%-6px)] snap-center flex-shrink-0">
             <ListingCard listing={listing} compact />
           </div>
         ))}

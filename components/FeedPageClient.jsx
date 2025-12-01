@@ -1447,7 +1447,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
               ? "Объявления"
               : typeFilter !== "all"
               ? "Объявления"
-              : "Свежее"}
+              : "Объявления"}
           </h2>
 
           {/* View Mode Toggle & Counter */}

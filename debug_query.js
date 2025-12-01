@@ -5,33 +5,21 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function findCroatiaListing() {
-  console.log('--- Searching for Croatia listing ---');
+async function checkPopular() {
+  console.log('--- Checking popular listings ---');
   
-  // Search by title
-  const { data: byTitle, error: titleError } = await supabase
+  const { data, error } = await supabase
     .from('listings')
-    .select('id, title, type, category_key')
-    .ilike('title', '%хорват%');
+    .select('id, title, views_count')
+    .order('views_count', { ascending: false })
+    .limit(5);
 
-  if (titleError) {
-    console.error('Title search error:', titleError);
+  if (error) {
+    console.error('Error:', error);
   } else {
-    console.log('Found by title:', byTitle);
-  }
-
-  // Search all services
-  const { data: services, error: servError } = await supabase
-    .from('listings')
-    .select('id, title, type, category_key')
-    .eq('type', 'services')
-    .limit(10);
-
-  if (servError) {
-    console.error('Services search error:', servError);
-  } else {
-    console.log('\nAll services (first 10):', services);
+    console.log('Found listings:', data.length);
+    data.forEach(l => console.log(`- ${l.title} (views: ${l.views_count || 0})`));
   }
 }
 
-findCroatiaListing();
+checkPopular();
