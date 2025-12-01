@@ -44,7 +44,7 @@ export default function CatalogPage() {
         {filteredCategories.map((cat) => (
           <Link 
             key={cat.key} 
-            href={`/?category=${cat.key}`}
+            href={`/category/${cat.key}`}
             className="group relative flex flex-col items-center justify-center p-6 bg-white rounded-3xl hover:shadow-airbnb-hover transition-all duration-300 active:scale-95 shadow-airbnb border border-gray-100"
           >
             {/* Large Icon/Emoji */}

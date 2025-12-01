@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { ListingCardSkeleton } from "./SkeletonLoader";
@@ -152,48 +152,10 @@ const PriceSlider = ({ min, max, onChange, minLimit = 0, maxLimit = 100000 }) =>
 };
 
 
-export default function FeedPageClient() {
+export default function FeedPageClient({ forcedCategory = null }) {
   const { lang, t } = useLang();
   
   // ... existing code ...
-
-  const txt = {
-      searchPlaceholder: t("searchPlaceholder"),
-      locationPlaceholder: t("locationPlaceholder"),
-      priceFrom: t("priceFrom"),
-      priceTo: t("priceTo"),
-      allCategories: t("allCategories"),
-      typeAny: t("typeAny"),
-      typeBuy: t("typeBuy"),
-      typeSell: t("typeSell"),
-      typeServices: t("typeServices"),
-      typeFree: t("typeFree"),
-      dateAll: t("dateAll"),
-      dateToday: t("dateToday"),
-      date3d: t("date3d"),
-      date7d: t("date7d"),
-      date30d: t("date30d"),
-      popularQueriesLabel: t("popularQueriesLabel"),
-      loading: t("loading"),
-      empty: t("empty"),
-      loadMore: t("loadMore"),
-      loadingMore: t("loadingMore"),
-      conditionAny: t("conditionAny"),
-      conditionNew: t("conditionNew"),
-      conditionUsed: t("conditionUsed"),
-      conditionLikeNew: t("conditionLikeNew"),
-      barter: t("barter"),
-      withPhoto: t("withPhoto"),
-      yes: t("yes"),
-      no: t("no"),
-      filters: t("filters"),
-      category: t("category"),
-      price: t("price"),
-      condition: t("condition"),
-      type: t("type"),
-      more: t("more"),
-      foundInCategory: t("foundInCategory"),
-  };
 
   const searchParams = useSearchParams();
   const urlQuery = (searchParams.get("q") || "").trim();
@@ -212,7 +174,7 @@ export default function FeedPageClient() {
   const [locationFilter, setLocationFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState(forcedCategory || "all");
   
   // Общие фильтры
   const [typeFilter, setTypeFilter] = useState("all"); // all | buy | sell | services | free
@@ -1026,7 +988,15 @@ export default function FeedPageClient() {
                 </div>
               </div>
               <button 
-                onClick={() => setCategoryFilter('all')}
+                onClick={() => {
+                  if (forcedCategory) {
+                    // If we are on a dedicated category page, go back to home or catalog
+                    // Going to home seems most natural to "clear filter"
+                    router.push("/");
+                  } else {
+                    setCategoryFilter('all');
+                  }
+                }}
                 className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm text-gray-400 hover:text-red-500 transition-colors"
               >
                 ✕
