@@ -236,6 +236,16 @@ export default function MyPage() {
 
         {/* Action Buttons */}
         <div className="mb-3 flex flex-col gap-2">
+            {/* Statistics Button */}
+            <Link 
+                href="/my/statistics"
+                className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+            >
+                <span>📊</span>
+                Статистика
+            </Link>
+            
+            {/* Create Listing Button */}
             <Link 
                 href="/create"
                 className="w-full py-3 bg-black text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
