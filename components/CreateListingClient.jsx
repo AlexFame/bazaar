@@ -205,7 +205,16 @@ export default function CreateListingClient({ onCreated, editId }) {
       if (address) {
         setLocation(address);
       } else {
-        setLocation(`${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`);
+        // If address is found, use it. If not, try to format it better or just use coords but maybe with a warning?
+        // Actually, let's try to be more persistent or just use what we have.
+        // The user wants "City name", so reverseGeocode is key.
+        if (address) {
+            setLocation(address);
+        } else {
+            // Fallback to coordinates if address lookup fails
+            setLocation(`${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`);
+            alert("Не удалось определить точный адрес. Пожалуйста, введите название города вручную.");
+        }
       }
     } catch (e) {
       console.error("Auto-location error:", e);

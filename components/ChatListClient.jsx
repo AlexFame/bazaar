@@ -27,7 +27,31 @@ export default function ChatListClient() {
         router.push("/login");
         return;
       }
-      setUser(user);
+      let currentUser = user;
+
+      if (!currentUser) {
+          // Try Telegram
+          if (typeof window !== "undefined") {
+              const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+              if (tgUser?.id) {
+                  const { data: profile } = await supabase
+                      .from("profiles")
+                      .select("id, full_name, avatar_url")
+                      .eq("tg_user_id", tgUser.id)
+                      .single();
+                  
+                  if (profile) {
+                      currentUser = profile;
+                  }
+              }
+          }
+      }
+
+      if (!currentUser) {
+        router.push("/login");
+        return;
+      }
+      setUser(currentUser);
 
       // Fetch conversations
       const { data, error } = await supabase
@@ -39,7 +63,7 @@ export default function ChatListClient() {
           buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
           seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url)
         `)
-        .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+        .or(`buyer_id.eq.${currentUser.id},seller_id.eq.${currentUser.id}`)
         .order("updated_at", { ascending: false });
 
       if (error) {
@@ -68,7 +92,7 @@ export default function ChatListClient() {
             .from('messages')
             .select('conversation_id')
             .eq('is_read', false)
-            .neq('sender_id', user.id);
+            .neq('sender_id', currentUser.id);
         
         const counts = {};
         unreadData?.forEach(msg => {

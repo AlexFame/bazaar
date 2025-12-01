@@ -42,7 +42,31 @@ export default function ChatWindowClient({ conversationId }) {
         router.push("/login");
         return;
       }
-      setUser(user);
+      let currentUser = user;
+
+      if (!currentUser) {
+          // Try Telegram
+          if (typeof window !== "undefined") {
+              const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+              if (tgUser?.id) {
+                  const { data: profile } = await supabase
+                      .from("profiles")
+                      .select("id, full_name, avatar_url")
+                      .eq("tg_user_id", tgUser.id)
+                      .single();
+                  
+                  if (profile) {
+                      currentUser = profile;
+                  }
+              }
+          }
+      }
+
+      if (!currentUser) {
+        // If still no user, we can't show chat
+        return;
+      }
+      setUser(currentUser);
 
       // Fetch conversation details
       const { data: conv, error: convError } = await supabase

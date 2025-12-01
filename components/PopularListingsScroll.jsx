@@ -154,7 +154,7 @@ export default function PopularListingsScroll() {
           style={{ scrollSnapType: "x mandatory" }}
         >
           {items.map((listing) => (
-            <div key={listing.id} className="min-w-[calc(50%-6px)] w-[calc(50%-6px)] snap-center flex-shrink-0">
+            <div key={listing.id} className="min-w-[calc(50%-6px)] w-[calc(50%-6px)] snap-start flex-shrink-0">
               <ListingCard listing={listing} compact />
             </div>
           ))}

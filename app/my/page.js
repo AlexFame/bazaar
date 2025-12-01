@@ -249,6 +249,12 @@ export default function MyPage() {
                 Черновики
                 {activeTab === "draft" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
             </button>
+            <button 
+                onClick={() => router.push("/favorites")}
+                className={`flex-1 pb-2 text-sm font-medium transition-colors relative text-gray-400 hover:text-gray-600`}
+            >
+                Понравившиеся
+            </button>
         </div>
 
         {/* Action Buttons */}

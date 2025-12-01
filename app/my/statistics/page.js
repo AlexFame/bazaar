@@ -69,8 +69,35 @@ export default function ProfileStatisticsPage() {
   useEffect(() => {
     async function loadData() {
       try {
+        let userId = null;
+
+        // 1. Try Supabase Auth
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
+        if (user) {
+            userId = user.id;
+        } else {
+            // 2. Try Telegram WebApp
+            if (typeof window !== "undefined") {
+                const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+                if (tgUser?.id) {
+                    // Fetch profile by Telegram ID
+                    const { data: profile } = await supabase
+                        .from("profiles")
+                        .select("id")
+                        .eq("tg_user_id", tgUser.id)
+                        .single();
+                    
+                    if (profile) {
+                        userId = profile.id;
+                    }
+                }
+            }
+        }
+
+        if (!userId) {
+          // If still no user, redirect to login or show empty
+          // But for Telegram WebApp we might just want to show "Please login" or similar?
+          // For now, let's redirect to login as fallback
           router.push("/login");
           return;
         }
@@ -79,7 +106,7 @@ export default function ProfileStatisticsPage() {
         const { data: listingsData, error: listingsError } = await supabase
           .from("listings")
           .select("*, listing_images(image_path)")
-          .eq("created_by", user.id)
+          .eq("created_by", userId)
           .order("created_at", { ascending: false });
 
         if (listingsError) {

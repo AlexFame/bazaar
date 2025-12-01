@@ -1413,6 +1413,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
               <button
                 onClick={() => {
                   if (forcedCategory) {
+                    // Do nothing or maybe reset filter? 
+                    // If forcedCategory is prop, we probably shouldn't redirect to home on close, 
+                    // but the button is "X", so clearing filter makes sense.
+                    // But wait, the user complaint is about redirecting when NO LISTINGS found.
+                    // This button is for clearing the filter.
+                    // I need to find the OTHER redirect.
                     router.push("/");
                   } else {
                     setCategoryFilter("all");
@@ -1440,7 +1446,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
         {/* Main Feed Header */}
         <div className="px-4 mt-8 mb-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+          <h2 className="text-lg font-bold text-gray-900 tracking-tight">
             {hasSearchQuery
               ? "Результаты"
               : categoryFilter !== "all"
