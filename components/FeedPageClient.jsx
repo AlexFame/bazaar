@@ -365,7 +365,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
         )
         .not("latitude", "is", null)
         .not("longitude", "is", null)
-        .eq("status", "active")
+        // .eq("status", "active")
         .order("created_at", { ascending: false });
 
       // Apply same filters as main list
@@ -471,7 +471,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
         )
         .order("is_vip", { ascending: false })
         .order("created_at", { ascending: false })
-        .eq("status", "active")
+        // .eq("status", "active")
         .range(from, to);
 
       const term = (searchTerm || "").trim();

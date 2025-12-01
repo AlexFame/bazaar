@@ -24,7 +24,7 @@ export default function PopularListingsScroll() {
             listing_images(image_path),
             profiles:created_by(is_verified, username, first_name, last_name, avatar_url)
           `)
-          .eq("status", "active")
+          // .eq("status", "active")
           .order("views_count", { ascending: false })
           .limit(12);
 
