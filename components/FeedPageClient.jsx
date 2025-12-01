@@ -460,18 +460,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
     }
 
     try {
+      // 1. Fetch listings (raw, without joins to avoid FK errors)
       let query = supabase
         .from("listings")
-        .select(
-          `
-          *,
-          listing_images(image_path),
-          profiles:created_by(is_verified, username, first_name, last_name, avatar_url)
-        `
-        )
+        .select("*")
         .order("is_vip", { ascending: false })
         .order("created_at", { ascending: false })
-        // .eq("status", "active")
+        // .eq("status", "active") // Removed strict filter
         .range(from, to);
 
       const term = (searchTerm || "").trim();
@@ -572,14 +567,62 @@ export default function FeedPageClient({ forcedCategory = null }) {
         query = query.contains("parameters", { barter: true });
       }
 
-      const { data, error } = await query;
+      const { data: rawListings, error } = await query;
 
       if (error) {
         console.error("Ошибка загрузки объявлений:", error);
         return;
       }
 
-      let chunk = data || [];
+      let chunk = rawListings || [];
+
+      // 2. Fetch related data manually (Images & Profiles)
+      if (chunk.length > 0) {
+        const listingIds = chunk.map((l) => l.id);
+        const userIds = [...new Set(chunk.map((l) => l.created_by).filter(Boolean))];
+
+        // Fetch Images
+        const { data: imagesData } = await supabase
+          .from("listing_images")
+          .select("listing_id, file_path") // Use file_path based on schema inspection
+          .in("listing_id", listingIds);
+
+        // Fetch Profiles
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, tg_username, full_name, avatar_url") // Use correct columns
+          .in("id", userIds);
+
+        // Merge data
+        chunk = chunk.map((listing) => {
+          const listingImages = imagesData
+            ? imagesData
+                .filter((img) => img.listing_id === listing.id)
+                .map((img) => ({ image_path: img.file_path })) // Map file_path -> image_path
+            : [];
+
+          const profile = profilesData
+            ? profilesData.find((p) => p.id === listing.created_by)
+            : null;
+
+          // Map profile fields to expected format
+          const mappedProfile = profile
+            ? {
+                is_verified: false, // Default to false as column missing
+                username: profile.tg_username,
+                first_name: profile.full_name ? profile.full_name.split(" ")[0] : "",
+                last_name: profile.full_name ? profile.full_name.split(" ").slice(1).join(" ") : "",
+                avatar_url: profile.avatar_url,
+              }
+            : null;
+
+          return {
+            ...listing,
+            listing_images: listingImages,
+            profiles: mappedProfile,
+          };
+        });
+      }
 
       // Client-side distance filtering
       if (userLocation && radiusFilter && chunk.length > 0) {
