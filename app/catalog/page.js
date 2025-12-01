@@ -45,18 +45,19 @@ export default function CatalogPage() {
           <Link 
             key={cat.key} 
             href={`/?category=${cat.key}`}
-            className="group relative flex flex-col items-center justify-center p-6 bg-gray-50 rounded-3xl hover:bg-gray-100 transition-all duration-300 active:scale-95 aspect-square"
+            className="group relative flex flex-col items-center justify-center p-6 bg-white rounded-3xl hover:shadow-airbnb-hover transition-all duration-300 active:scale-95 shadow-airbnb border border-gray-100"
           >
-            {/* Icon/Emoji with background glow */}
-            <div className="relative w-20 h-20 flex items-center justify-center mb-3">
-              <div className="absolute inset-0 bg-white rounded-full shadow-sm opacity-50 group-hover:scale-110 transition-transform duration-500"></div>
-              <span className="relative text-5xl drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300">
-                {cat.icon}
-              </span>
+            {/* Large Icon/Emoji */}
+            <div className="relative w-full flex items-center justify-center mb-4">
+              <div className="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+                <span className="text-6xl drop-shadow-sm">
+                  {cat.icon}
+                </span>
+              </div>
             </div>
             
             {/* Title */}
-            <span className="text-sm font-bold text-center text-gray-900 leading-tight px-2">
+            <span className="text-base font-bold text-center text-gray-900 leading-tight">
               {cat[lang] || cat.ru}
             </span>
           </Link>
