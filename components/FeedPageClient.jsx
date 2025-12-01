@@ -1010,6 +1010,31 @@ export default function FeedPageClient() {
           </div>
         )}
 
+        {/* Active Category Indicator */}
+        {categoryFilter !== 'all' && (
+          <div className="px-4 mt-4">
+            <div className="flex items-center justify-between bg-airbnb-red/5 border border-airbnb-red/10 rounded-2xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm">
+                  {CATEGORY_DEFS.find(c => c.key === categoryFilter)?.icon || '📁'}
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500 font-medium">Категория</p>
+                  <p className="font-bold text-gray-900">
+                    {CATEGORY_DEFS.find(c => c.key === categoryFilter)?.[lang] || CATEGORY_DEFS.find(c => c.key === categoryFilter)?.ru}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setCategoryFilter('all')}
+                className="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm text-gray-400 hover:text-red-500 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Popular Listings (Horizontal) */}
         {!hasSearchQuery && categoryFilter === 'all' && (
           <div className="mt-6">
@@ -1025,7 +1050,7 @@ export default function FeedPageClient() {
         {/* Main Feed Header */}
         <div className="px-4 mt-8 mb-4 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-            {hasSearchQuery ? 'Результаты' : 'Свежее'}
+            {hasSearchQuery ? 'Результаты' : (categoryFilter !== 'all' ? 'Объявления' : 'Свежее')}
           </h2>
           
           {/* View Mode Toggle & Counter */}

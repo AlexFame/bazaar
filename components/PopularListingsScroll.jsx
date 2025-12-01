@@ -52,12 +52,16 @@ export default function PopularListingsScroll() {
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-4 mb-3">Популярное</h2>
-      <div className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar snap-x snap-mandatory">
-        {items.map((listing) => (
-          <div key={listing.id} className="min-w-[160px] w-[160px] snap-center">
-            <ListingCard listing={listing} compact />
-          </div>
-        ))}
+      <div className="relative">
+        <div className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar snap-x snap-mandatory mask-fade-right">
+          {items.map((listing) => (
+            <div key={listing.id} className="min-w-[160px] w-[160px] snap-center">
+              <ListingCard listing={listing} compact />
+            </div>
+          ))}
+        </div>
+        {/* Gradient overlay for scroll indication */}
+        <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none" />
       </div>
     </div>
   );
