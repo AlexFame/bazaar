@@ -163,24 +163,22 @@ export default function ChatWindowClient({ conversationId }) {
     setMessages(prev => [...prev, optimisticMessage]);
     scrollToBottom();
 
-    // Send to server
-    const { data, error } = await supabase
-      .from("messages")
-      .insert({
-        conversation_id: conversationId,
-        sender_id: user.id,
-        content: content,
-      })
-      .select()
-      .single();
+    try {
+      // Send to server
+      const { data, error } = await supabase
+        .from("messages")
+        .insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          content: content,
+        })
+        .select()
+        .single();
 
-    if (error) {
-      console.error("Error sending message:", error);
-      alert("Не удалось отправить сообщение");
-      // Remove optimistic message on error
-      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
-      setNewMessage(content); // Restore text
-    } else {
+      if (error) {
+        throw error;
+      }
+
       // Replace optimistic message with real one
       setMessages(prev => 
         prev.map(m => m.id === optimisticMessage.id ? data : m)
@@ -195,7 +193,7 @@ export default function ChatWindowClient({ conversationId }) {
           body: JSON.stringify({
             recipientId: otherUser.id,
             message: `💬 Новое сообщение: ${content}`,
-            type: "new_message"
+            url: `https://t.me/bazaarua_bot/app?startapp=chat_${conversationId}`
           }),
         })
         .then(async res => {
@@ -206,13 +204,27 @@ export default function ChatWindowClient({ conversationId }) {
                 console.log("✅ [ChatWindow] Notification sent");
             }
         })
-        .catch(err => console.error("❌ [ChatWindow] Notification network error:", err));
+        .catch(err => console.error("Failed to send push:", err));
       } else {
         console.warn("⚠️ [ChatWindow] No otherUser.id, cannot send notification");
       }
+
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert("Ошибка отправки сообщения");
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
+      setNewMessage(content); // Restore text
+    } finally {
+      setIsSending(false); // Unlock
     }
-    
-    setIsSending(false); // Unlock sending
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend(e);
+    }
   };
 
   const getImageUrl = (path) => {
@@ -314,7 +326,6 @@ export default function ChatWindowClient({ conversationId }) {
             </div>
           );
         })}
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
