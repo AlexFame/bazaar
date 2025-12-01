@@ -738,30 +738,7 @@ export default function FeedPageClient() {
   const renderCompactFilters = () => {
       return (
           <div className="flex flex-wrap items-center mb-4" ref={dropdownRef}>
-              {/* Категория */}
-              <FilterDropdown 
-                  id="category" 
-                  label={categoryFilter === 'all' ? txt.allCategories : (CATEGORY_DEFS.find(c => c.key === categoryFilter)?.[lang] || CATEGORY_DEFS.find(c => c.key === categoryFilter)?.ru)}
-                  active={categoryFilter !== 'all'}
-              >
-                  <div className="max-h-60 overflow-y-auto">
-                      <button
-                          className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${categoryFilter === 'all' ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
-                          onClick={() => { setCategoryFilter('all'); setDynamicFilters({}); setOpenDropdown(null); }}
-                      >
-                          {txt.allCategories}
-                      </button>
-                      {CATEGORY_DEFS.map(cat => (
-                          <button
-                              key={cat.key}
-                              className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${categoryFilter === cat.key ? 'bg-gray-100 font-bold' : 'hover:bg-gray-50'}`}
-                              onClick={() => { setCategoryFilter(cat.key); setDynamicFilters({}); setOpenDropdown(null); }}
-                          >
-                              {cat.icon} {cat[lang] || cat.ru}
-                          </button>
-                      ))}
-                  </div>
-              </FilterDropdown>
+              {/* Category filter removed - now only in Catalog page */}
 
               {/* Цена (Слайдер) */}
               <FilterDropdown 
