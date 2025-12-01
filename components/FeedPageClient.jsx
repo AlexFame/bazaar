@@ -1497,10 +1497,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 🔍
               </div>
               <p className="text-lg font-medium text-gray-900">
-                Ничего не найдено
+                {categoryFilter !== "all" || typeFilter !== "all" 
+                  ? "В этом разделе пока нет объявлений"
+                  : "Ничего не найдено"}
               </p>
               <p className="text-sm mt-1 text-gray-500">
-                Попробуйте изменить параметры поиска
+                {categoryFilter !== "all" || typeFilter !== "all"
+                  ? "Попробуйте выбрать другую категорию"
+                  : "Попробуйте изменить параметры поиска"}
               </p>
             </div>
           ) : viewMode === "map" ? (

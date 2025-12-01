@@ -762,7 +762,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             onClick={(e) => handleSubmit(e, 'draft')}
             className="flex-1 bg-white border border-black text-black text-sm rounded-full py-2 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
           >
-            {loading ? "Сохраняем..." : "В черновик"}
+            {loading ? "Сохраняем..." : lang === "ua" ? "До чернетки" : "В черновик"}
           </button>
           <button
             type="submit"

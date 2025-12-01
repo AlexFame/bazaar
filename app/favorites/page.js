@@ -11,7 +11,7 @@ import BackButton from "@/components/BackButton";
 
 const pageTranslations = {
   ru: {
-    title: "Избранное",
+    title: "Понравившиеся",
     subtitle: "Объявления, которые вы сохранили",
     loading: "Загружаем избранное...",
     empty: "У вас пока нет избранных объявлений",

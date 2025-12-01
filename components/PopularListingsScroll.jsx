@@ -99,17 +99,17 @@ export default function PopularListingsScroll() {
     if (!scrollRef.current || items.length < 2) return;
 
     const scroll = scrollRef.current;
-    const cardWidth = 172; // 160px + 12px gap
+    const cardWidth = scroll.clientWidth; // Full width = 2 cards
 
     autoScrollInterval.current = setInterval(() => {
       if (scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth) {
         // Reset to start
         scroll.scrollTo({ left: 0, behavior: "smooth" });
       } else {
-        // Scroll to next card
+        // Scroll by full width (2 cards)
         scroll.scrollBy({ left: cardWidth, behavior: "smooth" });
       }
-    }, 3000); // Auto-scroll every 3 seconds
+    }, 5000); // Auto-scroll every 5 seconds
 
     return () => {
       if (autoScrollInterval.current) {
@@ -126,14 +126,14 @@ export default function PopularListingsScroll() {
       setTimeout(() => {
         if (scrollRef.current && items.length >= 2) {
           const scroll = scrollRef.current;
-          const cardWidth = 172;
+          const cardWidth = scroll.clientWidth;
           autoScrollInterval.current = setInterval(() => {
             if (scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth) {
               scroll.scrollTo({ left: 0, behavior: "smooth" });
             } else {
               scroll.scrollBy({ left: cardWidth, behavior: "smooth" });
             }
-          }, 3000);
+          }, 5000);
         }
       }, 5000);
     }
@@ -144,7 +144,7 @@ export default function PopularListingsScroll() {
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg font-bold px-4 mb-3">Популярное</h2>
+      <h2 className="text-lg font-bold px-4 mb-3">Популярные Объявления</h2>
       <div className="relative">
         <div
           ref={scrollRef}
