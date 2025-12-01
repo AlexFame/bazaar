@@ -58,17 +58,11 @@ export default function FavoritesPage() {
     if (!profileId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-         // Try to find profile by user_id (auth.uid) if you have such column, 
-         // OR if you linked tg_user_id to auth.uid somehow.
-         // Assuming profiles table has 'id' which matches auth.uid OR a separate column.
-         // If profiles are ONLY created via Telegram, then web users might not have a profile?
-         // Let's assume for now we can find a profile by id = user.id (if they are linked) 
-         // or we need to query by a different field.
-         // If the user is logged in via Supabase, they should have a profile.
+         // Try to find profile by user_id
          const { data: profileData } = await supabase
             .from("profiles")
             .select("id")
-            .eq("id", user.id) // Assuming profile.id is the auth.uid
+            .eq("id", user.id)
             .maybeSingle();
          if (profileData) profileId = profileData.id;
       }
@@ -82,15 +76,6 @@ export default function FavoritesPage() {
 
     try {
       // Get favorites with listing details
-      // ... (rest of code uses profileId)
-
-      if (!profileData) {
-        setListings([]);
-        setLoading(false);
-        return;
-      }
-
-      // Get favorites with listing details
       const { data, error } = await supabase
         .from("favorites")
         .select(`
@@ -100,7 +85,7 @@ export default function FavoritesPage() {
             profiles:created_by(*)
           )
         `)
-        .eq("profile_id", profileData.id)
+        .eq("profile_id", profileId)
         .order("created_at", { ascending: false });
 
       if (error) {

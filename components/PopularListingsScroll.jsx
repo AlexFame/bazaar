@@ -153,9 +153,18 @@ export default function PopularListingsScroll() {
           className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar snap-x snap-mandatory"
           style={{ scrollSnapType: "x mandatory" }}
         >
-          {items.map((listing) => (
-            <div key={listing.id} className="min-w-[calc(50%-6px)] w-[calc(50%-6px)] snap-start flex-shrink-0">
-              <ListingCard listing={listing} compact />
+          {items.reduce((acc, item, index) => {
+            if (index % 2 === 0) {
+              acc.push(items.slice(index, index + 2));
+            }
+            return acc;
+          }, []).map((pair, index) => (
+            <div key={index} className="min-w-full w-full snap-start flex-shrink-0 flex gap-3">
+              {pair.map((listing) => (
+                <div key={listing.id} className="w-[calc(50%-6px)] flex-shrink-0">
+                  <ListingCard listing={listing} compact />
+                </div>
+              ))}
             </div>
           ))}
         </div>
