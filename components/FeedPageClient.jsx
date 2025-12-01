@@ -266,18 +266,78 @@ export default function FeedPageClient({ forcedCategory = null }) {
   // Search History Logic
   const [searchHistory, setSearchHistory] = useState([]);
   const [showSearchHistory, setShowSearchHistory] = useState(false);
+  const [searchSuggestions, setSuggestions] = useState([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const searchInputRef = useRef(null);
 
   useEffect(() => {
     setSearchHistory(getSearchHistory());
   }, []);
 
+  // Smart search: fetch suggestions as user types
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      const term = searchTerm.trim();
+      if (term.length < 2) {
+        setSuggestions([]);
+        return;
+      }
+
+      setLoadingSuggestions(true);
+      try {
+        const { data, error } = await supabase
+          .from("listings")
+          .select("title, category_key")
+          .or(`title.ilike.%${term}%,description.ilike.%${term}%`)
+          .limit(5);
+
+        if (!error && data) {
+          // Group by title and get category
+          const unique = [];
+          const seen = new Set();
+          data.forEach((item) => {
+            const titleLower = item.title.toLowerCase();
+            if (!seen.has(titleLower)) {
+              seen.add(titleLower);
+              const category = CATEGORY_DEFS.find((c) => c.key === item.category_key);
+              unique.push({
+                title: item.title,
+                category: category ? category[lang] || category.ru : null,
+                categoryKey: item.category_key,
+              });
+            }
+          });
+          setSuggestions(unique);
+        }
+      } catch (e) {
+        console.error("Error fetching suggestions:", e);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    };
+
+    const debounce = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(debounce);
+  }, [searchTerm, lang]);
+
   const handleSearchKeyDown = (e) => {
     if (e.key === "Enter") {
       const newHistory = addToSearchHistory(searchTerm);
       setSearchHistory(newHistory);
       setShowSearchHistory(false);
+      setSuggestions([]);
       e.target.blur();
+    }
+  };
+
+  const handleSuggestionClick = (suggestion) => {
+    setSearchTerm(suggestion.title);
+    const newHistory = addToSearchHistory(suggestion.title);
+    setSearchHistory(newHistory);
+    setShowSearchHistory(false);
+    setSuggestions([]);
+    if (suggestion.categoryKey) {
+      setCategoryFilter(suggestion.categoryKey);
     }
   };
 
@@ -1213,8 +1273,37 @@ export default function FeedPageClient({ forcedCategory = null }) {
               </div>
             </form>
 
+            {/* Smart Search Suggestions */}
+            {showSearchHistory && searchTerm.length >= 2 && searchSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-50 mt-2 max-h-60 overflow-y-auto p-2">
+                <div className="px-3 py-2 border-b border-gray-50">
+                  <span className="text-xs font-semibold text-gray-500">
+                    Предложения
+                  </span>
+                </div>
+                {searchSuggestions.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center px-3 py-3 hover:bg-gray-50 cursor-pointer rounded-xl transition-colors"
+                    onClick={() => handleSuggestionClick(item)}
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-sm text-gray-900 font-medium">
+                        {item.title}
+                      </span>
+                      {item.category && (
+                        <span className="text-xs text-gray-500">
+                          📁 {item.category}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Search History Dropdown */}
-            {showSearchHistory && searchHistory.length > 0 && (
+            {showSearchHistory && searchTerm.length < 2 && searchHistory.length > 0 && (
               <div className="absolute top-full left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-50 mt-2 max-h-60 overflow-y-auto p-2">
                 <div className="flex justify-between items-center px-3 py-2 border-b border-gray-50">
                   <span className="text-xs font-semibold text-gray-500">

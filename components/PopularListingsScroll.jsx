@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { useLang } from "@/lib/i18n-client";
@@ -9,6 +9,8 @@ export default function PopularListingsScroll() {
   const { lang, t } = useLang();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const scrollRef = useRef(null);
+  const autoScrollInterval = useRef(null);
 
   // Load popular listings
   useEffect(() => {
@@ -21,7 +23,6 @@ export default function PopularListingsScroll() {
         const { data: rawListings, error } = await supabase
           .from("listings")
           .select("*")
-          // .eq("status", "active") // Removed strict filter
           .order("views_count", { ascending: false })
           .limit(12);
 
@@ -93,15 +94,67 @@ export default function PopularListingsScroll() {
     return () => (cancelled = true);
   }, []);
 
-  if (loading || !items.length) return null;
+  // Auto-scroll effect
+  useEffect(() => {
+    if (!scrollRef.current || items.length < 2) return;
+
+    const scroll = scrollRef.current;
+    const cardWidth = 172; // 160px + 12px gap
+
+    autoScrollInterval.current = setInterval(() => {
+      if (scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth) {
+        // Reset to start
+        scroll.scrollTo({ left: 0, behavior: "smooth" });
+      } else {
+        // Scroll to next card
+        scroll.scrollBy({ left: cardWidth, behavior: "smooth" });
+      }
+    }, 3000); // Auto-scroll every 3 seconds
+
+    return () => {
+      if (autoScrollInterval.current) {
+        clearInterval(autoScrollInterval.current);
+      }
+    };
+  }, [items]);
+
+  // Pause auto-scroll on user interaction
+  const handleUserScroll = () => {
+    if (autoScrollInterval.current) {
+      clearInterval(autoScrollInterval.current);
+      // Resume after 5 seconds of no interaction
+      setTimeout(() => {
+        if (scrollRef.current && items.length >= 2) {
+          const scroll = scrollRef.current;
+          const cardWidth = 172;
+          autoScrollInterval.current = setInterval(() => {
+            if (scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth) {
+              scroll.scrollTo({ left: 0, behavior: "smooth" });
+            } else {
+              scroll.scrollBy({ left: cardWidth, behavior: "smooth" });
+            }
+          }, 3000);
+        }
+      }, 5000);
+    }
+  };
+
+  if (loading) return null;
+  if (items.length === 0) return null;
 
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-4 mb-3">Популярное</h2>
       <div className="relative">
-        <div className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar snap-x snap-mandatory mask-fade-right">
+        <div
+          ref={scrollRef}
+          onTouchStart={handleUserScroll}
+          onMouseDown={handleUserScroll}
+          className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar snap-x snap-mandatory"
+          style={{ scrollSnapType: "x mandatory" }}
+        >
           {items.map((listing) => (
-            <div key={listing.id} className="min-w-[160px] w-[160px] snap-center">
+            <div key={listing.id} className="min-w-[160px] w-[160px] snap-center flex-shrink-0">
               <ListingCard listing={listing} compact />
             </div>
           ))}
