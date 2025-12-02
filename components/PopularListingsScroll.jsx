@@ -160,7 +160,7 @@ export default function PopularListingsScroll() {
           ref={scrollRef}
           onTouchStart={handleUserScroll}
           onMouseDown={handleUserScroll}
-          className="flex overflow-x-scroll gap-3 px-4 pb-4 no-scrollbar"
+          className="flex overflow-x-scroll gap-3 px-4 pb-4 no-scrollbar justify-center"
           style={{ 
             scrollSnapType: "x mandatory",
             WebkitOverflowScrolling: "touch"
