@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useLang } from "@/lib/i18n-client";
 
@@ -12,6 +12,7 @@ const LABELS = {
 
 export default function BackButton({ className = "" }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { lang } = useLang();
   const label = LABELS[lang] || LABELS.ru;
 
@@ -21,6 +22,11 @@ export default function BackButton({ className = "" }) {
 
   // Handle swipe gesture with visual feedback
   useEffect(() => {
+    // Disable swipe on category and catalog pages to prevent unwanted redirects
+    if (pathname?.startsWith('/category/') || pathname === '/catalog') {
+      return;
+    }
+
     let touchStartX = 0;
     let touchStartY = 0;
     let isSwiping = false;
@@ -100,7 +106,7 @@ export default function BackButton({ className = "" }) {
       container.style.transform = '';
       container.style.transition = '';
     };
-  }, [router]);
+  }, [router, pathname]);
 
   // Try to enable Telegram BackButton
   useEffect(() => {

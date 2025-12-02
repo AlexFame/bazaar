@@ -155,31 +155,33 @@ export default function PopularListingsScroll() {
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-4 mb-3">Популярные Объявления</h2>
-      <div className="relative overflow-hidden">
-        <div
-          ref={scrollRef}
-          onTouchStart={handleUserScroll}
-          onMouseDown={handleUserScroll}
-          className="flex overflow-x-scroll gap-3 pb-4 no-scrollbar"
-          style={{ 
-            paddingLeft: "16px", 
-            paddingRight: "16px",
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch"
-          }}
-        >
-          {items.map((listing) => (
-            <div 
-              key={listing.id} 
-              className="flex-shrink-0 snap-start"
-              style={{ width: "calc(50% - 6px)" }}
-            >
-              <ListingCard listing={listing} compact />
-            </div>
-          ))}
+      <div className="px-4">
+        <div className="relative overflow-hidden rounded-2xl">
+          <div
+            ref={scrollRef}
+            onTouchStart={handleUserScroll}
+            onMouseDown={handleUserScroll}
+            className="flex overflow-x-scroll gap-3 pb-4 no-scrollbar"
+            style={{ 
+              scrollSnapType: "x mandatory",
+              WebkitOverflowScrolling: "touch",
+              marginLeft: "-16px",
+              marginRight: "-16px",
+              paddingLeft: "16px",
+              paddingRight: "16px"
+            }}
+          >
+            {items.map((listing) => (
+              <div 
+                key={listing.id} 
+                className="flex-shrink-0 snap-start"
+                style={{ width: "calc((100vw - 32px - 12px) / 2)", maxWidth: "calc((520px - 32px - 12px) / 2)" }}
+              >
+                <ListingCard listing={listing} compact />
+              </div>
+            ))}
+          </div>
         </div>
-        {/* Gradient overlay for scroll indication */}
-        <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none" />
       </div>
     </div>
   );
