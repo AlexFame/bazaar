@@ -109,7 +109,7 @@ export default function PopularListingsScroll() {
         // Scroll by full width (2 cards)
         scroll.scrollBy({ left: cardWidth, behavior: "smooth" });
       }
-    }, 5000); // Auto-scroll every 5 seconds
+    }, 7000); // Auto-scroll every 7 seconds (slower)
 
     return () => {
       if (autoScrollInterval.current) {
@@ -133,7 +133,7 @@ export default function PopularListingsScroll() {
             } else {
               scroll.scrollBy({ left: cardWidth, behavior: "smooth" });
             }
-          }, 5000);
+          }, 7000);
         }
       }, 5000);
     }
@@ -150,8 +150,8 @@ export default function PopularListingsScroll() {
           ref={scrollRef}
           onTouchStart={handleUserScroll}
           onMouseDown={handleUserScroll}
-          className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar snap-x snap-mandatory"
-          style={{ scrollSnapType: "x mandatory" }}
+          className="flex overflow-x-auto gap-3 pb-4 no-scrollbar snap-x snap-mandatory"
+          style={{ scrollSnapType: "x mandatory", paddingLeft: "16px", paddingRight: "16px" }}
         >
           {items.reduce((acc, item, index) => {
             if (index % 2 === 0) {
