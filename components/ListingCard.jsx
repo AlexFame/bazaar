@@ -241,11 +241,14 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
   return (
     <Link href={`/listing/${listing.id}`}>
-      <article className={`bg-white rounded-3xl overflow-hidden transition-all hover:shadow-airbnb-hover group relative ${
+      <article 
+        className={`bg-white rounded-3xl overflow-hidden transition-all hover:shadow-airbnb-hover group relative ${
         isVip
           ? 'shadow-airbnb ring-2 ring-gradient-to-r from-purple-400 to-pink-400'
           : 'shadow-airbnb'
-      }`}>
+      }`}
+        style={{ minHeight: compact ? '280px' : 'auto' }}
+      >
         {/* VIP Badge - Modern gradient design */}
         {isVip && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-lg shadow-lg">
