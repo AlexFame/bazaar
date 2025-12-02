@@ -87,7 +87,7 @@ function formatDate(createdAt, lang) {
   });
 }
 
-export default function ListingCard({ listing, showActions, onDelete, onPromote, onAnalytics }) {
+export default function ListingCard({ listing, showActions, onDelete, onPromote, onAnalytics, compact }) {
   const { lang } = useLang();
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState(null);
