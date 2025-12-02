@@ -94,22 +94,28 @@ export default function PopularListingsScroll() {
     return () => (cancelled = true);
   }, []);
 
-  // Auto-scroll effect
+  // Auto-scroll effect - scroll one card at a time
   useEffect(() => {
     if (!scrollRef.current || items.length < 2) return;
 
     const scroll = scrollRef.current;
-    const cardWidth = scroll.clientWidth; // Full width = 2 cards
-
+    
     autoScrollInterval.current = setInterval(() => {
-      if (scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth) {
+      const containerWidth = scroll.offsetWidth;
+      const scrollLeft = scroll.scrollLeft;
+      const scrollWidth = scroll.scrollWidth;
+      
+      // Calculate card width (container width / 2 - gap)
+      const cardWidth = (containerWidth - 16 - 12) / 2; // 16px padding left, 12px gap
+      
+      if (scrollLeft + containerWidth >= scrollWidth - 10) {
         // Reset to start
         scroll.scrollTo({ left: 0, behavior: "smooth" });
       } else {
-        // Scroll by full width (2 cards)
-        scroll.scrollBy({ left: cardWidth, behavior: "smooth" });
+        // Scroll by one card width + gap
+        scroll.scrollBy({ left: cardWidth + 12, behavior: "smooth" });
       }
-    }, 7000); // Auto-scroll every 7 seconds (slower)
+    }, 10000); // Auto-scroll every 10 seconds (much slower)
 
     return () => {
       if (autoScrollInterval.current) {
@@ -126,14 +132,18 @@ export default function PopularListingsScroll() {
       setTimeout(() => {
         if (scrollRef.current && items.length >= 2) {
           const scroll = scrollRef.current;
-          const cardWidth = scroll.clientWidth;
           autoScrollInterval.current = setInterval(() => {
-            if (scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth) {
+            const containerWidth = scroll.offsetWidth;
+            const scrollLeft = scroll.scrollLeft;
+            const scrollWidth = scroll.scrollWidth;
+            const cardWidth = (containerWidth - 16 - 12) / 2;
+            
+            if (scrollLeft + containerWidth >= scrollWidth - 10) {
               scroll.scrollTo({ left: 0, behavior: "smooth" });
             } else {
-              scroll.scrollBy({ left: cardWidth, behavior: "smooth" });
+              scroll.scrollBy({ left: cardWidth + 12, behavior: "smooth" });
             }
-          }, 7000);
+          }, 10000);
         }
       }, 5000);
     }
@@ -145,26 +155,26 @@ export default function PopularListingsScroll() {
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-4 mb-3">Популярные Объявления</h2>
-      <div className="relative">
+      <div className="relative overflow-hidden">
         <div
           ref={scrollRef}
           onTouchStart={handleUserScroll}
           onMouseDown={handleUserScroll}
-          className="flex overflow-x-auto gap-3 pb-4 no-scrollbar snap-x snap-mandatory"
-          style={{ scrollSnapType: "x mandatory", paddingLeft: "16px", paddingRight: "16px" }}
+          className="flex overflow-x-scroll gap-3 pb-4 no-scrollbar"
+          style={{ 
+            paddingLeft: "16px", 
+            paddingRight: "16px",
+            scrollSnapType: "x mandatory",
+            WebkitOverflowScrolling: "touch"
+          }}
         >
-          {items.reduce((acc, item, index) => {
-            if (index % 2 === 0) {
-              acc.push(items.slice(index, index + 2));
-            }
-            return acc;
-          }, []).map((pair, index) => (
-            <div key={index} className="min-w-full w-full snap-start flex-shrink-0 flex gap-3">
-              {pair.map((listing) => (
-                <div key={listing.id} className="w-[calc(50%-6px)] flex-shrink-0">
-                  <ListingCard listing={listing} compact />
-                </div>
-              ))}
+          {items.map((listing) => (
+            <div 
+              key={listing.id} 
+              className="flex-shrink-0 snap-start"
+              style={{ width: "calc(50% - 6px)" }}
+            >
+              <ListingCard listing={listing} compact />
             </div>
           ))}
         </div>
