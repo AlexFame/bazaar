@@ -170,7 +170,10 @@ export default function PopularListingsScroll() {
             <div 
               key={listing.id} 
               className="flex-shrink-0 snap-start"
-              style={{ width: "calc((100% - 32px - 12px) / 2)" }}
+              style={{ 
+                width: "calc((100vw - 32px - 12px) / 2)",
+                maxWidth: "calc((520px - 32px - 12px) / 2)"
+              }}
             >
               <ListingCard listing={listing} compact />
             </div>
