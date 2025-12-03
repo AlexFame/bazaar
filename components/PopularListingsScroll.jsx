@@ -160,19 +160,15 @@ export default function PopularListingsScroll() {
 
   // Auto-scroll effect - change page every 5 seconds
   useEffect(() => {
-    if (!scrollRef.current || items.length <= 2) return;
+    if (items.length <= 2) return;
 
     const totalPages = Math.ceil(items.length / 2);
     
-    autoScrollInterval.current = setInterval(() => {
+    const interval = setInterval(() => {
       setCurrentPage((prev) => (prev + 1) % totalPages);
     }, 5000); // 5 seconds
 
-    return () => {
-      if (autoScrollInterval.current) {
-        clearInterval(autoScrollInterval.current);
-      }
-    };
+    return () => clearInterval(interval);
   }, [items]);
 
   if (loading) return null;

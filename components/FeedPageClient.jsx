@@ -1514,14 +1514,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
             />
           ) : (
             <>
-              {/* Live Indicator */}
-              {isLive && (
-                <div className="fixed top-24 left-1/2 -translate-x-1/2 z-40 bg-black/80 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-2 shadow-lg animate-pulse">
-                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                  LIVE UPDATE
-                </div>
-              )}
-
               {/* Список объявлений */}
               <div className="grid grid-cols-2 gap-3">
                 {listings.map((listing) => (
