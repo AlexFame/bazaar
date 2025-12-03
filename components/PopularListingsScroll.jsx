@@ -169,11 +169,7 @@ export default function PopularListingsScroll() {
           {items.map((listing) => (
             <div 
               key={listing.id} 
-              className="flex-shrink-0 snap-start"
-              style={{ 
-                width: "calc((100vw - 32px - 12px) / 2)",
-                maxWidth: "calc((520px - 32px - 12px) / 2)"
-              }}
+              className="min-w-[calc(50%-6px)] w-[calc(50%-6px)] snap-center flex-shrink-0"
             >
               <ListingCard listing={listing} compact />
             </div>
