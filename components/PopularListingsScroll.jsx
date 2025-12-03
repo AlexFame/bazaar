@@ -152,6 +152,12 @@ export default function PopularListingsScroll() {
   if (loading) return null;
   if (items.length === 0) return null;
 
+  // Chunk items into pairs for strict 2-card pages
+  const pages = [];
+  for (let i = 0; i < items.length; i += 2) {
+    pages.push(items.slice(i, i + 2));
+  }
+
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-4 mb-3">Популярные Объявления</h2>
@@ -160,18 +166,24 @@ export default function PopularListingsScroll() {
           ref={scrollRef}
           onTouchStart={handleUserScroll}
           onMouseDown={handleUserScroll}
-          className="flex overflow-x-scroll gap-3 px-4 pb-4 no-scrollbar"
+          className="flex overflow-x-scroll snap-x snap-mandatory no-scrollbar"
           style={{ 
-            scrollSnapType: "x mandatory",
+            scrollSnapStop: "always", // Forces stopping at each slide
             WebkitOverflowScrolling: "touch"
           }}
         >
-          {items.map((listing, index) => (
+          {pages.map((page, index) => (
             <div 
-              key={listing.id} 
-              className={`min-w-[calc(50%-6px)] w-[calc(50%-6px)] flex-shrink-0 ${index % 2 === 0 ? 'snap-start' : ''}`}
+              key={index} 
+              className="min-w-full w-full flex-shrink-0 snap-start flex gap-3 px-4"
             >
-              <ListingCard listing={listing} compact />
+              {page.map((listing) => (
+                <div key={listing.id} className="flex-1 min-w-0">
+                  <ListingCard listing={listing} compact />
+                </div>
+              ))}
+              {/* If page has only 1 item, add spacer to keep alignment */}
+              {page.length === 1 && <div className="flex-1" />}
             </div>
           ))}
         </div>
