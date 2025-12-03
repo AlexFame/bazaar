@@ -107,8 +107,7 @@ export default function RecentlyViewedScroll() {
       <div 
         className="flex overflow-x-auto no-scrollbar gap-3 px-3 pb-4"
         style={{ 
-          WebkitOverflowScrolling: "touch",
-          touchAction: "pan-x"
+          WebkitOverflowScrolling: "touch"
         }}
       >
         {listings.map((listing) => (
