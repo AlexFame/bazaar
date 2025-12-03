@@ -101,13 +101,15 @@ export default function PopularListingsScroll() {
     const scroll = scrollRef.current;
     
     autoScrollInterval.current = setInterval(() => {
-      const containerWidth = window.innerWidth; // Use window width for vw-based calc
+      // Use clientWidth (padding-box) to be safe
+      const containerWidth = scroll.clientWidth;
       const scrollLeft = scroll.scrollLeft;
       const scrollWidth = scroll.scrollWidth;
       
-      // Card width = (100vw - 32px padding - 16px gap) / 2
-      // gap-4 is 16px
-      const cardWidth = (containerWidth - 32 - 16) / 2;
+      // Content width = containerWidth - 32px (px-4)
+      // Card width = (ContentWidth - 16px gap) / 2
+      const contentWidth = containerWidth - 32;
+      const cardWidth = (contentWidth - 16) / 2;
       const scrollAmount = cardWidth + 16;
       
       if (scrollLeft + containerWidth >= scrollWidth - 10) {
@@ -132,10 +134,11 @@ export default function PopularListingsScroll() {
         if (scrollRef.current && items.length >= 2) {
           const scroll = scrollRef.current;
           autoScrollInterval.current = setInterval(() => {
-            const containerWidth = window.innerWidth;
+            const containerWidth = scroll.clientWidth;
             const scrollLeft = scroll.scrollLeft;
             const scrollWidth = scroll.scrollWidth;
-            const cardWidth = (containerWidth - 32 - 16) / 2;
+            const contentWidth = containerWidth - 32;
+            const cardWidth = (contentWidth - 16) / 2;
             const scrollAmount = cardWidth + 16;
             
             if (scrollLeft + containerWidth >= scrollWidth - 10) {
@@ -169,16 +172,16 @@ export default function PopularListingsScroll() {
             <div 
               key={listing.id} 
               className="flex-shrink-0 snap-start"
-              // Mobile: 50vw - 24px (16px padding + 8px half-gap)
-              // Desktop (md): 25vw - 24px
+              // Mobile: 50% - 8px (half of content width minus half gap)
+              // Desktop: 25% - 12px (quarter of content width minus 3/4 gap)
               style={{ 
-                flex: "0 0 calc(50vw - 24px)",
+                flex: "0 0 calc(50% - 8px)",
               }}
             >
               <div className="md:hidden">
                  <ListingCard listing={listing} compact />
               </div>
-              <div className="hidden md:block" style={{ width: 'calc(25vw - 24px)' }}>
+              <div className="hidden md:block" style={{ width: 'calc(25% - 12px)' }}>
                  <ListingCard listing={listing} compact />
               </div>
             </div>
