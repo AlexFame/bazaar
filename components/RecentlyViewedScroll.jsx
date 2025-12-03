@@ -108,12 +108,11 @@ export default function RecentlyViewedScroll() {
         className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar"
         style={{ 
           scrollSnapType: "x mandatory",
-          scrollPaddingLeft: "16px",
           WebkitOverflowScrolling: "touch"
         }}
       >
         {listings.map((listing) => (
-          <div key={listing.id} className="min-w-[calc(50%-4px)] w-[calc(50%-4px)] snap-start flex-shrink-0">
+          <div key={listing.id} className="min-w-[calc(50%-6px)] w-[calc(50%-6px)] snap-start flex-shrink-0">
             <ListingCard listing={listing} compact />
           </div>
         ))}
