@@ -152,12 +152,6 @@ export default function PopularListingsScroll() {
   if (loading) return null;
   if (items.length === 0) return null;
 
-  // Chunk items into pairs for strict 2-card slides
-  const slides = [];
-  for (let i = 0; i < items.length; i += 2) {
-    slides.push(items.slice(i, i + 2));
-  }
-
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-4 mb-3">Популярные Объявления</h2>
@@ -172,14 +166,12 @@ export default function PopularListingsScroll() {
             WebkitOverflowScrolling: "touch"
           }}
         >
-          {slides.map((pair, index) => (
+          {items.map((listing, index) => (
             <div 
-              key={index} 
-              className="min-w-full w-full flex-shrink-0 snap-center grid grid-cols-2 gap-3"
+              key={listing.id} 
+              className={`min-w-[calc(50%-6px)] w-[calc(50%-6px)] flex-shrink-0 ${index % 2 === 0 ? 'snap-start' : ''}`}
             >
-              {pair.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} compact />
-              ))}
+              <ListingCard listing={listing} compact />
             </div>
           ))}
         </div>
