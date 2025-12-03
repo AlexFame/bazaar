@@ -105,7 +105,7 @@ export default function RecentlyViewedScroll() {
     <div className="mb-6">
       <h2 className="text-lg font-bold px-4 mb-3">Недавно просмотренные</h2>
       <div 
-        className="flex overflow-x-auto gap-3 px-4 pb-4 no-scrollbar snap-x snap-mandatory"
+        className="flex overflow-x-auto gap-4 px-4 pb-4 no-scrollbar snap-x snap-mandatory"
         style={{ 
           WebkitOverflowScrolling: "touch"
         }}
@@ -115,13 +115,13 @@ export default function RecentlyViewedScroll() {
             key={listing.id} 
             className="flex-shrink-0 snap-start"
             style={{ 
-              flex: "0 0 calc(50vw - 22px)",
+              flex: "0 0 calc(50vw - 24px)",
             }}
           >
             <div className="md:hidden">
                <ListingCard listing={listing} compact />
             </div>
-            <div className="hidden md:block" style={{ width: 'calc(25vw - 22px)' }}>
+            <div className="hidden md:block" style={{ width: 'calc(25vw - 24px)' }}>
                <ListingCard listing={listing} compact />
             </div>
           </div>

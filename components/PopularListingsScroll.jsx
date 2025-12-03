@@ -105,9 +105,10 @@ export default function PopularListingsScroll() {
       const scrollLeft = scroll.scrollLeft;
       const scrollWidth = scroll.scrollWidth;
       
-      // Card width = (100vw - 32px padding - 12px gap) / 2
-      const cardWidth = (containerWidth - 32 - 12) / 2;
-      const scrollAmount = cardWidth + 12;
+      // Card width = (100vw - 32px padding - 16px gap) / 2
+      // gap-4 is 16px
+      const cardWidth = (containerWidth - 32 - 16) / 2;
+      const scrollAmount = cardWidth + 16;
       
       if (scrollLeft + containerWidth >= scrollWidth - 10) {
         scroll.scrollTo({ left: 0, behavior: "smooth" });
@@ -134,8 +135,8 @@ export default function PopularListingsScroll() {
             const containerWidth = window.innerWidth;
             const scrollLeft = scroll.scrollLeft;
             const scrollWidth = scroll.scrollWidth;
-            const cardWidth = (containerWidth - 32 - 12) / 2;
-            const scrollAmount = cardWidth + 12;
+            const cardWidth = (containerWidth - 32 - 16) / 2;
+            const scrollAmount = cardWidth + 16;
             
             if (scrollLeft + containerWidth >= scrollWidth - 10) {
               scroll.scrollTo({ left: 0, behavior: "smooth" });
@@ -159,7 +160,7 @@ export default function PopularListingsScroll() {
           ref={scrollRef}
           onTouchStart={handleUserScroll}
           onMouseDown={handleUserScroll}
-          className="flex overflow-x-scroll gap-3 px-4 pb-4 no-scrollbar snap-x snap-mandatory"
+          className="flex overflow-x-scroll gap-4 px-4 pb-4 no-scrollbar snap-x snap-mandatory"
           style={{ 
             WebkitOverflowScrolling: "touch"
           }}
@@ -168,16 +169,16 @@ export default function PopularListingsScroll() {
             <div 
               key={listing.id} 
               className="flex-shrink-0 snap-start"
-              // Mobile: 50vw - 22px (exactly 2 cards)
-              // Desktop (md): 25vw - 22px (4 cards)
+              // Mobile: 50vw - 24px (16px padding + 8px half-gap)
+              // Desktop (md): 25vw - 24px
               style={{ 
-                flex: "0 0 calc(50vw - 22px)",
+                flex: "0 0 calc(50vw - 24px)",
               }}
             >
               <div className="md:hidden">
                  <ListingCard listing={listing} compact />
               </div>
-              <div className="hidden md:block" style={{ width: 'calc(25vw - 22px)' }}>
+              <div className="hidden md:block" style={{ width: 'calc(25vw - 24px)' }}>
                  <ListingCard listing={listing} compact />
               </div>
             </div>
