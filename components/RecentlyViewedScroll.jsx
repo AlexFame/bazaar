@@ -101,6 +101,12 @@ export default function RecentlyViewedScroll() {
   if (loading) return null; // Or skeleton
   if (listings.length === 0) return null;
 
+  // Chunk listings into pairs
+  const slides = [];
+  for (let i = 0; i < listings.length; i += 2) {
+    slides.push(listings.slice(i, i + 2));
+  }
+
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-4 mb-3">Недавно просмотренные</h2>
@@ -111,9 +117,11 @@ export default function RecentlyViewedScroll() {
           WebkitOverflowScrolling: "touch"
         }}
       >
-        {listings.map((listing) => (
-          <div key={listing.id} className="min-w-[calc(50%-6px)] w-[calc(50%-6px)] snap-start flex-shrink-0">
-            <ListingCard listing={listing} compact />
+        {slides.map((pair, index) => (
+          <div key={index} className="min-w-full w-full flex-shrink-0 snap-center grid grid-cols-2 gap-3">
+            {pair.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} compact />
+            ))}
           </div>
         ))}
       </div>
