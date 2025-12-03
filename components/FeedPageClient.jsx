@@ -1411,11 +1411,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 </div>
               </div>
               <button
-                onClick={() => {
                   if (forcedCategory) {
-                    // Don't redirect, just do nothing since forcedCategory is a prop
-                    // User can use back button to leave
-                    return;
+                    router.push("/");
                   } else {
                     setCategoryFilter("all");
                   }
