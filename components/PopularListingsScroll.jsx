@@ -156,11 +156,32 @@ export default function PopularListingsScroll() {
     }
   };
 
+  const [currentPage, setCurrentPage] = useState(0);
+
+  // Auto-scroll effect - change page every 5 seconds
+  useEffect(() => {
+    if (!scrollRef.current || items.length <= 2) return;
+
+    const totalPages = Math.ceil(items.length / 2);
+    
+    autoScrollInterval.current = setInterval(() => {
+      setCurrentPage((prev) => (prev + 1) % totalPages);
+    }, 5000); // 5 seconds
+
+    return () => {
+      if (autoScrollInterval.current) {
+        clearInterval(autoScrollInterval.current);
+      }
+    };
+  }, [items]);
+
   if (loading) return null;
   if (items.length === 0) return null;
 
-  // Show only first 2 items
-  const displayItems = items.slice(0, 2);
+  // Calculate total pages and current items to display
+  const totalPages = Math.ceil(items.length / 2);
+  const startIndex = currentPage * 2;
+  const displayItems = items.slice(startIndex, startIndex + 2);
 
   return (
     <div className="mb-6">
@@ -171,6 +192,24 @@ export default function PopularListingsScroll() {
             <ListingCard key={listing.id} listing={listing} compact />
           ))}
         </div>
+        
+        {/* Timeline dots */}
+        {totalPages > 1 && (
+          <div className="flex justify-center gap-1.5 mt-3">
+            {Array.from({ length: totalPages }).map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentPage(index)}
+                className={`h-1.5 rounded-full transition-all ${
+                  index === currentPage 
+                    ? 'w-6 bg-black' 
+                    : 'w-1.5 bg-gray-300'
+                }`}
+                aria-label={`Go to page ${index + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
