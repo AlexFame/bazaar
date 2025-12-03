@@ -166,7 +166,8 @@ export default function PopularListingsScroll() {
         ref={scrollRef}
         className="flex overflow-x-auto no-scrollbar gap-3 px-3 pb-4"
         style={{ 
-          WebkitOverflowScrolling: "touch"
+          WebkitOverflowScrolling: "touch",
+          touchAction: "pan-x"
         }}
       >
         {items.map((listing) => (
