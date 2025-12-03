@@ -104,9 +104,16 @@ export default function RecentlyViewedScroll() {
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-4 mb-3">Недавно просмотренные</h2>
-      <div className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar snap-x snap-mandatory">
+      <div 
+        className="flex overflow-x-auto px-4 gap-3 pb-4 no-scrollbar"
+        style={{ 
+          scrollSnapType: "x mandatory",
+          scrollPaddingLeft: "16px",
+          WebkitOverflowScrolling: "touch"
+        }}
+      >
         {listings.map((listing) => (
-          <div key={listing.id} className="min-w-[calc(50%-6px)] w-[calc(50%-6px)] snap-center flex-shrink-0">
+          <div key={listing.id} className="min-w-[calc(50%-4px)] w-[calc(50%-4px)] snap-start flex-shrink-0">
             <ListingCard listing={listing} compact />
           </div>
         ))}

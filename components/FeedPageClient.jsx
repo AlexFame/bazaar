@@ -1413,7 +1413,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
               <button
                 onClick={() => {
                   if (forcedCategory) {
-                    router.push("/");
+                    router.push("/catalog");
                   } else {
                     setCategoryFilter("all");
                   }
