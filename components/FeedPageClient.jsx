@@ -357,7 +357,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
     setMinPrice(searchParams.get("price_min") || "");
     setMaxPrice(searchParams.get("price_max") || "");
 
-    const cat = searchParams.get("category") || "all";
+    const cat = searchParams.get("category") || forcedCategory || "all";
     setCategoryFilter(cat);
 
     // Smart category detection only if no category in URL and there is a query
