@@ -106,11 +106,11 @@ export default function PopularListingsScroll() {
       const scrollLeft = scroll.scrollLeft;
       const scrollWidth = scroll.scrollWidth;
       
-      // Content width = containerWidth - 32px (px-4)
-      // Card width = (ContentWidth - 16px gap) / 2
-      const contentWidth = containerWidth - 32;
-      const cardWidth = (contentWidth - 16) / 2;
-      const scrollAmount = cardWidth + 16;
+      // Content width = containerWidth - 24px (px-3 = 12px * 2)
+      // Card width = (ContentWidth - 12px gap) / 2
+      const contentWidth = containerWidth - 24;
+      const cardWidth = (contentWidth - 12) / 2;
+      const scrollAmount = cardWidth + 12;
       
       if (scrollLeft + containerWidth >= scrollWidth - 10) {
         scroll.scrollTo({ left: 0, behavior: "smooth" });
@@ -137,9 +137,9 @@ export default function PopularListingsScroll() {
             const containerWidth = scroll.clientWidth;
             const scrollLeft = scroll.scrollLeft;
             const scrollWidth = scroll.scrollWidth;
-            const contentWidth = containerWidth - 32;
-            const cardWidth = (contentWidth - 16) / 2;
-            const scrollAmount = cardWidth + 16;
+            const contentWidth = containerWidth - 24;
+            const cardWidth = (contentWidth - 12) / 2;
+            const scrollAmount = cardWidth + 12;
             
             if (scrollLeft + containerWidth >= scrollWidth - 10) {
               scroll.scrollTo({ left: 0, behavior: "smooth" });
@@ -157,13 +157,13 @@ export default function PopularListingsScroll() {
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg font-bold px-4 mb-3">Популярные Объявления</h2>
+      <h2 className="text-lg font-bold px-3 mb-3">Популярные Объявления</h2>
       <div className="overflow-hidden">
         <div
           ref={scrollRef}
           onTouchStart={handleUserScroll}
           onMouseDown={handleUserScroll}
-          className="flex overflow-x-scroll gap-4 px-4 pb-4 no-scrollbar snap-x snap-mandatory"
+          className="flex overflow-x-scroll gap-3 px-3 pb-4 no-scrollbar snap-x snap-mandatory"
           style={{ 
             WebkitOverflowScrolling: "touch"
           }}
@@ -172,16 +172,16 @@ export default function PopularListingsScroll() {
             <div 
               key={listing.id} 
               className="flex-shrink-0 snap-start"
-              // Mobile: 50% - 8px (half of content width minus half gap)
-              // Desktop: 25% - 12px (quarter of content width minus 3/4 gap)
+              // Mobile: 50% - 6px (half of content width minus half gap)
+              // Desktop: 25% - 9px (quarter of content width minus 3/4 gap)
               style={{ 
-                flex: "0 0 calc(50% - 8px)",
+                flex: "0 0 calc(50% - 6px)",
               }}
             >
               <div className="md:hidden">
                  <ListingCard listing={listing} compact />
               </div>
-              <div className="hidden md:block" style={{ width: 'calc(25% - 12px)' }}>
+              <div className="hidden md:block" style={{ width: 'calc(25% - 9px)' }}>
                  <ListingCard listing={listing} compact />
               </div>
             </div>
