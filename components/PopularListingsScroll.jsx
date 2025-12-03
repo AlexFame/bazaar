@@ -105,15 +105,12 @@ export default function PopularListingsScroll() {
       const scrollLeft = scroll.scrollLeft;
       const scrollWidth = scroll.scrollWidth;
       
-      // Calculate card width (container width / 2 - gap)
-      const cardWidth = (containerWidth - 16 - 12) / 2; // 16px padding left, 12px gap
-      
       if (scrollLeft + containerWidth >= scrollWidth - 10) {
         // Reset to start
         scroll.scrollTo({ left: 0, behavior: "smooth" });
       } else {
-        // Scroll by one card width + gap
-        scroll.scrollBy({ left: cardWidth + 12, behavior: "smooth" });
+        // Scroll by one page
+        scroll.scrollBy({ left: containerWidth, behavior: "smooth" });
       }
     }, 10000); // Auto-scroll every 10 seconds (much slower)
 
@@ -136,12 +133,11 @@ export default function PopularListingsScroll() {
             const containerWidth = scroll.offsetWidth;
             const scrollLeft = scroll.scrollLeft;
             const scrollWidth = scroll.scrollWidth;
-            const cardWidth = (containerWidth - 16 - 12) / 2;
             
             if (scrollLeft + containerWidth >= scrollWidth - 10) {
               scroll.scrollTo({ left: 0, behavior: "smooth" });
             } else {
-              scroll.scrollBy({ left: cardWidth + 12, behavior: "smooth" });
+              scroll.scrollBy({ left: containerWidth, behavior: "smooth" });
             }
           }, 10000);
         }
