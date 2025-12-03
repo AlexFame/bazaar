@@ -1411,6 +1411,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 </div>
               </div>
               <button
+                onClick={() => {
                   if (forcedCategory) {
                     router.push("/");
                   } else {
