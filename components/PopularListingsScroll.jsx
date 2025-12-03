@@ -157,19 +157,33 @@ export default function PopularListingsScroll() {
   };
 
   const [currentPage, setCurrentPage] = useState(0);
+  const [progress, setProgress] = useState(0);
 
-  // Auto-scroll effect - change page every 5 seconds
+  // Auto-scroll effect with progress animation
   useEffect(() => {
     if (items.length <= 2) return;
 
     const totalPages = Math.ceil(items.length / 2);
+    const duration = 5000; // 5 seconds
+    const intervalTime = 50; // Update every 50ms for smooth animation
     
-    const interval = setInterval(() => {
-      setCurrentPage((prev) => (prev + 1) % totalPages);
-    }, 5000); // 5 seconds
+    let elapsed = 0;
+    
+    const progressInterval = setInterval(() => {
+      elapsed += intervalTime;
+      const newProgress = (elapsed / duration) * 100;
+      
+      if (newProgress >= 100) {
+        setProgress(0);
+        setCurrentPage((prev) => (prev + 1) % totalPages);
+        elapsed = 0;
+      } else {
+        setProgress(newProgress);
+      }
+    }, intervalTime);
 
-    return () => clearInterval(interval);
-  }, [items]);
+    return () => clearInterval(progressInterval);
+  }, [items, currentPage]);
 
   if (loading) return null;
   if (items.length === 0) return null;
@@ -183,26 +197,44 @@ export default function PopularListingsScroll() {
     <div className="mb-6">
       <h2 className="text-lg font-bold px-3 mb-3">Популярные Объявления</h2>
       <div className="px-3">
-        <div className="grid grid-cols-2 gap-3">
+        {/* Cards with fade transition */}
+        <div 
+          key={currentPage}
+          className="grid grid-cols-2 gap-3 animate-fadeIn"
+        >
           {displayItems.map((listing) => (
             <ListingCard key={listing.id} listing={listing} compact />
           ))}
         </div>
         
-        {/* Timeline dots */}
+        {/* Animated progress timeline */}
         {totalPages > 1 && (
           <div className="flex justify-center gap-1.5 mt-3">
             {Array.from({ length: totalPages }).map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentPage(index)}
-                className={`h-1.5 rounded-full transition-all ${
-                  index === currentPage 
-                    ? 'w-6 bg-black' 
-                    : 'w-1.5 bg-gray-300'
-                }`}
+                onClick={() => {
+                  setCurrentPage(index);
+                  setProgress(0);
+                }}
+                className="relative h-1.5 rounded-full overflow-hidden transition-all"
+                style={{ width: index === currentPage ? '24px' : '6px' }}
                 aria-label={`Go to page ${index + 1}`}
-              />
+              >
+                <div className="absolute inset-0 bg-gray-300" />
+                {index === currentPage && (
+                  <div 
+                    className="absolute inset-0 bg-black transition-all"
+                    style={{ 
+                      width: `${progress}%`,
+                      transition: 'width 50ms linear'
+                    }}
+                  />
+                )}
+                {index < currentPage && (
+                  <div className="absolute inset-0 bg-black" />
+                )}
+              </button>
             ))}
           </div>
         )}

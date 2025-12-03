@@ -103,9 +103,9 @@ export default function ProfileStatisticsPage() {
         }
 
         // Load all user listings
-        const { data: listingsData, error: listingsError } = await supabase
+        const { data: listingsData, error: listingsError} = await supabase
           .from("listings")
-          .select("*, listing_images(image_path)")
+          .select("*")
           .eq("created_by", userId)
           .order("created_at", { ascending: false });
 
