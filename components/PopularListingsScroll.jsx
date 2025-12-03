@@ -176,19 +176,13 @@ export default function PopularListingsScroll() {
             <div 
               key={listing.id} 
               className="flex-shrink-0 snap-start"
-              // Mobile: 50% - 0.375rem (half of content width minus half gap)
-              // gap-3 = 0.75rem. Half is 0.375rem.
-              // Desktop: 25% - 0.5625rem (quarter width minus 3/4 gap)
               style={{ 
-                flex: "0 0 calc(50% - 0.375rem)",
+                minWidth: "calc(50% - 0.375rem)",
+                maxWidth: "calc(50% - 0.375rem)",
+                width: "calc(50% - 0.375rem)"
               }}
             >
-              <div className="md:hidden">
-                 <ListingCard listing={listing} compact />
-              </div>
-              <div className="hidden md:block" style={{ width: 'calc(25% - 0.5625rem)' }}>
-                 <ListingCard listing={listing} compact />
-              </div>
+              <ListingCard listing={listing} compact />
             </div>
           ))}
         </div>
