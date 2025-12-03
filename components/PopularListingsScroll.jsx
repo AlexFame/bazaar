@@ -164,16 +164,20 @@ export default function PopularListingsScroll() {
       <h2 className="text-lg font-bold px-3 mb-3">Популярные Объявления</h2>
       <div 
         ref={scrollRef}
-        className="overflow-x-auto no-scrollbar px-3"
+        className="flex overflow-x-auto no-scrollbar gap-3 px-3 pb-4"
         style={{ 
           WebkitOverflowScrolling: "touch"
         }}
       >
-        <div className="grid grid-cols-2 gap-3" style={{ minWidth: "100%" }}>
-          {items.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} compact />
-          ))}
-        </div>
+        {items.map((listing) => (
+          <div 
+            key={listing.id}
+            className="flex-shrink-0"
+            style={{ width: "calc(50% - 6px)" }}
+          >
+            <ListingCard listing={listing} compact />
+          </div>
+        ))}
       </div>
     </div>
   );

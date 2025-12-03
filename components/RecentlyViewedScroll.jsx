@@ -105,16 +105,20 @@ export default function RecentlyViewedScroll() {
     <div className="mb-6">
       <h2 className="text-lg font-bold px-3 mb-3">Недавно просмотренные</h2>
       <div 
-        className="overflow-x-auto no-scrollbar px-3"
+        className="flex overflow-x-auto no-scrollbar gap-3 px-3 pb-4"
         style={{ 
           WebkitOverflowScrolling: "touch"
         }}
       >
-        <div className="grid grid-cols-2 gap-3" style={{ minWidth: "100%" }}>
-          {listings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} compact />
-          ))}
-        </div>
+        {listings.map((listing) => (
+          <div 
+            key={listing.id}
+            className="flex-shrink-0"
+            style={{ width: "calc(50% - 6px)" }}
+          >
+            <ListingCard listing={listing} compact />
+          </div>
+        ))}
       </div>
     </div>
   );
