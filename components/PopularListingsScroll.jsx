@@ -105,12 +105,10 @@ export default function PopularListingsScroll() {
       const scrollLeft = scroll.scrollLeft;
       const scrollWidth = scroll.scrollWidth;
       
-      // Dynamically measure card and gap
       const firstCard = scroll.firstElementChild;
       if (!firstCard) return;
       
       const cardWidth = firstCard.offsetWidth;
-      // Get gap from computed style
       const gap = parseFloat(window.getComputedStyle(scroll).gap) || 0;
       const scrollAmount = cardWidth + gap;
       
@@ -178,18 +176,17 @@ export default function PopularListingsScroll() {
             <div 
               key={listing.id} 
               className="flex-shrink-0 snap-start"
-              // Mobile: 50% - 1.125rem (half of content width minus half gap)
-              // px-3 = 0.75rem, gap-3 = 0.75rem
-              // (100% - 1.5rem - 0.75rem) / 2 = 50% - 1.125rem
-              // Desktop: 25% - 0.9375rem
+              // Mobile: 50% - 0.375rem (half of content width minus half gap)
+              // gap-3 = 0.75rem. Half is 0.375rem.
+              // Desktop: 25% - 0.5625rem (quarter width minus 3/4 gap)
               style={{ 
-                flex: "0 0 calc(50% - 1.125rem)",
+                flex: "0 0 calc(50% - 0.375rem)",
               }}
             >
               <div className="md:hidden">
                  <ListingCard listing={listing} compact />
               </div>
-              <div className="hidden md:block" style={{ width: 'calc(25% - 0.9375rem)' }}>
+              <div className="hidden md:block" style={{ width: 'calc(25% - 0.5625rem)' }}>
                  <ListingCard listing={listing} compact />
               </div>
             </div>
