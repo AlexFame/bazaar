@@ -114,9 +114,16 @@ export default function RecentlyViewedScroll() {
           <div 
             key={listing.id} 
             className="flex-shrink-0 snap-start"
-            style={{ flex: "0 0 calc(50% - 6px)" }}
+            style={{ 
+              flex: "0 0 calc(50vw - 22px)",
+            }}
           >
-            <ListingCard listing={listing} compact />
+            <div className="md:hidden">
+               <ListingCard listing={listing} compact />
+            </div>
+            <div className="hidden md:block" style={{ width: 'calc(25vw - 22px)' }}>
+               <ListingCard listing={listing} compact />
+            </div>
           </div>
         ))}
       </div>
