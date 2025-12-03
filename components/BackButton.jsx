@@ -22,11 +22,6 @@ export default function BackButton({ className = "" }) {
 
   // Handle swipe gesture with visual feedback
   useEffect(() => {
-    // Disable swipe on category and catalog pages to prevent unwanted redirects
-    if (pathname?.startsWith('/category/') || pathname === '/catalog') {
-      return;
-    }
-
     let touchStartX = 0;
     let touchStartY = 0;
     let isSwiping = false;
