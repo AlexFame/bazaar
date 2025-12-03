@@ -86,6 +86,14 @@ export default function ChatWindowClient({ conversationId }) {
         return;
       }
 
+      // Check if profiles are loaded
+      if (!conv.buyer || !conv.seller) {
+        console.error("Missing profile data:", { buyer: conv.buyer, seller: conv.seller });
+        setError("Не удалось загрузить данные собеседника");
+        setLoading(false);
+        return;
+      }
+
       const other = conv.buyer_id === user.id ? conv.seller : conv.buyer;
       setOtherUser(other);
       setListing(conv.listing);

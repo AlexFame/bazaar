@@ -108,7 +108,8 @@ export default function ChatListClient() {
 
   const getOtherParticipant = (conv) => {
     if (!user) return null;
-    return conv.buyer_id === user.id ? conv.seller : conv.buyer;
+    const other = conv.buyer_id === user.id ? conv.seller : conv.buyer;
+    return other || null; // Return null if profile is missing
   };
 
   const getImageUrl = (path) => {
