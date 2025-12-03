@@ -252,15 +252,15 @@ export default function ProfileStatisticsPage() {
               {listings.map((listing) => (
                 <Link
                   key={listing.id}
-                  href={`/my/analytics/${listing.id}`}
+                  href={`/listing/${listing.id}`}
                   className="block bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-airbnb transition-all"
                 >
                   <div className="flex items-center gap-4">
                     {/* Image */}
                     <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                      {listing.listing_images?.[0]?.image_path && (
+                      {listing.image_path && (
                         <img
-                          src={supabase.storage.from("listing-images").getPublicUrl(listing.listing_images[0].image_path).data.publicUrl}
+                          src={supabase.storage.from("listing-images").getPublicUrl(listing.image_path).data.publicUrl}
                           alt={listing.title}
                           className="w-full h-full object-cover"
                         />

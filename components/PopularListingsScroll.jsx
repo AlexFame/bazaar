@@ -158,6 +158,7 @@ export default function PopularListingsScroll() {
 
   const [currentPage, setCurrentPage] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Auto-scroll effect with progress animation
   useEffect(() => {
@@ -175,7 +176,11 @@ export default function PopularListingsScroll() {
       
       if (newProgress >= 100) {
         setProgress(0);
-        setCurrentPage((prev) => (prev + 1) % totalPages);
+        setIsTransitioning(true);
+        setTimeout(() => {
+          setCurrentPage((prev) => (prev + 1) % totalPages);
+          setIsTransitioning(false);
+        }, 300); // Match transition duration
         elapsed = 0;
       } else {
         setProgress(newProgress);
@@ -188,23 +193,39 @@ export default function PopularListingsScroll() {
   if (loading) return null;
   if (items.length === 0) return null;
 
-  // Calculate total pages and current items to display
+  // Calculate total pages
   const totalPages = Math.ceil(items.length / 2);
-  const startIndex = currentPage * 2;
-  const displayItems = items.slice(startIndex, startIndex + 2);
 
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-3 mb-3">Популярные Объявления</h2>
       <div className="px-3">
-        {/* Cards with fade transition */}
-        <div 
-          key={currentPage}
-          className="grid grid-cols-2 gap-3 animate-fadeIn"
-        >
-          {displayItems.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} compact />
-          ))}
+        {/* Sliding carousel */}
+        <div className="relative overflow-hidden">
+          <div 
+            className="flex transition-transform duration-300 ease-in-out"
+            style={{ 
+              transform: `translateX(-${currentPage * 100}%)`,
+            }}
+          >
+            {Array.from({ length: totalPages }).map((_, pageIndex) => {
+              const startIndex = pageIndex * 2;
+              const pageItems = items.slice(startIndex, startIndex + 2);
+              
+              return (
+                <div 
+                  key={pageIndex}
+                  className="min-w-full flex-shrink-0"
+                >
+                  <div className="grid grid-cols-2 gap-3">
+                    {pageItems.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing} compact />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
         
         {/* Animated progress timeline */}

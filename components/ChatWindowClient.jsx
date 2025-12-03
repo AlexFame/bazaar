@@ -15,6 +15,7 @@ export default function ChatWindowClient({ conversationId }) {
   const [listing, setListing] = useState(null);
   const [showInput, setShowInput] = useState(false);
   const [isSending, setIsSending] = useState(false); // Prevent duplicate sends
+  const [error, setError] = useState(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
 
