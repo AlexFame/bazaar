@@ -159,18 +159,35 @@ export default function PopularListingsScroll() {
   if (loading) return null;
   if (items.length === 0) return null;
 
-  // Show only first 2 items for now
-  const displayItems = items.slice(0, 2);
+  // Group items into pairs (pages of 2)
+  const pages = [];
+  for (let i = 0; i < items.length; i += 2) {
+    pages.push(items.slice(i, i + 2));
+  }
 
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-3 mb-3">Популярные Объявления</h2>
-      <div className="px-3">
-        <div className="grid grid-cols-2 gap-3">
-          {displayItems.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} compact />
-          ))}
-        </div>
+      <div 
+        ref={scrollRef}
+        className="flex overflow-x-auto no-scrollbar snap-x snap-mandatory"
+        style={{ 
+          WebkitOverflowScrolling: "touch",
+          scrollSnapType: "x mandatory"
+        }}
+      >
+        {pages.map((page, pageIndex) => (
+          <div 
+            key={pageIndex}
+            className="min-w-full flex-shrink-0 snap-start px-3"
+          >
+            <div className="grid grid-cols-2 gap-3">
+              {page.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} compact />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
