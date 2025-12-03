@@ -98,31 +98,21 @@ export default function RecentlyViewedScroll() {
     fetchRecentlyViewed();
   }, []);
 
-  if (loading) return null; // Or skeleton
+  if (loading) return null;
   if (listings.length === 0) return null;
+
+  // Show only first 2 items for now
+  const displayItems = listings.slice(0, 2);
 
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-3 mb-3">Недавно просмотренные</h2>
-      <div 
-        className="flex overflow-x-auto gap-3 px-3 pb-4 no-scrollbar snap-x snap-mandatory"
-        style={{ 
-          WebkitOverflowScrolling: "touch"
-        }}
-      >
-        {listings.map((listing) => (
-          <div 
-            key={listing.id} 
-            className="flex-shrink-0 snap-start"
-            style={{ 
-              minWidth: "calc(50% - 0.375rem)",
-              maxWidth: "calc(50% - 0.375rem)",
-              width: "calc(50% - 0.375rem)"
-            }}
-          >
-            <ListingCard listing={listing} compact />
-          </div>
-        ))}
+      <div className="px-3">
+        <div className="grid grid-cols-2 gap-3">
+          {displayItems.map((listing) => (
+            <ListingCard key={listing.id} listing={listing} compact />
+          ))}
+        </div>
       </div>
     </div>
   );
