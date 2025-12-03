@@ -159,25 +159,18 @@ export default function PopularListingsScroll() {
   if (loading) return null;
   if (items.length === 0) return null;
 
+  // Show only first 2 items
+  const displayItems = items.slice(0, 2);
+
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-3 mb-3">Популярные Объявления</h2>
-      <div 
-        ref={scrollRef}
-        className="flex overflow-x-auto no-scrollbar gap-3 px-3 pb-4 snap-x snap-mandatory"
-        style={{ 
-          WebkitOverflowScrolling: "touch"
-        }}
-      >
-        {items.map((listing, index) => (
-          <div 
-            key={listing.id}
-            className={`flex-shrink-0 ${index % 2 === 0 ? 'snap-start' : ''}`}
-            style={{ width: "calc(50% - 6px)" }}
-          >
-            <ListingCard listing={listing} compact />
-          </div>
-        ))}
+      <div className="px-3">
+        <div className="grid grid-cols-2 gap-3">
+          {displayItems.map((listing) => (
+            <ListingCard key={listing.id} listing={listing} compact />
+          ))}
+        </div>
       </div>
     </div>
   );
