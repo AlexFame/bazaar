@@ -101,30 +101,22 @@ export default function RecentlyViewedScroll() {
   if (loading) return null; // Or skeleton
   if (listings.length === 0) return null;
 
-  // Chunk listings into pairs
-  const pages = [];
-  for (let i = 0; i < listings.length; i += 2) {
-    pages.push(listings.slice(i, i + 2));
-  }
-
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-4 mb-3">Недавно просмотренные</h2>
       <div 
-        className="flex overflow-x-auto snap-x snap-mandatory no-scrollbar"
+        className="flex overflow-x-auto gap-3 px-4 pb-4 no-scrollbar snap-x snap-mandatory"
         style={{ 
-          scrollSnapStop: "always",
           WebkitOverflowScrolling: "touch"
         }}
       >
-        {pages.map((page, index) => (
-          <div key={index} className="min-w-full w-full flex-shrink-0 snap-start flex gap-3 px-4 pb-4">
-            {page.map((listing) => (
-              <div key={listing.id} className="flex-1 min-w-0">
-                <ListingCard listing={listing} compact />
-              </div>
-            ))}
-            {page.length === 1 && <div className="flex-1" />}
+        {listings.map((listing) => (
+          <div 
+            key={listing.id} 
+            className="flex-shrink-0 snap-start"
+            style={{ flex: "0 0 calc(50% - 6px)" }}
+          >
+            <ListingCard listing={listing} compact />
           </div>
         ))}
       </div>

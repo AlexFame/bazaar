@@ -94,7 +94,7 @@ export default function PopularListingsScroll() {
     return () => (cancelled = true);
   }, []);
 
-  // Auto-scroll effect - scroll one card at a time
+  // Auto-scroll effect
   useEffect(() => {
     if (!scrollRef.current || items.length < 2) return;
 
@@ -105,14 +105,17 @@ export default function PopularListingsScroll() {
       const scrollLeft = scroll.scrollLeft;
       const scrollWidth = scroll.scrollWidth;
       
+      // Calculate card width dynamically: (container - padding - gap) / 2
+      // We assume px-4 (32px) and gap-3 (12px)
+      const cardWidth = (containerWidth - 32 - 12) / 2;
+      const scrollAmount = cardWidth + 12; // card + gap
+      
       if (scrollLeft + containerWidth >= scrollWidth - 10) {
-        // Reset to start
         scroll.scrollTo({ left: 0, behavior: "smooth" });
       } else {
-        // Scroll by one page
-        scroll.scrollBy({ left: containerWidth, behavior: "smooth" });
+        scroll.scrollBy({ left: scrollAmount, behavior: "smooth" });
       }
-    }, 10000); // Auto-scroll every 10 seconds (much slower)
+    }, 8000); // 8 seconds
 
     return () => {
       if (autoScrollInterval.current) {
@@ -125,7 +128,7 @@ export default function PopularListingsScroll() {
   const handleUserScroll = () => {
     if (autoScrollInterval.current) {
       clearInterval(autoScrollInterval.current);
-      // Resume after 5 seconds of no interaction
+      // Resume after 5 seconds
       setTimeout(() => {
         if (scrollRef.current && items.length >= 2) {
           const scroll = scrollRef.current;
@@ -133,13 +136,15 @@ export default function PopularListingsScroll() {
             const containerWidth = scroll.offsetWidth;
             const scrollLeft = scroll.scrollLeft;
             const scrollWidth = scroll.scrollWidth;
+            const cardWidth = (containerWidth - 32 - 12) / 2;
+            const scrollAmount = cardWidth + 12;
             
             if (scrollLeft + containerWidth >= scrollWidth - 10) {
               scroll.scrollTo({ left: 0, behavior: "smooth" });
             } else {
-              scroll.scrollBy({ left: containerWidth, behavior: "smooth" });
+              scroll.scrollBy({ left: scrollAmount, behavior: "smooth" });
             }
-          }, 10000);
+          }, 8000);
         }
       }, 5000);
     }
@@ -147,12 +152,6 @@ export default function PopularListingsScroll() {
 
   if (loading) return null;
   if (items.length === 0) return null;
-
-  // Chunk items into pairs for strict 2-card pages
-  const pages = [];
-  for (let i = 0; i < items.length; i += 2) {
-    pages.push(items.slice(i, i + 2));
-  }
 
   return (
     <div className="mb-6">
@@ -162,24 +161,18 @@ export default function PopularListingsScroll() {
           ref={scrollRef}
           onTouchStart={handleUserScroll}
           onMouseDown={handleUserScroll}
-          className="flex overflow-x-scroll snap-x snap-mandatory no-scrollbar"
+          className="flex overflow-x-scroll gap-3 px-4 pb-4 no-scrollbar snap-x snap-mandatory"
           style={{ 
-            scrollSnapStop: "always", // Forces stopping at each slide
             WebkitOverflowScrolling: "touch"
           }}
         >
-          {pages.map((page, index) => (
+          {items.map((listing) => (
             <div 
-              key={index} 
-              className="min-w-full w-full flex-shrink-0 snap-start flex gap-3 px-4"
+              key={listing.id} 
+              className="flex-shrink-0 snap-start"
+              style={{ flex: "0 0 calc(50% - 6px)" }}
             >
-              {page.map((listing) => (
-                <div key={listing.id} className="flex-1 min-w-0">
-                  <ListingCard listing={listing} compact />
-                </div>
-              ))}
-              {/* If page has only 1 item, add spacer to keep alignment */}
-              {page.length === 1 && <div className="flex-1" />}
+              <ListingCard listing={listing} compact />
             </div>
           ))}
         </div>
