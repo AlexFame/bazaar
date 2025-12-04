@@ -336,6 +336,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         location_text: location,
         latitude: coordinates?.lat || null,
         longitude: coordinates?.lng || null,
+        contacts: contacts || "", // Add contacts field
         created_by: userId,
         parameters: parameters, // JSONB
         status: status // 'active' or 'draft'
