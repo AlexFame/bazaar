@@ -287,8 +287,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
       try {
         const { data, error } = await supabase
           .from("listings")
-          .select("title, category_key")
+          .select("id, title, category_key, price")
           .or(`title.ilike.%${term}%,description.ilike.%${term}%`)
+          .eq("status", "active")
           .limit(5);
 
         if (!error && data) {
@@ -301,9 +302,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
               seen.add(titleLower);
               const category = CATEGORY_DEFS.find((c) => c.key === item.category_key);
               unique.push({
+                id: item.id,
                 title: item.title,
+                price: item.price,
                 category: category ? category[lang] || category.ru : null,
                 categoryKey: item.category_key,
+                isListing: true, // Flag to identify it's a listing
               });
             }
           });
@@ -331,6 +335,15 @@ export default function FeedPageClient({ forcedCategory = null }) {
   };
 
   const handleSuggestionClick = (suggestion) => {
+    // If it's a listing, navigate to it
+    if (suggestion.isListing && suggestion.id) {
+      router.push(`/listing/${suggestion.id}`);
+      setShowSearchHistory(false);
+      setSuggestions([]);
+      return;
+    }
+    
+    // Otherwise, use it as search term
     setSearchTerm(suggestion.title);
     const newHistory = addToSearchHistory(suggestion.title);
     setSearchHistory(newHistory);
