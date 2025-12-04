@@ -289,39 +289,33 @@ export default function FeedPageClient({ forcedCategory = null }) {
         const generateSearchVariants = (text) => {
           const variants = [text.toLowerCase()];
           
-          // Cyrillic to Latin transliteration map
-          const cyrToLat = {
-            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh',
-            'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o',
-            'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts',
-            'ч': 'ch', 'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
-          };
-          
-          // Latin to Cyrillic transliteration map (common tech words)
-          const latToCyr = {
-            'iphone': 'айфон', 'ipad': 'айпад', 'macbook': 'макбук', 'apple': 'эппл',
-            'samsung': 'самсунг', 'xiaomi': 'сяоми', 'huawei': 'хуавей', 'lenovo': 'леново',
-            'asus': 'асус', 'acer': 'эйсер', 'dell': 'делл', 'hp': 'хп', 'sony': 'сони'
+          // Latin to Cyrillic transliteration map (common tech words only)
+          const translations = {
+            'iphone': 'айфон', 'айфон': 'iphone',
+            'ipad': 'айпад', 'айпад': 'ipad',
+            'macbook': 'макбук', 'макбук': 'macbook',
+            'apple': 'эппл', 'эппл': 'apple',
+            'samsung': 'самсунг', 'самсунг': 'samsung',
+            'xiaomi': 'сяоми', 'сяоми': 'xiaomi',
+            'huawei': 'хуавей', 'хуавей': 'huawei',
+            'lenovo': 'леново', 'леново': 'lenovo',
+            'asus': 'асус', 'асус': 'asus',
+            'acer': 'эйсер', 'эйсер': 'acer',
+            'dell': 'делл', 'делл': 'dell',
+            'sony': 'сони', 'сони': 'sony'
           };
           
           const lowerText = text.toLowerCase();
           
-          // Add transliteration from Cyrillic to Latin
-          let latinVariant = '';
-          for (let char of lowerText) {
-            latinVariant += cyrToLat[char] || char;
-          }
-          if (latinVariant !== lowerText) {
-            variants.push(latinVariant);
+          // Check if the search term matches any dictionary word
+          if (translations[lowerText]) {
+            variants.push(translations[lowerText]);
           }
           
-          // Add transliteration from Latin to Cyrillic (for common words)
-          for (const [lat, cyr] of Object.entries(latToCyr)) {
-            if (lowerText.includes(lat)) {
-              variants.push(lowerText.replace(lat, cyr));
-            }
-            if (lowerText.includes(cyr)) {
-              variants.push(lowerText.replace(cyr, lat));
+          // Check if search term contains any dictionary word
+          for (const [key, value] of Object.entries(translations)) {
+            if (lowerText.includes(key) && key !== lowerText) {
+              variants.push(lowerText.replace(key, value));
             }
           }
           
