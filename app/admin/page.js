@@ -12,43 +12,65 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, [activeTab]);
+    let cancelled = false;
 
-  async function fetchData() {
-    setLoading(true);
-    try {
-      let query;
+    async function fetchData() {
+      setLoading(true);
+      setData([]); // Clear previous data
       
-      if (activeTab === "reports") {
-        query = supabase
-          .from("reports")
-          .select("*, reporter:reporter_id(full_name, tg_username)")
-          .order("created_at", { ascending: false });
-      } else if (activeTab === "listings") {
-        query = supabase
-          .from("listings")
-          .select("*, profiles:created_by(full_name, tg_username)")
-          .order("created_at", { ascending: false })
-          .limit(50);
-      } else if (activeTab === "users") {
-        query = supabase
-          .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(50);
-      }
+      try {
+        let query;
+        
+        if (activeTab === "reports") {
+          query = supabase
+            .from("reports")
+            .select("*")
+            .order("created_at", { ascending: false });
+        } else if (activeTab === "listings") {
+          query = supabase
+            .from("listings")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(50);
+        } else if (activeTab === "users") {
+          query = supabase
+            .from("profiles")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(50);
+        }
 
-      const { data: result, error } = await query;
-      if (error) throw error;
-      setData(result || []);
-    } catch (err) {
-      console.error("Admin fetch error:", err);
-      alert("Ошибка загрузки данных");
-    } finally {
-      setLoading(false);
+        const { data: result, error } = await query;
+        
+        if (error) {
+          console.error("Admin fetch error:", error);
+          if (!cancelled) {
+            alert("Ошибка загрузки данных: " + error.message);
+          }
+          return;
+        }
+        
+        if (!cancelled) {
+          setData(result || []);
+        }
+      } catch (err) {
+        console.error("Admin fetch error:", err);
+        if (!cancelled) {
+          alert("Ошибка загрузки данных");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }
-  }
+
+    fetchData();
+    
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
 
   async function handleAction(action, id, payload = {}) {
     if (!confirm("Вы уверены?")) return;
@@ -120,7 +142,7 @@ export default function AdminPage() {
                             Target: {item.target_type} ({item.target_id.slice(0, 8)})
                           </div>
                           <div className="text-xs text-gray-400">
-                            By: {item.reporter?.full_name || item.reporter?.tg_username || "Anon"}
+                            Reporter ID: {item.reporter_id?.slice(0, 8) || "Unknown"}
                           </div>
                         </div>
                       )}
