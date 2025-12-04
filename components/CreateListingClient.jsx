@@ -313,7 +313,6 @@ export default function CreateListingClient({ onCreated, editId }) {
         title,
         description,
         price: Number(price),
-        currency: "UAH",
         category_key: categoryKey,
         type: listingType,
         condition: listingType === "service" ? "new" : condition, // Default for services
