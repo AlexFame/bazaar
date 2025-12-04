@@ -24,12 +24,16 @@ export default function ChatListClient() {
         data: { user },
       } = await supabase.auth.getUser();
 
+      console.log("🔍 ChatList - Supabase Auth user:", user?.id, user?.email);
+
       let currentUser = user;
 
       // If no Supabase user, try Telegram
       if (!currentUser) {
+          console.log("🔍 ChatList - No Supabase user, trying Telegram...");
           if (typeof window !== "undefined") {
               const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+              console.log("🔍 ChatList - Telegram user:", tgUser?.id, tgUser?.username);
               if (tgUser?.id) {
                   const { data: profile } = await supabase
                       .from("profiles")
@@ -37,6 +41,7 @@ export default function ChatListClient() {
                       .eq("tg_user_id", tgUser.id)
                       .single();
                   
+                  console.log("🔍 ChatList - Found profile for Telegram user:", profile?.id);
                   if (profile) {
                       currentUser = profile;
                   }
@@ -45,10 +50,12 @@ export default function ChatListClient() {
       }
 
       if (!currentUser) {
-        console.warn("No user found for chat list");
+        console.warn("❌ ChatList - No user found");
         setLoading(false);
         return;
       }
+      
+      console.log("✅ ChatList - Using user:", currentUser.id);
       setUser(currentUser);
 
       // Fetch conversations
