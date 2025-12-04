@@ -293,8 +293,6 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-              placeholder="blur"
-              blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN88/7dfwAIuQNS4g0U2AAAAABJRU5ErkJggg=="
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300">
