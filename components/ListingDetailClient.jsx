@@ -554,7 +554,6 @@ export default function ListingDetailClient({ id }) {
                       
                       <div 
                         className="relative w-full h-full flex items-center justify-center"
-                        onClick={(e) => e.stopPropagation()}
                       >
                         <TransformWrapper
                           initialScale={1}
@@ -564,12 +563,21 @@ export default function ListingDetailClient({ id }) {
                           doubleClick={{ disabled: false, mode: "toggle" }}
                           pinch={{ disabled: true }}
                         >
-                          {({ zoomIn, zoomOut, resetTransform, ...rest }) => (
+                          {({ zoomIn, zoomOut, resetTransform, state, ...rest }) => (
                             <TransformComponent
                               wrapperClass="!w-full !h-full flex items-center justify-center"
                               contentClass="!w-full !h-full flex items-center justify-center"
                             >
-                              <div className="relative w-full h-full max-w-4xl max-h-[90vh] flex items-center justify-center">
+                              <div 
+                                className="relative w-full h-full max-w-4xl max-h-[90vh] flex items-center justify-center"
+                                onClick={(e) => {
+                                  // Close modal on single tap only if not zoomed
+                                  if (state.scale === 1) {
+                                    e.stopPropagation();
+                                    setIsLightboxOpen(false);
+                                  }
+                                }}
+                              >
                                 <Image
                                   src={imageUrls[currentIndex]}
                                   alt="Full size"
