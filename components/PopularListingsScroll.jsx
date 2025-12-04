@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { useLang } from "@/lib/i18n-client";
+import cache from "@/lib/cache";
 
 export default function PopularListingsScroll() {
   const { lang, t } = useLang();
@@ -12,74 +13,82 @@ export default function PopularListingsScroll() {
   const scrollRef = useRef(null);
   const autoScrollInterval = useRef(null);
 
-  // Load popular listings
+  // Load popular listings with caching
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setLoading(true);
       try {
-        // 1. Fetch listings raw
-        const { data: rawListings, error } = await supabase
-          .from("listings")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(12);
+        // Use cache to reduce database load (5 minute TTL)
+        const chunk = await cache.getOrSet(
+          'popular_listings',
+          async () => {
+            // 1. Fetch listings raw
+            const { data: rawListings, error } = await supabase
+              .from("listings")
+              .select("*")
+              .order("created_at", { ascending: false })
+              .limit(12);
 
-        if (error) {
-          console.error("Error loading popular listings:", error);
-          if (!cancelled) setItems([]);
-          return;
-        }
+            if (error) {
+              console.error("Error loading popular listings:", error);
+              return [];
+            }
 
-        let chunk = rawListings || [];
+            let listings = rawListings || [];
 
-        // 2. Fetch related data manually
-        if (chunk.length > 0) {
-          const listingIds = chunk.map((l) => l.id);
-          const userIds = [...new Set(chunk.map((l) => l.created_by).filter(Boolean))];
+            // 2. Fetch related data manually
+            if (listings.length > 0) {
+              const listingIds = listings.map((l) => l.id);
+              const userIds = [...new Set(listings.map((l) => l.created_by).filter(Boolean))];
 
-          // Fetch Images
-          const { data: imagesData } = await supabase
-            .from("listing_images")
-            .select("listing_id, file_path")
-            .in("listing_id", listingIds);
+              // Fetch Images
+              const { data: imagesData } = await supabase
+                .from("listing_images")
+                .select("listing_id, file_path")
+                .in("listing_id", listingIds);
 
-          // Fetch Profiles
-          const { data: profilesData } = await supabase
-            .from("profiles")
-            .select("id, tg_username, full_name, avatar_url")
-            .in("id", userIds);
+              // Fetch Profiles
+              const { data: profilesData } = await supabase
+                .from("profiles")
+                .select("id, tg_username, full_name, avatar_url")
+                .in("id", userIds);
 
-          // Merge
-          chunk = chunk.map((listing) => {
-            const listingImages = imagesData
-              ? imagesData
-                  .filter((img) => img.listing_id === listing.id)
-                  .map((img) => ({ image_path: img.file_path }))
-              : [];
+              // Merge
+              listings = listings.map((listing) => {
+                const listingImages = imagesData
+                  ? imagesData
+                      .filter((img) => img.listing_id === listing.id)
+                      .map((img) => ({ image_path: img.file_path }))
+                  : [];
 
-            const profile = profilesData
-              ? profilesData.find((p) => p.id === listing.created_by)
-              : null;
+                const profile = profilesData
+                  ? profilesData.find((p) => p.id === listing.created_by)
+                  : null;
 
-            const mappedProfile = profile
-              ? {
-                  is_verified: false,
-                  username: profile.tg_username,
-                  first_name: profile.full_name ? profile.full_name.split(" ")[0] : "",
-                  last_name: profile.full_name ? profile.full_name.split(" ").slice(1).join(" ") : "",
-                  avatar_url: profile.avatar_url,
-                }
-              : null;
+                const mappedProfile = profile
+                  ? {
+                      is_verified: false,
+                      username: profile.tg_username,
+                      first_name: profile.full_name ? profile.full_name.split(" ")[0] : "",
+                      last_name: profile.full_name ? profile.full_name.split(" ").slice(1).join(" ") : "",
+                      avatar_url: profile.avatar_url,
+                    }
+                  : null;
 
-            return {
-              ...listing,
-              listing_images: listingImages,
-              profiles: mappedProfile,
-            };
-          });
-        }
+                return {
+                  ...listing,
+                  listing_images: listingImages,
+                  profiles: mappedProfile,
+                };
+              });
+            }
+
+            return listings;
+          },
+          5 * 60 * 1000 // 5 minutes cache
+        );
 
         if (!cancelled) setItems(chunk);
       } catch (e) {
