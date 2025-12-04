@@ -323,7 +323,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         latitude: coordinates?.lat || null,
         longitude: coordinates?.lng || null,
         created_by: userId,
-        parameters: dynamicValues, // JSONB
+        parameters: parameters, // JSONB
         status: status // 'active' or 'draft'
       });
 
