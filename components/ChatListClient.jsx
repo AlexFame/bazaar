@@ -48,7 +48,8 @@ export default function ChatListClient() {
       }
 
       if (!currentUser) {
-        router.push("/login");
+        console.warn("No user found for chat list");
+        setLoading(false);
         return;
       }
       setUser(currentUser);

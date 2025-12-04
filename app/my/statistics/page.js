@@ -95,10 +95,9 @@ export default function ProfileStatisticsPage() {
         }
 
         if (!userId) {
-          // If still no user, redirect to login or show empty
-          // But for Telegram WebApp we might just want to show "Please login" or similar?
-          // For now, let's redirect to login as fallback
-          router.push("/login");
+          // No user found - just show empty state
+          console.warn("No user ID found");
+          setLoading(false);
           return;
         }
 
