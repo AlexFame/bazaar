@@ -11,20 +11,37 @@ export default function AdminLayout({ children }) {
 
   useEffect(() => {
     async function checkAdmin() {
+      // Try Supabase Auth first
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        router.push("/login");
-        return;
+      let profile = null;
+
+      if (user) {
+        // Try to find profile by Supabase user ID (if exists)
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", user.id)
+          .single();
+        
+        profile = profileData;
       }
 
-      const { data: profile, error } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
-        .single();
+      // If no profile found via Supabase, try Telegram
+      if (!profile && typeof window !== "undefined") {
+        const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+        if (tgUser?.id) {
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("is_admin")
+            .eq("tg_user_id", tgUser.id)
+            .single();
+          
+          profile = profileData;
+        }
+      }
 
-      if (error || !profile?.is_admin) {
+      if (!profile?.is_admin) {
         console.warn("Access denied: User is not admin");
         router.push("/");
         return;
