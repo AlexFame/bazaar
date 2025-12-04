@@ -95,6 +95,9 @@ export default function RecentlyViewedScroll() {
       }
     };
 
+    fetchRecentlyViewed();
+  }, []);
+
   if (loading) return null;
   if (listings.length === 0) return null;
 
