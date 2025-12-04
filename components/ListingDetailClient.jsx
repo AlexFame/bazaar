@@ -389,7 +389,7 @@ export default function ListingDetailClient({ id }) {
       const url = window.location.href; 
       const shareData = {
           title: listing.title,
-          text: `${listing.title} - ${listing.price} €\n${url}`,
+          text: `${listing.title} - ${listing.price} €${url}`,
           url: url
       };
 
@@ -408,7 +408,7 @@ export default function ListingDetailClient({ id }) {
                  const shareDataWithImage = {
                      files: [file],
                      title: listing.title,
-                     text: `${listing.title} - ${listing.price} €\n${url}`
+                     text: `${listing.title} - ${listing.price} €${url}`
                  };
                  
                  if (navigator.canShare(shareDataWithImage)) {
@@ -759,7 +759,7 @@ export default function ListingDetailClient({ id }) {
                     // +49123...
                     const raw = String(listing.contacts || "");
                     const parts = raw
-                      .split(/[\n,;]+/)
+                      .split(/[,;]+/)
                       .map((c) => c.trim())
                       .filter(Boolean);
 
@@ -792,7 +792,7 @@ export default function ListingDetailClient({ id }) {
                         }
                         // Redirect to chat page with listing and seller info
                         // Conversation will be created when first message is sent
-                        router.push(`/messages/new?listing_id=${listing.id}&seller_id=${listing.created_by}`);\n                    };
+                        router.push(`/messages/new?listing_id=${listing.id}&seller_id=${listing.created_by}`);                    };
 
                     return (
                       <div className="flex gap-2 mt-3">
@@ -900,7 +900,7 @@ export default function ListingDetailClient({ id }) {
             </a>
 
             <a 
-              href={`https://wa.me/?text=${encodeURIComponent(listing.title + ' - ' + listing.price + ' €\n' + window.location.href)}`}
+              href={`https://wa.me/?text=${encodeURIComponent(listing.title + ' - ' + listing.price + ' €' + window.location.href)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 w-full p-3 rounded-xl bg-[#25D366]/10 text-[#25D366] font-semibold text-base hover:bg-[#25D366]/20 transition-colors active:scale-[0.98]"
