@@ -169,105 +169,21 @@ export default function PopularListingsScroll() {
   const [progress, setProgress] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Auto-scroll effect with progress animation
-  useEffect(() => {
-    if (items.length <= 2) return;
-
-    const totalPages = Math.ceil(items.length / 2);
-    const duration = 5000; // 5 seconds
-    const intervalTime = 50; // Update every 50ms for smooth animation
-    
-    let elapsed = 0;
-    
-    const progressInterval = setInterval(() => {
-      elapsed += intervalTime;
-      const newProgress = (elapsed / duration) * 100;
-      
-      if (newProgress >= 100) {
-        setProgress(0);
-        setIsTransitioning(true);
-        setTimeout(() => {
-          setCurrentPage((prev) => (prev + 1) % totalPages);
-          setIsTransitioning(false);
-        }, 300); // Match transition duration
-        elapsed = 0;
-      } else {
-        setProgress(newProgress);
-      }
-    }, intervalTime);
-
-    return () => clearInterval(progressInterval);
-  }, [items, currentPage]);
-
   if (loading) return null;
   if (items.length === 0) return null;
 
-  // Calculate total pages
-  const totalPages = Math.ceil(items.length / 2);
+  // Show only first 2 items
+  const displayItems = items.slice(0, 2);
 
   return (
     <div className="mb-6">
       <h2 className="text-lg font-bold px-3 mb-3">Популярные Объявления</h2>
       <div className="px-3">
-        {/* Sliding carousel */}
-        <div className="relative overflow-hidden">
-          <div 
-            className="flex transition-transform duration-300 ease-in-out"
-            style={{ 
-              transform: `translateX(-${currentPage * 100}%)`,
-            }}
-          >
-            {Array.from({ length: totalPages }).map((_, pageIndex) => {
-              const startIndex = pageIndex * 2;
-              const pageItems = items.slice(startIndex, startIndex + 2);
-              
-              return (
-                <div 
-                  key={pageIndex}
-                  className="min-w-full flex-shrink-0"
-                >
-                  <div className="grid grid-cols-2 gap-3">
-                    {pageItems.map((listing) => (
-                      <ListingCard key={listing.id} listing={listing} compact />
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+        <div className="grid grid-cols-2 gap-3">
+          {displayItems.map((listing) => (
+            <ListingCard key={listing.id} listing={listing} compact />
+          ))}
         </div>
-        
-        {/* Animated progress timeline */}
-        {totalPages > 1 && (
-          <div className="flex justify-center gap-1.5 mt-3">
-            {Array.from({ length: totalPages }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => {
-                  setCurrentPage(index);
-                  setProgress(0);
-                }}
-                className="relative h-1.5 rounded-full overflow-hidden transition-all"
-                style={{ width: index === currentPage ? '24px' : '6px' }}
-                aria-label={`Go to page ${index + 1}`}
-              >
-                <div className="absolute inset-0 bg-gray-300" />
-                {index === currentPage && (
-                  <div 
-                    className="absolute inset-0 bg-black transition-all"
-                    style={{ 
-                      width: `${progress}%`,
-                      transition: 'width 50ms linear'
-                    }}
-                  />
-                )}
-                {index < currentPage && (
-                  <div className="absolute inset-0 bg-black" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
