@@ -276,13 +276,28 @@ export default function CreateListingClient({ onCreated, editId }) {
 
     try {
       const user = getTelegramUser();
-      const userId = getUserId();
+      const tgUserId = getUserId();
 
-      if (!userId) {
+      if (!tgUserId) {
         alert("Ошибка авторизации. Попробуйте перезагрузить страницу.");
         setLoading(false);
         return;
       }
+
+      // Get profile UUID from database using Telegram ID
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("tg_user_id", tgUserId)
+        .single();
+
+      if (profileError || !profile) {
+        alert("Профиль не найден. Пожалуйста, войдите через Telegram.");
+        setLoading(false);
+        return;
+      }
+
+      const userId = profile.id; // This is the UUID we need
 
       // 1. Upload images
       const uploadedPaths = [];
