@@ -772,9 +772,19 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
   function handleSearchSubmit(e) {
     e.preventDefault();
+    // Close autocomplete
+    setShowSearchHistory(false);
+    setSuggestions([]);
+    // Add to history
+    if (searchTerm.trim()) {
+      const newHistory = addToSearchHistory(searchTerm);
+      setSearchHistory(newHistory);
+    }
+    // Blur input
     if (searchInputRef.current) {
       searchInputRef.current.blur();
     }
+    // Search will happen automatically via useEffect watching searchTerm
   }
 
   function handlePopularClick(term) {
