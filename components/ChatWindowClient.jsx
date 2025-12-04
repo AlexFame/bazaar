@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import BackButton from "@/components/BackButton";
 import { useLang } from "@/lib/i18n-client";
 
-export default function ChatWindowClient({ conversationId }) {
+export default function ChatWindowClient({ conversationId, listingId, sellerId }) {
   const router = useRouter();
   const { t } = useLang();
   const [messages, setMessages] = useState([]);
@@ -71,7 +71,40 @@ export default function ChatWindowClient({ conversationId }) {
       }
       setUser(currentUser);
 
-      // Fetch conversation details
+      // Handle new chat (no conversation yet)
+      if (conversationId === "new" && listingId && sellerId) {
+        console.log("ChatWindow: New chat mode", { listingId, sellerId });
+        
+        // Fetch listing details
+        const { data: listingData } = await supabase
+          .from("listings")
+          .select("id, title, price, image_path")
+          .eq("id", listingId)
+          .single();
+        
+        if (listingData) {
+          setListing(listingData);
+        }
+        
+        // Fetch seller profile
+        const { data: sellerProfile } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .eq("id", sellerId)
+          .single();
+        
+        if (sellerProfile) {
+          setOtherUser(sellerProfile);
+        }
+        
+        // No messages yet
+        setMessages([]);
+        setLoading(false);
+        setShowInput(true);
+        return;
+      }
+
+      // Fetch conversation details (existing conversation)
       const { data: conv, error: convError } = await supabase
         .from("conversations")
         .select(`
@@ -184,26 +217,56 @@ export default function ChatWindowClient({ conversationId }) {
     setNewMessage("");
     setShowInput(false); // Hide input after sending
     
-    // Optimistic UI: Add message immediately
-    const optimisticMessage = {
-      id: `temp-${Date.now()}`,
-      conversation_id: conversationId,
-      sender_id: user.id,
-      content: content,
-      created_at: new Date().toISOString(),
-      is_optimistic: true,
-      is_read: false
-    };
-    
-    setMessages(prev => [...prev, optimisticMessage]);
-    scrollToBottom();
-
     try {
+      let actualConversationId = conversationId;
+      
+      // Create conversation if this is a new chat
+      if (conversationId === "new" && listingId && sellerId) {
+        console.log("Creating conversation for first message...");
+        
+        const { data: newConv, error: convError } = await supabase
+          .from("conversations")
+          .insert({
+            listing_id: listingId,
+            buyer_id: user.id,
+            seller_id: sellerId
+          })
+          .select()
+          .single();
+        
+        if (convError) {
+          console.error("Error creating conversation:", convError);
+          alert("Не удалось создать чат: " + convError.message);
+          setIsSending(false);
+          return;
+        }
+        
+        actualConversationId = newConv.id;
+        console.log("Created conversation:", actualConversationId);
+        
+        // Update URL to use actual conversation ID
+        router.replace(`/messages/${actualConversationId}`);
+      }
+    
+      // Optimistic UI: Add message immediately
+      const optimisticMessage = {
+        id: `temp-${Date.now()}`,
+        conversation_id: actualConversationId,
+        sender_id: user.id,
+        content: content,
+        created_at: new Date().toISOString(),
+        is_optimistic: true,
+        is_read: false
+      };
+      
+      setMessages(prev => [...prev, optimisticMessage]);
+      scrollToBottom();
+
       // Send to server
       const { data, error } = await supabase
         .from("messages")
         .insert({
-          conversation_id: conversationId,
+          conversation_id: actualConversationId,
           sender_id: user.id,
           content: content,
         })
