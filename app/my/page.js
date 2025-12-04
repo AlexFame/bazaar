@@ -233,6 +233,21 @@ export default function MyPage() {
             </div>
         )}
 
+        {/* Logout Button */}
+        <div className="mb-3">
+            <button 
+                onClick={async () => {
+                    if (confirm("Вы уверены, что хотите выйти?")) {
+                        await supabase.auth.signOut();
+                        router.push("/");
+                    }
+                }}
+                className="w-full py-2 bg-red-500 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-red-600 transition-colors"
+            >
+                🚪 Выйти
+            </button>
+        </div>
+
         {/* Tabs */}
         <div className="flex mb-4 border-b border-gray-200">
             <button 
