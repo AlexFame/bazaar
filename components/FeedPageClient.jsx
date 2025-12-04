@@ -285,12 +285,62 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
       setLoadingSuggestions(true);
       try {
+        // Generate search variants with transliteration
+        const generateSearchVariants = (text) => {
+          const variants = [text.toLowerCase()];
+          
+          // Cyrillic to Latin transliteration map
+          const cyrToLat = {
+            'а': 'a', 'б': 'b', 'в': 'v', 'г': 'g', 'д': 'd', 'е': 'e', 'ё': 'yo', 'ж': 'zh',
+            'з': 'z', 'и': 'i', 'й': 'y', 'к': 'k', 'л': 'l', 'м': 'm', 'н': 'n', 'о': 'o',
+            'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u', 'ф': 'f', 'х': 'h', 'ц': 'ts',
+            'ч': 'ch', 'ш': 'sh', 'щ': 'sch', 'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya'
+          };
+          
+          // Latin to Cyrillic transliteration map (common tech words)
+          const latToCyr = {
+            'iphone': 'айфон', 'ipad': 'айпад', 'macbook': 'макбук', 'apple': 'эппл',
+            'samsung': 'самсунг', 'xiaomi': 'сяоми', 'huawei': 'хуавей', 'lenovo': 'леново',
+            'asus': 'асус', 'acer': 'эйсер', 'dell': 'делл', 'hp': 'хп', 'sony': 'сони'
+          };
+          
+          const lowerText = text.toLowerCase();
+          
+          // Add transliteration from Cyrillic to Latin
+          let latinVariant = '';
+          for (let char of lowerText) {
+            latinVariant += cyrToLat[char] || char;
+          }
+          if (latinVariant !== lowerText) {
+            variants.push(latinVariant);
+          }
+          
+          // Add transliteration from Latin to Cyrillic (for common words)
+          for (const [lat, cyr] of Object.entries(latToCyr)) {
+            if (lowerText.includes(lat)) {
+              variants.push(lowerText.replace(lat, cyr));
+            }
+            if (lowerText.includes(cyr)) {
+              variants.push(lowerText.replace(cyr, lat));
+            }
+          }
+          
+          return [...new Set(variants)]; // Remove duplicates
+        };
+        
+        const searchVariants = generateSearchVariants(term);
+        
+        // Build OR query for all variants
+        const orConditions = searchVariants.map(variant => 
+          `title.ilike.%${variant}%,description.ilike.%${variant}%`
+        ).join(',');
+        
         const { data, error } = await supabase
           .from("listings")
           .select("id, title, category_key, price")
-          .or(`title.ilike.%${term}%,description.ilike.%${term}%`)
+          .or(orConditions)
           .eq("status", "active")
-          .limit(5);
+          .limit(10); // Increased limit for better results
 
         if (!error && data) {
           // Group by title and get category
