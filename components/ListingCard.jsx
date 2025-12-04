@@ -96,8 +96,15 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   const [translatedTitle, setTranslatedTitle] = useState("");
 
   useEffect(() => {
-    const path = listing?.main_image_path || listing?.image_path;
-    if (!path) {
+    let path = listing?.main_image_path || listing?.image_path;
+    
+    // Handle arrays (image_path might be an array)
+    if (Array.isArray(path)) {
+      path = path[0];
+    }
+    
+    // Check if path is empty, null, or just whitespace
+    if (!path || (typeof path === 'string' && path.trim() === '')) {
       setImageUrl(null);
       return;
     }
