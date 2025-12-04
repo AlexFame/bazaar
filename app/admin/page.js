@@ -137,12 +137,12 @@ export default function AdminPage() {
                     <td className="px-4 py-3">
                       {activeTab === "reports" && (
                         <div>
-                          <div className="font-medium text-red-600 mb-1">{item.reason}</div>
+                          <div className="font-medium text-red-600 mb-1">{item.reason || "No reason"}</div>
                           <div className="text-xs text-gray-500">
-                            Target: {item.target_type} ({item.target_id.slice(0, 8)})
+                            Target: {item.target_type || "Unknown"} ({item.target_id ? item.target_id.slice(0, 8) : "N/A"})
                           </div>
                           <div className="text-xs text-gray-400">
-                            Reporter ID: {item.reporter_id?.slice(0, 8) || "Unknown"}
+                            Reporter ID: {item.reporter_id ? item.reporter_id.slice(0, 8) : "Unknown"}
                           </div>
                         </div>
                       )}
