@@ -4,9 +4,11 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import BackButton from "@/components/BackButton";
+import { useLang } from "@/lib/i18n-client";
 
 export default function ChatWindowClient({ conversationId }) {
   const router = useRouter();
+  const { t } = useLang();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
