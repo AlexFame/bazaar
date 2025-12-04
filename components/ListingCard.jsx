@@ -109,11 +109,19 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
       return;
     }
 
-    const { data } = supabase.storage
-      .from("listing-images")
-      .getPublicUrl(path);
+    // Check if path looks like a valid storage path (not a full URL)
+    // Valid paths should not start with http:// or https://
+    if (typeof path === 'string' && (path.startsWith('http://') || path.startsWith('https://'))) {
+      // It's already a full URL, use it directly
+      setImageUrl(path);
+    } else {
+      // It's a storage path, get public URL
+      const { data } = supabase.storage
+        .from("listing-images")
+        .getPublicUrl(path);
 
-    setImageUrl(data?.publicUrl || null);
+      setImageUrl(data?.publicUrl || null);
+    }
   }, [listing?.main_image_path, listing?.image_path]);
 
   // Load favorite status
