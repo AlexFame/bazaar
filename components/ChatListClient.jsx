@@ -19,18 +19,15 @@ export default function ChatListClient() {
 
   useEffect(() => {
     const fetchUserAndChats = async () => {
+      // Try Supabase Auth first
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        router.push("/login");
-        return;
-      }
       let currentUser = user;
 
+      // If no Supabase user, try Telegram
       if (!currentUser) {
-          // Try Telegram
           if (typeof window !== "undefined") {
               const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
               if (tgUser?.id) {
