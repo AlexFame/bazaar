@@ -256,8 +256,8 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             </div>
         )}
 
-        {/* Micro-labels (New / Popular) */}
-        {!isVip && isNew && (
+        {/* Micro-labels (New / Popular) - REMOVED to prevent overlap */}
+        {/* {!isVip && isNew && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-md">
                 🔥 New
             </div>
@@ -266,7 +266,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full shadow-md">
                 ⚡ Popular
             </div>
-        )}
+        )} */}
 
         {/* Heart button */}
         <button
@@ -317,7 +317,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
         <div className="p-3">
           {/* Тип + дата */}
-          <div className="flex items-center justify-between mb-1 mt-2">
+          <div className="flex items-center justify-between mb-1">
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-[11px] font-medium">
               {typeText}
             </span>

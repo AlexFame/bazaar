@@ -30,22 +30,32 @@ export async function GET(req) {
       url = `${NOMINATIM_BASE_URL}/search?${params.toString()}`;
     }
 
+    console.log('Geocoding request:', url);
+
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'BazaarApp/1.0 (alexeypavlov@example.com)', // Add contact info as per Nominatim policy
-        'Accept-Language': 'ru,uk,en' // Prefer local languages
+        'User-Agent': 'BazaarApp/1.0 (contact@bazaar.app)',
+        'Accept-Language': 'ru,uk,en'
       }
     });
 
+    console.log('Geocoding response status:', response.status);
+
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Nominatim API error:', response.status, errorText);
       throw new Error(`Nominatim API error: ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('Geocoding data:', data);
     return NextResponse.json(data);
 
   } catch (error) {
-    console.error('Geocoding proxy error:', error);
-    return NextResponse.json({ error: 'Geocoding failed' }, { status: 500 });
+    console.error('Geocoding proxy error:', error.message, error.stack);
+    return NextResponse.json({ 
+      error: 'Geocoding failed', 
+      details: error.message 
+    }, { status: 500 });
   }
 }
