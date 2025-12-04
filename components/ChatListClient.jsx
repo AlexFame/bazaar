@@ -139,7 +139,17 @@ export default function ChatListClient() {
       </div>
 
       <div className="px-4 py-2">
-        {conversations.length === 0 ? (
+        {!user ? (
+          <div className="text-center mt-20">
+            <p className="text-gray-500 mb-4">Войдите, чтобы увидеть сообщения</p>
+            <Link 
+              href="/login"
+              className="inline-block px-6 py-2 bg-black text-white rounded-xl hover:bg-gray-800 transition-colors"
+            >
+              Войти
+            </Link>
+          </div>
+        ) : conversations.length === 0 ? (
           <div className="text-center text-gray-500 mt-20">
             {fetchError ? (
                 <div className="text-red-500 px-4">
