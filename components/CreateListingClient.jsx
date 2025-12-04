@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
-import { getTelegramUser, isTelegramEnv, checkTelegramAccountAge } from "@/lib/telegram";
+import { getTelegramUser, isTelegramEnv, checkTelegramAccountAge, getUserId } from "@/lib/telegram";
 import { geocodeAddress, getUserLocation, reverseGeocode } from "@/lib/geocoding";
 import BackButton from "@/components/BackButton";
 
