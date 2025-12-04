@@ -330,9 +330,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
         
         const searchVariants = generateSearchVariants(term);
         
-        // Build OR query for all variants
+        // Build OR query - each variant searches in both title AND description
         const orConditions = searchVariants.map(variant => 
-          `title.ilike.%${variant}%,description.ilike.%${variant}%`
+          `and(or(title.ilike.%${variant}%,description.ilike.%${variant}%))`
         ).join(',');
         
         const { data, error } = await supabase
@@ -340,7 +340,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           .select("id, title, category_key, price")
           .or(orConditions)
           .eq("status", "active")
-          .limit(10); // Increased limit for better results
+          .limit(10);
 
         if (!error && data) {
           // Group by title and get category
