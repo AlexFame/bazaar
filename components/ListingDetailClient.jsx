@@ -790,45 +790,9 @@ export default function ListingDetailClient({ id }) {
                             router.push('/login');
                             return;
                         }
-
-                        // Check if conversation exists
-                        console.log("Checking existing conversation...");
-                        const { data: existingConv, error: fetchError } = await supabase
-                            .from('conversations')
-                            .select('id')
-                            .eq('listing_id', listing.id)
-                            .eq('buyer_id', user.id)
-                            .eq('seller_id', listing.created_by) 
-                            .maybeSingle(); // Use maybeSingle to avoid error on 0 rows
-                        
-                        console.log("Existing conv:", existingConv);
-                        if (fetchError) console.error("Fetch error:", fetchError);
-
-                        if (existingConv) {
-                            console.log("Redirecting to existing:", existingConv.id);
-                            router.push(`/messages/${existingConv.id}`);
-                        } else {
-                            // Create new conversation
-                            console.log("Creating new conversation...");
-                            const { data: newConv, error } = await supabase
-                                .from('conversations')
-                                .insert({
-                                    listing_id: listing.id,
-                                    buyer_id: user.id,
-                                    seller_id: listing.created_by
-                                })
-                                .select()
-                                .single();
-                            
-                            if (error) {
-                                console.error('Error creating chat:', error);
-                                alert('Не удалось начать чат: ' + error.message);
-                            } else {
-                                console.log("Created new conv:", newConv.id);
-                                router.push(`/messages/${newConv.id}`);
-                            }
-                        }
-                    };
+                        // Redirect to chat page with listing and seller info
+                        // Conversation will be created when first message is sent
+                        router.push(`/messages/new?listing_id=${listing.id}&seller_id=${listing.created_by}`);\n                    };
 
                     return (
                       <div className="flex gap-2 mt-3">
