@@ -330,23 +330,32 @@ export default function FeedPageClient({ forcedCategory = null }) {
         
         const searchVariants = generateSearchVariants(term);
         
-        // Build OR query - each variant searches in both title AND description
-        const orConditions = searchVariants.map(variant => 
-          `and(or(title.ilike.%${variant}%,description.ilike.%${variant}%))`
-        ).join(',');
+        // Use textSearch for better results - search across all variants
+        let allData = [];
         
-        const { data, error } = await supabase
-          .from("listings")
-          .select("id, title, category_key, price")
-          .or(orConditions)
-          .eq("status", "active")
-          .limit(10);
+        for (const variant of searchVariants) {
+          const { data, error } = await supabase
+            .from("listings")
+            .select("id, title, category_key, price")
+            .or(`title.ilike.%${variant}%,description.ilike.%${variant}%`)
+            .eq("status", "active")
+            .limit(10);
+          
+          if (!error && data) {
+            allData = [...allData, ...data];
+          }
+        }
+        
+        // Remove duplicates by ID
+        const uniqueData = Array.from(
+          new Map(allData.map(item => [item.id, item])).values()
+        ).slice(0, 10);
 
-        if (!error && data) {
+        if (uniqueData.length > 0) {
           // Group by title and get category
           const unique = [];
           const seen = new Set();
-          data.forEach((item) => {
+          uniqueData.forEach((item) => {
             const titleLower = item.title.toLowerCase();
             if (!seen.has(titleLower)) {
               seen.add(titleLower);
