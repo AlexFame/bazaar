@@ -10,7 +10,11 @@ import BackButton from "@/components/BackButton";
 import { CreateListingSkeleton } from "./SkeletonLoader";
 
 import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";
+import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";
 import imageCompression from 'browser-image-compression';
+import { useHaptic } from "@/hooks/useHaptic";
+import { triggerConfetti } from "@/lib/confetti";
+import { toast } from "sonner";
 
 const typeOptions = [
   { value: "buy", labelKey: "field_type_buy" },
@@ -44,6 +48,7 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [honeypot, setHoneypot] = useState(""); // Bot trap
   const inTelegram = isTelegramEnv();
   const closeTimeoutRef = useRef(null);
+  const { notificationOccurred, impactOccurred } = useHaptic();
 
   useEffect(() => {
     if (!editId) return;
@@ -346,9 +351,12 @@ export default function CreateListingClient({ onCreated, editId }) {
       if (error) throw error;
 
       if (status === 'draft') {
-        alert("Объявление сохранено в черновики!");
+        toast.success("Объявление сохранено в черновики!");
+        notificationOccurred('success');
       } else {
-        alert("Объявление опубликовано!");
+        triggerConfetti();
+        notificationOccurred('success');
+        toast.success("Объявление опубликовано! 🎉");
       }
       
       // Reset form or redirect

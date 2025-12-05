@@ -26,7 +26,9 @@ import dynamic from "next/dynamic";
 import PopularListingsScroll from "./PopularListingsScroll";
 import RecentlyViewedScroll from "./RecentlyViewedScroll";
 import LangSwitcher from "./LangSwitcher";
+import LangSwitcher from "./LangSwitcher";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import PullToRefresh from "@/components/PullToRefresh";
 
 const MapComponent = dynamic(() => import("./MapComponent"), {
   ssr: false,
@@ -783,6 +785,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
       if (append) setLoadingMore(false);
     }
   }
+
+  const handleRefresh = async () => {
+    // Reset pagination and reload
+    setPage(0);
+    setHasMore(true);
+    await fetchPage(0);
+  };
 
   // Pulsating Feed Logic: автообновление, если нет фильтров и мы на первой странице
   useEffect(() => {
@@ -1599,11 +1608,15 @@ export default function FeedPageClient({ forcedCategory = null }) {
           ) : (
             <>
               {/* Список объявлений */}
-              <div className="grid grid-cols-2 gap-3">
-                {listings.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
+      <PullToRefresh onRefresh={handleRefresh}>
+      <div className="grid grid-cols-2 gap-2">
+        {listings.map((listing) => (
+          <ListingCard key={listing.id} listing={listing} />
+        ))}
+      </div>
+      </PullToRefresh>
+
+      {/* Лоадер при подгрузке */}
             </>
           )}
 

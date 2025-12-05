@@ -2,6 +2,7 @@ import "../styles/globals.css";
 import Providers from "./providers";
 import AppShell from "@/components/AppShell";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { Toaster } from "@/components/ui/sonner";
 import { Suspense } from "react";
 import Script from "next/script";
 
@@ -71,6 +72,7 @@ export default function RootLayout({ children }) {
               <Suspense fallback={null}>
                 <AppShell>{children}</AppShell>
               </Suspense>
+              <Toaster />
             </div>
           </Providers>
         </ErrorBoundary>

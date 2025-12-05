@@ -10,7 +10,9 @@ import { CATEGORY_DEFS } from "@/lib/categories";
 import { getUserId } from "@/lib/userId";
 import { translateText } from "@/lib/translation";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { trackAnalyticsEvent } from "@/lib/analytics";
 import { motion } from "framer-motion";
+import { useHaptic } from "@/hooks/useHaptic";
 
 const typeLabels = {
   ru: {
@@ -96,6 +98,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   const [isFavorite, setIsFavorite] = useState(false);
   const [profileId, setProfileId] = useState(null);
   const [translatedTitle, setTranslatedTitle] = useState("");
+  const { impactOccurred } = useHaptic();
 
   useEffect(() => {
     try {
@@ -237,6 +240,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
           });
         setIsFavorite(true);
         trackAnalyticsEvent(listing.id, 'favorite_add');
+        impactOccurred('light');
       }
     } catch (error) {
       console.error("Error toggling favorite:", error);
