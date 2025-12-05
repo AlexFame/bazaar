@@ -26,7 +26,7 @@ export default function Template({ children }) {
       initial="hidden"
       animate="enter"
       exit="exit"
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      transition={{ type: "spring", stiffness: 100, damping: 20, mass: 0.5 }}
       className="min-h-screen bg-white"
       drag={!isHome ? "x" : false}
       dragControls={dragControls}
