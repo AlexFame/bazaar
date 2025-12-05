@@ -447,7 +447,7 @@ export default function ListingDetailClient({ id }) {
     {/* Share Fallback Modal (Bottom Sheet) */}
     {isShareModalOpen && listing && (
       <div 
-        className="fixed inset-0 z-[60] flex items-end justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+        className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
         onClick={() => setIsShareModalOpen(false)}
       >
         <div 

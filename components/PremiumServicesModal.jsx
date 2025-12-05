@@ -13,8 +13,12 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen) {
+      document.body.style.overflow = "hidden";
       fetchServices();
+    } else {
+      document.body.style.overflow = "";
     }
+    return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
   const fetchServices = async () => {
@@ -135,8 +139,10 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fade-in">
-      <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 animate-fade-in overscroll-contain">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+        {/* Scrollable Area */}
+        <div className="overflow-y-auto flex-1 overscroll-contain">
         {/* Header */}
         <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 p-4 flex items-center justify-between z-10">
           <h2 className="text-xl font-bold text-black dark:text-white">
@@ -227,7 +233,8 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
           )}
         </div>
 
-        {/* Info */}
+        </div>
+        {/* Info - Fixed at bottom */}
         <div className="p-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400 text-center">
           💡 Оплата через Telegram Stars. Безопасно и мгновенно.
         </div>

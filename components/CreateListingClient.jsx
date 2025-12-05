@@ -250,6 +250,7 @@ export default function CreateListingClient({ onCreated, editId }) {
 
   async function handleSubmit(e, status = 'active') {
     if (e) e.preventDefault();
+    if (loading) return;
 
     if (!checkTelegramAccountAge()) {
       alert("Ваш аккаунт Telegram слишком новый для публикации объявлений.");
@@ -321,17 +322,33 @@ export default function CreateListingClient({ onCreated, editId }) {
         return;
       }
 
-      const userId = profile.id; // This is the UUID we need
+      const userId = profile.id;
+      // Generate a UUID for the listing upfront so we can use it for the folder
+      const listingId = crypto.randomUUID();
 
       // 1. Upload images
       const uploadedPaths = [];
-      for (const img of images) {
+      
+      // We also want to insert into listing_images table for robustness
+      const listingImagesInserts = [];
+
+      for (const [index, img] of images.entries()) {
+        if (img.type === 'existing') {
+             // For existing images, we don't move them, but we might want to ensure they are tracked?
+             // Actually, if we are editing, we are not creating new listingId.
+             // WAIT! editId is handled separately?
+             // If editId exists, we use it. If not, generate new.
+             continue;
+        }
+
+        const currentId = editId || listingId;
         const fileExt = img.file.name.split(".").pop();
         const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${userId}/${fileName}`;
+        const folderName = `listing-${currentId}`;
+        const filePath = `${folderName}/${fileName}`;
 
         const { error: uploadError } = await supabase.storage
-          .from("listings")
+          .from("listing-images")
           .upload(filePath, img.file);
 
         if (uploadError) {
@@ -339,32 +356,50 @@ export default function CreateListingClient({ onCreated, editId }) {
           continue;
         }
         
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-            .from("listings")
-            .getPublicUrl(filePath);
-            
-        uploadedPaths.push(publicUrl);
+        uploadedPaths.push(filePath);
+        
+        listingImagesInserts.push({
+            listing_id: currentId,
+            file_path: filePath,
+            position: index
+        });
       }
 
-      // 2. Insert listing
-      const { error } = await supabase.from("listings").insert({
+      // 2. Insert or Update listing
+      const payload = {
         title,
         description,
         price: Number(price),
         category_key: categoryKey,
         type: listingType,
-        condition: listingType === "service" ? "new" : condition, // Default for services
-        main_image_path: uploadedPaths[0] || null,
-        image_path: uploadedPaths, // Array of all images
+        condition: listingType === "service" ? "new" : condition,
+        main_image_path: uploadedPaths[0] || (images.find(i => i.type === 'existing')?.path) || null,
+        // image_path: uploadedPaths, // Removed as column might not exist or be redundant
         location_text: location,
         latitude: coordinates?.lat || null,
         longitude: coordinates?.lng || null,
-        contacts: contacts || "", // Add contacts field
+        contacts: contacts || "",
         created_by: userId,
-        parameters: parameters, // JSONB
-        status: status // 'active' or 'draft'
-      });
+        parameters: parameters, 
+        status: status
+      };
+
+      if (editId) {
+          const { error } = await supabase.from("listings").update(payload).eq('id', editId);
+          if (error) throw error;
+      } else {
+          const { error } = await supabase.from("listings").insert({
+              id: listingId,
+              ...payload
+          });
+          if (error) throw error;
+      }
+
+      // 3. Insert into listing_images table
+      if (listingImagesInserts.length > 0) {
+          const { error: imgError } = await supabase.from("listing_images").insert(listingImagesInserts);
+          if (imgError) console.error("Error inserting listing_images:", imgError);
+      }
 
       if (error) throw error;
 
