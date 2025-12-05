@@ -145,7 +145,7 @@ export default function CreateListingClient({ onCreated, editId }) {
           maxSizeMB: 1,
           maxWidthOrHeight: 1920,
           useWebWorker: true,
-          fileType: 'image/webp'
+          fileType: 'image/jpeg'
         };
         
         const compressedFile = await imageCompression(file, options);
