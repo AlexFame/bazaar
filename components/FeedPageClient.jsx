@@ -1333,7 +1333,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-20">
+    <div className="min-h-screen bg-white pb-32">
       {/* Header: Search + Lang */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-4 py-3 border-b border-gray-100 transition-all duration-300">
         <div className="flex items-center gap-2 max-w-[520px] mx-auto">
@@ -1625,15 +1625,27 @@ export default function FeedPageClient({ forcedCategory = null }) {
           )}
 
           {hasMore && listings.length > 0 && viewMode === "list" && (
-            <div className="mt-8 mb-6 flex justify-center">
-              <button
-                type="button"
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-                className="px-8 py-3 text-sm font-medium bg-black text-white rounded-full disabled:opacity-60 hover:scale-105 transition-transform shadow-lg"
-              >
-                {loadingMore ? txt.loadingMore : txt.loadMore}
-              </button>
+            <div 
+              ref={(node) => {
+                if (!node || loadingMore) return;
+                const observer = new IntersectionObserver(
+                  (entries) => {
+                    if (entries[0].isIntersecting) {
+                      handleLoadMore();
+                    }
+                  },
+                  { threshold: 0.1, rootMargin: "100px" }
+                );
+                observer.observe(node);
+                return () => observer.disconnect();
+              }}
+              className="mt-8 mb-6 flex justify-center py-4"
+            >
+              {loadingMore ? (
+                <div className="w-6 h-6 border-2 border-gray-200 border-t-black rounded-full animate-spin" />
+              ) : (
+                <div className="h-4" /> // Invisible trigger area
+              )}
             </div>
           )}
         </div>
