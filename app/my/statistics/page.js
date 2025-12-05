@@ -6,6 +6,16 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import BackButton from "@/components/BackButton";
 import Link from "next/link";
+import { 
+  EyeIcon, 
+  HeartIcon, 
+  ShareIcon, 
+  ChartBarIcon, 
+  CalendarIcon,
+  ChatBubbleLeftRightIcon,
+  PhoneIcon
+} from "@heroicons/react/24/outline";
+import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
 
 function StatisticsListingItem({ listing, t, sortBy }) {
   const [imageError, setImageError] = useState(false);
@@ -61,27 +71,27 @@ function StatisticsListingItem({ listing, t, sortBy }) {
           {/* Detailed Stats Row */}
           <div className="flex items-center gap-3 mt-2 text-xs">
             <span className="text-gray-500 flex items-center gap-1" title={t.views}>
-              👁️ {listing.views_count || 0}
+              <EyeIcon className="w-3.5 h-3.5" /> {listing.views_count || 0}
             </span>
             
             {(listing.favorites_count > 0 || sortBy === 'favorites') && (
                 <span className="text-red-500 flex items-center gap-1 font-medium" title={t.totalFavorites}>
-                  ❤️ {listing.favorites_count || 0}
+                  <HeartIconSolid className="w-3.5 h-3.5" /> {listing.favorites_count || 0}
                 </span>
             )}
 
             {listing.shares_count > 0 && (
                 <span className="text-indigo-500 flex items-center gap-1 font-medium" title={t.totalShares}>
-                  ↗️ {listing.shares_count}
+                  <ShareIcon className="w-3.5 h-3.5" /> {listing.shares_count}
                 </span>
             )}
 
             <span className="text-emerald-600 flex items-center gap-1 font-medium" title={t.avgConversion}>
-              📊 {listing.conversion_rate?.toFixed(1)}%
+              <ChartBarIcon className="w-3.5 h-3.5" /> {listing.conversion_rate?.toFixed(1)}%
             </span>
 
             <span className="text-gray-400 flex items-center gap-1 ml-auto">
-              📅 {listing.days_active} {t.daysActive}
+              <CalendarIcon className="w-3.5 h-3.5" /> {listing.days_active} {t.daysActive}
             </span>
           </div>
         </div>
@@ -370,14 +380,15 @@ export default function ProfileStatisticsPage() {
         {/* Main Stats Grid */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           {/* Total Views */}
-          <Link href="/my" className="block hover:scale-[1.02] active:scale-95 transition-transform">
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl p-6 shadow-airbnb h-full">
-              <div className="text-4xl font-bold text-blue-600 mb-2">
-                {stats.totalViews.toLocaleString()}
-              </div>
-              <div className="text-sm font-medium text-blue-900">{t.totalViews}</div>
+          {/* Total Views */}
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl p-6 shadow-airbnb h-full">
+            <div className="text-4xl font-bold text-blue-600 mb-2">
+              {stats.totalViews.toLocaleString()}
             </div>
-          </Link>
+            <div className="text-sm font-medium text-blue-900 flex items-center gap-1">
+              <EyeIcon className="w-4 h-4" /> {t.totalViews}
+            </div>
+          </div>
 
           {/* Total Favorites (Click to sort) */}
           <button 
@@ -395,7 +406,9 @@ export default function ProfileStatisticsPage() {
               <div className="text-4xl font-bold text-red-600 mb-2">
                 {stats.totalFavorites.toLocaleString()}
               </div>
-              <div className="text-sm font-medium text-red-900">{t.totalFavorites}</div>
+              <div className="text-sm font-medium text-red-900 flex items-center gap-1">
+                <HeartIconSolid className="w-4 h-4" /> {t.totalFavorites}
+              </div>
             </div>
           </button>
 
@@ -404,7 +417,9 @@ export default function ProfileStatisticsPage() {
             <div className="text-4xl font-bold text-indigo-600 mb-2">
               {stats.totalShares.toLocaleString()}
             </div>
-            <div className="text-sm font-medium text-indigo-900">{t.totalShares}</div>
+            <div className="text-sm font-medium text-indigo-900 flex items-center gap-1">
+              <ShareIcon className="w-4 h-4" /> {t.totalShares}
+            </div>
           </div>
 
           {/* Avg Conversion */}
@@ -412,21 +427,23 @@ export default function ProfileStatisticsPage() {
             <div className="text-4xl font-bold text-emerald-600 mb-2">
               {stats.avgConversion.toFixed(1)}%
             </div>
-            <div className="text-sm font-medium text-emerald-900">{t.avgConversion}</div>
+            <div className="text-sm font-medium text-emerald-900 flex items-center gap-1">
+              <ChartBarIcon className="w-4 h-4" /> {t.avgConversion}
+            </div>
           </div>
         </div>
 
         {/* Secondary Stats Row */}
         <div className="grid grid-cols-2 gap-4 mb-6">
            {/* Total Contacts */}
-           <Link href="/messages" className="block hover:scale-[1.02] active:scale-95 transition-transform">
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl p-6 shadow-airbnb h-full">
-              <div className="text-3xl font-bold text-green-600 mb-2">
-                {stats.totalContacts.toLocaleString()}
-              </div>
-              <div className="text-sm font-medium text-green-900">{t.totalContacts}</div>
-            </div>
-          </Link>
+           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl p-6 shadow-airbnb h-full">
+             <div className="text-3xl font-bold text-green-600 mb-2">
+               {stats.totalContacts.toLocaleString()}
+             </div>
+             <div className="text-sm font-medium text-green-900 flex items-center gap-1">
+               <PhoneIcon className="w-4 h-4" /> {t.totalContacts}
+             </div>
+           </div>
 
           {/* Total Messages */}
           <Link href="/messages" className="block hover:scale-[1.02] active:scale-95 transition-transform">
@@ -434,7 +451,9 @@ export default function ProfileStatisticsPage() {
               <div className="text-3xl font-bold text-purple-600 mb-2">
                 {stats.totalMessages.toLocaleString()}
               </div>
-              <div className="text-sm font-medium text-purple-900">{t.totalMessages}</div>
+              <div className="text-sm font-medium text-purple-900 flex items-center gap-1">
+                <ChatBubbleLeftRightIcon className="w-4 h-4" /> {t.totalMessages}
+              </div>
             </div>
           </Link>
         </div>
