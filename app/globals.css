@@ -43,7 +43,7 @@ html.dark {
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: #f0ffff; /* Azure (Crayola) background */
+  background: #F7F7F7; /* Airbnb Gray background */
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100dvh;
 }
