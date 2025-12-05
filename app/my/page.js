@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import {
+  PlusIcon,
+  TrashIcon,
+  PencilSquareIcon,
+  HeartIcon,
+  Cog6ToothIcon
+} from "@heroicons/react/24/outline";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { getUserId } from "@/lib/userId";
@@ -235,26 +242,37 @@ export default function MyPage() {
         {tgUser && (
             <FadeIn>
                 <div className="bg-white rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
-                    <div className="font-semibold mb-2">{localStrings.userBlockTitle}</div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold overflow-hidden relative">
-                        {tgUser.photo_url ? (
-                            <img src={tgUser.photo_url} alt="Avatar" className="w-full h-full object-cover" />
-                        ) : (
-                            <>
-                                {tgUser.first_name?.[0]}
-                                {tgUser.last_name?.[0]}
-                            </>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">
-                          {tgUser.first_name}
-                          {tgUser.last_name ? ` ${tgUser.last_name}` : ""}
-                        </span>
-
-                      </div>
-                    </div>
+            {/* Header / User Info */}
+            <div className={`p-4 rounded-3xl bg-white shadow-sm mb-6 flex items-center justify-between`}>
+               <div className="flex items-center space-x-4">
+                  <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl relative overflow-hidden">
+                     {tgUser.photo_url ? (
+                        <img 
+                           src={tgUser.photo_url} 
+                           alt="Avatar" 
+                           className="h-full w-full object-cover"
+                        />
+                     ) : (
+                        <span>{tgUser.first_name?.[0]}{tgUser.last_name?.[0]}</span>
+                     )}
+                  </div>
+                  <div>
+                     <h1 className={`text-xl font-bold text-gray-900`}>
+                        {tgUser.first_name} {tgUser.last_name || ""}
+                     </h1>
+                     <p className={`text-sm text-gray-500`}>
+                        {tgUser.username ? `@${tgUser.username}` : t('no_username')}
+                     </p>
+                  </div>
+               </div>
+               
+               <Link href="/profile/settings" className="p-2 bg-gray-100 rounded-full hover:opacity-80 transition-opacity">
+                  {/* Assuming Cog6ToothIcon is imported or defined */}
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="h-6 w-6 text-gray-600">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.333-.99.692-1.334.36-.343.82-.585 1.359-.691.538-.107 1.08-.107 1.618 0 .539.106.999.348 1.359.691.36.344.602.792.692 1.334.09.542.09 1.096 0 1.638-.09.542-.333.99-.692 1.334-.36.343-.82.585-1.359.691-.538.107-1.08.107-1.618 0-.539-.106-.999-.348-1.359-.691-.36-.344-.602-.792-.692-1.334-.09-.542-.09-1.096 0-1.638ZM4.06 7.394c-.542-.09-.99-.333-1.334-.692-.343-.36-.585-.82-.691-1.359-.107-.538-.107-1.08 0-1.618.106-.539.348-.999.691-1.359.344-.36.792-.602 1.334-.692.542-.09 1.096-.09 1.638 0 .542.09.99.333 1.334.692.343.36.585.82.691 1.359.107.538.107 1.08 0 1.618-.106.539-.348.999-.691 1.359-.344.36-.792.602-1.334.692-.542.09-1.096.09-1.638 0Zm16.38 0c.542-.09.99-.333 1.334-.692.343-.36.585-.82.691-1.359.107-.538.107-1.08 0-1.618-.106-.539-.348-.999-.691-1.359-.344-.36-.792-.602-1.334-.692-.542-.09-1.096-.09-1.638 0-.542.09-.99.333-1.334.692-.343.36-.585.82-.691 1.359-.107.538-.107 1.08 0 1.618.106.539.348.999.691 1.359.344.36.792.602 1.334.692.542.09 1.096.09 1.638 0ZM4.06 16.606c-.542.09-.99.333-1.334.692-.343.36-.585.82-.691 1.359-.107.538-.107 1.08 0 1.618.106.539.348.999.691 1.359.344.36.792.602 1.334.692.542.09 1.096.09 1.638 0 .542-.09.99-.333 1.334-.692.343-.36.585-.82.691-1.359.107-.538.107-1.08 0-1.618-.106-.539-.348-.999-.691-1.359-.344-.36-.792-.602-1.334-.692-.542-.09-1.096-.09-1.638 0ZM12 15.75a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5ZM18.94 16.606c-.542.09-.99.333-1.334.692-.343.36-.585.82-.691 1.359-.107.538-.107 1.08 0 1.618.106.539.348.999.691 1.359.344.36.792.602 1.334.692.542.09 1.096.09 1.638 0 .542-.09.99-.333 1.334-.692.343-.36.585-.82.691-1.359.107-.538.107 1.08 0 1.618-.106.539-.348.999-.691 1.359-.344.36-.792.602-1.334.692-.542.09-1.096.09-1.638 0Z" />
+                  </svg>
+               </Link>
+            </div>
                 </div>
             </FadeIn>
         )}

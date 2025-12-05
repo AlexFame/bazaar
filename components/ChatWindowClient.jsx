@@ -20,8 +20,12 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   const [showInput, setShowInput] = useState(false);
   const [isSending, setIsSending] = useState(false); // Prevent duplicate sends
   const [error, setError] = useState(null);
+  const [otherUserTyping, setOtherUserTyping] = useState(false);
+  const [channel, setChannel] = useState(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const typingTimeoutRef = useRef(null);
+  const lastTypingTimeRef = useRef(0);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -162,50 +166,71 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
       }
       setLoading(false);
 
-      // Subscribe to new messages
+      // Subscribe to Realtime (Messages + Typing)
       const channel = supabase
         .channel(`chat:${conversationId}`)
         .on(
           "postgres_changes",
           {
-            event: "*", // Listen for INSERT and UPDATE
+            event: "*",
             schema: "public",
             table: "messages",
             filter: `conversation_id=eq.${conversationId}`,
           },
           (payload) => {
             if (payload.eventType === "INSERT") {
-                // Prevent duplicates: check if message already exists
                 setMessages((prev) => {
                   const exists = prev.some(m => m.id === payload.new.id);
-                  if (exists) {
-                    return prev;
-                  }
+                  if (exists) return prev;
                   return [...prev, payload.new];
                 });
                 
-                // Mark as read immediately if I'm looking at the chat
                 if (payload.new.sender_id !== user.id) {
-                    supabase
-                        .from('messages')
-                        .update({ is_read: true })
-                        .eq('id', payload.new.id)
-                        .then();
+                    supabase.from('messages').update({ is_read: true }).eq('id', payload.new.id).then();
                 }
             } else if (payload.eventType === "UPDATE") {
                 setMessages((prev) => prev.map(m => m.id === payload.new.id ? payload.new : m));
             }
           }
         )
+        .on("broadcast", { event: "typing" }, (payload) => {
+           if (payload.payload.sender_id !== user.id) {
+               setOtherUserTyping(true);
+               // Clear typing after 3 seconds
+               if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+               typingTimeoutRef.current = setTimeout(() => {
+                   setOtherUserTyping(false);
+               }, 3000);
+           }
+        })
         .subscribe();
 
+      setChannel(channel);
+
       return () => {
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
         supabase.removeChannel(channel);
       };
     };
 
     initChat();
   }, [conversationId, router]);
+
+  // Typing logic
+  const handleTyping = () => {
+    if (!channel) return;
+    
+    // Throttle sending typing events
+    const now = Date.now();
+    if (now - lastTypingTimeRef.current > 2000) {
+        channel.send({
+            type: "broadcast",
+            event: "typing",
+            payload: { sender_id: user.id },
+        });
+        lastTypingTimeRef.current = now;
+    }
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -380,6 +405,14 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
         )}
       </div>
 
+      {otherUserTyping && (
+          <div className="absolute top-[65px] left-0 w-full px-3 z-0 pointer-events-none">
+              <div className="text-xs text-gray-500 italic ml-14 animate-pulse">
+                 {otherUser?.full_name || "Собеседник"} печатает...
+              </div>
+          </div>
+      )}
+
       {/* Messages Area */}
       <div 
         className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-4 w-full"
@@ -444,7 +477,10 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           <textarea
             ref={textareaRef}
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => {
+                setNewMessage(e.target.value);
+                handleTyping();
+            }}
             onKeyDown={handleKeyDown}
             placeholder={t("chat_placeholder") || "Написать сообщение..."}
             className="flex-1 bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-2xl px-4 py-3 text-sm resize-none max-h-32 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white min-w-0 w-full"

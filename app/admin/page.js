@@ -3,16 +3,18 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import AdminLayout from "@/components/AdminLayout";
-import Image from "next/image";
-import Link from "next/link";
+import AdminDashboard from "@/components/admin/AdminDashboard";
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState("reports");
+  const [activeTab, setActiveTab] = useState("dashboard"); // Default to dashboard
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
+
+    // Skip fetch for dashboard, it handles itself
+    if (activeTab === "dashboard") return;
 
     async function fetchData() {
       setLoading(true);
@@ -97,7 +99,7 @@ export default function AdminPage() {
   return (
     <AdminLayout>
       <div className="flex gap-4 mb-6 border-b border-gray-200 pb-1">
-        {["reports", "listings", "users"].map((tab) => (
+        {["dashboard", "reports", "listings", "users"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -112,7 +114,9 @@ export default function AdminPage() {
         ))}
       </div>
 
-      {loading ? (
+      {activeTab === "dashboard" ? (
+        <AdminDashboard />
+      ) : loading ? (
         <div className="text-center py-10 text-gray-500">Загрузка...</div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200">

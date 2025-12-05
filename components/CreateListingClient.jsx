@@ -11,6 +11,7 @@ import BackButton from "@/components/BackButton";
 import { CreateListingSkeleton } from "./SkeletonLoader";
 
 import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";
+import { calculateQuality } from "@/lib/quality"; // NEW
 
 import imageCompression from 'browser-image-compression';
 import { useHaptic } from "@/hooks/useHaptic";
@@ -51,6 +52,21 @@ export default function CreateListingClient({ onCreated, editId }) {
   const inTelegram = isTelegramEnv();
   const closeTimeoutRef = useRef(null);
   const { notificationOccurred, impactOccurred } = useHaptic();
+  
+  // Quality Score
+  const [quality, setQuality] = useState({ score: 0, breakdown: [] });
+  
+  useEffect(() => {
+    const q = calculateQuality({
+        title,
+        description,
+        price,
+        location,
+        contacts,
+        images
+    });
+    setQuality(q);
+  }, [title, description, price, location, contacts, images]);
 
   useEffect(() => {
     if (!editId) return;
@@ -523,12 +539,39 @@ export default function CreateListingClient({ onCreated, editId }) {
     );
   }
 
+
   return (
     <section className="w-full max-w-xl mx-auto mt-4 px-3">
       <div className="mb-3">
           <BackButton />
       </div>
-      <h1 className="text-lg font-semibold mb-4">{t("new_heading")}</h1>
+
+      <div className="flex items-center justify-between mb-2">
+         <h1 className="text-lg font-semibold">{t("new_heading")}</h1>
+         {/* Quality Indicator */}
+         {inTelegram && (
+             <div className="flex flex-col items-end">
+                 <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold text-gray-500 uppercase">Качество</span>
+                    <span className={`text-sm font-bold ${
+                        quality.score < 40 ? 'text-red-500' : 
+                        quality.score < 75 ? 'text-yellow-600' : 'text-green-600'
+                    }`}>
+                        {quality.score}%
+                    </span>
+                 </div>
+                 <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden mt-1">
+                     <div 
+                        className={`h-full transition-all duration-500 ${
+                            quality.score < 40 ? 'bg-red-500' : 
+                            quality.score < 75 ? 'bg-yellow-500' : 'bg-green-500'
+                        }`}
+                        style={{ width: `${quality.score}%` }}
+                     />
+                 </div>
+             </div>
+         )}
+      </div>
 
       {errorMsg && (
         <div className="mb-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">

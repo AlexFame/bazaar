@@ -6,34 +6,56 @@ import { ListingCardSkeleton } from "./SkeletonLoader";
 
 import { useLang } from "@/lib/i18n-client";
 
-export default function SimilarListings({ categoryId, currentId }) {
+export default function SimilarListings({ categoryId, currentId, title }) {
   const { t } = useLang();
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchSimilar() {
-      if (!categoryId) {
-          setLoading(false);
-          return;
+      // If we have a title, use smart search. 
+      // Fallback to category search if no title (shouldn't happen often)
+      
+      let data = [];
+      let error = null;
+
+      if (title) {
+          // Use our smart search RPC
+          const { data: searchResults, error: searchError } = await supabase
+            .rpc('search_listings', { 
+                search_query: title, 
+                filter_category: categoryId || undefined,
+                match_threshold: 0.1 
+            });
+            
+          if (searchError) {
+              console.error("Similar search error:", searchError);
+          } else {
+              data = searchResults;
+          }
+      } else if (categoryId) {
+          // Fallback: simple category fetch
+          const { data: catData, error: catError } = await supabase
+            .from("listings")
+            .select("*, profiles:created_by(*)")
+            .eq("category_key", categoryId)
+            .order("created_at", { ascending: false })
+            .limit(5); // Fetch 5 to have buffer for exclusion
+           
+          err = catError;
+          data = catData;
       }
 
-      const { data, error } = await supabase
-        .from("listings")
-        .select("*, profiles:created_by(*)")
-        .eq("category_key", categoryId)
-        .neq("id", currentId)
-        .order("created_at", { ascending: false })
-        .limit(4);
-
-      if (!error && data) {
-        setListings(data);
+      if (data) {
+        // Filter out current listing
+        const filtered = data.filter(l => l.id !== currentId).slice(0, 4);
+        setListings(filtered);
       }
       setLoading(false);
     }
 
     fetchSimilar();
-  }, [categoryId, currentId]);
+  }, [categoryId, currentId, title]);
 
   if (!loading && listings.length === 0) return null;
 

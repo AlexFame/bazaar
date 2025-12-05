@@ -110,6 +110,55 @@ export default function ChatListClient() {
     };
 
     fetchUserAndChats();
+
+    const setupRealtime = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const handleRecordUpdated = (payload) => {
+        console.log("🔔 ChatList: Conversation updated", payload);
+        // Re-fetch everything for simplicity (or update locally)
+        fetchUserAndChats();
+      };
+
+      const channelBuyer = supabase
+        .channel('chat_list_buyer')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'conversations',
+            filter: `buyer_id=eq.${user.id}`
+          },
+          handleRecordUpdated
+        )
+        .subscribe();
+
+      const channelSeller = supabase
+         .channel('chat_list_seller')
+         .on(
+           'postgres_changes',
+           {
+             event: '*',
+             schema: 'public',
+             table: 'conversations',
+             filter: `seller_id=eq.${user.id}`
+           },
+           handleRecordUpdated
+         )
+         .subscribe();
+
+      return () => {
+        supabase.removeChannel(channelBuyer);
+        supabase.removeChannel(channelSeller);
+      };
+    };
+
+    const unsubscribe = setupRealtime();
+    return () => {
+      unsubscribe.then(unsub => unsub?.());
+    };
   }, [router]);
 
   const getOtherParticipant = (conv) => {

@@ -13,14 +13,14 @@ CREATE INDEX IF NOT EXISTS idx_listings_created_at
 ON listings(created_at DESC);
 
 -- Index for category filtering
--- Speeds up: WHERE category = 'electronics'
+-- Speeds up: WHERE category_key = 'electronics'
 CREATE INDEX IF NOT EXISTS idx_listings_category 
-ON listings(category);
+ON listings(category_key);
 
 -- Index for location-based search
--- Speeds up: WHERE location = 'Berlin'
+-- Speeds up: WHERE location_text = 'Berlin'
 CREATE INDEX IF NOT EXISTS idx_listings_location 
-ON listings(location);
+ON listings(location_text);
 
 -- Composite index for active listings feed
 -- Speeds up: WHERE status = 'active' ORDER BY created_at DESC
@@ -75,9 +75,9 @@ ON conversations(listing_id);
 -- ============================================
 
 -- Index for user's favorites
--- Speeds up: WHERE user_id = X ORDER BY created_at DESC
+-- Speeds up: WHERE profile_id = X ORDER BY created_at DESC
 CREATE INDEX IF NOT EXISTS idx_favorites_user_created 
-ON favorites(user_id, created_at DESC);
+ON favorites(profile_id, created_at DESC);
 
 -- Index for listing's favorite count
 -- Speeds up: WHERE listing_id = X
@@ -85,9 +85,9 @@ CREATE INDEX IF NOT EXISTS idx_favorites_listing
 ON favorites(listing_id);
 
 -- Composite index for checking if user favorited listing
--- Speeds up: WHERE user_id = X AND listing_id = Y
+-- Speeds up: WHERE profile_id = X AND listing_id = Y
 CREATE INDEX IF NOT EXISTS idx_favorites_user_listing 
-ON favorites(user_id, listing_id);
+ON favorites(profile_id, listing_id);
 
 -- ============================================
 -- PROFILES TABLE INDEXES
@@ -99,39 +99,33 @@ CREATE INDEX IF NOT EXISTS idx_profiles_tg_user
 ON profiles(tg_user_id);
 
 -- ============================================
--- ANALYTICS INDEXES (if analytics tables exist)
+-- REVIEWS TABLE INDEXES
 -- ============================================
 
--- Index for listing views
-CREATE INDEX IF NOT EXISTS idx_listing_views_listing_created 
-ON listing_views(listing_id, created_at DESC);
+-- Index for reviews received by a user (target)
+-- Speeds up: WHERE target_id = X
+CREATE INDEX IF NOT EXISTS idx_reviews_target 
+ON reviews(target_id);
 
--- Index for user's view history
-CREATE INDEX IF NOT EXISTS idx_listing_views_user_created 
-ON listing_views(user_id, created_at DESC);
+-- Index for reviews written by a user
+-- Speeds up: WHERE reviewer_id = X
+CREATE INDEX IF NOT EXISTS idx_reviews_reviewer 
+ON reviews(reviewer_id);
+
+-- Index for reviews on a specific listing
+-- Speeds up: WHERE listing_id = X
+CREATE INDEX IF NOT EXISTS idx_reviews_listing 
+ON reviews(listing_id);
+
+-- ============================================
+-- ANALYTICS INDEXES (Table listing_views doesn't exist yet)
+-- ============================================
+-- Skipping listing_views indexes until table is fully implemented
+-- (Current implementation uses atomic counter in listings table)
 
 -- ============================================
 -- VERIFICATION
 -- ============================================
 
--- Show all indexes created
-SELECT 
-    schemaname,
-    tablename,
-    indexname,
-    indexdef
-FROM pg_indexes 
-WHERE schemaname = 'public' 
-    AND indexname LIKE 'idx_%'
-ORDER BY tablename, indexname;
-
--- Show index sizes (helpful for monitoring)
-SELECT
-    schemaname,
-    tablename,
-    indexname,
-    pg_size_pretty(pg_relation_size(indexrelid)) as index_size
-FROM pg_stat_user_indexes
-WHERE schemaname = 'public'
-    AND indexrelname LIKE 'idx_%'
-ORDER BY pg_relation_size(indexrelid) DESC;
+-- Indexes created! 
+-- You can verify them in Supabase Dashboard -> Database -> Indexes
