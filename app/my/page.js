@@ -185,13 +185,90 @@ export default function MyPage() {
     loadListings();
   }, [activeTab]); // Reload when tab changes
 
-  // ... (existing code)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const user = getTelegramUser();
+      setTgUser(user);
+    }
+  }, []);
+
+  const handleDelete = async (id) => {
+    if (!confirm(localStrings.confirm_delete)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("listings")
+        .delete()
+        .eq("id", id);
+
+      if (error) {
+        console.error("Error deleting listing:", error);
+        alert(localStrings.delete_error);
+        return;
+      }
+
+      // Remove from local state
+      setListings(prev => prev.filter(l => l.id !== id));
+    } catch (err) {
+      console.error("Error:", err);
+      alert(localStrings.delete_error);
+    }
+  };
+
+  const handlePromote = (id) => {
+    setSelectedListingId(id);
+    setIsPremiumModalOpen(true);
+  };
 
   return (
     <div className="w-full flex justify-center mt-3 mb-20">
       <div className="w-full max-w-[520px] px-3">
         
-        {/* ... (existing header code) ... */}
+        <div className="mb-3">
+            <BackButton />
+        </div>
+        <h1 className="text-lg font-semibold mb-1">{localStrings.my}</h1>
+        <p className="text-sm text-gray-500 mb-3">{localStrings.mySubtitle}</p>
+
+        {tgUser && (
+            <FadeIn>
+                <div className="bg-white rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
+                    <div className="font-semibold mb-2">{localStrings.userBlockTitle}</div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold overflow-hidden relative">
+                        {tgUser.photo_url ? (
+                            <img src={tgUser.photo_url} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                            <>
+                                {tgUser.first_name?.[0]}
+                                {tgUser.last_name?.[0]}
+                            </>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {tgUser.first_name}
+                          {tgUser.last_name ? ` ${tgUser.last_name}` : ""}
+                        </span>
+
+                      </div>
+                    </div>
+                </div>
+            </FadeIn>
+        )}
+
+        {/* Admin Panel Button */}
+        {isAdmin && (
+            <div className="mb-3">
+                <Link href="/admin" className="w-full py-2 bg-gray-800 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2">
+                    🛡️ Админ-панель
+                </Link>
+            </div>
+        )}
+
+
 
         {/* Tabs */}
         <div className="flex mb-4 border-b border-gray-200">
