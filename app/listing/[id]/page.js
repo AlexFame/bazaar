@@ -52,40 +52,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function ListingPage({ params }) {
-  // We need to fetch data here server side again to build the Schema
-  // Or we can pass it down if we refactor, but for now let's just stick it in the Client Component? 
-  // Next.js App Router recommends putting JSON-LD in the Server Component if possible.
-  // Since we don't have the data here (except in generateMetadata), let's rely on the Client component or fetch it quickly.
-  // Actually, we can just fetch it here for the payload, it acts as a cache usually.
-  
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            // We'll populate this dynamically in the client or fetch here. 
-            // To be efficient, let's keep it simple and just render the Client Component as before, 
-            // but for a PROPER implementation we should inject it here.
-            // Let's hold off on re-fetching to avoid dupes and let's add it to the Client Component or separate Server Component.
-          })
-        }} 
-      />
-      {/* 
-         On second thought, implementing JSON-LD properly requires the data. 
-         Let's wrap the client component in a server component that fetches data solely for the Schema if we want it perfect.
-         BUT, `ListingDetailClient` fetches its own data.
-         
-         Let's do this: we already fetch for metadata. Let's reuse that logic or just accept it's a client specific app mostly for Telegram.
-         However, for Google Indexing, it must be in the HTML.
-      */}
-      <ListingDetailClient id={params.id} />
-    </>
-  );
-}
+
 
 // Let's rewrite this function to fetch data and pass it to a Schema component or render script directly
 // Re-using the fetch from generateMetadata is tricky without deduping request (Next.js does this automatically for fetch(), but supabase client might not).
