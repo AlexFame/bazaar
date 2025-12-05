@@ -245,17 +245,21 @@ export default function ListingDetailClient({ id }) {
             })
             .filter(Boolean);
         } else if (listingData.image_path) {
-          // Filter out placeholder text like "Фото 1", "Фото 2", etc
-          const imagePath = listingData.image_path.trim();
-          const isPlaceholder = imagePath.toLowerCase().includes('фото') || 
-                               imagePath.toLowerCase().includes('photo') ||
-                               imagePath.length < 5;
-          
-          if (!isPlaceholder) {
-            const { data } = supabase.storage
-              .from("listing-images")
-              .getPublicUrl(listingData.image_path);
-            if (data?.publicUrl) urls = [data.publicUrl];
+          try {
+            // Filter out placeholder text like "Фото 1", "Фото 2", etc
+            const imagePath = String(listingData.image_path).trim();
+            const isPlaceholder = imagePath.toLowerCase().includes('фото') || 
+                                 imagePath.toLowerCase().includes('photo') ||
+                                 imagePath.length < 5;
+            
+            if (!isPlaceholder) {
+              const { data } = supabase.storage
+                .from("listing-images")
+                .getPublicUrl(imagePath);
+              if (data?.publicUrl) urls = [data.publicUrl];
+            }
+          } catch (e) {
+            console.error("Error processing image path:", e);
           }
         }
 

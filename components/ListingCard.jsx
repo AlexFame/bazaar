@@ -96,36 +96,43 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   const [translatedTitle, setTranslatedTitle] = useState("");
 
   useEffect(() => {
-    let path = listing?.main_image_path || listing?.image_path;
-    
-    // Handle arrays (image_path might be an array)
-    if (Array.isArray(path)) {
-      path = path[0];
-    }
-    
-    // If path is a placeholder string like "Фото 1" or empty, ignore it
-    if (typeof path === 'string') {
-      const trimmed = path.trim();
-      if (trimmed === '' || trimmed.toLowerCase().includes('фото')) {
+    try {
+      let path = listing?.main_image_path || listing?.image_path;
+      
+      // Handle arrays (image_path might be an array)
+      if (Array.isArray(path)) {
+        path = path[0];
+      }
+      
+      // Validate path type
+      if (!path || typeof path !== 'string') {
         setImageUrl(null);
         return;
       }
-    }
-    
-    // Check if path is empty, null, or just whitespace
-    if (!path || (typeof path === 'string' && path.trim() === '')) {
-      setImageUrl(null);
-      return;
-    }
 
-    // Check if path looks like a full URL
-    if (typeof path === 'string' && (path.startsWith('http://') || path.startsWith('https://'))) {
-      setImageUrl(path);
-    } else {
-      const { data } = supabase.storage
-        .from("listing-images")
-        .getPublicUrl(path);
-      setImageUrl(data?.publicUrl || null);
+      const trimmed = path.trim();
+      
+      // Filter out empty, short paths, or placeholders
+      if (trimmed.length < 5 || 
+          trimmed.toLowerCase().includes('фото') || 
+          trimmed.toLowerCase().includes('photo')) {
+        setImageUrl(null);
+        return;
+      }
+
+      // Check if path looks like a full URL
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        setImageUrl(trimmed);
+      } else {
+        // Safe Supabase call
+        const { data } = supabase.storage
+          .from("listing-images")
+          .getPublicUrl(trimmed);
+        setImageUrl(data?.publicUrl || null);
+      }
+    } catch (err) {
+      console.error("Error setting image URL:", err);
+      setImageUrl(null);
     }
   }, [listing?.main_image_path, listing?.image_path]);
 
