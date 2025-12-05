@@ -25,11 +25,12 @@ export default function Template({ children }) {
       initial="hidden"
       animate="enter"
       exit="exit"
-      transition={{ type: "linear", duration: 0.25 }}
+      transition={{ type: "tween", ease: "easeOut", duration: 0.3 }}
       className="min-h-screen bg-white"
       drag={!isHome ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={{ left: 0, right: 0.5 }} // Elastic pull to the right
+      dragElastic={{ left: 0, right: 1 }} // Full elasticity for natural feel
+      dragSnapToOrigin={true} // Snap back if not swiped enough
       onDragStart={() => setIsDragging(true)}
       onDragEnd={(e, { offset, velocity }) => {
         setIsDragging(false);
