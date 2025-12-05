@@ -401,6 +401,24 @@ export default function CreateListingClient({ onCreated, editId }) {
       return null;
     }
 
+    // --- Conditional Logic for Electronics ---
+    if (categoryKey === "electronics" && (filter.key === "memory" || filter.key === "ram")) {
+      const allowedSubtypes = ["mobile_phones", "laptops", "tablets", "desktops"];
+      const currentSubtype = parameters["subtype"];
+      if (!allowedSubtypes.includes(currentSubtype)) {
+        return null;
+      }
+    }
+
+    // --- Conditional Logic for Realty ---
+    if (categoryKey === "realty" && (filter.key === "deposit" || filter.key === "utilities_included")) {
+      const currentDealType = parameters["deal_type"];
+      // Show only if deal type is rent or daily
+      if (currentDealType !== "rent" && currentDealType !== "daily") {
+        return null;
+      }
+    }
+
 
     const label = filter.label[lang] || filter.label.ru;
     const value = parameters[filter.key] || "";
