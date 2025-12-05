@@ -199,7 +199,8 @@ export default function MyPage() {
       <div className="w-full max-w-[520px] px-3">
         
         <div className="mb-3">
-            <BackButton />
+            {/* <BackButton /> */}
+            <div className="p-2 bg-gray-100 rounded">Back Button Placeholder</div>
         </div>
         <h1 className="text-lg font-semibold mb-1">{t.my}</h1>
         <p className="text-sm text-gray-500 mb-3">{t.mySubtitle}</p>
@@ -302,11 +303,12 @@ export default function MyPage() {
         {loading && (
              <div className="bg-white rounded-2xl shadow-sm p-3">
                 <div className="grid grid-cols-2 gap-2">
-                  {[...Array(4)].map((_, i) => (
+                  {/* [...Array(4)].map((_, i) => (
                     <div key={i} className="overflow-hidden">
                       <ListingCardSkeleton />
                     </div>
-                  ))}
+                  )) */}
+                  <div>Loading...</div>
                 </div>
               </div>
         )}
@@ -338,11 +340,11 @@ export default function MyPage() {
       </div>
 
       {/* Premium Services Modal */}
-      <PremiumServicesModal
+      {/* <PremiumServicesModal
         listingId={selectedListingId}
         isOpen={isPremiumModalOpen}
         onClose={() => setIsPremiumModalOpen(false)}
-      />
+      /> */}
     </div>
   );
 }
