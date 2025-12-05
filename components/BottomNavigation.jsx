@@ -16,31 +16,56 @@ import {
   UserIcon as UserIconSolid 
 } from "@heroicons/react/24/solid";
 import { useLang } from "@/lib/i18n-client";
+import { motion, AnimatePresence } from "framer-motion";
 
 const NavItem = ({ href, label, IconOutline, IconSolid, isActive }) => {
   return (
-    <Link href={href} className="group flex flex-col items-center justify-center w-full h-full gap-1 relative">
-      <div className="relative w-6 h-6">
-        {/* Outline Icon (Inactive State) */}
-        <IconOutline 
-          className={`w-6 h-6 text-gray-500 absolute top-0 left-0 transition-all duration-300 ease-in-out
-            ${isActive ? 'opacity-0 scale-75' : 'opacity-100 scale-100'}
-          `} 
-        />
-        
-        {/* Solid Icon (Active State) */}
-        <IconSolid 
-          className={`w-6 h-6 text-black absolute top-0 left-0 transition-all duration-300 ease-in-out
-            ${isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}
-          `} 
-        />
-      </div>
+    <Link href={href} className="group flex flex-col items-center justify-center w-full h-full gap-1 relative no-underline">
+      <motion.div 
+        className="relative w-6 h-6"
+        whileTap={{ scale: 0.8 }}
+        transition={{ type: "spring", stiffness: 400, damping: 17 }}
+      >
+        <div className="relative w-full h-full">
+            {/* Outline Icon (Inactive) */}
+            <motion.div
+                initial={false}
+                animate={{ 
+                    opacity: isActive ? 0 : 1,
+                    scale: isActive ? 0.5 : 1
+                }}
+                transition={{ duration: 0.2 }}
+                className="absolute inset-0"
+            >
+                <IconOutline className="w-6 h-6 text-gray-500" />
+            </motion.div>
+
+            {/* Solid Icon (Active) */}
+            <motion.div
+                initial={false}
+                animate={{ 
+                    opacity: isActive ? 1 : 0,
+                    scale: isActive ? 1 : 0.5
+                }}
+                transition={{ 
+                    type: "spring", 
+                    stiffness: 300, 
+                    damping: 20 
+                }}
+                className="absolute inset-0"
+            >
+                <IconSolid className="w-6 h-6 text-black" />
+            </motion.div>
+        </div>
+      </motion.div>
       
-      <span className={`text-[10px] font-medium transition-colors duration-300 ease-in-out
-        ${isActive ? "text-black" : "text-gray-500"}
-      `}>
+      <motion.span 
+        className="text-[10px] font-medium"
+        animate={{ color: isActive ? "#000000" : "#6b7280" }}
+        transition={{ duration: 0.2 }}
+      >
         {label}
-      </span>
+      </motion.span>
     </Link>
   );
 };
@@ -73,10 +98,15 @@ export default function BottomNavigation() {
         />
 
         {/* Create Listing (Prominent) */}
-        <Link href="/create" className="flex flex-col items-center justify-center w-full h-full -mt-4 active:scale-95 transition-transform duration-200">
-          <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center shadow-lg text-white hover:bg-gray-800 transition-colors duration-300">
+        <Link href="/create" className="flex flex-col items-center justify-center w-full h-full -mt-4 no-underline">
+          <motion.div 
+            className="w-12 h-12 bg-black rounded-full flex items-center justify-center shadow-lg text-white"
+            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            transition={{ type: "spring", stiffness: 400, damping: 17 }}
+          >
             <PlusIcon className="w-7 h-7" strokeWidth={2.5} />
-          </div>
+          </motion.div>
           <span className="text-[10px] font-medium text-gray-500 mt-1">
             Создать
           </span>
