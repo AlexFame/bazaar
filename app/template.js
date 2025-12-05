@@ -25,7 +25,7 @@ export default function Template({ children }) {
       initial="hidden"
       animate="enter"
       exit="exit"
-      transition={{ type: "tween", ease: "easeOut", duration: 0.3 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="min-h-screen bg-white"
       drag={!isHome ? "x" : false}
       dragConstraints={{ left: 0, right: 0 }}

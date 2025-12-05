@@ -204,14 +204,8 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   const dateText = formatDate(listing?.created_at, lang);
 
   // Category Color Logic
-  const categoryDef = CATEGORY_DEFS.find(c => c.key === listing?.category_key);
-  
-  let badgeClass = "bg-black dark:bg-white text-white dark:text-black";
-  if (categoryDef && categoryDef.color) {
-      // Extract color name from class (e.g., "pink" from "text-pink-600")
-      const colorName = categoryDef.color.split("-")[1]; 
-      badgeClass = `bg-${colorName}-100 text-${colorName}-800 dark:bg-${colorName}-900 dark:text-${colorName}-200`;
-  }
+  // Reverted to black/white as per user request
+  const badgeClass = "bg-black dark:bg-white text-white dark:text-black";
 
   // Micro-labels logic
   const isNew = listing?.created_at && (new Date() - new Date(listing.created_at)) < 24 * 60 * 60 * 1000;
