@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import BackButton from "@/components/BackButton";
 import { useLang } from "@/lib/i18n-client";
+import { ChatDetailSkeleton } from "./SkeletonLoader";
 
 export default function ChatWindowClient({ conversationId, listingId, sellerId }) {
   const router = useRouter();
@@ -332,11 +333,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <ChatDetailSkeleton />;
   }
 
   return (

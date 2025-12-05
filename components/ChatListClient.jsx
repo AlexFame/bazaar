@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import BackButton from "./BackButton";
 import { useLang } from "@/lib/i18n-client";
+import { ChatListSkeleton } from "./SkeletonLoader";
 
 export default function ChatListClient() {
   const router = useRouter();
@@ -124,11 +125,7 @@ export default function ChatListClient() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white p-4 flex justify-center items-center">
-        <div className="w-6 h-6 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
+    return <ChatListSkeleton />;
   }
 
   return (

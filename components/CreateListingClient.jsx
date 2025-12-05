@@ -7,6 +7,7 @@ import { CATEGORY_DEFS } from "@/lib/categories";
 import { getTelegramUser, isTelegramEnv, checkTelegramAccountAge, getUserId } from "@/lib/telegram";
 import { geocodeAddress, getUserLocation, reverseGeocode } from "@/lib/geocoding";
 import BackButton from "@/components/BackButton";
+import { CreateListingSkeleton } from "./SkeletonLoader";
 
 import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";
 import imageCompression from 'browser-image-compression';
@@ -470,6 +471,10 @@ export default function CreateListingClient({ onCreated, editId }) {
       </div>
     );
   };
+
+  if (loading) {
+    return <CreateListingSkeleton />;
+  }
 
   // если не в Telegram WebApp – только текст, без формы
   if (!inTelegram) {
