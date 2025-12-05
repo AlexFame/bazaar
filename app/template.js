@@ -1,13 +1,14 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, useDragControls } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 export default function Template({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
+  const dragControls = useDragControls();
 
   // Disable swipe back on home page
   const isHome = pathname === "/";
@@ -28,6 +29,8 @@ export default function Template({ children }) {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="min-h-screen bg-white"
       drag={!isHome ? "x" : false}
+      dragControls={dragControls}
+      dragListener={false} // Disable default drag listener (full screen)
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={{ left: 0, right: 1 }} // Full elasticity for natural feel
       dragSnapToOrigin={true} // Snap back if not swiped enough
@@ -43,16 +46,17 @@ export default function Template({ children }) {
         }
       }}
       style={{ 
-        touchAction: "pan-y", // Allow vertical scrolling, handle horizontal gestures manually
+        touchAction: "pan-y", // Allow vertical scrolling
         position: "relative",
         zIndex: 1 
       }}
     >
-      {/* Edge hit area for easier swipe initiation (optional visual cue or logic) */}
+      {/* Edge hit area - Only this area triggers the drag */}
       {!isHome && (
         <div 
-          className="absolute top-0 bottom-0 left-0 w-5 z-50"
-          style={{ touchAction: "none" }} // Capture touches on the edge
+          className="absolute top-0 bottom-0 left-0 w-8 z-50" // 32px edge area
+          onPointerDown={(e) => dragControls.start(e)}
+          style={{ touchAction: "none", cursor: "grab" }}
         />
       )}
       
