@@ -30,6 +30,7 @@ import LangSwitcher from "./LangSwitcher";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import PullToRefresh from "@/components/PullToRefresh";
 import BackButton from "@/components/BackButton";
+import { useImpressionTracker } from "@/hooks/useImpressionTracker";
 
 const MapComponent = dynamic(() => import("./MapComponent"), {
   ssr: false,
@@ -223,6 +224,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  
+  useImpressionTracker(listings, "feed");
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLive, setIsLive] = useState(false);
@@ -1614,7 +1617,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
               {/* Список объявлений */}
       <div className="grid grid-cols-2 gap-2">
         {listings.map((listing) => (
-          <ListingCard key={listing.id} listing={listing} />
+          <div key={listing.id} id={`listing-${listing.id}`} data-id={listing.id}>
+             <ListingCard listing={listing} />
+          </div>
         ))}
       </div>
 

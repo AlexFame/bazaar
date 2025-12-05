@@ -17,7 +17,7 @@ export async function POST(request) {
     }
 
     // Validate event type
-    const validEventTypes = ['view', 'contact_click', 'message_click', 'favorite_add', 'share'];
+    const validEventTypes = ['view', 'contact_click', 'message_click', 'favorite_add', 'share', 'impression', 'search_appearance'];
     if (!validEventTypes.includes(eventType)) {
       return NextResponse.json(
         { error: "Invalid event type" },
