@@ -24,6 +24,7 @@ const typeOptions = [
 ];
 
 export default function CreateListingClient({ onCreated, editId }) {
+  const router = useRouter();
   const { lang, t } = useLang();
   const [images, setImages] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
@@ -359,8 +360,10 @@ export default function CreateListingClient({ onCreated, editId }) {
         toast.success("Объявление опубликовано! 🎉");
       }
       
-      // Reset form or redirect
-      window.location.href = "/"; 
+      // Delay redirect to show confetti and toast
+      setTimeout(() => {
+        router.push("/");
+      }, 2000); 
     } catch (err) {
       console.error("Error creating listing:", err);
       alert("Ошибка при создании объявления: " + err.message);
