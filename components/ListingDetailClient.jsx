@@ -482,8 +482,8 @@ export default function ListingDetailClient({ id }) {
 
           {!loading && listing && (
             <>
-              {/* ГАЛЕРЕЯ */}
-              {imageUrls.length > 0 && (
+              {/* ГАЛЕРЕЯ ИЛИ PLACEHOLDER */}
+              {imageUrls.length > 0 ? (
                 <>
                   <div className="relative">
                     <button
@@ -536,7 +536,6 @@ export default function ListingDetailClient({ id }) {
                     </div>
                   </div>
 
-                  {/* Lightbox Modal */}
                   {/* Lightbox Modal */}
                   {isLightboxOpen && (
                     <div 
@@ -640,7 +639,43 @@ export default function ListingDetailClient({ id }) {
                     </div>
                   )}
                 </>
+              ) : (
+                /* No photos - show SVG placeholder */
+                <div className="relative mb-3">
+                  <button
+                    onClick={handleFavoriteClick}
+                    className="absolute top-3 right-3 z-10 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm hover:scale-110 transition-transform"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill={isFavorite ? "#ef4444" : "none"}
+                      stroke={isFavorite ? "#ef4444" : "currentColor"}
+                      strokeWidth="2"
+                      className="w-5 h-5 text-black"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                  </button>
+                  
+                  <div className="w-full bg-gray-100 rounded-2xl overflow-hidden relative h-[300px] flex items-center justify-center">
+                    <svg
+                      className="w-16 h-16 text-gray-300"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                </div>
               )}
+
 
               {/* КАТЕГОРИЯ И ИЕРАРХИЯ */}
               {(() => {
