@@ -27,7 +27,7 @@ import PopularListingsScroll from "./PopularListingsScroll";
 import RecentlyViewedScroll from "./RecentlyViewedScroll";
 import LangSwitcher from "./LangSwitcher";
 
-import { MagnifyingGlassIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import PullToRefresh from "@/components/PullToRefresh";
 import BackButton from "@/components/BackButton";
 
@@ -1433,13 +1433,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
               </div>
             )}
           </div>
-            <button
-              onClick={handleRefresh}
-              className="p-2 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-              title={txt.loadMore} // Reusing a label or adding a new one? "Обновить"
-            >
-              <ArrowPathIcon className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
-            </button>
             <LangSwitcher />
           </div>
       </header>
