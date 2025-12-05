@@ -46,6 +46,7 @@ body {
   background: #F7F7F7; /* Airbnb Gray background */
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100dvh;
+  overflow-x: hidden;
 }
 
 /* Telegram-like smooth scrolling */
