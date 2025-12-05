@@ -1612,11 +1612,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
           ) : (
             <>
               {/* Список объявлений */}
+      <PullToRefresh onRefresh={handleRefresh}>
       <div className="grid grid-cols-2 gap-2">
         {listings.map((listing) => (
           <ListingCard key={listing.id} listing={listing} />
         ))}
       </div>
+      </PullToRefresh>
 
       {/* Лоадер при подгрузке */}
             </>
