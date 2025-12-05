@@ -1,6 +1,6 @@
 -- 1. Enum types
-create type if not exists public.listing_type as enum ('buy','sell','free');
-create type if not exists public.listing_status as enum ('active','hidden','closed');
+create type if not exists public.listing_type as enum ('buy','sell','free','service','exchange');
+create type if not exists public.listing_status as enum ('active','hidden','closed','draft');
 
 -- 2. Profiles
 create table if not exists public.profiles (

@@ -20,6 +20,7 @@ const typeLabels = {
     buy: "Куплю",
     free: "Отдам",
     services: "Услуги",
+    service: "Услуги",
     unknown: "Объявление",
   },
   ua: {
@@ -27,6 +28,7 @@ const typeLabels = {
     buy: "Куплю",
     free: "Віддам",
     services: "Послуги",
+    service: "Послуги",
     unknown: "Оголошення",
   },
   en: {
@@ -34,6 +36,7 @@ const typeLabels = {
     buy: "Buy",
     free: "Free",
     services: "Services",
+    service: "Services",
     unknown: "Listing",
   },
 };

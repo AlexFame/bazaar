@@ -415,7 +415,8 @@ export default function CreateListingClient({ onCreated, editId }) {
           if (imgError) console.error("Error inserting listing_images:", imgError);
       }
 
-      if (error) throw error;
+      // Error checking was done inside the blocks above.
+
 
       if (status === 'draft') {
         toast.success("Объявление сохранено в черновики!");
