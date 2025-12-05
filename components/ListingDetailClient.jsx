@@ -405,6 +405,9 @@ export default function ListingDetailClient({ id }) {
           url: url
       };
 
+      // Track share event
+      trackAnalyticsEvent(listing.id, 'share');
+
       try {
           // Detect iOS (iPhone/iPad)
           const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);

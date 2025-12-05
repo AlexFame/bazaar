@@ -29,6 +29,7 @@ import LangSwitcher from "./LangSwitcher";
 import LangSwitcher from "./LangSwitcher";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import PullToRefresh from "@/components/PullToRefresh";
+import BackButton from "@/components/BackButton";
 
 const MapComponent = dynamic(() => import("./MapComponent"), {
   ssr: false,
@@ -1335,7 +1336,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
     <div className="min-h-screen bg-white pb-20">
       {/* Header: Search + Lang */}
       <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-4 py-3 border-b border-gray-100 transition-all duration-300">
-        <div className="flex items-center gap-3 max-w-[520px] mx-auto">
+        <div className="flex items-center gap-2 max-w-[520px] mx-auto">
+          {(categoryFilter !== "all" || hasSearchQuery) && (
+             <BackButton className="shrink-0" />
+          )}
           <div className="flex-1 relative">
             <form onSubmit={handleSearchSubmit}>
               <div className="relative group">
