@@ -34,7 +34,8 @@ export async function GET(req) {
 
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'BazaarApp/1.0 (contact@bazaar.app)',
+        'User-Agent': 'Bazaar/1.0 (https://bazaar.app; contact@bazaar.app)',
+        'Referer': 'https://bazaar.app',
         'Accept-Language': 'ru,uk,en'
       }
     });
