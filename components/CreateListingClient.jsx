@@ -395,7 +395,21 @@ export default function CreateListingClient({ onCreated, editId }) {
           if (error) throw error;
       }
 
-      // 3. Insert into listing_images table
+      // 3. Update listing_images table
+      // First, delete OLD images to prevent duplication/ghosting
+      // (We use a full replace strategy for simplicity and correctness)
+      const currentId = editId || listingId;
+      
+      const { error: deleteError } = await supabase
+          .from("listing_images")
+          .delete()
+          .eq("listing_id", currentId);
+
+      if (deleteError) {
+          console.error("Error clearing old images:", deleteError);
+          // Proceeding anyway might be risky, but let's try to insert new ones.
+      }
+
       if (listingImagesInserts.length > 0) {
           const { error: imgError } = await supabase.from("listing_images").insert(listingImagesInserts);
           if (imgError) console.error("Error inserting listing_images:", imgError);
@@ -587,7 +601,7 @@ export default function CreateListingClient({ onCreated, editId }) {
          {inTelegram && (
              <div className="flex flex-col items-end">
                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase">Качество</span>
+                    <span className="text-[10px] font-bold text-gray-500 uppercase">{t('quality_score')}</span>
                     <span className={`text-sm font-bold ${
                         quality.score < 40 ? 'text-red-500' : 
                         quality.score < 75 ? 'text-yellow-600' : 'text-green-600'
