@@ -195,19 +195,40 @@ export default function SearchBar() {
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
               <div className="text-[10px] text-gray-400 px-3 py-1 bg-gray-50">
-                {searchTerm ? "Подсказки" : "Популярное"}
+                {searchTerm ? "Рекомендации" : "Популярное"}
               </div>
               {suggestions.map((s, i) => (
                 <button
                   key={i}
-                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50 flex items-center gap-3 border-b border-gray-50 last:border-0"
                   onClick={() => {
-                    setSearchTerm(s);
-                    handleSearch(s);
+                    if (s.type === 'listing') {
+                        // Go direct to listing
+                        router.push(`/listing/${s.id}`);
+                    } else {
+                        // Search query
+                        setSearchTerm(s.text);
+                        handleSearch(s.text);
+                    }
                   }}
                 >
-                  <span className="text-gray-400">🔍</span>
-                  {s}
+                  {/* Icon or Image */}
+                  <div className="w-8 h-8 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden flex items-center justify-center text-lg">
+                      {s.image ? (
+                          <img src={s.image} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                          <span className="opacity-50">{s.type === 'listing' ? '📦' : '🔍'}</span>
+                      )}
+                  </div>
+                  
+                  {/* Text */}
+                  <div className="flex-1">
+                      <div className="font-medium truncate text-gray-800">{s.text}</div>
+                      {s.subText && <div className="text-[10px] text-gray-400">{s.subText}</div>}
+                  </div>
+
+                  {/* Arrow */}
+                  <span className="text-gray-300 text-xs">↗</span>
                 </button>
               ))}
             </div>

@@ -53,8 +53,15 @@ begin
         -- 2. Fuzzy Title match (for typos) - only if query is long enough
         (length(search_query) > 3 and title % search_query)
         or
-        -- 3. Simple ILIKE fallback for very short queries or exact matches
-        title ilike '%' || search_query || '%'
+        -- 3. Simple ILIKE fallback
+        -- If query is short (<3 chars), only match prefix logic to avoid "Headphones" matching "ho"
+        (length(search_query) < 3 and title ilike search_query || '%')
+        or
+        -- If query is longer, allow containment but maybe still prefer bounds? 
+        -- Let's keep containment for longer queries but it might still be noisy. 
+        -- Better: ' %query%' (start of word) or just rely on FTS.
+        -- For now, let's just make the existing line restrict to > 2 chars for wildcards.
+        (length(search_query) >= 3 and title ilike '%' || search_query || '%')
       )
     )
   order by
