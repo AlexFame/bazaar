@@ -10,7 +10,7 @@ import BackButton from "@/components/BackButton";
 import { CreateListingSkeleton } from "./SkeletonLoader";
 
 import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";
-import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";
+
 import imageCompression from 'browser-image-compression';
 import { useHaptic } from "@/hooks/useHaptic";
 import { triggerConfetti } from "@/lib/confetti";

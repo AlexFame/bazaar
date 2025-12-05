@@ -10,7 +10,7 @@ import { CATEGORY_DEFS } from "@/lib/categories";
 import { getUserId } from "@/lib/userId";
 import { translateText } from "@/lib/translation";
 import { trackAnalyticsEvent } from "@/lib/analytics";
-import { trackAnalyticsEvent } from "@/lib/analytics";
+
 import { motion } from "framer-motion";
 import { useHaptic } from "@/hooks/useHaptic";
 

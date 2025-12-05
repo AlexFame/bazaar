@@ -26,7 +26,7 @@ import dynamic from "next/dynamic";
 import PopularListingsScroll from "./PopularListingsScroll";
 import RecentlyViewedScroll from "./RecentlyViewedScroll";
 import LangSwitcher from "./LangSwitcher";
-import LangSwitcher from "./LangSwitcher";
+
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import PullToRefresh from "@/components/PullToRefresh";
 import BackButton from "@/components/BackButton";
