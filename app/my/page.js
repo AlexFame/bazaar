@@ -67,12 +67,15 @@ const pageTranslations = {
     langLabel: "Telegram language",
     confirm_delete: "Are you sure you want to delete this listing?",
     delete_error: "Failed to delete listing",
+    tab_active: "Active",
+    tab_drafts: "Drafts",
+    tab_favorites: "Favorites",
   },
 };
 
 export default function MyPage() {
-  const { lang } = useLang();
-  const t = pageTranslations[lang] || pageTranslations.ru;
+  const { lang, t } = useLang();
+  const localStrings = pageTranslations[lang] || pageTranslations.ru;
   const router = useRouter();
 
   const [userId, setUserId] = useState(null);
@@ -165,7 +168,7 @@ export default function MyPage() {
   }, []);
 
   const handleDelete = async (id) => {
-    if (!confirm(t.confirm_delete)) {
+    if (!confirm(localStrings.confirm_delete)) {
       return;
     }
 
@@ -177,7 +180,7 @@ export default function MyPage() {
 
       if (error) {
         console.error("Error deleting listing:", error);
-        alert(t.delete_error);
+        alert(localStrings.delete_error);
         return;
       }
 
@@ -185,7 +188,7 @@ export default function MyPage() {
       setListings(prev => prev.filter(l => l.id !== id));
     } catch (err) {
       console.error("Error:", err);
-      alert(t.delete_error);
+      alert(localStrings.delete_error);
     }
   };
 
@@ -199,15 +202,14 @@ export default function MyPage() {
       <div className="w-full max-w-[520px] px-3">
         
         <div className="mb-3">
-            {/* <BackButton /> */}
-            <div className="p-2 bg-gray-100 rounded">Back Button Placeholder</div>
+            <BackButton />
         </div>
-        <h1 className="text-lg font-semibold mb-1">{t.my}</h1>
-        <p className="text-sm text-gray-500 mb-3">{t.mySubtitle}</p>
+        <h1 className="text-lg font-semibold mb-1">{localStrings.my}</h1>
+        <p className="text-sm text-gray-500 mb-3">{localStrings.mySubtitle}</p>
 
         {tgUser && (
             <div className="bg-white rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
-                <div className="font-semibold mb-2">{t.userBlockTitle}</div>
+                <div className="font-semibold mb-2">{localStrings.userBlockTitle}</div>
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold overflow-hidden relative">
                     {tgUser.photo_url ? (
@@ -295,7 +297,7 @@ export default function MyPage() {
                 className="w-full py-3 bg-black text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
             >
                 <span>+</span>
-                {t.createBtn}
+                {localStrings.createBtn}
             </Link>
         </div>
 
@@ -303,20 +305,19 @@ export default function MyPage() {
         {loading && (
              <div className="bg-white rounded-2xl shadow-sm p-3">
                 <div className="grid grid-cols-2 gap-2">
-                  {/* [...Array(4)].map((_, i) => (
+                  {[...Array(4)].map((_, i) => (
                     <div key={i} className="overflow-hidden">
                       <ListingCardSkeleton />
                     </div>
-                  )) */}
-                  <div>Loading...</div>
+                  ))}
                 </div>
               </div>
         )}
 
         {!loading && listings.length === 0 && (
            <div className="bg-white rounded-2xl shadow-sm p-3 text-xs text-black/80 text-center py-8">
-             <p className="text-gray-500 text-sm mb-2">{activeTab === 'active' ? t.empty : "У вас нет черновиков."}</p>
-             {activeTab === 'active' && <p className="text-black/60">{t.hintCreate}</p>}
+             <p className="text-gray-500 text-sm mb-2">{activeTab === 'active' ? localStrings.empty : "У вас нет черновиков."}</p>
+             {activeTab === 'active' && <p className="text-black/60">{localStrings.hintCreate}</p>}
            </div>
         )}
 
@@ -324,15 +325,14 @@ export default function MyPage() {
           <div className="bg-white rounded-2xl shadow-sm p-3">
             <div className="grid grid-cols-2 gap-2">
               {listings.map((listing) => (
-                // <ListingCard 
-                //   key={listing.id} 
-                //   listing={listing} 
-                //   showActions={true}
-                //   onDelete={() => handleDelete(listing.id)}
-                //   onPromote={() => handlePromote(listing.id)}
-                //   onAnalytics={() => router.push(`/my/analytics/${listing.id}`)}
-                // />
-                <div key={listing.id} className="p-4 border rounded">Listing {listing.id}</div>
+                <ListingCard 
+                  key={listing.id} 
+                  listing={listing} 
+                  showActions={true}
+                  onDelete={() => handleDelete(listing.id)}
+                  onPromote={() => handlePromote(listing.id)}
+                  onAnalytics={() => router.push(`/my/analytics/${listing.id}`)}
+                />
               ))}
             </div>
           </div>
@@ -340,11 +340,12 @@ export default function MyPage() {
       </div>
 
       {/* Premium Services Modal */}
-      {/* <PremiumServicesModal
+      <PremiumServicesModal
         listingId={selectedListingId}
         isOpen={isPremiumModalOpen}
         onClose={() => setIsPremiumModalOpen(false)}
-      /> */}
+      />
     </div>
   );
 }
+```
