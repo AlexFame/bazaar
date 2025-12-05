@@ -366,6 +366,11 @@ export default function CreateListingClient({ onCreated, editId }) {
       }
 
       // 2. Insert or Update listing
+      // 2. Insert or Update listing via Secure API
+      const tg = window.Telegram?.WebApp;
+      const initData = tg?.initData;
+      if (!initData) throw new Error("InitData missing");
+
       const payload = {
         title,
         description,
@@ -374,26 +379,27 @@ export default function CreateListingClient({ onCreated, editId }) {
         type: listingType,
         condition: listingType === "service" ? "new" : condition,
         main_image_path: uploadedPaths[0] || (images.find(i => i.type === 'existing')?.path) || null,
-        // image_path: uploadedPaths, // Removed as column might not exist or be redundant
         location_text: location,
         latitude: coordinates?.lat || null,
         longitude: coordinates?.lng || null,
         contacts: contacts || "",
-        created_by: userId,
+        // created_by is handled by server from initData
         parameters: parameters, 
-        status: status
+        status: status,
+        id: editId || listingId // Pass ID for update or insert
       };
 
-      if (editId) {
-          const { error } = await supabase.from("listings").update(payload).eq('id', editId);
-          if (error) throw error;
-      } else {
-          const { error } = await supabase.from("listings").insert({
-              id: listingId,
-              ...payload
-          });
-          if (error) throw error;
+      const res = await fetch('/api/listings/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, initData })
+      });
+
+      if (!res.ok) {
+          const dat = await res.json();
+          throw new Error(dat.error || "Save failed");
       }
+
 
       // 3. Update listing_images table
       // First, delete OLD images to prevent duplication/ghosting
@@ -684,6 +690,9 @@ export default function CreateListingClient({ onCreated, editId }) {
                         if (opt.value === "service") {
                           setCategoryKey("business");
                         }
+                        if (opt.value === 'free') {
+                            setPrice("0");
+                        }
                       }}
                       className={`block w-full text-left px-3 py-1.5 ${
                         listingType === opt.value
@@ -753,20 +762,22 @@ export default function CreateListingClient({ onCreated, editId }) {
           />
         </div>
 
-        {/* цена */}
-        <div className="mb-3">
-          <div className="text-[11px] font-semibold mb-1">
-            {t("field_price_label")}
+        {/* цена (Скрываем для типа 'free' / 'give_away') */}
+        {listingType !== 'free' && (
+          <div className="mb-3">
+            <div className="text-[11px] font-semibold mb-1">
+              {t("field_price_label")}
+            </div>
+            <input
+              type="number"
+              min="0"
+              placeholder={t("field_price_ph")}
+              className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+            />
           </div>
-          <input
-            type="number"
-            min="0"
-            placeholder={t("field_price_ph")}
-            className="w-full border border-black rounded-xl px-3 py-2 text-sm"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-          />
-        </div>
+        )}
 
         {/* Бартер */}
         <div className="mb-3 flex items-center gap-2">

@@ -263,17 +263,29 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
     if (!confirm("Удалить это объявление?")) return;
 
     try {
-      const { error } = await supabase
-        .from("listings")
-        .delete()
-        .eq("id", listing.id);
+      const tg = window.Telegram?.WebApp;
+      const initData = tg?.initData;
+      
+      if (!initData) {
+          alert("Ошибка безопасности: откройте приложение в Telegram");
+          return;
+      }
 
-      if (error) throw error;
+      const res = await fetch(`/api/listings/${listing.id}/delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData })
+      });
+
+      if (!res.ok) {
+          const dat = await res.json();
+          throw new Error(dat.error || 'Server Error');
+      }
 
       if (onDelete) onDelete();
     } catch (error) {
       console.error("Error deleting listing:", error);
-      alert("Ошибка при удалении объявления");
+      alert("Ошибка при удалении объявления: " + error.message);
     }
   };
 

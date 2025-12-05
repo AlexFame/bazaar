@@ -61,6 +61,7 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 -- Listings policies
+-- Listings policies (SECURED: Mutations only via Server Side API)
 do $$ begin
   create policy listings_select on public.listings for select using (
     status = 'active' or created_by = auth.uid()
@@ -68,15 +69,15 @@ do $$ begin
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create policy listings_insert on public.listings for insert with check (true);
+  create policy listings_insert on public.listings for insert with check (false);
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create policy listings_update_own on public.listings for update using (true);
+  create policy listings_update_own on public.listings for update using (false);
 exception when duplicate_object then null; end $$;
 
 do $$ begin
-  create policy listings_delete_own on public.listings for delete using (true);
+  create policy listings_delete_own on public.listings for delete using (false);
 exception when duplicate_object then null; end $$;
 
 -- Note: For production, replace (true) checks with auth.uid() ownership checks via Supabase Auth.

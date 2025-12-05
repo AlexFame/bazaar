@@ -23,6 +23,7 @@ import FadeIn from "@/components/FadeIn";
 const pageTranslations = {
   ru: {
     my: "Мои объявления",
+    my_orders: "Мои покупки",
     mySubtitle:
       "Здесь будут собраны все объявления, опубликованные с вашего Telegram-аккаунта.",
     createBtn: "Создать объявление",
@@ -42,6 +43,7 @@ const pageTranslations = {
   },
   ua: {
     my: "Мої оголошення",
+    my_orders: "Мої покупки",
     mySubtitle:
       "Тут будуть зібрані всі оголошення, опубліковані з вашого Telegram-акаунта.",
     createBtn: "Створити оголошення",
@@ -62,6 +64,7 @@ const pageTranslations = {
   },
   en: {
     my: "My listings",
+    my_orders: "My orders",
     mySubtitle:
       "All listings published from your Telegram account will appear here.",
     createBtn: "Create listing",
@@ -323,6 +326,15 @@ export default function MyPage() {
             >
                 <span>📊</span>
                 Статистика
+            </Link>
+            
+            {/* My Orders Button */}
+            <Link 
+                href="/my/orders"
+                className="w-full py-3 bg-white border border-gray-200 text-black rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+            >
+                <span>🛍️</span>
+                {t('my_orders') || "Мои покупки"}
             </Link>
             
             {/* Create Listing Button */}
