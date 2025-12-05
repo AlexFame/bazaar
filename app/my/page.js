@@ -84,6 +84,19 @@ export default function MyPage() {
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState(null);
 
+  // Debug imports
+  useEffect(() => {
+    console.log("MyPage Debug:", {
+      useLangType: typeof useLang,
+      getUserIdType: typeof getUserId,
+      getTelegramUserType: typeof getTelegramUser,
+      ListingCardType: typeof ListingCard,
+      BackButtonType: typeof BackButton,
+      lang,
+      tType: typeof t
+    });
+  }, []);
+
   const loadListings = async () => {
     setLoading(true);
     let tgUserId = getUserId();
