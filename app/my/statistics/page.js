@@ -183,53 +183,65 @@ export default function ProfileStatisticsPage() {
         {/* Main Stats Grid */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           {/* Total Views */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl p-6 shadow-airbnb">
-            <div className="text-4xl font-bold text-blue-600 mb-2">
-              {stats.totalViews.toLocaleString()}
+          <Link href="/my" className="block hover:scale-[1.02] active:scale-95 transition-transform">
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl p-6 shadow-airbnb h-full">
+              <div className="text-4xl font-bold text-blue-600 mb-2">
+                {stats.totalViews.toLocaleString()}
+              </div>
+              <div className="text-sm font-medium text-blue-900">{t.totalViews}</div>
             </div>
-            <div className="text-sm font-medium text-blue-900">{t.totalViews}</div>
-          </div>
+          </Link>
 
           {/* Total Favorites */}
-          <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-3xl p-6 shadow-airbnb">
-            <div className="text-4xl font-bold text-red-600 mb-2">
-              {stats.totalFavorites.toLocaleString()}
+          <Link href="/my?tab=favorites" className="block hover:scale-[1.02] active:scale-95 transition-transform">
+            <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-3xl p-6 shadow-airbnb h-full">
+              <div className="text-4xl font-bold text-red-600 mb-2">
+                {stats.totalFavorites.toLocaleString()}
+              </div>
+              <div className="text-sm font-medium text-red-900">{t.totalFavorites}</div>
             </div>
-            <div className="text-sm font-medium text-red-900">{t.totalFavorites}</div>
-          </div>
+          </Link>
 
           {/* Total Contacts */}
-          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl p-6 shadow-airbnb">
-            <div className="text-4xl font-bold text-green-600 mb-2">
-              {stats.totalContacts.toLocaleString()}
+          <Link href="/messages" className="block hover:scale-[1.02] active:scale-95 transition-transform">
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl p-6 shadow-airbnb h-full">
+              <div className="text-4xl font-bold text-green-600 mb-2">
+                {stats.totalContacts.toLocaleString()}
+              </div>
+              <div className="text-sm font-medium text-green-900">{t.totalContacts}</div>
             </div>
-            <div className="text-sm font-medium text-green-900">{t.totalContacts}</div>
-          </div>
+          </Link>
 
           {/* Total Messages */}
-          <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl p-6 shadow-airbnb">
-            <div className="text-4xl font-bold text-purple-600 mb-2">
-              {stats.totalMessages.toLocaleString()}
+          <Link href="/messages" className="block hover:scale-[1.02] active:scale-95 transition-transform">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl p-6 shadow-airbnb h-full">
+              <div className="text-4xl font-bold text-purple-600 mb-2">
+                {stats.totalMessages.toLocaleString()}
+              </div>
+              <div className="text-sm font-medium text-purple-900">{t.totalMessages}</div>
             </div>
-            <div className="text-sm font-medium text-purple-900">{t.totalMessages}</div>
-          </div>
+          </Link>
         </div>
 
         {/* Listings Count */}
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm">
-            <div className="text-3xl font-bold text-gray-900 mb-2">
-              {stats.activeListings}
+          <Link href="/my?tab=active" className="block hover:scale-[1.02] active:scale-95 transition-transform">
+            <div className="bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm h-full">
+              <div className="text-3xl font-bold text-gray-900 mb-2">
+                {stats.activeListings}
+              </div>
+              <div className="text-sm font-medium text-gray-600">{t.activeListings}</div>
             </div>
-            <div className="text-sm font-medium text-gray-600">{t.activeListings}</div>
-          </div>
+          </Link>
 
-          <div className="bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm">
-            <div className="text-3xl font-bold text-gray-900 mb-2">
-              {stats.totalListings}
+          <Link href="/my" className="block hover:scale-[1.02] active:scale-95 transition-transform">
+            <div className="bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm h-full">
+              <div className="text-3xl font-bold text-gray-900 mb-2">
+                {stats.totalListings}
+              </div>
+              <div className="text-sm font-medium text-gray-600">{t.totalListings}</div>
             </div>
-            <div className="text-sm font-medium text-gray-600">{t.totalListings}</div>
-          </div>
+          </Link>
         </div>
 
         {/* Listings List */}
