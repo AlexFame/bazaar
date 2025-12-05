@@ -1503,14 +1503,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
         )}
 
         {/* Popular Listings (Horizontal) */}
-        {categoryFilter === "all" && !hasSearchQuery && (
+        {categoryFilter === "all" && !searchTerm.trim() && (
           <div className="mt-6">
             <PopularListingsScroll />
           </div>
         )}
 
         {/* Recently Viewed (Horizontal) */}
-        {categoryFilter === "all" && !hasSearchQuery && (
+        {categoryFilter === "all" && !searchTerm.trim() && (
           <RecentlyViewedScroll />
         )}
 
