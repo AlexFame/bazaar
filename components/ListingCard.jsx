@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
+import { CATEGORY_DEFS } from "@/lib/categories";
 import { getUserId } from "@/lib/userId";
 import { translateText } from "@/lib/translation";
 import { trackAnalyticsEvent } from "@/lib/analytics";
@@ -202,6 +203,16 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   const typeText = typeMap[typeKey] || typeMap.unknown;
   const dateText = formatDate(listing?.created_at, lang);
 
+  // Category Color Logic
+  const categoryDef = CATEGORY_DEFS.find(c => c.key === listing?.category_key);
+  
+  let badgeClass = "bg-black dark:bg-white text-white dark:text-black";
+  if (categoryDef && categoryDef.color) {
+      // Extract color name from class (e.g., "pink" from "text-pink-600")
+      const colorName = categoryDef.color.split("-")[1]; 
+      badgeClass = `bg-${colorName}-100 text-${colorName}-800 dark:bg-${colorName}-900 dark:text-${colorName}-200`;
+  }
+
   // Micro-labels logic
   const isNew = listing?.created_at && (new Date() - new Date(listing.created_at)) < 24 * 60 * 60 * 1000;
   const isPopular = (listing?.views_count || 0) > 50;
@@ -352,7 +363,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
         <div className="p-3">
           {/* Тип + дата */}
           <div className="flex items-center justify-between mb-1">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-[11px] font-medium">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium ${badgeClass}`}>
               {typeText}
             </span>
             {dateText && (

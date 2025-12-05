@@ -1468,7 +1468,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
         {/* Active Category Indicator */}
         {categoryFilter !== "all" && (
           <div className="px-4 mt-4">
-            <div className="flex items-center justify-between bg-airbnb-red/5 border border-airbnb-red/10 rounded-2xl p-4">
+            <div 
+              className={`flex items-center justify-between border rounded-2xl p-4 ${
+                CATEGORY_DEFS.find((c) => c.key === categoryFilter)?.bg || "bg-gray-50"
+              } ${
+                CATEGORY_DEFS.find((c) => c.key === categoryFilter)?.bg?.replace("bg-", "border-").replace("50", "100") || "border-gray-100"
+              }`}
+            >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-2xl shadow-sm">
                   {CATEGORY_DEFS.find((c) => c.key === categoryFilter)
@@ -1476,9 +1482,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500 font-medium">
-                    Категория
+                    {txt.category}
                   </p>
-                  <p className="font-bold text-gray-900">
+                  <p className={`font-bold ${
+                    CATEGORY_DEFS.find((c) => c.key === categoryFilter)?.color || "text-gray-900"
+                  }`}>
                     {CATEGORY_DEFS.find((c) => c.key === categoryFilter)?.[
                       lang
                     ] ||

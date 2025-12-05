@@ -54,14 +54,14 @@ const NavItem = ({ href, label, IconOutline, IconSolid, isActive }) => {
                 }}
                 className="absolute inset-0"
             >
-                <IconSolid className="w-6 h-6 text-black" />
+                <IconSolid className="w-6 h-6 text-rose-600" />
             </motion.div>
         </div>
       </motion.div>
       
       <motion.span 
         className="text-[10px] font-medium"
-        animate={{ color: isActive ? "#000000" : "#6b7280" }}
+        animate={{ color: isActive ? "#e11d48" : "#6b7280" }}
         transition={{ duration: 0.2 }}
       >
         {label}
@@ -100,7 +100,7 @@ export default function BottomNavigation() {
         {/* Create Listing (Prominent) */}
         <Link href="/create" className="flex flex-col items-center justify-center w-full h-full -mt-4 no-underline">
           <motion.div 
-            className="w-12 h-12 bg-black rounded-full flex items-center justify-center shadow-lg text-white"
+            className="w-12 h-12 bg-gradient-to-tr from-rose-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg text-white"
             whileTap={{ scale: 0.9 }}
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
