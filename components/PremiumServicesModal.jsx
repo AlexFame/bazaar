@@ -81,12 +81,12 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
       if (tg?.openInvoice) {
         tg.openInvoice(data.invoiceLink, (status) => {
           if (status === "paid") {
-            alert("✅ Оплата успешна! Услуга активирована.");
+            alert(t("payment_success") || "✅ Оплата успешна! Услуга активирована.");
             onClose();
           } else if (status === "cancelled") {
             console.log("Payment cancelled");
           } else if (status === "failed") {
-            alert("❌ Оплата не удалась. Попробуйте снова.");
+            alert(t("payment_failed") || "❌ Оплата не удалась. Попробуйте снова.");
           }
           setPurchasing(null);
         });
@@ -224,7 +224,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                         Загрузка...
                       </span>
                     ) : (
-                      `Купить за ${service.price_stars} ⭐️`
+                      `${t("buy_for") || "Купить за"} ${service.price_stars} ⭐️`
                     )}
                   </button>
                 </div>
@@ -236,7 +236,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
         </div>
         {/* Info - Fixed at bottom */}
         <div className="p-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400 text-center">
-          💡 Оплата через Telegram Stars. Безопасно и мгновенно.
+          {t("payment_stars") || "💡 Оплата через Telegram Stars. Безопасно и мгновенно."}
         </div>
       </div>
     </div>
