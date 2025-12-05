@@ -103,23 +103,28 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
       path = path[0];
     }
     
+    // If path is a placeholder string like "Фото 1" or empty, ignore it
+    if (typeof path === 'string') {
+      const trimmed = path.trim();
+      if (trimmed === '' || trimmed.toLowerCase().includes('фото')) {
+        setImageUrl(null);
+        return;
+      }
+    }
+    
     // Check if path is empty, null, or just whitespace
     if (!path || (typeof path === 'string' && path.trim() === '')) {
       setImageUrl(null);
       return;
     }
 
-    // Check if path looks like a valid storage path (not a full URL)
-    // Valid paths should not start with http:// or https://
+    // Check if path looks like a full URL
     if (typeof path === 'string' && (path.startsWith('http://') || path.startsWith('https://'))) {
-      // It's already a full URL, use it directly
       setImageUrl(path);
     } else {
-      // It's a storage path, get public URL
       const { data } = supabase.storage
         .from("listing-images")
         .getPublicUrl(path);
-
       setImageUrl(data?.publicUrl || null);
     }
   }, [listing?.main_image_path, listing?.image_path]);
