@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import BackButton from "@/components/BackButton";
 import { useLang } from "@/lib/i18n-client";
 import { ChatDetailSkeleton } from "./SkeletonLoader";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function ChatWindowClient({ conversationId, listingId, sellerId }) {
   const router = useRouter();
@@ -383,12 +384,19 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
       <div 
         className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-4 w-full"
       >
+        <AnimatePresence initial={false}>
         {messages.map((msg, index) => {
           const isMe = msg.sender_id === user?.id;
           const showDate = index === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[index - 1].created_at).toDateString();
           
           return (
-            <div key={msg.id} className="flex flex-col w-full">
+            <motion.div 
+                key={msg.id} 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="flex flex-col w-full"
+            >
                 {showDate && (
                     <div className="flex justify-center my-4">
                         <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full">
@@ -418,9 +426,10 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                     </div>
                   </div>
                 </div>
-            </div>
+            </motion.div>
           );
         })}
+        </AnimatePresence>
       </div>
 
       {/* Input Area */}

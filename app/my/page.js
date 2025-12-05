@@ -11,6 +11,7 @@ import { ListingCardSkeleton } from "@/components/SkeletonLoader";
 import { getTelegramUser } from "@/lib/telegram";
 import BackButton from "@/components/BackButton";
 import PremiumServicesModal from "@/components/PremiumServicesModal";
+import FadeIn from "@/components/FadeIn";
 
 const pageTranslations = {
   ru: {
@@ -208,28 +209,30 @@ export default function MyPage() {
         <p className="text-sm text-gray-500 mb-3">{localStrings.mySubtitle}</p>
 
         {tgUser && (
-            <div className="bg-white rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
-                <div className="font-semibold mb-2">{localStrings.userBlockTitle}</div>
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold overflow-hidden relative">
-                    {tgUser.photo_url ? (
-                        <img src={tgUser.photo_url} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : (
-                        <>
-                            {tgUser.first_name?.[0]}
-                            {tgUser.last_name?.[0]}
-                        </>
-                    )}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">
-                      {tgUser.first_name}
-                      {tgUser.last_name ? ` ${tgUser.last_name}` : ""}
-                    </span>
+            <FadeIn>
+                <div className="bg-white rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
+                    <div className="font-semibold mb-2">{localStrings.userBlockTitle}</div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-sm font-semibold overflow-hidden relative">
+                        {tgUser.photo_url ? (
+                            <img src={tgUser.photo_url} alt="Avatar" className="w-full h-full object-cover" />
+                        ) : (
+                            <>
+                                {tgUser.first_name?.[0]}
+                                {tgUser.last_name?.[0]}
+                            </>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {tgUser.first_name}
+                          {tgUser.last_name ? ` ${tgUser.last_name}` : ""}
+                        </span>
 
-                  </div>
+                      </div>
+                    </div>
                 </div>
-            </div>
+            </FadeIn>
         )}
 
         {/* Admin Panel Button */}
@@ -322,20 +325,22 @@ export default function MyPage() {
         )}
 
         {!loading && listings.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm p-3">
-            <div className="grid grid-cols-2 gap-2">
-              {listings.map((listing) => (
-                <ListingCard 
-                  key={listing.id} 
-                  listing={listing} 
-                  showActions={true}
-                  onDelete={() => handleDelete(listing.id)}
-                  onPromote={() => handlePromote(listing.id)}
-                  onAnalytics={() => router.push(`/my/analytics/${listing.id}`)}
-                />
-              ))}
+          <FadeIn delay={0.2}>
+            <div className="bg-white rounded-2xl shadow-sm p-3">
+              <div className="grid grid-cols-2 gap-2">
+                {listings.map((listing) => (
+                  <ListingCard 
+                    key={listing.id} 
+                    listing={listing} 
+                    showActions={true}
+                    onDelete={() => handleDelete(listing.id)}
+                    onPromote={() => handlePromote(listing.id)}
+                    onAnalytics={() => router.push(`/my/analytics/${listing.id}`)}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
+          </FadeIn>
         )}
       </div>
 

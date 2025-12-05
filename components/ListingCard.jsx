@@ -9,6 +9,7 @@ import { useLang } from "@/lib/i18n-client";
 import { getUserId } from "@/lib/userId";
 import { translateText } from "@/lib/translation";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { motion } from "framer-motion";
 
 const typeLabels = {
   ru: {
@@ -314,13 +315,21 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
         <div className="aspect-square w-full bg-gray-100 relative overflow-hidden">
           {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt=""
-              fill
-              className="object-cover group-hover:scale-105 transition-transform duration-300"
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-            />
+            <motion.div
+              initial={{ opacity: 0, scale: 1.05 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="w-full h-full relative"
+            >
+              <Image
+                src={imageUrl}
+                alt=""
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+                onLoadingComplete={(img) => img.classList.remove("opacity-0")}
+              />
+            </motion.div>
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300">
               <svg
