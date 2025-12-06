@@ -830,6 +830,58 @@ export default function CreateListingClient({ onCreated, editId }) {
           </label>
         </div>
 
+        {/* Фото */}
+        <div className="mb-4">
+          <div className="text-[11px] font-semibold mb-2 dark:text-gray-300">
+            {t("field_photos") || "Фото"} <span className="text-gray-400 font-normal">({images.length}/10)</span>
+          </div>
+          
+          <div className="grid grid-cols-3 gap-2">
+            {images.map((img, index) => (
+              <div key={index} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-white/10 group">
+                <img src={img.url} className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index)}
+                  className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <XMarkIcon className="w-4 h-4" />
+                </button>
+                {index === 0 && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] py-1 text-center backdrop-blur-sm">
+                        Главное
+                    </div>
+                )}
+              </div>
+            ))}
+            
+            {images.length < 10 && (
+              <div className="relative aspect-square rounded-xl border-2 border-dashed border-gray-300 dark:border-white/20 flex flex-col items-center justify-center bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
+                   onClick={() => document.getElementById('file-upload').click()}
+                   onDragOver={handleDragOver}
+                   onDrop={handleDrop}
+              >
+                <input
+                  id="file-upload"
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-white/10 flex items-center justify-center mb-1 text-gray-500 dark:text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                </div>
+                <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center px-1">
+                    {t("field_photos_ph") || "Добавить"}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* локация */}
         <div className="mb-3">
           <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
@@ -861,33 +913,36 @@ export default function CreateListingClient({ onCreated, editId }) {
           </div>
         </div>
 
-        <div className="mb-3">
-          <div className="text-[11px] font-semibold mb-1">
+        {/* Контакты */}
+        <div className="mb-6">
+          <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
             {t("field_contacts_label")}
           </div>
-          <input
-            type="text"
+          <textarea
+            rows={2}
             placeholder={t("field_contacts_ph")}
-            className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+            className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm resize-none placeholder-gray-500 dark:placeholder-gray-500"
             value={contacts}
             onChange={(e) => setContacts(e.target.value)}
           />
-          {inTelegram && (
-            <button
-              type="button"
-              className="mt-2 text-xs text-blue-600 hover:text-blue-800"
-              onClick={() => {
-                const user = getTelegramUser();
-                if (user?.username) {
-                  setContacts(`@${user.username}`);
-                } else {
-                    alert("У вас не установлен username в Telegram.");
-                }
-              }}
-            >
-              {t("username_label_use") || "Использовать мой юзернейм"}
-            </button>
-          )}
+          <div className="mt-2">
+            {inTelegram && (
+                <button
+                type="button"
+                className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                onClick={() => {
+                    const user = getTelegramUser();
+                    if (user?.username) {
+                    setContacts(`@${user.username}`);
+                    } else {
+                        alert("У вас не установлен username в Telegram.");
+                    }
+                }}
+                >
+                {t("username_label_use") || "Использовать мой юзернейм"}
+                </button>
+            )}
+          </div>
         </div>
 
         {/* Состояние (только для товаров, не для услуг) */}

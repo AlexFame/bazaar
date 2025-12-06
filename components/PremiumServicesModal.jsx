@@ -239,7 +239,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
 
         </div>
         {/* Info - Fixed at bottom */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 text-xs text-gray-600 dark:text-gray-400 text-center">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 text-center leading-tight">
           {t("payment_stars") || "💡 Оплата через Telegram Stars. Безопасно и мгновенно."}
         </div>
       </div>
