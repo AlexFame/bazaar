@@ -220,6 +220,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const searchParams = useSearchParams();
   const urlQuery = (searchParams.get("q") || "").trim();
   const hasSearchQuery = urlQuery.length > 0;
+  
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1339,16 +1341,18 @@ export default function FeedPageClient({ forcedCategory = null }) {
   return (
     <div className="min-h-screen bg-white pb-32">
       {/* Header: Search + Lang */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-4 py-3 border-b border-gray-100 transition-all duration-300">
+      <header className={`sticky top-0 z-[60] bg-white/90 backdrop-blur-md px-4 py-3 border-b border-gray-100 transition-all duration-300 ${isSearchFocused ? 'bg-white' : ''}`}>
         <div className="flex items-center gap-2 max-w-[520px] mx-auto">
-          {(categoryFilter !== "all" || hasSearchQuery) && (
+          {/* Hide BackButton when focused to save space */}
+          {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery) && (
              <BackButton className="shrink-0" />
           )}
+          
           <div className="flex-1 relative">
             <form onSubmit={handleSearchSubmit}>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 group-focus-within:text-airbnb-red transition-colors" />
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 group-focus-within:text-black transition-colors" />
                 </div>
                 <input
                   ref={searchInputRef}
@@ -1357,87 +1361,125 @@ export default function FeedPageClient({ forcedCategory = null }) {
                   className="w-full pl-10 pr-4 py-3 bg-gray-100 border-none rounded-full text-sm focus:bg-white focus:ring-2 focus:ring-black/5 focus:shadow-md transition-all shadow-sm placeholder-gray-500 text-gray-900"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  onFocus={() => setShowSearchHistory(true)}
-                  onBlur={() =>
-                    setTimeout(() => setShowSearchHistory(false), 200)
-                  }
+                  onFocus={() => {
+                      setShowSearchHistory(true);
+                      setIsSearchFocused(true);
+                  }}
+                  // Removed onBlur to keep overlay open until Cancel/Submit
                   onKeyDown={handleSearchKeyDown}
                 />
               </div>
             </form>
 
-            {/* Smart Search Suggestions */}
-            {showSearchHistory && searchTerm.length >= 2 && searchSuggestions.length > 0 && (
-              <div className="absolute top-full left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-50 mt-2 max-h-60 overflow-y-auto p-2">
-                <div className="px-3 py-2 border-b border-gray-50">
-                  <span className="text-xs font-semibold text-gray-500">
-                    Предложения
-                  </span>
-                </div>
-                {searchSuggestions.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex justify-between items-center px-3 py-3 hover:bg-gray-50 cursor-pointer rounded-xl transition-colors"
-                    onClick={() => handleSuggestionClick(item)}
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-sm text-gray-900 font-medium">
-                        {item.title}
-                      </span>
-                      {item.category && (
-                        <span className="text-xs text-gray-500">
-                          📁 {item.category}
-                        </span>
-                      )}
+            {/* Smart Search Suggestions - Full Screen Overlay Mode */}
+            {isSearchFocused && (searchTerm.length >= 2 && searchSuggestions.length > 0) && (
+              <div className="fixed top-[64px] left-0 w-full h-[calc(100vh-64px)] bg-white z-50 overflow-y-auto p-2 pb-20 animate-in fade-in duration-200">
+                <div className="max-w-[520px] mx-auto">
+                    <div className="px-3 py-2 border-b border-gray-50">
+                    <span className="text-xs font-semibold text-gray-500">
+                        Предложения
+                    </span>
                     </div>
-                  </div>
-                ))}
+                    {searchSuggestions.map((item, idx) => (
+                    <div
+                        key={idx}
+                        className="flex justify-between items-center px-3 py-3 hover:bg-gray-50 cursor-pointer rounded-xl transition-colors border-b border-gray-50 last:border-0"
+                        onClick={() => {
+                            handleSuggestionClick(item);
+                            setIsSearchFocused(false);
+                        }}
+                    >
+                        <div className="flex flex-col">
+                        <span className="text-sm text-gray-900 font-medium">
+                            {item.title}
+                        </span>
+                        {item.category && (
+                            <span className="text-xs text-gray-500">
+                            📁 {item.category}
+                            </span>
+                        )}
+                        </div>
+                    </div>
+                    ))}
+                </div>
               </div>
             )}
 
-            {/* Search History Dropdown */}
-            {showSearchHistory && searchTerm.length < 2 && searchHistory.length > 0 && (
-              <div className="absolute top-full left-0 w-full bg-white border border-gray-100 rounded-2xl shadow-xl z-50 mt-2 max-h-60 overflow-y-auto p-2">
-                <div className="flex justify-between items-center px-3 py-2 border-b border-gray-50">
-                  <span className="text-xs font-semibold text-gray-500">
-                    Недавние
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      clearSearchHistory();
-                      setSearchHistory([]);
-                    }}
-                    className="text-xs text-red-500 hover:underline"
-                  >
-                    Очистить
-                  </button>
-                </div>
-                {searchHistory.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex justify-between items-center px-3 py-3 hover:bg-gray-50 cursor-pointer rounded-xl transition-colors"
-                    onClick={() => handleHistoryClick(item)}
-                  >
-                    <span className="text-sm text-gray-700 truncate">
-                      {item}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const h = removeFromSearchHistory(item);
-                        setSearchHistory(h);
-                      }}
-                      className="text-gray-400 hover:text-red-500 px-2"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+            {/* Search History Dropdown - Full Screen Overlay Mode */}
+            {isSearchFocused && (searchTerm.length < 2 || searchSuggestions.length === 0) && (
+              <div className="fixed top-[64px] left-0 w-full h-[calc(100vh-64px)] bg-white z-50 overflow-y-auto p-2 pb-20 animate-in fade-in duration-200">
+                 <div className="max-w-[520px] mx-auto">
+                    {searchHistory.length > 0 && (
+                        <>
+                            <div className="flex justify-between items-center px-3 py-2 border-b border-gray-50">
+                            <span className="text-xs font-semibold text-gray-500">
+                                Недавние
+                            </span>
+                            <button
+                                onClick={(e) => {
+                                e.preventDefault();
+                                clearSearchHistory();
+                                setSearchHistory([]);
+                                }}
+                                className="text-xs text-red-500 hover:underline"
+                            >
+                                Очистить
+                            </button>
+                            </div>
+                            {searchHistory.map((item, idx) => (
+                            <div
+                                key={idx}
+                                className="flex justify-between items-center px-3 py-3 hover:bg-gray-50 cursor-pointer rounded-xl transition-colors border-b border-gray-50 last:border-0"
+                                onClick={() => {
+                                    handleHistoryClick(item);
+                                    setIsSearchFocused(false);
+                                }}
+                            >
+                                <span className="text-sm text-gray-700 truncate">
+                                {item}
+                                </span>
+                                <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    const h = removeFromSearchHistory(item);
+                                    setSearchHistory(h);
+                                }}
+                                className="text-gray-400 hover:text-red-500 px-2"
+                                >
+                                ×
+                                </button>
+                            </div>
+                            ))}
+                        </>
+                    )}
+                    
+                    {/* Empty State / Hint */}
+                    {searchHistory.length === 0 && !searchTerm && (
+                        <div className="text-center text-gray-400 text-sm py-10">
+                            Введите запрос для поиска...
+                        </div>
+                    )}
+                 </div>
               </div>
             )}
           </div>
-            <LangSwitcher />
+            
+            {/* Cancel Button (Visible only when focused) */}
+            {isSearchFocused ? (
+                <button
+                    onClick={() => {
+                        setIsSearchFocused(false);
+                        setShowSearchHistory(false);
+                        setSearchTerm("");
+                    }}
+                    className="text-sm font-medium text-blue-600 px-2 hover:bg-blue-50 rounded-lg py-2 transition-colors"
+                >
+                    Отмена
+                </button>
+            ) : (
+                <LangSwitcher />
+            )}
+            
           </div>
       </header>
 
