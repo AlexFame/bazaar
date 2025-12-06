@@ -24,8 +24,7 @@ export default function SimilarListings({ categoryId, currentId, title }) {
           const { data: searchResults, error: searchError } = await supabase
             .rpc('search_listings', { 
                 search_query: title, 
-                filter_category: categoryId || undefined,
-                match_threshold: 0.1 
+                filter_category: categoryId || undefined
             });
             
           if (searchError) {
