@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
+import { useLang } from "@/lib/i18n-client";
 
 export default function SettingsPage() {
   const router = useRouter();
+  const { t } = useLang();
   const [loading, setLoading] = useState(true);
   const [preferences, setPreferences] = useState({
     messages: true,
@@ -54,7 +56,7 @@ export default function SettingsPage() {
     setSaving(false);
   };
 
-  if (loading) return <div className="p-4">Загрузка...</div>;
+  if (loading) return <div className="p-4">{t("settings_loading")}</div>;
 
   return (
     <div className="pb-24 max-w-md mx-auto bg-white dark:bg-black min-h-screen">
@@ -62,18 +64,18 @@ export default function SettingsPage() {
         <Link href="/profile" className="mr-4">
           <ChevronLeftIcon className="h-6 w-6" />
         </Link>
-        <h1 className="text-xl font-bold">Настройки</h1>
+        <h1 className="text-xl font-bold">{t("settings_title")}</h1>
       </div>
 
       <div className="p-4 space-y-6">
         <div>
-          <h2 className="text-lg font-semibold mb-3">Уведомления</h2>
+          <h2 className="text-lg font-semibold mb-3">{t("settings_notifications")}</h2>
           <div className="bg-gray-50 dark:bg-gray-900 rounded-2xl p-2">
             
             <div className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
               <div>
-                <div className="font-medium">Новые сообщения</div>
-                <div className="text-xs text-gray-500">Уведомления о сообщениях в чате</div>
+                <div className="font-medium">{t("settings_msg_new")}</div>
+                <div className="text-xs text-gray-500">{t("settings_msg_desc")}</div>
               </div>
               <Switch 
                 checked={preferences.messages} 
@@ -83,8 +85,8 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
               <div>
-                <div className="font-medium">Снижение цены</div>
-                <div className="text-xs text-gray-500">Когда товар в избранном дешевеет</div>
+                <div className="font-medium">{t("settings_price_drop")}</div>
+                <div className="text-xs text-gray-500">{t("settings_price_desc")}</div>
               </div>
               <Switch 
                 checked={preferences.price_drops} 
@@ -94,8 +96,8 @@ export default function SettingsPage() {
 
             <div className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
               <div>
-                <div className="font-medium">Новости</div>
-                <div className="text-xs text-gray-500">Важные обновления сервиса</div>
+                <div className="font-medium">{t("settings_news")}</div>
+                <div className="text-xs text-gray-500">{t("settings_news_desc")}</div>
               </div>
               <Switch 
                 checked={preferences.news} 
@@ -107,7 +109,7 @@ export default function SettingsPage() {
         </div>
         
         {saving && (
-            <div className="text-center text-xs text-gray-400">Сохранение...</div>
+            <div className="text-center text-xs text-gray-400">{t("settings_saving")}</div>
         )}
       </div>
     </div>

@@ -482,6 +482,15 @@ export default function CreateListingClient({ onCreated, editId }) {
       }
     }
 
+    // --- Conditional Logic for Sizes (Kids & Fashion) ---
+    if ((categoryKey === "kids" || categoryKey === "fashion") && (filter.key === "size_clothes" || filter.key === "size_shoes")) {
+      const currentSubtype = parameters["subtype"];
+      // If clothing, hide shoes size. If shoes, hide clothing size.
+      // If neither (e.g. accessories), hide both.
+      if (filter.key === "size_clothes" && currentSubtype !== "clothing") return null;
+      if (filter.key === "size_shoes" && currentSubtype !== "shoes") return null;
+    }
+
     // --- Conditional Logic for Realty ---
     if (categoryKey === "realty" && (filter.key === "deposit" || filter.key === "utilities_included")) {
       const currentDealType = parameters["deal_type"];
@@ -848,7 +857,7 @@ export default function CreateListingClient({ onCreated, editId }) {
                 }
               }}
             >
-              Использовать мой юзернейм
+              {t("username_label_use") || "Использовать мой юзернейм"}
             </button>
           )}
         </div>
@@ -862,9 +871,9 @@ export default function CreateListingClient({ onCreated, editId }) {
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
           >
-             <option value="new">Новое</option>
-             <option value="used">Б/у</option>
-             <option value="like_new">Как новое</option>
+             <option value="new">{t("condition_new")}</option>
+             <option value="used">{t("condition_used")}</option>
+             <option value="like_new">{t("condition_like_new")}</option>
           </select>
         </div>
         )}

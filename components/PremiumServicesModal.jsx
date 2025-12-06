@@ -127,20 +127,20 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
 
   const getServiceColor = (serviceType) => {
     const colors = {
-      urgent_sticker: "from-red-500 to-orange-500",
-      boost_1d: "from-blue-500 to-cyan-500",
-      boost_3d: "from-purple-500 to-pink-500",
-      pin_7d: "from-yellow-500 to-amber-500",
-      combo_7d: "from-indigo-500 via-purple-500 to-pink-500",
+      urgent_sticker: "bg-red-500",
+      boost_1d: "bg-blue-500",
+      boost_3d: "bg-purple-500",
+      pin_7d: "bg-amber-500",
+      combo_7d: "bg-indigo-600",
     };
-    return colors[serviceType] || "from-gray-500 to-gray-600";
+    return colors[serviceType] || "bg-gray-600";
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 animate-fade-in overscroll-contain">
-      <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden transition-all">
         {/* Scrollable Area */}
         <div className="overflow-y-auto flex-1 overscroll-contain">
         {/* Header */}
@@ -218,7 +218,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                   <button
                     onClick={() => handlePurchase(service)}
                     disabled={purchasing === service.id}
-                    className={`w-full py-3 rounded-xl font-bold text-white bg-gradient-to-r ${getServiceColor(
+                    className={`w-full py-3 rounded-xl font-bold text-white shadow-sm ${getServiceColor(
                       service.service_type
                     )} hover:opacity-90 transition-opacity disabled:opacity-50`}
                   >
