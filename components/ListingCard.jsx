@@ -312,12 +312,15 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
           })
       });
 
-      if (!res.ok) throw new Error('Failed to update status');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to update status');
+      }
 
       if (onStatusChange) onStatusChange();
     } catch (error) {
       console.error("Error updating status:", error);
-      alert("Ошибка обновления статуса");
+      alert(`Ошибка обновления статуса: ${error.message}`);
     }
   };
 
