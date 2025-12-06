@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { ListingCardSkeleton } from "./SkeletonLoader";
+import { useLang } from "@/lib/i18n-client";
 
 export default function RecentlyViewedScroll() {
   const [listings, setListings] = useState([]);
@@ -98,6 +99,8 @@ export default function RecentlyViewedScroll() {
     fetchRecentlyViewed();
   }, []);
 
+  const { t } = useLang();
+  
   if (loading) return null;
   if (listings.length === 0) return null;
 
@@ -106,7 +109,7 @@ export default function RecentlyViewedScroll() {
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg font-bold px-3 mb-3">Недавно просмотренные</h2>
+      <h2 className="text-lg font-bold px-3 mb-3">{t("recently_viewed")}</h2>
       <div className="px-3">
         <div className="grid grid-cols-2 gap-3">
           {displayItems.map((listing) => (
