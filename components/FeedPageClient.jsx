@@ -354,7 +354,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
         for (const variant of searchVariants) {
           const { data, error } = await supabase
             .from("listings")
-            .select("id, title, category_key, price")
+            .select("id, title, category_key, price, main_image_path")
             .or(`title.ilike.%${variant}%,description.ilike.%${variant}%`)
             .eq("status", "active")
             .limit(10);
@@ -384,7 +384,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 price: item.price,
                 category: category ? category[lang] || category.ru : null,
                 categoryKey: item.category_key,
-                isListing: true, // Flag to identify it's a listing
+                isListing: true,
+                image: item.main_image_path,
               });
             }
           });
@@ -1357,7 +1358,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
   return (
     <div className="min-h-screen bg-white pb-32">
       {/* Header: Search + Lang */}
-      <header className={`sticky top-0 z-[101] bg-white/90 backdrop-blur-md px-4 py-3 border-b border-gray-100 transition-all duration-300 ${isSearchFocused ? 'bg-white' : ''}`}>
+      <header className={`${isSearchFocused ? 'fixed top-0 left-0 w-full bg-white' : 'sticky top-0 bg-white/90 backdrop-blur-md'} z-[101] px-4 py-3 border-b border-gray-100 transition-all duration-300`}>
         <div className="flex items-center gap-2 max-w-[520px] mx-auto">
           {/* Hide BackButton when focused to save space */}
           {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery) && (
@@ -1403,17 +1404,39 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         onClick={() => {
                             handleSuggestionClick(item);
                             setIsSearchFocused(false);
+                            document.body.style.overflow = "";
                         }}
                     >
-                        <div className="flex flex-col">
-                        <span className="text-sm text-gray-900 font-medium">
-                            {item.title}
-                        </span>
-                        {item.category && (
-                            <span className="text-xs text-gray-500">
-                            📁 {item.category}
-                            </span>
-                        )}
+                        <div className="flex items-center gap-3">
+                            {/* Listing Image */}
+                            {item.image ? (
+                                <img 
+                                    src={item.image} 
+                                    alt="" 
+                                    className="w-10 h-10 rounded-lg object-cover bg-gray-100 border border-gray-100" 
+                                />
+                            ) : (
+                                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+                                    <MagnifyingGlassIcon className="w-5 h-5" />
+                                </div>
+                            )}
+
+                            <div className="flex flex-col">
+                                <span className="text-sm text-gray-900 font-medium line-clamp-1">
+                                    {item.title}
+                                </span>
+                                {item.category && (
+                                    <span className="text-xs text-gray-500">
+                                    {item.category}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                        
+                        <div className="text-gray-300">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
                         </div>
                     </div>
                     ))}
@@ -1449,6 +1472,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                 onClick={() => {
                                     handleHistoryClick(item);
                                     setIsSearchFocused(false);
+                                    document.body.style.overflow = "";
                                 }}
                             >
                                 <span className="text-sm text-gray-700 truncate">
