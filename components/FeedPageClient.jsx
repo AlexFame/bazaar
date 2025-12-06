@@ -1379,9 +1379,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
   };
 
   return (
-    <div className="min-h-screen bg-white pb-32">
-      {/* Header: Search + Lang */}
-      <header className={`${isSearchFocused ? 'fixed top-0 left-0 w-full bg-white' : 'sticky top-0 bg-white/90 backdrop-blur-md'} z-[101] px-4 py-3 border-b border-gray-100 transition-all duration-300`}>
+    <main className="min-h-screen pb-20 bg-gray-50 dark:bg-black text-foreground transition-colors duration-300">
+      {/* Search Header */}
+      <header className={`sticky top-0 z-30 transition-all duration-300 ${
+        headerCompact ? "bg-white/90 dark:bg-black/90 backdrop-blur-md shadow-sm py-2" : "bg-white dark:bg-black py-4"
+      }`}>
         <div className="flex items-center gap-2 max-w-[520px] mx-auto">
           {/* Hide BackButton when focused to save space */}
           {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery) && (
@@ -1535,13 +1537,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         setShowSearchHistory(false);
                         setSearchTerm("");
                     }}
-                    className="text-sm font-medium text-blue-600 px-2 hover:bg-blue-50 rounded-lg py-2 transition-colors"
+                    className="text-sm font-medium text-blue-600 px-2 hover:bg-blue-50 dark:hover:bg-white/10 rounded-lg py-2 transition-colors"
                 >
-                    {txt.cancel}
+                    {t("cancel")}
                 </button>
             ) : (
                 <div className="flex items-center gap-2">
-                    <ThemeSwitcher />
                     <LangSwitcher />
                 </div>
             )}

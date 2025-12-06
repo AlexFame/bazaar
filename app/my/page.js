@@ -259,7 +259,7 @@ export default function MyPage() {
   };
 
   return (
-    <div className="w-full flex justify-center mt-3 mb-20">
+    <div className="w-full flex justify-center mt-3 mb-20 min-h-screen bg-white dark:bg-black transition-colors duration-300">
       <div className="w-full max-w-[520px] px-3">
         
         <div className="mb-3">

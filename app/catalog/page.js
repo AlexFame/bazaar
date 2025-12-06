@@ -53,7 +53,7 @@ export default function CatalogPage() {
           >
             {/* Icon/Emoji */}
             <div className="relative w-full flex items-center justify-center mb-3">
-              <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl group-hover:scale-110 transition-transform duration-300">
+              <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-white/10 dark:to-white/5 rounded-2xl group-hover:scale-110 transition-transform duration-300">
                 <span className="text-4xl drop-shadow-sm">
                   {cat.icon}
                 </span>
@@ -61,7 +61,7 @@ export default function CatalogPage() {
             </div>
             
             {/* Title */}
-            <span className="text-base font-bold text-center text-gray-900 leading-tight">
+            <span className="text-base font-bold text-center text-gray-900 dark:text-gray-100 leading-tight">
               {cat[lang] || cat.ru}
             </span>
           </Link>

@@ -617,9 +617,11 @@ export default function CreateListingClient({ onCreated, editId }) {
       </div>
 
       <div className="w-full max-w-xl mx-auto mt-4 px-3">
-         {/* Quality Indicator - Only in Telegram / Mobile view context if needed, or keeping it but styled */}
+      <div className="flex items-center justify-between mb-2">
+         <h1 className="text-lg font-semibold">{t("new_heading")}</h1>
+         {/* Quality Indicator */}
          {inTelegram && (
-             <div className="flex flex-col items-end mb-4">
+             <div className="flex flex-col items-end">
                  <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold text-gray-500 uppercase">{t('quality_score')}</span>
                     <span className={`text-sm font-bold ${
@@ -640,6 +642,7 @@ export default function CreateListingClient({ onCreated, editId }) {
                  </div>
              </div>
          )}
+      </div>
 
       {errorMsg && (
         <div className="mb-2 text-xs text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 rounded-xl px-3 py-2">

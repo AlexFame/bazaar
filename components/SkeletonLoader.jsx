@@ -1,6 +1,6 @@
 export function Skeleton({ className }) {
   return (
-    <div className={`animate-pulse bg-gray-200 rounded-md ${className}`} />
+    <div className={`animate-pulse bg-gray-200 dark:bg-white/10 rounded-md ${className}`} />
   );
 }
 
@@ -31,7 +31,7 @@ export function ChatListSkeleton() {
   return (
     <div className="flex flex-col gap-1 p-4">
       {[...Array(6)].map((_, i) => (
-        <div key={i} className="flex items-center gap-3 p-3 border-b border-gray-50 last:border-0">
+        <div key={i} className="flex items-center gap-3 p-3 border-b border-gray-50 dark:border-white/5 last:border-0">
           <Skeleton className="w-12 h-12 rounded-full flex-shrink-0" />
           <div className="flex-1 min-w-0 flex flex-col gap-2">
             <div className="flex justify-between items-center">
@@ -49,9 +49,9 @@ export function ChatListSkeleton() {
 
 export function ChatDetailSkeleton() {
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col h-full w-full bg-white dark:bg-black">
       {/* Header Skeleton */}
-      <div className="flex items-center gap-3 p-3 border-b border-gray-100">
+      <div className="flex items-center gap-3 p-3 border-b border-gray-100 dark:border-white/10">
         <Skeleton className="w-6 h-6 rounded-full" /> {/* Back button */}
         <Skeleton className="w-10 h-10 rounded-full" /> {/* Avatar */}
         <div className="flex flex-col gap-1 flex-1">
@@ -81,7 +81,7 @@ export function ChatDetailSkeleton() {
       </div>
 
       {/* Input Skeleton */}
-      <div className="p-3 border-t border-gray-100">
+      <div className="p-3 border-t border-gray-100 dark:border-white/10">
         <Skeleton className="h-11 w-full rounded-2xl" />
       </div>
     </div>
