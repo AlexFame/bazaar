@@ -8,12 +8,52 @@
 }
 
 /* Делаем фон всего сайта белым */
+@layer base {
+  :root {
+    --background: 0 0% 100%; /* #ffffff */
+    --foreground: 0 0% 0%; /* #000000 */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --border: 220 13% 91%; /* gray-200 */
+    --input: 220 13% 91%;
+    --primary: 346 87% 43%; /* rose-600 #e11d48 */
+    --primary-foreground: 0 0% 100%;
+    
+    --nav-bg: 0 0% 100%;
+    --nav-border: 220 13% 91%;
+    --nav-text: 215 19% 35%; /* gray-500 */
+  }
+
+  .dark {
+    --background: 0 0% 0%; /* #000000 */
+    --foreground: 0 0% 100%;
+    --card: 0 0% 5%; /* Slightly lighter than black #0d0d0d */
+    --card-foreground: 0 0% 100%;
+    --border: 0 0% 12%; /* #1a1a1a */
+    --input: 240 3.7% 15.9%;
+    --primary: 346 87% 43%;
+    --primary-foreground: 0 0% 100%;
+    
+    --nav-bg: 0 0% 0%;
+    --nav-border: 0 0% 12%;
+    --nav-text: 0 0% 60%;
+  }
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
-  background: #ffffff; /* ← белый фон */
   min-height: 100%;
+  background-color: hsl(var(--background)); 
+  color: hsl(var(--foreground));
+}
+
+/* Anzo Style Gradients */
+.dark body {
+    /* Subtle red glow at the top center, fading to black */
+    background-image: radial-gradient(circle at 50% 0%, #200505 0%, #000000 60%);
+    background-attachment: fixed;
 }
 
 /* Глобальный шрифт */

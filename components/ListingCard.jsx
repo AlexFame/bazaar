@@ -434,24 +434,23 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             )}
           </div>
 
-          {/* Заголовок */}
-          {listing.title && (
-            <h2 className="text-sm font-semibold line-clamp-2 mb-0.5 text-black dark:text-white">
-              {translatedTitle || listing.title}
-            </h2>
-          )}
-
-          {/* Цена */}
-          {typeof listing.price === "number" && (
-            <div className="flex justify-between items-end mt-auto pt-2">
-            <span className="font-semibold text-sm text-black dark:text-white">{listing.price} €</span>
-            {listing.views_count > 0 && (
-              <span className="text-[10px] text-gray-400 flex items-center gap-1">
-                👁️ {listing.views_count}
+          {/* Price & Title */}
+          <div className="mb-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-lg font-bold text-foreground">
+                {listing.price} {listing.currency || "€"}
               </span>
-            )}
+              {listing.views_count > 0 && (
+                <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                    👁️ {listing.views_count}
+                </span>
+              )}
+            </div>
+            
+            <h3 className="font-medium text-foreground line-clamp-2 text-sm leading-snug min-h-[2.5em]">
+                {translatedTitle || listing.title}
+            </h3>
           </div>
-          )}
 
           {/* Локация */}
           {listing.location_text && (

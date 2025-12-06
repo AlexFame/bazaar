@@ -60,8 +60,9 @@ const NavItem = ({ href, label, IconOutline, IconSolid, isActive }) => {
       </motion.div>
       
       <motion.span 
-        className="text-[10px] font-medium"
-        animate={{ color: isActive ? "#e11d48" : "#6b7280" }}
+        animate={{ color: isActive ? "#e11d48" : "var(--nav-text)" }}
+        style={{ "--nav-text": "gray" }} // We'll handle this via class instead or use a CSS variable
+        className={`text-[10px] font-medium ${isActive ? 'text-rose-600' : 'text-gray-500 dark:text-gray-400'}`}
         transition={{ duration: 0.2 }}
       >
         {label}
@@ -77,7 +78,7 @@ export default function BottomNavigation() {
   const isActive = (path) => pathname === path;
 
   return (
-    <div id="mobile-bottom-nav" className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-200 pb-[env(safe-area-inset-bottom)] z-50">
+    <div id="mobile-bottom-nav" className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)] z-50 transition-colors duration-300">
       <div className="flex justify-around items-center h-16 max-w-[520px] mx-auto px-2">
         {/* Home */}
         <NavItem 

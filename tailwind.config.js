@@ -8,6 +8,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        'anzo-gradient': 'linear-gradient(135deg, #DC2626 0%, #991B1B 100%)',
+        'anzo-dark-gradient': 'radial-gradient(circle at 50% 0%, #2a0505 0%, #000000 70%)',
+      },
       fontSize: {
         xs: ['0.85rem', { lineHeight: '1.2rem' }],
         sm: ['1rem', { lineHeight: '1.5rem' }],
@@ -37,6 +41,22 @@ module.exports = {
         "airbnb-gray": "#F7F7F7",
         "airbnb-text": "#222222",
         "airbnb-text-secondary": "#717171",
+
+        // Semantic Colors (CSS Variables)
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: "hsl(var(--card))",
+        "card-foreground": "hsl(var(--card-foreground))",
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        primary: "hsl(var(--primary))",
+        "primary-foreground": "hsl(var(--primary-foreground))",
+
+        // Anzo Dark Mode (Kept for reference or specific use)
+        "anzo-black": "#000000",
+        "anzo-dark": "#0A0A0A",
+        "anzo-card": "#121212",
+        "anzo-red": "#DC2626", // Red-600
       },
       boxShadow: {
         'airbnb': '0 6px 16px rgba(0,0,0,0.12)',

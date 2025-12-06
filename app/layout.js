@@ -67,7 +67,7 @@ export default function RootLayout({ children }) {
           strategy="beforeInteractive"
         />
       </head>
-      <body className="min-h-screen">
+      <body className="min-h-screen bg-background text-foreground transition-colors duration-300">
         <ErrorBoundary>
           <Providers>
             <div className="telegram-container">

@@ -27,7 +27,8 @@ import PopularListingsScroll from "./PopularListingsScroll";
 import RecentlyViewedScroll from "./RecentlyViewedScroll";
 import LangSwitcher from "./LangSwitcher";
 
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import ThemeSwitcher from "./ThemeSwitcher";
+import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import PullToRefresh from "@/components/PullToRefresh";
 import BackButton from "@/components/BackButton";
 import { useImpressionTracker } from "@/hooks/useImpressionTracker";
@@ -1539,7 +1540,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     {txt.cancel}
                 </button>
             ) : (
-                <LangSwitcher />
+                <div className="flex items-center gap-2">
+                    <ThemeSwitcher />
+                    <LangSwitcher />
+                </div>
             )}
             
           </div>
