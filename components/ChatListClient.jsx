@@ -122,21 +122,21 @@ export default function ChatListClient() {
   const displayedChats = activeTab === 'selling' ? sellingChats : buyingChats;
 
   return (
-    <div className="min-h-screen bg-white animate-fade-in pb-20">
-      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-gray-100 px-4 py-3">
+    <div className="min-h-screen bg-white dark:bg-black animate-fade-in pb-20">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-white/10 px-4 py-3">
         <div className="flex items-center gap-3 mb-3">
             <BackButton />
-            <h1 className="text-lg font-bold">{t("navbar_messages")}</h1>
+            <h1 className="text-lg font-bold dark:text-white">{t("navbar_messages")}</h1>
         </div>
         
         {/* Tabs */}
-        <div className="flex p-1 bg-gray-100 rounded-xl">
+        <div className="flex p-1 bg-gray-100 dark:bg-white/10 rounded-xl">
             <button
                 onClick={() => setActiveTab('selling')}
                 className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all ${
                     activeTab === 'selling' 
-                    ? 'bg-white text-black shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-white dark:bg-card text-black dark:text-white shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
             >
                 {t("msg_tab_selling")}
@@ -145,8 +145,8 @@ export default function ChatListClient() {
                 onClick={() => setActiveTab('buying')}
                 className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all ${
                     activeTab === 'buying' 
-                    ? 'bg-white text-black shadow-sm' 
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-white dark:bg-card text-black dark:text-white shadow-sm' 
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                 }`}
             >
                 {t("msg_tab_buying")}

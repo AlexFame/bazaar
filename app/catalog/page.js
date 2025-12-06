@@ -20,12 +20,12 @@ export default function CatalogPage() {
   });
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-white dark:bg-black pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-4 py-4 border-b border-gray-100">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 py-4 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-3 mb-4">
             <BackButton />
-            <h1 className="text-2xl font-bold">Каталог</h1>
+            <h1 className="text-2xl font-bold dark:text-white">Каталог</h1>
         </div>
         
         {/* Search in Catalog */}
@@ -38,7 +38,7 @@ export default function CatalogPage() {
             placeholder={t("catalog_search_placeholder") || "Поиск категории..."}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-black transition-all"
+            className="block w-full pl-10 pr-3 py-3 border border-gray-200 dark:border-white/10 rounded-xl leading-5 bg-gray-50 dark:bg-white/10 dark:text-white placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-black focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
           />
         </div>
       </div>
@@ -49,7 +49,7 @@ export default function CatalogPage() {
           <Link 
             key={cat.key} 
             href={`/category/${cat.key}`}
-            className="group relative flex flex-col items-center justify-center p-6 bg-white rounded-3xl hover:shadow-airbnb-hover transition-all duration-300 active:scale-95 shadow-airbnb border border-gray-100"
+            className="group relative flex flex-col items-center justify-center p-6 bg-white dark:bg-white/5 rounded-3xl hover:shadow-airbnb-hover transition-all duration-300 active:scale-95 shadow-airbnb border border-gray-100 dark:border-white/10"
           >
             {/* Icon/Emoji */}
             <div className="relative w-full flex items-center justify-center mb-3">

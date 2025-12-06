@@ -329,7 +329,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   return (
     <Link href={`/listing/${listing.id}`}>
       <article 
-        className={`bg-white rounded-3xl overflow-hidden transition-all hover:shadow-airbnb-hover group relative flex flex-col h-full ${
+        className={`group relative flex flex-col h-full bg-white dark:bg-card rounded-2xl overflow-hidden shadow-airbnb hover:shadow-airbnb-hover transition-all duration-300 transform active:scale-[0.98] border border-transparent dark:border-white/10 ${
         isVip
           ? 'shadow-xl shadow-amber-500/10 border-2 border-amber-400'
           : 'shadow-airbnb border border-transparent'

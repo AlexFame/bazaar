@@ -606,16 +606,20 @@ export default function CreateListingClient({ onCreated, editId }) {
 
 
   return (
-    <section className="w-full max-w-xl mx-auto mt-4 px-3">
-      <div className="mb-3">
+    <div className="min-h-screen bg-white dark:bg-black pb-24">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 py-4 border-b border-gray-100 dark:border-white/10">
+        <div className="flex items-center gap-3">
           <BackButton />
+          <h1 className="text-xl font-bold dark:text-white">
+            {editId ? t("create_title_edit") : t("create_title")}
+          </h1>
+        </div>
       </div>
 
-      <div className="flex items-center justify-between mb-2">
-         <h1 className="text-lg font-semibold">{t("new_heading")}</h1>
-         {/* Quality Indicator */}
+      <div className="w-full max-w-xl mx-auto mt-4 px-3">
+         {/* Quality Indicator - Only in Telegram / Mobile view context if needed, or keeping it but styled */}
          {inTelegram && (
-             <div className="flex flex-col items-end">
+             <div className="flex flex-col items-end mb-4">
                  <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold text-gray-500 uppercase">{t('quality_score')}</span>
                     <span className={`text-sm font-bold ${
@@ -625,7 +629,7 @@ export default function CreateListingClient({ onCreated, editId }) {
                         {quality.score}%
                     </span>
                  </div>
-                 <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden mt-1">
+                 <div className="w-24 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden mt-1">
                      <div 
                         className={`h-full transition-all duration-500 ${
                             quality.score < 40 ? 'bg-red-500' : 
@@ -636,16 +640,15 @@ export default function CreateListingClient({ onCreated, editId }) {
                  </div>
              </div>
          )}
-      </div>
 
       {errorMsg && (
-        <div className="mb-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-xl px-3 py-2">
+        <div className="mb-2 text-xs text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 rounded-xl px-3 py-2">
           {errorMsg}
         </div>
       )}
 
       {successMsg && (
-        <div className="mb-2 text-xs text-green-700 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+        <div className="mb-2 text-xs text-green-700 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/30 rounded-xl px-3 py-2">
           {successMsg}
         </div>
       )}
@@ -718,6 +721,27 @@ export default function CreateListingClient({ onCreated, editId }) {
           </div>
         </div>
 
+        <div className="bg-gray-100 dark:bg-white/5 p-4 rounded-xl mb-4">
+          <h3 className="text-xs text-gray-400 uppercase font-bold mb-2">
+            {t("preview_mode")}
+          </h3>
+          <div className="max-w-[200px] pointer-events-none opacity-80">
+            <ListingCard
+              listing={{
+                id: "preview",
+                title: title || t("field_title_placeholder"),
+                price: price || "0",
+                currency: "€",
+                image_path: imagePreviews[0] || null,
+                main_image_path: imagePreviews[0] || null,
+                type: listingType,
+                created_at: new Date().toISOString(),
+                location_text: location
+              }}
+              lang={lang}
+            />
+          </div>
+        </div>
         {/* категория */}
         <div className="flex flex-col mb-3">
           <div className="text-[11px] font-semibold mb-1">
@@ -948,6 +972,7 @@ export default function CreateListingClient({ onCreated, editId }) {
           </button>
         </div>
       </form>
-    </section>
+      </div> 
+    </div>
   );
 }
