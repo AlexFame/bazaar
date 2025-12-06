@@ -1763,6 +1763,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }
