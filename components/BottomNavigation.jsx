@@ -79,57 +79,67 @@ export default function BottomNavigation() {
 
   return (
     <div id="mobile-bottom-nav" className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)] z-50 transition-colors duration-300">
-      <div className="grid grid-cols-5 h-16 max-w-[520px] mx-auto">
+      <div className="flex items-end h-16 max-w-[520px] mx-auto">
         {/* Home */}
-        <NavItem 
-          href="/" 
-          label={t("navbar_home") || "Главная"} 
-          IconOutline={HomeIcon} 
-          IconSolid={HomeIconSolid} 
-          isActive={isActive("/")} 
-        />
+        <div className="flex-1 min-w-0 h-full">
+            <NavItem 
+            href="/" 
+            label={t("navbar_home") || "Главная"} 
+            IconOutline={HomeIcon} 
+            IconSolid={HomeIconSolid} 
+            isActive={isActive("/")} 
+            />
+        </div>
 
         {/* Catalog */}
-        <NavItem 
-          href="/catalog" 
-          label={t("navbar_catalog") || "Каталог"} 
-          IconOutline={Squares2X2Icon} 
-          IconSolid={Squares2X2IconSolid} 
-          isActive={isActive("/catalog")} 
-        />
+        <div className="flex-1 min-w-0 h-full">
+            <NavItem 
+            href="/catalog" 
+            label={t("navbar_catalog") || "Каталог"} 
+            IconOutline={Squares2X2Icon} 
+            IconSolid={Squares2X2IconSolid} 
+            isActive={isActive("/catalog")} 
+            />
+        </div>
 
         {/* Create Listing (Prominent) */}
-        <Link href="/create" className="flex flex-col items-center justify-center w-full h-full -mt-4 no-underline relative z-10">
-          <motion.div 
-            className="w-12 h-12 bg-rose-600 rounded-full flex items-center justify-center shadow-lg text-white"
-            whileTap={{ scale: 0.9 }}
-            whileHover={{ scale: 1.05 }}
-            transition={{ type: "spring", stiffness: 400, damping: 17 }}
-          >
-            <PlusIcon className="w-7 h-7" strokeWidth={2.5} />
-          </motion.div>
-          <span className="text-[10px] font-medium text-gray-500 mt-1">
-            {t("navbar_create") || "Создать"}
-          </span>
-        </Link>
+        <div className="flex-1 min-w-0 h-full relative z-10 overflow-visible">
+            <Link href="/create" className="flex flex-col items-center justify-end w-full h-full pb-[11px] no-underline group">
+            <motion.div 
+                className="w-12 h-12 bg-rose-600 rounded-full flex items-center justify-center shadow-lg text-white mb-1"
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+                <PlusIcon className="w-7 h-7" strokeWidth={2.5} />
+            </motion.div>
+            <span className="text-[10px] font-medium text-gray-500 whitespace-nowrap">
+                {t("navbar_create") || "Создать"}
+            </span>
+            </Link>
+        </div>
 
         {/* Chat */}
-        <NavItem 
-          href="/messages" 
-          label={t("navbar_messages") || "Чат"} 
-          IconOutline={ChatBubbleOvalLeftIcon} 
-          IconSolid={ChatBubbleOvalLeftIconSolid} 
-          isActive={isActive("/messages")} 
-        />
+        <div className="flex-1 min-w-0 h-full">
+            <NavItem 
+            href="/messages" 
+            label={t("navbar_messages") || "Чат"} 
+            IconOutline={ChatBubbleOvalLeftIcon} 
+            IconSolid={ChatBubbleOvalLeftIconSolid} 
+            isActive={isActive("/messages")} 
+            />
+        </div>
 
         {/* Profile */}
-        <NavItem 
-          href="/my" 
-          label={t("navbar_myAds") || "Профиль"} 
-          IconOutline={UserIcon} 
-          IconSolid={UserIconSolid} 
-          isActive={isActive("/my")} 
-        />
+        <div className="flex-1 min-w-0 h-full">
+            <NavItem 
+            href="/my" 
+            label={t("navbar_myAds") || "Профиль"} 
+            IconOutline={UserIcon} 
+            IconSolid={UserIconSolid} 
+            isActive={isActive("/my")} 
+            />
+        </div>
       </div>
     </div>
   );

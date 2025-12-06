@@ -10,6 +10,7 @@ import { geocodeAddress, getUserLocation, reverseGeocode } from "@/lib/geocoding
 import BackButton from "@/components/BackButton";
 import ListingCard from "./ListingCard"; 
 import { CreateListingSkeleton } from "./SkeletonLoader";
+import { XMarkIcon } from "@heroicons/react/24/solid";
 
 import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";
 import { calculateQuality } from "@/lib/quality"; // NEW
