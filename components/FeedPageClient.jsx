@@ -1341,7 +1341,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
   return (
     <div className="min-h-screen bg-white pb-32">
       {/* Header: Search + Lang */}
-      <header className={`sticky top-0 z-[60] bg-white/90 backdrop-blur-md px-4 py-3 border-b border-gray-100 transition-all duration-300 ${isSearchFocused ? 'bg-white' : ''}`}>
+      <header className={`sticky top-0 z-[101] bg-white/90 backdrop-blur-md px-4 py-3 border-b border-gray-100 transition-all duration-300 ${isSearchFocused ? 'bg-white' : ''}`}>
         <div className="flex items-center gap-2 max-w-[520px] mx-auto">
           {/* Hide BackButton when focused to save space */}
           {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery) && (
@@ -1373,7 +1373,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
             {/* Smart Search Suggestions - Full Screen Overlay Mode */}
             {isSearchFocused && (searchTerm.length >= 2 && searchSuggestions.length > 0) && (
-              <div className="fixed top-[64px] left-0 w-full h-[calc(100vh-64px)] bg-white z-50 overflow-y-auto p-2 pb-20 animate-in fade-in duration-200">
+              <div className="fixed top-[64px] left-0 w-full h-[calc(100vh-64px)] bg-white z-[100] overflow-y-auto p-2 pb-20 animate-in fade-in duration-200">
                 <div className="max-w-[520px] mx-auto">
                     <div className="px-3 py-2 border-b border-gray-50">
                     <span className="text-xs font-semibold text-gray-500">
@@ -1407,7 +1407,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
             {/* Search History Dropdown - Full Screen Overlay Mode */}
             {isSearchFocused && (searchTerm.length < 2 || searchSuggestions.length === 0) && (
-              <div className="fixed top-[64px] left-0 w-full h-[calc(100vh-64px)] bg-white z-50 overflow-y-auto p-2 pb-20 animate-in fade-in duration-200">
+              <div className="fixed top-[64px] left-0 w-full h-[calc(100vh-64px)] bg-white z-[100] overflow-y-auto p-2 pb-20 animate-in fade-in duration-200">
                  <div className="max-w-[520px] mx-auto">
                     {searchHistory.length > 0 && (
                         <>
