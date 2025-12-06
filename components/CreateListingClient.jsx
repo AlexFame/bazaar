@@ -555,10 +555,10 @@ export default function CreateListingClient({ onCreated, editId }) {
         // Для простоты будем считать, что при создании вводится одно значение.
         return (
             <div key={filter.key} className="mb-3">
-              <div className="text-[11px] font-semibold mb-1">{label}</div>
+              <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">{label}</div>
               <input
                 type="number"
-                className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+                className="w-full border border-black dark:border-white/20 rounded-xl px-3 py-2 text-sm bg-white dark:bg-neutral-900 text-foreground dark:text-white"
                 value={value}
                 onChange={(e) =>
                   setParameters({ ...parameters, [filter.key]: e.target.value })
@@ -571,10 +571,10 @@ export default function CreateListingClient({ onCreated, editId }) {
     // text, number
     return (
       <div key={filter.key} className="mb-3">
-        <div className="text-[11px] font-semibold mb-1">{label}</div>
+        <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">{label}</div>
         <input
           type={filter.type === "number" ? "number" : "text"}
-          className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+          className="w-full border border-black dark:border-white/20 rounded-xl px-3 py-2 text-sm bg-white dark:bg-neutral-900 text-foreground dark:text-white"
           value={value}
           onChange={(e) =>
             setParameters({ ...parameters, [filter.key]: e.target.value })
@@ -927,9 +927,9 @@ export default function CreateListingClient({ onCreated, editId }) {
         {/* Состояние (только для товаров, не для услуг) */}
         {listingType !== "service" && (
         <div className="mb-3">
-          <div className="text-[11px] font-semibold mb-1">{t("condition_label") || "Состояние"}</div>
+          <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">{t("condition_label") || "Состояние"}</div>
           <select
-            className="w-full border border-black rounded-xl px-3 py-2 text-sm bg-white"
+            className="w-full border border-black dark:border-white/20 rounded-xl px-3 py-2 text-sm bg-white dark:bg-neutral-900 text-foreground dark:text-white"
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
           >
@@ -945,7 +945,7 @@ export default function CreateListingClient({ onCreated, editId }) {
 
         {/* зона фото – много фото */}
         <div
-          className="mt-2 border border-dashed border-black rounded-2xl px-4 py-4 text-xs text-center cursor-pointer bg-white"
+          className="mt-2 border border-dashed border-black dark:border-white/20 rounded-2xl px-4 py-4 text-xs text-center cursor-pointer bg-white dark:bg-white/5 text-foreground dark:text-white"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
         >
@@ -976,8 +976,8 @@ export default function CreateListingClient({ onCreated, editId }) {
             ) : (
               <>
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <div className="text-xs font-semibold">{t("upload_photos_label") || "Загрузите фото"}</div>
-                  <div className="text-[10px] text-gray-500">{t("field_photos_ph") || "до 10 шт"}</div>
+                  <div className="text-xs font-semibold dark:text-gray-200">{t("upload_photos_label") || "Загрузите фото"}</div>
+                  <div className="text-[10px] text-gray-500 dark:text-gray-400">{t("field_photos_ph") || "до 10 шт"}</div>
                 </div>
               </>
             )}
