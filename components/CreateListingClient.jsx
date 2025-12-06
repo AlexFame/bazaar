@@ -949,6 +949,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             </div>
           </div>
         </div>
+        )}
 
 
         {/* Динамические поля категории */}
