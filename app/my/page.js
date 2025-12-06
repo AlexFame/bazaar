@@ -352,7 +352,7 @@ export default function MyPage() {
             {/* Statistics Button */}
             <Link 
                 href="/my/statistics"
-                className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:shadow-lg transition-all"
+                className="w-full py-3 bg-blue-600 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-all"
             >
                 <span>📊</span>
                 {localStrings.stats_btn}
