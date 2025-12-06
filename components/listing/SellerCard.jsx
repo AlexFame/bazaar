@@ -162,6 +162,27 @@ export default function SellerCard({ listing, isOwner }) {
                             </svg>
                         )}
                     </div>
+
+                    {/* User Badges */}
+                    {profile.badges && Array.isArray(profile.badges) && profile.badges.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1 mb-1">
+                            {profile.badges.map(b => {
+                                const map = {
+                                    top_seller: { icon: '🏆', txt: 'Top Seller', bg: 'bg-purple-100 text-purple-700' },
+                                    trusted: { icon: '🛡️', txt: 'Trusted', bg: 'bg-blue-100 text-blue-700' },
+                                    expert: { icon: '🎓', txt: 'Expert', bg: 'bg-indigo-100 text-indigo-700' },
+                                    fast_responder: { icon: '⚡', txt: 'Fast', bg: 'bg-yellow-100 text-yellow-800' }
+                                };
+                                const badge = map[b] || { icon: '🎗️', txt: b, bg: 'bg-gray-100 text-gray-600' };
+                                return (
+                                    <span key={b} className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold flex items-center gap-1 ${badge.bg}`}>
+                                        {badge.icon} {badge.txt}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    )}
+
                     <div className="text-xs text-gray-500">{t("view_profile")}</div>
                     {profile.last_seen && (
                         <div className="text-[10px] text-green-600 font-medium mt-0.5">

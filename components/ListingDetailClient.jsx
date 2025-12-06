@@ -22,6 +22,7 @@ import ListingGallery from "@/components/listing/ListingGallery";
 import ListingInfo from "@/components/listing/ListingInfo";
 import SellerCard from "@/components/listing/SellerCard";
 import ListingActions from "@/components/listing/ListingActions";
+import ListingOffers from "@/components/listing/ListingOffers";
 
 // Helpers moved to subcomponents or unused
 // buildContactLink, detectType, formatLastSeen, getSellerActivityStats moved to SellerCard.jsx
@@ -432,6 +433,9 @@ export default function ListingDetailClient({ id }) {
                   onDelete={handleDelete}
                   onPromote={() => setIsPremiumModalOpen(true)}
               />
+
+              {/* OFFERS (OWNER) */}
+              {isOwner && <ListingOffers listingId={listing.id} />}
 
               {/* Q&A Section */}
               <ListingComments listingId={listing.id} ownerId={listing.created_by} />
