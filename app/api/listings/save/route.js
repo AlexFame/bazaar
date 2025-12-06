@@ -78,7 +78,8 @@ export async function POST(req) {
     return new Response(JSON.stringify({ success: true }), { status: 200 });
 
   } catch (e) {
-    console.error("Save API Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    console.error("Save API Error FULL:", e);
+    // Return the actual error message to the client
+    return new Response(JSON.stringify({ error: e.message || "Unknown server error", details: e }), { status: 500 });
   }
 }
