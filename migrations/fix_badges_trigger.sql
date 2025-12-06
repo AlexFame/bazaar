@@ -1,4 +1,7 @@
--- Fix badges trigger logic to use valid enum values and correct parenthesis
+-- 1. Ensure is_verified column exists
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_verified boolean DEFAULT false;
+
+-- 2. Fix badges trigger logic to use valid enum values
 create or replace function public.update_profile_badges(user_id uuid)
 returns void
 language plpgsql
@@ -17,7 +20,6 @@ begin
     end if;
 
     -- 2. Check sold count (status 'sold' or 'closed' or 'archived')
-    -- Enclose ORs in parenthesis!
     select count(*) into sold_count from public.listings 
     where created_by = user_id 
     and (status = 'sold' OR status = 'closed' OR status = 'archived');
