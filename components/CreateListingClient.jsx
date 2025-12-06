@@ -618,7 +618,7 @@ export default function CreateListingClient({ onCreated, editId }) {
 
       <div className="w-full max-w-xl mx-auto mt-4 px-3">
       <div className="flex items-center justify-between mb-2">
-         <h1 className="text-lg font-semibold">{t("new_heading")}</h1>
+         <h1 className="text-lg font-semibold dark:text-white">{t("new_heading")}</h1>
          {/* Quality Indicator */}
          {inTelegram && (
              <div className="flex flex-col items-end">
@@ -656,7 +656,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-[#F2F3F7] dark:bg-card rounded-2xl p-3 border border-transparent dark:border-border">
+      <form onSubmit={handleSubmit} className="bg-[#F2F3F7] dark:bg-white/5 rounded-2xl p-3 border border-transparent dark:border-white/10">
         {/* Honeypot field - hidden from users, bots will fill it */}
         <input
           type="text"
