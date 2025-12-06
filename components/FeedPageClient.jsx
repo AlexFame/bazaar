@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion"; // Added animation lib
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { ListingCardSkeleton } from "./SkeletonLoader";
@@ -1470,12 +1471,19 @@ export default function FeedPageClient({ forcedCategory = null }) {
             )}
 
             {/* Search History Dropdown - Full Screen Overlay Mode */}
+            <AnimatePresence>
             {isSearchFocused && (searchTerm.length < 2 || searchSuggestions.length === 0) && (
-              <div className="fixed top-[64px] left-0 w-full h-[calc(100vh-64px)] bg-white z-[100] overflow-y-auto p-2 pb-20 animate-in fade-in duration-200">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, borderRadius: "50px" }}
+                animate={{ opacity: 1, scale: 1, borderRadius: "0px" }}
+                exit={{ opacity: 0, scale: 0.9, borderRadius: "50px" }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="fixed top-[64px] left-0 w-full h-[calc(100vh-64px)] bg-white dark:bg-black z-[100] overflow-y-auto p-2 pb-20"
+              >
                  <div className="max-w-[520px] mx-auto">
                     {searchHistory.length > 0 && (
                         <>
-                            <div className="flex justify-between items-center px-3 py-2 border-b border-gray-50">
+                            <div className="flex justify-between items-center px-3 py-2 border-b border-gray-50 dark:border-white/10">
                             <span className="text-xs font-semibold text-gray-500">
                                 {txt.recentlyViewed}
                             </span>
@@ -1493,14 +1501,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             {searchHistory.map((item, idx) => (
                             <div
                                 key={idx}
-                                className="flex justify-between items-center px-3 py-3 hover:bg-gray-50 cursor-pointer rounded-xl transition-colors border-b border-gray-50 last:border-0"
+                                className="flex justify-between items-center px-3 py-3 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer rounded-xl transition-colors border-b border-gray-50 dark:border-white/5 last:border-0"
                                 onClick={() => {
                                     handleHistoryClick(item);
                                     setIsSearchFocused(false);
                                     document.body.style.overflow = "";
                                 }}
                             >
-                                <span className="text-sm text-gray-700 truncate">
+                                <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
                                 {item}
                                 </span>
                                 <button
@@ -1525,8 +1533,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         </div>
                     )}
                  </div>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
             
             {/* Cancel Button (Visible only when focused) */}
