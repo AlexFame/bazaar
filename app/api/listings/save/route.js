@@ -49,18 +49,24 @@ export async function POST(req) {
 
     // 2. Handle Operation
     if (payload.id) {
-        // UPDATE
-        // Verify ownership
-        const { data: existing } = await supa.from('listings').select('created_by').eq('id', payload.id).single();
-        if (!existing) return new Response(JSON.stringify({ error: 'Listing not found' }), { status: 404 });
+        // Check if listing exists
+        const { data: existing } = await supa.from('listings').select('created_by').eq('id', payload.id).maybeSingle();
         
-        if (existing.created_by !== userId) {
-             // Check admin? assume no admin edit for now unless requested
-             return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+        if (existing) {
+             // UPDATE Existing
+             if (existing.created_by !== userId) {
+                 // Check admin? assume no admin edit for now unless requested
+                 return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
+             }
+             
+             const { error } = await supa.from('listings').update(payload).eq('id', payload.id);
+             if (error) throw error;
+        } else {
+             // INSERT New (with specific ID)
+             payload.created_by = userId;
+             const { error } = await supa.from('listings').insert(payload);
+             if (error) throw error;
         }
-        
-        const { error } = await supa.from('listings').update(payload).eq('id', payload.id);
-        if (error) throw error;
     } else {
         // INSERT
         // Force created_by to be the authenticated user
