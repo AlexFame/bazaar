@@ -725,27 +725,6 @@ export default function CreateListingClient({ onCreated, editId }) {
           </div>
         </div>
 
-        <div className="bg-gray-100 dark:bg-white/5 p-4 rounded-xl mb-4">
-          <h3 className="text-xs text-gray-400 uppercase font-bold mb-2">
-            {t("preview_mode")}
-          </h3>
-          <div className="max-w-[200px] pointer-events-none opacity-80">
-            <ListingCard
-              listing={{
-                id: "preview",
-                title: title || t("field_title_placeholder"),
-                price: price || "0",
-                currency: "€",
-                image_path: imagePreviews[0] || null,
-                main_image_path: imagePreviews[0] || null,
-                type: listingType,
-                created_at: new Date().toISOString(),
-                location_text: location
-              }}
-              lang={lang}
-            />
-          </div>
-        </div>
         {/* категория */}
         <div className="flex flex-col mb-3">
           <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
