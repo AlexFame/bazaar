@@ -326,12 +326,11 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   return (
     <Link href={`/listing/${listing.id}`}>
       <article 
-        className={`bg-white rounded-3xl overflow-hidden transition-all hover:shadow-airbnb-hover group relative ${
+        className={`bg-white rounded-3xl overflow-hidden transition-all hover:shadow-airbnb-hover group relative flex flex-col h-full ${
         isVip
           ? 'shadow-xl shadow-amber-500/10 border-2 border-amber-400'
           : 'shadow-airbnb border border-transparent'
       }`}
-        style={{ minHeight: compact ? '280px' : 'auto' }}
       >
         {/* VIP Badge - Modern Gold Design */}
         {isVip && (
@@ -421,7 +420,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
           )}
         </div>
 
-        <div className="p-3">
+        <div className="p-3 flex flex-col flex-grow">
           {/* Тип + дата */}
           <div className="flex items-center justify-between mb-1">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium ${badgeClass}`}>
