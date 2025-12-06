@@ -38,7 +38,9 @@ const pageTranslations = {
     idLabel: "Telegram ID",
     langLabel: "Язык Telegram",
     confirm_delete: "Вы уверены, что хотите удалить это объявление?",
+    confirm_delete: "Вы уверены, что хотите удалить это объявление?",
     delete_error: "Не удалось удалить объявление",
+    tab_archive: "Архив",
     settings: "Настройки",
   },
   ua: {
@@ -59,7 +61,9 @@ const pageTranslations = {
     idLabel: "Telegram ID",
     langLabel: "Мова Telegram",
     confirm_delete: "Ви впевнені, що хочете видалити це оголошення?",
+    confirm_delete: "Ви впевнені, що хочете видалити це оголошення?",
     delete_error: "Не вдалося видалити оголошення",
+    tab_archive: "Архів",
     settings: "Налаштування",
   },
   en: {
@@ -81,7 +85,9 @@ const pageTranslations = {
     confirm_delete: "Are you sure you want to delete this listing?",
     delete_error: "Failed to delete listing",
     tab_active: "Active",
+    tab_active: "Active",
     tab_drafts: "Drafts",
+    tab_archive: "Archive",
     tab_favorites: "Favorites",
     settings: "Settings",
   },
@@ -168,14 +174,22 @@ export default function MyPage() {
             .filter(l => l !== null); // Filter out any nulls if listing was deleted
         }
       } else {
-        // Fetch own listings (active/draft)
-        const result = await supabase
+        // Fetch own listings
+        let query = supabase
           .from("listings")
           .select("*, profiles:created_by(*)")
           .eq("created_by", profileData.id)
-          .eq("status", activeTab)
           .order("created_at", { ascending: false });
+
+        if (activeTab === 'active') {
+            query = query.in('status', ['active', 'reserved']);
+        } else if (activeTab === 'archive') {
+            query = query.eq('status', 'closed');
+        } else {
+            query = query.eq('status', activeTab);
+        }
         
+        const result = await query;
         data = result.data;
         error = result.error;
       }
@@ -302,6 +316,13 @@ export default function MyPage() {
                 {activeTab === "active" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
             </button>
             <button 
+                onClick={() => setActiveTab("archive")}
+                className={`flex-1 pb-2 text-sm font-medium transition-colors relative ${activeTab === "archive" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
+            >
+                {localStrings.tab_archive || "Архив"}
+                {activeTab === "archive" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
+            </button>
+            <button 
                 onClick={() => setActiveTab("draft")}
                 className={`flex-1 pb-2 text-sm font-medium transition-colors relative ${activeTab === "draft" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
             >
@@ -328,14 +349,7 @@ export default function MyPage() {
                 Статистика
             </Link>
             
-            {/* My Orders Button */}
-            <Link 
-                href="/my/orders"
-                className="w-full py-3 bg-white border border-gray-200 text-black rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
-            >
-                <span>🛍️</span>
-                {t('my_orders') || "Мои покупки"}
-            </Link>
+
             
             {/* Create Listing Button */}
             <Link 
@@ -379,6 +393,7 @@ export default function MyPage() {
                     onDelete={() => handleDelete(listing.id)}
                     onPromote={() => handlePromote(listing.id)}
                     onAnalytics={() => router.push(`/my/analytics/${listing.id}`)}
+                    onStatusChange={loadListings}
                   />
                 ))}
               </div>

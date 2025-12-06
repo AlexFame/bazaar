@@ -94,7 +94,7 @@ function formatDate(createdAt, lang) {
   });
 }
 
-export default function ListingCard({ listing, showActions, onDelete, onPromote, onAnalytics, compact }) {
+export default function ListingCard({ listing, showActions, onDelete, onPromote, onAnalytics, onStatusChange, compact }) {
   const { lang } = useLang();
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState(null);
@@ -289,6 +289,38 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
     }
   };
 
+  const handleStatusChange = async (e, newStatus) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    try {
+      const tg = window.Telegram?.WebApp;
+      const initData = tg?.initData;
+      
+      if (!initData) {
+          alert("Ошибка безопасности: откройте приложение в Telegram");
+          return;
+      }
+
+      const res = await fetch('/api/listings/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+              id: listing.id, 
+              status: newStatus,
+              initData 
+          })
+      });
+
+      if (!res.ok) throw new Error('Failed to update status');
+
+      if (onStatusChange) onStatusChange();
+    } catch (error) {
+      console.error("Error updating status:", error);
+      alert("Ошибка обновления статуса");
+    }
+  };
+
   const isVip = listing.is_vip || false;
 
   return (
@@ -308,13 +340,25 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             </div>
         )}
 
-        {/* Micro-labels (New / Popular) */}
-        {!isVip && isNew && (
+        {/* Status Badges (Override New/Popular) */}
+        {listing.status === 'closed' && (
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-gray-800 text-white text-xs font-bold rounded-lg shadow-md">
+                🔒 Sold
+            </div>
+        )}
+        {listing.status === 'reserved' && (
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded-lg shadow-md border border-yellow-500">
+                ⏳ Reserved
+            </div>
+        )}
+
+        {/* Micro-labels (New / Popular) - Only if active */}
+        {listing.status === 'active' && !isVip && isNew && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-md">
                 🔥 New
             </div>
         )}
-        {!isVip && !isNew && isPopular && (
+        {listing.status === 'active' && !isVip && !isNew && isPopular && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full shadow-md">
                 ⚡ Popular
             </div>
@@ -436,7 +480,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                   📊 Статистика
                 </button>
             )}
-            {onPromote && !isVip && (
+            {onPromote && !isVip && listing.status === 'active' && (
                 <button
                   onClick={(e) => {
                       e.preventDefault();
@@ -448,6 +492,51 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                   🚀 Продвинуть (VIP)
                 </button>
             )}
+
+            {/* Status Actions */}
+            {listing.status === 'active' && (
+                <div className="flex gap-2">
+                    <button
+                        onClick={(e) => handleStatusChange(e, 'reserved')}
+                        className="flex-1 py-1.5 px-3 bg-yellow-50 text-yellow-700 text-[11px] font-medium rounded-lg hover:bg-yellow-100 transition-colors"
+                    >
+                        В резерв
+                    </button>
+                    <button
+                        onClick={(e) => handleStatusChange(e, 'closed')}
+                        className="flex-1 py-1.5 px-3 bg-gray-100 text-gray-700 text-[11px] font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        Продано
+                    </button>
+                </div>
+            )}
+
+            {listing.status === 'reserved' && (
+                <div className="flex gap-2">
+                    <button
+                        onClick={(e) => handleStatusChange(e, 'active')}
+                        className="flex-1 py-1.5 px-3 bg-green-50 text-green-700 text-[11px] font-medium rounded-lg hover:bg-green-100 transition-colors"
+                    >
+                        Вернуть
+                    </button>
+                    <button
+                        onClick={(e) => handleStatusChange(e, 'closed')}
+                        className="flex-1 py-1.5 px-3 bg-gray-100 text-gray-700 text-[11px] font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        Продано
+                    </button>
+                </div>
+            )}
+
+            {listing.status === 'closed' && (
+                <button
+                    onClick={(e) => handleStatusChange(e, 'active')}
+                    className="w-full py-1.5 px-3 bg-green-50 text-green-700 text-[11px] font-medium rounded-lg hover:bg-green-100 transition-colors"
+                >
+                    Активировать снова
+                </button>
+            )}
+
             <button
               onClick={handleEdit}
               className="w-full py-1.5 px-3 bg-gray-100 dark:bg-gray-800 text-black dark:text-white text-[11px] font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
