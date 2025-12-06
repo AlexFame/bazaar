@@ -316,34 +316,34 @@ export default function MyPage() {
 
 
         {/* Tabs - Scrollable */}
-        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mb-4 border-b border-gray-200 pb-px">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mb-4 border-b border-gray-200 dark:border-white/10 pb-px">
             <button 
                 onClick={() => setActiveTab("active")}
-                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "active" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
+                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "active" ? "text-black dark:text-white" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
             >
                 {t("tab_active")}
-                {activeTab === "active" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
+                {activeTab === "active" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black dark:bg-white rounded-t-full"></div>}
             </button>
             <button 
                 onClick={() => setActiveTab("archive")}
-                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "archive" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
+                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "archive" ? "text-black dark:text-white" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
             >
                 {localStrings.tab_archive || "Архив"}
-                {activeTab === "archive" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
+                {activeTab === "archive" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black dark:bg-white rounded-t-full"></div>}
             </button>
             <button 
                 onClick={() => setActiveTab("draft")}
-                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "draft" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
+                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "draft" ? "text-black dark:text-white" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
             >
                 {t("tab_drafts")}
-                {activeTab === "draft" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
+                {activeTab === "draft" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black dark:bg-white rounded-t-full"></div>}
             </button>
             <button 
                 onClick={() => setActiveTab("favorites")}
-                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "favorites" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
+                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "favorites" ? "text-black dark:text-white" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
             >
                 {t("tab_favorites")}
-                {activeTab === "favorites" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
+                {activeTab === "favorites" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black dark:bg-white rounded-t-full"></div>}
             </button>
         </div>
 
@@ -361,7 +361,7 @@ export default function MyPage() {
             {/* Create Listing Button */}
             <Link 
                 href="/create"
-                className="w-full py-3 bg-black text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
+                className="w-full py-3 bg-black dark:bg-white dark:text-black text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
             >
                 <span>+</span>
                 {localStrings.createBtn}
@@ -370,7 +370,7 @@ export default function MyPage() {
 
         {/* Listings List */}
         {loading && (
-             <div className="bg-white rounded-2xl shadow-sm p-3">
+             <div className="bg-white dark:bg-transparent rounded-2xl shadow-sm p-3">
                 <div className="grid grid-cols-2 gap-2">
                   {[...Array(4)].map((_, i) => (
                     <div key={i} className="overflow-hidden">
@@ -382,20 +382,20 @@ export default function MyPage() {
         )}
 
         {!loading && listings.length === 0 && (
-           <div className="bg-white rounded-2xl shadow-sm p-3 text-xs text-black/80 text-center py-8">
+           <div className="bg-white dark:bg-white/5 rounded-2xl shadow-sm p-3 text-xs text-black/80 dark:text-white/80 text-center py-8">
              <p className="text-gray-500 text-sm mb-2">
                {activeTab === 'active' ? localStrings.empty : 
                 activeTab === 'draft' ? localStrings.empty_drafts : 
                 activeTab === 'archive' ? localStrings.empty_archive :
                 localStrings.empty_favorites}
              </p>
-             {activeTab === 'active' && <p className="text-black/60">{localStrings.hintCreate}</p>}
+             {activeTab === 'active' && <p className="text-black/60 dark:text-white/60">{localStrings.hintCreate}</p>}
            </div>
         )}
 
         {!loading && listings.length > 0 && (
           <FadeIn delay={0.2}>
-            <div className="bg-white rounded-2xl shadow-sm p-3">
+            <div className="bg-white dark:bg-transparent rounded-2xl shadow-sm p-3">
               <div className="grid grid-cols-2 gap-2">
                 {listings.map((listing) => (
                   <ListingCard 

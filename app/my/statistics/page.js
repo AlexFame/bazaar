@@ -43,11 +43,11 @@ function StatisticsListingItem({ listing, t, sortBy }) {
   return (
     <Link
       href={`/listing/${listing.id}`}
-      className="block bg-white border border-gray-200 rounded-2xl p-4 hover:shadow-airbnb transition-all"
+      className="block bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-4 hover:shadow-airbnb dark:hover:bg-white/10 transition-all"
     >
       <div className="flex items-center gap-4">
         {/* Image */}
-        <div className="w-16 h-16 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 relative">
+        <div className="w-16 h-16 bg-gray-100 dark:bg-white/10 rounded-xl overflow-hidden flex-shrink-0 relative">
           {imageUrl && !imageError ? (
             <img
               src={imageUrl}
@@ -56,7 +56,7 @@ function StatisticsListingItem({ listing, t, sortBy }) {
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <div className="w-full h-full flex items-center justify-center text-gray-300 dark:text-gray-600">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -66,7 +66,7 @@ function StatisticsListingItem({ listing, t, sortBy }) {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate">{listing.title}</h3>
+          <h3 className="font-semibold text-gray-900 dark:text-white truncate">{listing.title}</h3>
           
           {/* Detailed Stats Row */}
           <div className="flex items-center gap-3 mt-2 text-xs">
@@ -367,12 +367,12 @@ export default function ProfileStatisticsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-white dark:bg-black pb-24 transition-colors duration-300">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-4 py-4 border-b border-gray-100">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 py-4 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-3">
           <BackButton />
-          <h1 className="text-2xl font-bold">{t.title}</h1>
+          <h1 className="text-2xl font-bold dark:text-white">{t.title}</h1>
         </div>
       </div>
 
@@ -380,12 +380,11 @@ export default function ProfileStatisticsPage() {
         {/* Main Stats Grid */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           {/* Total Views */}
-          {/* Total Views */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-3xl p-6 shadow-airbnb h-full">
-            <div className="text-4xl font-bold text-blue-600 mb-2">
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-900/10 rounded-3xl p-6 shadow-airbnb dark:shadow-none h-full border border-transparent dark:border-blue-500/20">
+            <div className="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">
               {stats.totalViews.toLocaleString()}
             </div>
-            <div className="text-sm font-medium text-blue-900 flex items-center gap-1">
+            <div className="text-sm font-medium text-blue-900 dark:text-blue-300 flex items-center gap-1">
               <EyeIcon className="w-4 h-4" /> {t.totalViews}
             </div>
           </div>
@@ -395,7 +394,7 @@ export default function ProfileStatisticsPage() {
             onClick={handleFavoritesClick} 
             className={`block w-full text-left hover:scale-[1.02] active:scale-95 transition-transform ${sortBy === 'favorites' ? 'ring-2 ring-red-400' : ''}`}
           >
-            <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-3xl p-6 shadow-airbnb h-full relative overflow-hidden">
+            <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-900/10 rounded-3xl p-6 shadow-airbnb dark:shadow-none h-full relative overflow-hidden border border-transparent dark:border-red-500/20">
               {sortBy === 'favorites' && (
                  <div className="absolute top-3 right-3 text-red-500">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
@@ -403,31 +402,31 @@ export default function ProfileStatisticsPage() {
                     </svg>
                  </div>
               )}
-              <div className="text-4xl font-bold text-red-600 mb-2">
+              <div className="text-4xl font-bold text-red-600 dark:text-red-400 mb-2">
                 {stats.totalFavorites.toLocaleString()}
               </div>
-              <div className="text-sm font-medium text-red-900 flex items-center gap-1">
+              <div className="text-sm font-medium text-red-900 dark:text-red-300 flex items-center gap-1">
                 <HeartIconSolid className="w-4 h-4" /> {t.totalFavorites}
               </div>
             </div>
           </button>
 
           {/* Total Shares */}
-          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-3xl p-6 shadow-airbnb h-full">
-            <div className="text-4xl font-bold text-indigo-600 mb-2">
+          <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-900/10 rounded-3xl p-6 shadow-airbnb dark:shadow-none h-full border border-transparent dark:border-indigo-500/20">
+            <div className="text-4xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">
               {stats.totalShares.toLocaleString()}
             </div>
-            <div className="text-sm font-medium text-indigo-900 flex items-center gap-1">
+            <div className="text-sm font-medium text-indigo-900 dark:text-indigo-300 flex items-center gap-1">
               <ShareIcon className="w-4 h-4" /> {t.totalShares}
             </div>
           </div>
 
           {/* Avg Conversion */}
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-3xl p-6 shadow-airbnb h-full">
-            <div className="text-4xl font-bold text-emerald-600 mb-2">
+          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-900/10 rounded-3xl p-6 shadow-airbnb dark:shadow-none h-full border border-transparent dark:border-emerald-500/20">
+            <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400 mb-2">
               {stats.avgConversion.toFixed(1)}%
             </div>
-            <div className="text-sm font-medium text-emerald-900 flex items-center gap-1">
+            <div className="text-sm font-medium text-emerald-900 dark:text-emerald-300 flex items-center gap-1">
               <ChartBarIcon className="w-4 h-4" /> {t.avgConversion}
             </div>
           </div>
@@ -436,22 +435,22 @@ export default function ProfileStatisticsPage() {
         {/* Secondary Stats Row */}
         <div className="grid grid-cols-2 gap-4 mb-6">
            {/* Total Contacts */}
-           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-3xl p-6 shadow-airbnb h-full">
-             <div className="text-3xl font-bold text-green-600 mb-2">
+           <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-900/10 rounded-3xl p-6 shadow-airbnb dark:shadow-none h-full border border-transparent dark:border-green-500/20">
+             <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">
                {stats.totalContacts.toLocaleString()}
              </div>
-             <div className="text-sm font-medium text-green-900 flex items-center gap-1">
+             <div className="text-sm font-medium text-green-900 dark:text-green-300 flex items-center gap-1">
                <PhoneIcon className="w-4 h-4" /> {t.totalContacts}
              </div>
            </div>
 
           {/* Total Messages */}
           <Link href="/messages" className="block hover:scale-[1.02] active:scale-95 transition-transform">
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl p-6 shadow-airbnb h-full">
-              <div className="text-3xl font-bold text-purple-600 mb-2">
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-900/10 rounded-3xl p-6 shadow-airbnb dark:shadow-none h-full border border-transparent dark:border-purple-500/20">
+              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">
                 {stats.totalMessages.toLocaleString()}
               </div>
-              <div className="text-sm font-medium text-purple-900 flex items-center gap-1">
+              <div className="text-sm font-medium text-purple-900 dark:text-purple-300 flex items-center gap-1">
                 <ChatBubbleLeftRightIcon className="w-4 h-4" /> {t.totalMessages}
               </div>
             </div>
@@ -461,20 +460,20 @@ export default function ProfileStatisticsPage() {
         {/* Listings Count */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <Link href="/my?tab=active" className="block hover:scale-[1.02] active:scale-95 transition-transform">
-            <div className="bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm h-full">
-              <div className="text-2xl font-bold text-gray-900 mb-2">
+            <div className="bg-white dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-sm h-full">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {stats.activeListings}
               </div>
-              <div className="text-xs font-medium text-gray-600">{t.activeListings}</div>
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400">{t.activeListings}</div>
             </div>
           </Link>
 
           <Link href="/my" className="block hover:scale-[1.02] active:scale-95 transition-transform">
-            <div className="bg-white border-2 border-gray-200 rounded-3xl p-6 shadow-sm h-full">
-              <div className="text-2xl font-bold text-gray-900 mb-2">
+            <div className="bg-white dark:bg-white/5 border-2 border-gray-200 dark:border-white/10 rounded-3xl p-6 shadow-sm h-full">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {stats.totalListings}
               </div>
-              <div className="text-xs font-medium text-gray-600">{t.totalListings}</div>
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400">{t.totalListings}</div>
             </div>
           </Link>
         </div>
@@ -482,7 +481,7 @@ export default function ProfileStatisticsPage() {
         {/* Listings List */}
         <div className="mt-8" id="listings-list">
           <div className="flex items-center justify-between mb-4">
-             <h2 className="text-xl font-bold">{t.myListings}</h2>
+             <h2 className="text-xl font-bold dark:text-white">{t.myListings}</h2>
              {sortBy === 'favorites' && (
                 <button 
                   onClick={() => setSortBy('date')}
@@ -494,7 +493,7 @@ export default function ProfileStatisticsPage() {
           </div>
           
           {sortedListings.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-3xl">
+            <div className="text-center py-12 bg-gray-50 dark:bg-white/5 rounded-3xl">
               <p className="text-gray-500 mb-4">{t.noListings}</p>
               <Link 
                 href="/create"
