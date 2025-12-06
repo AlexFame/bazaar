@@ -346,13 +346,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
         {listing.status === 'closed' && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1.5 backdrop-blur-md bg-black/60 text-white text-xs font-bold rounded-xl shadow-sm border border-white/10 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                Sold
+                {lang === 'en' ? 'Sold' : 'Продано'}
             </div>
         )}
         {listing.status === 'reserved' && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1.5 backdrop-blur-md bg-yellow-400/90 text-black text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-black"></span>
-                Reserved
+                {lang === 'en' ? 'Reserved' : 'Бронь'}
             </div>
         )}
 
