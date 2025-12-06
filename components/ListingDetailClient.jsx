@@ -384,7 +384,7 @@ export default function ListingDetailClient({ id }) {
 
   return (
     <>
-    <div className="w-full flex justify-center mt-3">
+    <div className="w-full min-h-screen bg-gray-50 dark:bg-black flex justify-center py-3 transition-colors duration-300">
       <div className="w-full max-w-[520px] px-3">
         <div className="mb-3 flex items-center gap-3">
           <BackButton />

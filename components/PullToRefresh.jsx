@@ -93,9 +93,9 @@ export default function PullToRefresh({ onRefresh, children }) {
         className="absolute top-0 left-0 w-full flex justify-center pointer-events-none z-20"
       >
         {/* Negative margin to hide it initially, or just rely on opacity/y */}
-        <div className="mt-[-40px] w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center border border-gray-100">
+        <div className="mt-[-40px] w-10 h-10 rounded-full bg-white dark:bg-neutral-800 shadow-lg flex items-center justify-center border border-gray-100 dark:border-white/10">
           {isRefreshing ? (
-            <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin" />
+            <div className="w-5 h-5 border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin" />
           ) : (
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -103,7 +103,7 @@ export default function PullToRefresh({ onRefresh, children }) {
               viewBox="0 0 24 24"
               strokeWidth={2}
               stroke="currentColor"
-              className="w-5 h-5 text-black"
+              className="w-5 h-5 text-black dark:text-white"
             >
               <path
                 strokeLinecap="round"
