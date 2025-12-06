@@ -495,7 +495,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                       e.stopPropagation();
                       onPromote();
                   }}
-                  className="w-full py-1.5 px-3 bg-orange-500 text-white text-[11px] font-bold rounded-lg shadow-sm hover:bg-orange-600 transition-all"
+                  className="w-full py-1.5 px-3 bg-rose-600 text-white text-[11px] font-bold rounded-lg shadow-sm hover:bg-rose-700 transition-all"
                 >
                   🚀 {t("btn_promote")} (VIP)
                 </button>

@@ -100,7 +100,7 @@ export default function BottomNavigation() {
         {/* Create Listing (Prominent) */}
         <Link href="/create" className="flex flex-col items-center justify-center w-full h-full -mt-4 no-underline">
           <motion.div 
-            className="w-12 h-12 bg-gradient-to-tr from-rose-500 to-orange-500 rounded-full flex items-center justify-center shadow-lg text-white"
+            className="w-12 h-12 bg-rose-600 rounded-full flex items-center justify-center shadow-lg text-white"
             whileTap={{ scale: 0.9 }}
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
