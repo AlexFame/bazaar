@@ -261,8 +261,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const lastRefreshRef = useRef(Date.now());
 
   // фильтры
-  const [searchTerm, setSearchTerm] = useState("");
-  const [headerCompact, setHeaderCompact] = useState(false); // Header compact stateurlQuery);
+  const [searchTerm, setSearchTerm] = useState(urlQuery);
   const [locationFilter, setLocationFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
