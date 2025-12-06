@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 
@@ -62,15 +63,16 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
         <span>{t("report_button")}</span>
       </button>
       
-      {/* Modal */}
-      {isOpen && (
+      {/* Modal - Portaled */}
+      {isOpen && typeof document !== 'undefined' && createPortal(
         <div 
           className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
           onClick={() => setIsOpen(false)}
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
           <div 
-            className="bg-white rounded-2xl w-full max-w-sm p-4 shadow-xl relative"
-            onClick={(e) => e.stopPropagation()} // Prevent closing modal when clicking inside
+            className="bg-white rounded-2xl w-full max-w-sm p-4 shadow-xl relative mb-4 mx-2"
+            onClick={(e) => e.stopPropagation()} 
           >
             <button 
                 onClick={() => setIsOpen(false)}
@@ -101,7 +103,7 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
                         <button
                             type="button"
                             onClick={() => setIsOpen(false)}
-                            className="flex-1 py-2 rounded-xl border border-gray-300 text-sm hover:bg-gray-50"
+                            className="flex-1 py-2 rounded-xl border border-gray-300 text-sm hover:bg-gray-50 dark:text-black"
                         >
                             {t("cancel") || "Отмена"}
                         </button>
@@ -116,7 +118,8 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
                 </form>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

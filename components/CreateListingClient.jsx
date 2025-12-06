@@ -116,6 +116,21 @@ export default function CreateListingClient({ onCreated, editId }) {
                 }));
                 setImages(loadedImages);
                 setInitialImageIds(loadedImages.map(img => img.id));
+            } else if (data.main_image_path) {
+                // Fallback: if no relation images, use main_image_path (Legacy support)
+                let url = data.main_image_path;
+                // If it's a relative path (not starting with http), get public URL
+                if (!url.startsWith('http')) {
+                    const { data: publicData } = supabase.storage.from('listing-images').getPublicUrl(url);
+                    url = publicData.publicUrl;
+                }
+                
+                setImages([{
+                    type: 'existing',
+                    id: 'legacy-main',
+                    url: url,
+                    path: data.main_image_path
+                }]);
             }
         }
       } catch (err) {

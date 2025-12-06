@@ -548,7 +548,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
               onClick={handleEdit}
               className="w-full py-1.5 px-3 bg-gray-100 dark:bg-gray-800 text-black dark:text-white text-[11px] font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             >
-              Редактировать
+              {t("edit")}
             </button>
             <button
               onClick={handleDelete}

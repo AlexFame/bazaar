@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { createPortal } from "react-dom";
 // import Link from "next/link"; // Moved to subcomponents
 // import Image from "next/image"; // Moved to subcomponents
 import { useRouter } from "next/navigation";
@@ -386,14 +387,16 @@ export default function ListingDetailClient({ id }) {
     <>
     <div className="w-full min-h-screen bg-gray-50 dark:bg-black flex justify-center py-3 transition-colors duration-300">
       <div className="w-full max-w-[520px] px-3">
-        <div className="mb-3 flex items-center gap-3">
-          <BackButton />
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="flex-shrink-0">
+             <BackButton />
+          </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 max-w-[calc(100%-50px)]">
             {/* Share Button */}
             <button 
               onClick={handleShare}
-              className="flex items-center justify-center gap-2 px-3 py-1.5 bg-[#F2F3F7] dark:bg-white/10 rounded-full text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors text-black dark:text-white"
+              className="flex items-center justify-center gap-2 px-3 py-1.5 bg-[#F2F3F7] dark:bg-white/10 rounded-full text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors text-black dark:text-white whitespace-nowrap flex-shrink-0"
             >
               <span>📤</span>
               <span>{t("share")}</span>
@@ -448,14 +451,15 @@ export default function ListingDetailClient({ id }) {
       </div>
     </div>
 
-    {/* Share Fallback Modal (Bottom Sheet) */}
-    {isShareModalOpen && listing && (
+    {/* Share Fallback Modal (Bottom Sheet) - Portaled */}
+    {isShareModalOpen && listing && typeof document !== 'undefined' && createPortal(
       <div 
         className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
         onClick={() => setIsShareModalOpen(false)}
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div 
-          className="bg-white w-full max-w-[500px] rounded-t-3xl p-4 flex flex-col gap-4 shadow-2xl animate-in slide-in-from-bottom duration-300 pb-[calc(env(safe-area-inset-bottom)+20px)]"
+          className="bg-white w-full max-w-[500px] rounded-t-3xl p-4 flex flex-col gap-4 shadow-2xl animate-in slide-in-from-bottom duration-300 mb-4 mx-2"
           onClick={e => e.stopPropagation()}
         >
           {/* Handle bar */}
@@ -464,7 +468,7 @@ export default function ListingDetailClient({ id }) {
           </div>
 
           <div className="flex justify-between items-center px-2">
-            <h3 className="text-lg font-bold text-gray-900">{t.share}</h3>
+            <h3 className="text-lg font-bold text-gray-900">{t("share")}</h3>
             <button onClick={() => setIsShareModalOpen(false)} className="p-1.5 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-500">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -504,11 +508,12 @@ export default function ListingDetailClient({ id }) {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5" />
               </svg>
-              {t.share_copied || "Копировать ссылку"}
+              {t("share_copied") || "Копировать ссылку"}
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     )}
     
     {/* Premium Services Modal */}
