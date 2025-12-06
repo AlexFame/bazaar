@@ -122,40 +122,59 @@ export default function MyPage() {
 
   const loadListings = async () => {
     setLoading(true);
-    let tgUserId = getUserId();
-    
-    // Fallback to Supabase Auth if no Telegram ID
-    if (!tgUserId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        tgUserId = user.id; // This is a UUID, not a number.
-      }
-    }
-
-    setUserId(tgUserId);
-    
-    if (!tgUserId) {
-      setLoading(false);
-      setListings([]);
-      return;
-    }
+    let profileData = null;
 
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, is_admin")
-        .eq("tg_user_id", Number(tgUserId))
-        .single();
+        // 1. Try finding by Telegram ID
+        let tgId = getUserId();
+        if (!tgId && typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+            tgId = window.Telegram.WebApp.initDataUnsafe.user.id;
+        }
 
-      if (profileError || !profileData) {
-        setListings([]);
-        setLoading(false);
-        return;
-      }
+        if (tgId) {
+            const { data } = await supabase
+                .from("profiles")
+                .select("id, is_admin")
+                .eq("tg_user_id", Number(tgId))
+                .maybeSingle();
+            if (data) profileData = data;
+        }
 
-      setIsAdmin(profileData.is_admin || false);
+        // 2. Fallback to Supabase Auth (Profile ID)
+        if (!profileData) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                // Try to find profile matching Auth ID
+                const { data } = await supabase
+                    .from("profiles")
+                    .select("id, is_admin")
+                    .eq("id", user.id)
+                    .maybeSingle();
+                
+                if (data) {
+                    profileData = data;
+                } else if (!tgId) {
+                    // Try to finding by tg_user_id inside metadata?
+                    const metaId = user.user_metadata?.sub || user.user_metadata?.provider_id;
+                    if (metaId) {
+                         const { data: byMeta } = await supabase.from("profiles").select("id, is_admin").eq("tg_user_id", metaId).maybeSingle();
+                         if (byMeta) profileData = byMeta;
+                    }
+                }
+            }
+        }
 
-      let data, error;
+        if (!profileData) {
+            console.log("No profile found for current user.");
+            setListings([]);
+            setLoading(false);
+            return;
+        }
+
+        setUserId(profileData.id); // For state
+        setIsAdmin(profileData.is_admin || false);
+
+        let data, error;
 
       if (activeTab === 'favorites') {
         // Fetch favorites
@@ -306,32 +325,32 @@ export default function MyPage() {
 
 
 
-        {/* Tabs */}
-        <div className="flex mb-4 border-b border-gray-200">
+        {/* Tabs - Scrollable */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar mb-4 border-b border-gray-200 pb-px">
             <button 
                 onClick={() => setActiveTab("active")}
-                className={`flex-1 pb-2 text-sm font-medium transition-colors relative ${activeTab === "active" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
+                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "active" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
             >
                 {t("tab_active")}
                 {activeTab === "active" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
             </button>
             <button 
                 onClick={() => setActiveTab("archive")}
-                className={`flex-1 pb-2 text-sm font-medium transition-colors relative ${activeTab === "archive" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
+                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "archive" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
             >
                 {localStrings.tab_archive || "Архив"}
                 {activeTab === "archive" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
             </button>
             <button 
                 onClick={() => setActiveTab("draft")}
-                className={`flex-1 pb-2 text-sm font-medium transition-colors relative ${activeTab === "draft" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
+                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "draft" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
             >
                 {t("tab_drafts")}
                 {activeTab === "draft" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
             </button>
             <button 
                 onClick={() => setActiveTab("favorites")}
-                className={`flex-1 pb-2 text-sm font-medium transition-colors relative ${activeTab === "favorites" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
+                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "favorites" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
             >
                 {t("tab_favorites")}
                 {activeTab === "favorites" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
