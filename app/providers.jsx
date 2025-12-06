@@ -5,6 +5,7 @@ import { initTelegramUI, isTelegramEnv } from "@/lib/telegram";
 import { LanguageProvider } from "@/lib/i18n-client";
 
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { TelegramThemeSync } from "@/components/TelegramThemeSync";
 
 export default function Providers({ children }) {
   const [inTG, setInTG] = useState(false);
@@ -22,6 +23,7 @@ export default function Providers({ children }) {
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <TelegramThemeSync />
       <LanguageProvider>{children}</LanguageProvider>
     </ThemeProvider>
   );

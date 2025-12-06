@@ -1,43 +1,38 @@
 "use client";
 
-import { useTheme } from "next-themes";
 import { useEffect } from "react";
-import { getTG } from "@/lib/telegram";
+import { useTheme } from "next-themes";
+import { isTelegramEnv, getTG } from "@/lib/telegram";
 
-export default function TelegramThemeSync() {
-  const { theme, resolvedTheme } = useTheme();
+export function TelegramThemeSync() {
+  const { setTheme } = useTheme();
 
   useEffect(() => {
+    if (!isTelegramEnv()) return;
+
     const tg = getTG();
     if (!tg) return;
 
-    const isDark = theme === "dark" || resolvedTheme === "dark" || tg.colorScheme === "dark";
-    const color = isDark ? "#000000" : "#ffffff";
-
-    // 1. Update Telegram WebApp
-    try {
-      tg.setHeaderColor(color);
-      tg.setBackgroundColor(color);
-      if (tg.setBottomBarColor) {
-        tg.setBottomBarColor(color);
+    // Apply initial theme from Telegram
+    const applyTheme = () => {
+      const colorScheme = tg.colorScheme; // 'light' or 'dark'
+      if (colorScheme) {
+        setTheme(colorScheme);
+        // Force background colors if needed, but next-themes should handle 'class' toggle
       }
-    } catch (e) {
-      console.warn("Error syncing Telegram theme:", e);
-    }
+    };
 
-    // 2. Update Browser Meta Tag (for PWA/Mobile Browser edges)
-    try {
-      let meta = document.querySelector('meta[name="theme-color"]');
-      if (!meta) {
-        meta = document.createElement('meta');
-        meta.name = "theme-color";
-        document.head.appendChild(meta);
-      }
-      meta.content = color;
-    } catch (e) {
-      console.warn("Error syncing meta theme-color:", e);
-    }
-  }, [theme, resolvedTheme]);
+    applyTheme();
+
+    // Listen for theme changes (Telegram WebApp event)
+    // Unfortunately, Telegram doesn't have a direct 'themeChanged' event in older versions,
+    // but we can listen to 'theme_changed' if supported, or just rely on init.
+    tg.onEvent("themeChanged", applyTheme);
+
+    return () => {
+      tg.offEvent("themeChanged", applyTheme);
+    };
+  }, [setTheme]);
 
   return null;
 }
