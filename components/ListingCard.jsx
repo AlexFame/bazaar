@@ -503,7 +503,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                         onClick={(e) => handleStatusChange(e, 'reserved')}
                         className="flex-1 py-1.5 px-3 bg-yellow-50 text-yellow-700 text-[11px] font-medium rounded-lg hover:bg-yellow-100 transition-colors"
                     >
-                        В резерв
+                        В бронь
                     </button>
                     <button
                         onClick={(e) => handleStatusChange(e, 'closed')}
