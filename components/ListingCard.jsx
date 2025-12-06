@@ -328,15 +328,15 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
       <article 
         className={`bg-white rounded-3xl overflow-hidden transition-all hover:shadow-airbnb-hover group relative ${
         isVip
-          ? 'shadow-airbnb ring-2 ring-gradient-to-r from-purple-400 to-pink-400'
-          : 'shadow-airbnb'
+          ? 'shadow-xl shadow-amber-500/10 border-2 border-amber-400'
+          : 'shadow-airbnb border border-transparent'
       }`}
         style={{ minHeight: compact ? '280px' : 'auto' }}
       >
-        {/* VIP Badge - Modern gradient design */}
+        {/* VIP Badge - Modern Gold Design */}
         {isVip && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-lg shadow-lg">
-                ⭐ VIP
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-orange-500/30 flex items-center justify-center border border-white/20 backdrop-blur-sm">
+                <span className="drop-shadow-sm tracking-wide">VIP</span>
             </div>
         )}
 
