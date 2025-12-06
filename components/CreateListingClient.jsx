@@ -8,6 +8,7 @@ import { CATEGORY_DEFS } from "@/lib/categories";
 import { getTelegramUser, isTelegramEnv, checkTelegramAccountAge, getUserId } from "@/lib/telegram";
 import { geocodeAddress, getUserLocation, reverseGeocode } from "@/lib/geocoding";
 import BackButton from "@/components/BackButton";
+import ListingCard from "./ListingCard"; 
 import { CreateListingSkeleton } from "./SkeletonLoader";
 
 import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";

@@ -259,20 +259,20 @@ export default function MyPage() {
   };
 
   return (
-    <div className="w-full flex justify-center mt-3 mb-20 min-h-screen bg-white dark:bg-black transition-colors duration-300">
-      <div className="w-full max-w-[520px] px-3">
+    <div className="w-full flex justify-center mt-0 mb-20 min-h-screen bg-white dark:bg-black transition-colors duration-300">
+      <div className="w-full max-w-[520px] px-3 pt-3">
         
         <div className="mb-3">
             <BackButton />
         </div>
-        <h1 className="text-lg font-semibold mb-1">{localStrings.my}</h1>
+        <h1 className="text-lg font-semibold mb-1 dark:text-white">{localStrings.my}</h1>
         <p className="text-sm text-gray-500 mb-3">{localStrings.mySubtitle}</p>
 
         {tgUser && (
             <FadeIn>
-                <div className="bg-white rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
+                <div className="bg-white dark:bg-transparent rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
             {/* Header / User Info */}
-            <div className={`p-4 rounded-3xl bg-white dark:bg-card shadow-sm mb-6 flex items-center justify-between border border-transparent dark:border-border`}>
+            <div className={`p-4 rounded-3xl bg-white dark:bg-white/5 shadow-sm mb-6 flex items-center justify-between border border-transparent dark:border-white/10`}>
                <div className="flex items-center space-x-4">
                   <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl relative overflow-hidden">
                      {tgUser.photo_url ? (
@@ -295,9 +295,9 @@ export default function MyPage() {
                   </div>
                </div>
                
-                <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
-                   <Cog6ToothIcon className="h-4 w-4 text-gray-600" />
-                   <span className="text-xs font-medium text-gray-700">{localStrings.settings || "Настройки"}</span>
+                <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
+                   <Cog6ToothIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                   <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.settings || "Настройки"}</span>
                 </Link>
              </div>
                 </div>

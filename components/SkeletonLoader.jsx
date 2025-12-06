@@ -95,8 +95,7 @@ export function CreateListingSkeleton() {
         <Skeleton className="w-8 h-8 rounded-full" /> {/* Back Button */}
       </div>
       <Skeleton className="h-6 w-1/3 mb-4" /> {/* Heading */}
-
-      <div className="bg-[#F2F3F7] rounded-2xl p-3 flex flex-col gap-4">
+      <div className="bg-[#F2F3F7] dark:bg-white/5 rounded-2xl p-3 flex flex-col gap-4">
         {/* Type */}
         <div className="flex flex-col gap-1">
           <Skeleton className="h-3 w-1/4" />

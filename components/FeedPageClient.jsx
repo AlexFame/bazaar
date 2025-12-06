@@ -243,7 +243,16 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
+  const [headerCompact, setHeaderCompact] = useState(false);
+  
+  // Handle scroll for header compacting
+  useEffect(() => {
+    const handleScroll = () => {
+      setHeaderCompact(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
   
   useImpressionTracker(listings, "feed");
   const [page, setPage] = useState(0);
@@ -252,7 +261,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const lastRefreshRef = useRef(Date.now());
 
   // фильтры
-  const [searchTerm, setSearchTerm] = useState(urlQuery);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [headerCompact, setHeaderCompact] = useState(false); // Header compact stateurlQuery);
   const [locationFilter, setLocationFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
@@ -297,7 +307,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const searchInputRef = useRef(null);
 
   useEffect(() => {
-    setSearchHistory(getSearchHistory());
+    const stored = getSearchHistory();
+    setSearchHistory(stored);
+    
+    // Header scroll
+    const handleScroll = () => setHeaderCompact(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Smart search: fetch suggestions as user types
