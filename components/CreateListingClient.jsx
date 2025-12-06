@@ -928,15 +928,20 @@ export default function CreateListingClient({ onCreated, editId }) {
         {listingType !== "service" && (
         <div className="mb-3">
           <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">{t("condition_label") || "Состояние"}</div>
-          <select
-            className="w-full border border-black dark:border-white/20 rounded-xl px-3 py-2 text-sm bg-white dark:bg-neutral-900 text-foreground dark:text-white"
-            value={condition}
-            onChange={(e) => setCondition(e.target.value)}
-          >
-             <option value="new">{t("condition_new")}</option>
-             <option value="used">{t("condition_used")}</option>
-             <option value="like_new">{t("condition_like_new")}</option>
-          </select>
+          <div className="relative">
+            <select
+              className="w-full border border-black dark:border-white/20 rounded-xl px-3 py-2 text-sm bg-white dark:bg-neutral-900 text-foreground dark:text-white appearance-none"
+              value={condition}
+              onChange={(e) => setCondition(e.target.value)}
+            >
+               <option value="new">{t("condition_new")}</option>
+               <option value="used">{t("condition_used")}</option>
+               <option value="like_new">{t("condition_like_new")}</option>
+            </select>
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
         </div>
         )}
 

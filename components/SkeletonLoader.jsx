@@ -90,47 +90,6 @@ export function ChatDetailSkeleton() {
 
 export function CreateListingSkeleton() {
   return (
-    <div className="w-full max-w-xl mx-auto mt-4 px-3">
-      <div className="mb-3">
-        <Skeleton className="w-8 h-8 rounded-full" /> {/* Back Button */}
-      </div>
-      <Skeleton className="h-6 w-1/3 mb-4" /> {/* Heading */}
-      <div className="bg-[#F2F3F7] dark:bg-white/5 rounded-2xl p-3 flex flex-col gap-4">
-        {/* Type */}
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-3 w-1/4" />
-          <Skeleton className="h-10 w-full rounded-xl" />
-        </div>
-
-        {/* Category */}
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-3 w-1/4" />
-          <div className="flex gap-2 overflow-hidden">
-            <Skeleton className="h-8 w-20 rounded-full" />
-            <Skeleton className="h-8 w-24 rounded-full" />
-            <Skeleton className="h-8 w-16 rounded-full" />
-          </div>
-        </div>
-
-        {/* Title */}
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-3 w-1/4" />
-          <Skeleton className="h-10 w-full rounded-xl" />
-        </div>
-
-        {/* Description */}
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-3 w-1/4" />
-          <Skeleton className="h-24 w-full rounded-xl" />
-        </div>
-
-        {/* Price */}
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-3 w-1/4" />
-          <Skeleton className="h-10 w-full rounded-xl" />
-        </div>
-
-        {/* Location */}
         <div className="flex flex-col gap-1">
           <Skeleton className="h-3 w-1/4" />
           <Skeleton className="h-10 w-full rounded-xl" />
