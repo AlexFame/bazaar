@@ -122,59 +122,40 @@ export default function MyPage() {
 
   const loadListings = async () => {
     setLoading(true);
-    let profileData = null;
+    let tgUserId = getUserId();
+    
+    // Fallback to Supabase Auth if no Telegram ID
+    if (!tgUserId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        tgUserId = user.id; // This is a UUID, not a number.
+      }
+    }
+
+    setUserId(tgUserId);
+    
+    if (!tgUserId) {
+      setLoading(false);
+      setListings([]);
+      return;
+    }
 
     try {
-        // 1. Try finding by Telegram ID
-        let tgId = getUserId();
-        if (!tgId && typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
-            tgId = window.Telegram.WebApp.initDataUnsafe.user.id;
-        }
+      const { data: profileData, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, is_admin")
+        .eq("tg_user_id", Number(tgUserId))
+        .single();
 
-        if (tgId) {
-            const { data } = await supabase
-                .from("profiles")
-                .select("id, is_admin")
-                .eq("tg_user_id", Number(tgId))
-                .maybeSingle();
-            if (data) profileData = data;
-        }
+      if (profileError || !profileData) {
+        setListings([]);
+        setLoading(false);
+        return;
+      }
 
-        // 2. Fallback to Supabase Auth (Profile ID)
-        if (!profileData) {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                // Try to find profile matching Auth ID
-                const { data } = await supabase
-                    .from("profiles")
-                    .select("id, is_admin")
-                    .eq("id", user.id)
-                    .maybeSingle();
-                
-                if (data) {
-                    profileData = data;
-                } else if (!tgId) {
-                    // Try to finding by tg_user_id inside metadata?
-                    const metaId = user.user_metadata?.sub || user.user_metadata?.provider_id;
-                    if (metaId) {
-                         const { data: byMeta } = await supabase.from("profiles").select("id, is_admin").eq("tg_user_id", metaId).maybeSingle();
-                         if (byMeta) profileData = byMeta;
-                    }
-                }
-            }
-        }
+      setIsAdmin(profileData.is_admin || false);
 
-        if (!profileData) {
-            console.log("No profile found for current user.");
-            setListings([]);
-            setLoading(false);
-            return;
-        }
-
-        setUserId(profileData.id); // For state
-        setIsAdmin(profileData.is_admin || false);
-
-        let data, error;
+      let data, error;
 
       if (activeTab === 'favorites') {
         // Fetch favorites
