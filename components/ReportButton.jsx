@@ -56,14 +56,22 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className={`text-xs text-gray-400 hover:text-red-500 underline ${isOpen ? 'invisible' : 'visible'}`}
+        className="flex items-center justify-center gap-2 px-3 py-1.5 bg-[#F2F3F7] dark:bg-white/10 rounded-full text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-colors text-red-500 dark:text-red-400"
       >
-        {t("report_button") || "Пожаловаться"}
+        <span>⚠️</span>
+        <span>{t("report_button")}</span>
       </button>
       
+      {/* Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-4 shadow-xl relative">
+        <div 
+          className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={() => setIsOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl w-full max-w-sm p-4 shadow-xl relative"
+            onClick={(e) => e.stopPropagation()} // Prevent closing modal when clicking inside
+          >
             <button 
                 onClick={() => setIsOpen(false)}
                 className="absolute top-2 right-2 text-gray-400 hover:text-black"

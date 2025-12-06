@@ -59,12 +59,12 @@ export default function CreateListingClient({ onCreated, editId }) {
   
   useEffect(() => {
     const q = calculateQuality({
-        title,
-        description,
-        price,
-        location,
-        contacts,
-        images
+        title: title || "",
+        description: description || "",
+        price: price || 0,
+        location: location || "",
+        contacts: contacts || "",
+        images: images || []
     });
     setQuality(q);
   }, [title, description, price, location, contacts, images]);
@@ -74,6 +74,7 @@ export default function CreateListingClient({ onCreated, editId }) {
 
     setLoading(true);
     const fetchListing = async () => {
+      try {
         const { data, error } = await supabase
             .from("listings")
             .select("*, listing_images(*)")
@@ -82,7 +83,7 @@ export default function CreateListingClient({ onCreated, editId }) {
 
         if (error) {
             console.error("Error loading listing:", error);
-            setErrorMsg("Ошибка загрузки объявления");
+            setErrorMsg("Ошибка загрузки объявления: " + error.message);
             setLoading(false);
             return;
         }
@@ -104,8 +105,9 @@ export default function CreateListingClient({ onCreated, editId }) {
             }
 
             // Images
-            if (data.listing_images && data.listing_images.length > 0) {
-                const loadedImages = data.listing_images.map(img => ({
+            const rawImages = data.listing_images || [];
+            if (rawImages.length > 0) {
+                const loadedImages = rawImages.map(img => ({
                     type: 'existing',
                     id: img.id,
                     url: supabase.storage.from('listing-images').getPublicUrl(img.image_path).data.publicUrl,
@@ -115,7 +117,12 @@ export default function CreateListingClient({ onCreated, editId }) {
                 setInitialImageIds(loadedImages.map(img => img.id));
             }
         }
+      } catch (err) {
+        console.error("Unexpected error fetching listing:", err);
+        setErrorMsg("Произошла ошибка при загрузке объявления.");
+      } finally {
         setLoading(false);
+      }
     };
 
     fetchListing();
@@ -955,7 +962,7 @@ export default function CreateListingClient({ onCreated, editId }) {
 
         {/* зона фото – много фото */}
         <div
-          className="mt-2 border border-dashed border-black dark:border-white/20 rounded-2xl px-4 py-4 text-xs text-center cursor-pointer bg-white dark:bg-white/5 text-foreground dark:text-white"
+          className="w-full mt-2 border border-dashed border-gray-300 dark:border-white/20 rounded-2xl px-4 py-8 text-xs text-center cursor-pointer bg-transparent dark:bg-white/5 text-foreground dark:text-white"
           onDrop={handleDrop}
           onDragOver={handleDragOver}
         >

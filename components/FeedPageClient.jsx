@@ -37,7 +37,7 @@ import { useImpressionTracker } from "@/hooks/useImpressionTracker";
 const MapComponent = dynamic(() => import("./MapComponent"), {
   ssr: false,
   loading: () => (
-    <div className="h-[60vh] w-full bg-gray-100 animate-pulse rounded-xl mt-4" />
+    <div className="h-[60vh] w-full bg-gray-100 dark:bg-neutral-900 animate-pulse rounded-xl mt-4" />
   ),
 });
 

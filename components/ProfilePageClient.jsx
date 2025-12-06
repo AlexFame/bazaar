@@ -72,10 +72,10 @@ export default function ProfilePageClient({ profileId }) {
       return (
           <div className="w-full flex justify-center mt-8">
               <div className="w-full max-w-[520px] px-3">
-                  <div className="bg-white rounded-2xl p-6 shadow-sm flex flex-col items-center animate-pulse">
-                      <div className="w-24 h-24 bg-gray-200 rounded-full mb-4"></div>
-                      <div className="h-6 w-32 bg-gray-200 rounded mb-2"></div>
-                      <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                  <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm dark:shadow-none flex flex-col items-center animate-pulse">
+                      <div className="w-24 h-24 bg-gray-200 dark:bg-neutral-800 rounded-full mb-4"></div>
+                      <div className="h-6 w-32 bg-gray-200 dark:bg-neutral-800 rounded mb-2"></div>
+                      <div className="h-4 w-24 bg-gray-200 dark:bg-neutral-800 rounded"></div>
                   </div>
                   <div className="mt-6 grid grid-cols-2 gap-2">
                       <ListingCardSkeleton />

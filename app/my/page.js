@@ -22,12 +22,12 @@ import FadeIn from "@/components/FadeIn";
 
 const pageTranslations = {
   ru: {
-    my: "Мои объявления",
+    my: "Мой профиль", // Changed from "Мои объявления"
     my_orders: "Мои покупки",
     mySubtitle:
-      "Здесь будут собраны все объявления, опубликованные с вашего Telegram-аккаунта.",
+      "Здесь вы можете управлять своими объявлениями и настройками профиля.",
     createBtn: "Создать объявление",
-    loading: "Загружаем ваши объявления...",
+    loading: "Загружаем данные профиля...",
     empty: "У вас пока нет объявлений.",
     hintCreate: "Нажмите кнопку выше, чтобы опубликовать первое объявление.",
     userBlockTitle: "Telegram-профиль",
@@ -47,12 +47,12 @@ const pageTranslations = {
     empty_favorites: "Избранного пока нет."
   },
   ua: {
-    my: "Мої оголошення",
+    my: "Мій профіль", // Changed from "Мої оголошення"
     my_orders: "Мої покупки",
     mySubtitle:
-      "Тут будуть зібрані всі оголошення, опубліковані з вашого Telegram-акаунта.",
+      "Тут ви можете керувати своїми оголошеннями та налаштуваннями профілю.",
     createBtn: "Створити оголошення",
-    loading: "Завантажуємо твої оголошення...",
+    loading: "Завантажуємо дані профілю...",
     empty: "У вас поки немає оголошень.",
     hintCreate:
       "Натисніть кнопку вище, щоб опублікувати своє перше оголошення.",
@@ -73,10 +73,10 @@ const pageTranslations = {
     empty_favorites: "Ви ще нічого не вподобали."
   },
   en: {
-    my: "My listings",
+    my: "My Profile", // Changed from "My listings"
     my_orders: "My orders",
     mySubtitle:
-      "All listings published from your Telegram account will appear here.",
+      "Here you can manage your listings and profile settings.",
     createBtn: "Create listing",
     loading: "Loading your listings...",
     empty: "You don’t have any listings yet.",
@@ -272,7 +272,7 @@ export default function MyPage() {
             <FadeIn>
                 <div className="bg-white dark:bg-transparent rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
             {/* Header / User Info */}
-            <div className={`p-4 rounded-3xl bg-white dark:bg-white/5 shadow-sm mb-6 flex items-center justify-between border border-transparent`}>
+            <div className={`p-4 rounded-3xl bg-white dark:bg-white/5 shadow-sm dark:shadow-none mb-6 flex items-center justify-between border-none`}>
                <div className="flex items-center space-x-4">
                   <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl relative overflow-hidden">
                      {tgUser.photo_url ? (
