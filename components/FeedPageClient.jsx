@@ -750,6 +750,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
           return {
             ...listing,
+            main_image_path: listing.main_image_path || listingImages[0]?.image_path || null,
             listing_images: listingImages,
             profiles: mappedProfile,
           };
