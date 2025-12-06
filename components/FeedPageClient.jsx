@@ -223,6 +223,22 @@ export default function FeedPageClient({ forcedCategory = null }) {
   
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
+  // Lock body scroll and hide bottom navigation when search is active
+  useEffect(() => {
+    const nav = document.getElementById("mobile-bottom-nav");
+    if (isSearchFocused) {
+      document.body.style.overflow = "hidden";
+      if (nav) nav.style.display = "none";
+    } else {
+      document.body.style.overflow = "";
+      if (nav) nav.style.display = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      if (nav) nav.style.display = "";
+    };
+  }, [isSearchFocused]);
+
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);

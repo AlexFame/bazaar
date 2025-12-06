@@ -77,7 +77,7 @@ export default function BottomNavigation() {
   const isActive = (path) => pathname === path;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-200 pb-[env(safe-area-inset-bottom)] z-50">
+    <div id="mobile-bottom-nav" className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-gray-200 pb-[env(safe-area-inset-bottom)] z-50">
       <div className="flex justify-around items-center h-16 max-w-[520px] mx-auto px-2">
         {/* Home */}
         <NavItem 
