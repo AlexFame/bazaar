@@ -35,91 +35,90 @@ export default function SwipeNavigation() {
     };
 
     const handleTouchMove = (e) => {
-      if (!touchStartRef.current) return;
+      try {
+        if (!touchStartRef.current) return;
 
-      const x = e.touches[0].clientX;
-      const y = e.touches[0].clientY;
-      const deltaX = x - touchStartRef.current.x;
-      const deltaY = y - touchStartRef.current.y;
+        const x = e.touches[0].clientX;
+        const y = e.touches[0].clientY;
+        const deltaX = x - touchStartRef.current.x;
+        const deltaY = y - touchStartRef.current.y;
 
-      // 1. Check intent if not yet dragging
-      if (!isDraggingRef.current) {
-        // Must be moving Right
-        if (deltaX < 0) return; // moving left
+        // 1. Check intent if not yet dragging
+        if (!isDraggingRef.current) {
+          // Must be moving Right
+          if (deltaX < 0) return; // moving left
 
-        // Must be mostly horizontal
-        if (Math.abs(deltaY) > Math.abs(deltaX)) {
-             // Vertical scroll intent, ignore this gesture
-             touchStartRef.current = null;
-             return;
-        }
-        
-        // Check for scrollable containers
-        if (Math.abs(deltaX) > 10) { // small buffer
-           if (isTouchInScrollable(touchStartRef.current.target, deltaX)) {
-               // Inside scrollable, ignore
-               touchStartRef.current = null; 
+          // Must be mostly horizontal
+          if (Math.abs(deltaY) > Math.abs(deltaX)) {
+               // Vertical scroll intent, ignore this gesture
+               touchStartRef.current = null;
                return;
-           }
-           // Start dragging!
-           isDraggingRef.current = true;
-           // Disable browser native swipe if possible? 
-           // e.preventDefault(); // Might break scrolling if we are wrong
+          }
+          
+          // Check for scrollable containers
+          if (Math.abs(deltaX) > 10) { // small buffer
+             if (isTouchInScrollable(touchStartRef.current.target, deltaX)) {
+                 // Inside scrollable, ignore
+                 touchStartRef.current = null; 
+                 return;
+             }
+             // Start dragging!
+             isDraggingRef.current = true;
+          }
         }
-      }
 
-      if (isDraggingRef.current && deltaX > 0) {
-        e.preventDefault(); // Prevent scrolling while dragging horizontally
-        currentXRef.current = deltaX;
-        
-        // Apply transform
-        // Use non-linear resistance/dampening like iOS?
-        // Simple linear for now:
-        container.style.transform = `translateX(${deltaX}px)`;
-        container.style.transition = 'none';
-        
-        // Visual opacity fade?
-        container.style.opacity = `${1 - (deltaX / window.innerWidth) * 0.5}`;
+        if (isDraggingRef.current && deltaX > 0) {
+          if (e.cancelable) e.preventDefault(); // Prevent scrolling while dragging horizontally
+          currentXRef.current = deltaX;
+          
+          // Apply transform
+          container.style.transform = `translateX(${deltaX}px)`;
+          container.style.transition = 'none';
+          
+          // Visual opacity fade
+          container.style.opacity = `${1 - (deltaX / window.innerWidth) * 0.5}`;
+        }
+      } catch (err) {
+        console.error("Swipe move error:", err);
+        touchStartRef.current = null;
+        isDraggingRef.current = false;
       }
     };
 
     const handleTouchEnd = (e) => {
-      if (!touchStartRef.current) return;
-      
-      const deltaX = currentXRef.current;
-      
-      if (isDraggingRef.current) {
-         // Released
-         if (deltaX > TRIGGER_THRESHOLD) {
-             // Trigger Back
-             if (navigator.vibrate) navigator.vibrate(15);
-             
-             // Animate out
-             container.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
-             container.style.transform = `translateX(100%)`;
-             container.style.opacity = '0';
-             
-             setTimeout(() => {
-                 router.back();
-                 // Reset after navigation acts?
-                 // Next.js will likely mount new page or update this one.
-                 // We need to reset opacity/transform for the "new" page state.
-                 // But router.back() is async.
-                 
-                 // Ideally we reset style immediately when pathname changes.
-                 // See cleanup below.
-             }, 200);
-         } else {
-             // Snap back
-             container.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
-             container.style.transform = 'translateX(0px)';
-             container.style.opacity = '1';
-         }
+      try {
+        if (!touchStartRef.current) return;
+        
+        const deltaX = currentXRef.current;
+        
+        if (isDraggingRef.current) {
+           // Released
+           if (deltaX > TRIGGER_THRESHOLD) {
+               // Trigger Back
+               if (navigator.vibrate) navigator.vibrate(15);
+               
+               // Animate out
+               container.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+               container.style.transform = `translateX(100%)`;
+               container.style.opacity = '0';
+               
+               setTimeout(() => {
+                   router.back();
+               }, 200);
+           } else {
+               // Snap back
+               container.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+               container.style.transform = 'translateX(0px)';
+               container.style.opacity = '1';
+           }
+        }
+      } catch (err) {
+        console.error("Swipe end error:", err);
+      } finally {
+        touchStartRef.current = null;
+        isDraggingRef.current = false;
+        currentXRef.current = 0;
       }
-
-      touchStartRef.current = null;
-      isDraggingRef.current = false;
-      currentXRef.current = 0;
     };
     
     // Helper
