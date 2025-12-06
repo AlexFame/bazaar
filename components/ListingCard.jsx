@@ -425,7 +425,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
         <div className="p-3 flex flex-col flex-grow">
           {/* Тип + дата */}
-          <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center justify-between mb-3">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium ${badgeClass}`}>
               {typeText}
             </span>
@@ -495,7 +495,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                       e.stopPropagation();
                       onPromote();
                   }}
-                  className="w-full py-1.5 px-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[11px] font-bold rounded-lg shadow-sm hover:shadow-md transition-all"
+                  className="w-full py-1.5 px-3 bg-black dark:bg-white/10 text-white text-[11px] font-bold rounded-lg shadow-sm hover:opacity-90 transition-all"
                 >
                   🚀 {t("btn_promote")} (VIP)
                 </button>
