@@ -70,7 +70,9 @@ export default function SwipeNavigation() {
 
     // Helper: Check if the touch target is inside a horizontally scrollable element
     const isTouchInScrollable = (target, deltaX) => {
-      let current = target;
+      // Handle text nodes (e.g. clicking on text)
+      let current = target instanceof Element ? target : target.parentElement;
+      
       while (current && current !== document.body) {
         const style = window.getComputedStyle(current);
         const overflowX = style.overflowX;
