@@ -73,9 +73,13 @@ function detectType(raw) {
 }
 
 
+import MakeOfferModal from "@/components/MakeOfferModal";
+import { useState } from "react";
+
 export default function SellerCard({ listing, isOwner }) {
     const { t, lang } = useLang();
     const router = useRouter();
+    const [isOfferModalOpen, setIsOfferModalOpen] = useState(false);
     const profile = listing.profiles;
 
     if (!profile) return null;
@@ -91,6 +95,40 @@ export default function SellerCard({ listing, isOwner }) {
             return;
         }
         router.push(`/messages/new?listing_id=${listing.id}&seller_id=${listing.created_by}`);
+    };
+
+    const handleOfferSubmit = async (price) => {
+        try {
+            const tg = window.Telegram?.WebApp;
+            const initData = tg?.initData;
+            
+            if (!initData) {
+                alert(t.login_telegram || "Пожалуйста, войдите через Telegram для отправки предложения.");
+                return;
+            }
+
+            const res = await fetch('/api/offers/make', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    listing_id: listing.id, 
+                    price,
+                    initData 
+                })
+            });
+
+            const data = await res.json();
+            
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to make offer');
+            }
+            
+            alert(t.offer_sent || "Предложение отправлено! Продавец получит уведомление.");
+            trackAnalyticsEvent(listing.id, 'make_offer');
+        } catch (error) {
+            console.error(error);
+            alert(error.message);
+        }
     };
 
     // Parse contacts from listing if available (legacy fallback)
@@ -146,25 +184,41 @@ export default function SellerCard({ listing, isOwner }) {
 
             {/* Buttons (Only for non-owners) */}
             {!isOwner && (
-                 <div className="flex gap-2 mt-3">
-                    <button
-                        onClick={handleWriteToSeller}
-                        className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-black text-white text-center hover:bg-gray-800 transition-colors"
-                    >
-                        {t("write_msg")}
-                    </button>
+                 <div className="flex flex-col gap-2 mt-3">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={handleWriteToSeller}
+                            className="flex-1 px-3 py-2.5 text-xs font-bold rounded-xl bg-black text-white text-center hover:bg-gray-800 transition-colors"
+                        >
+                            {t("write_msg")}
+                        </button>
 
+                        <button
+                            onClick={() => setIsOfferModalOpen(true)}
+                            className="flex-1 px-3 py-2.5 text-xs font-bold rounded-xl bg-white border border-gray-200 text-black text-center hover:bg-gray-50 transition-colors shadow-sm"
+                        >
+                            {lang === 'en' ? 'Make offer' : (lang === 'ua' ? 'Запропонувати ціну' : 'Предложить цену')}
+                        </button>
+                    </div>
+                
                     {phoneLink && (
                         <a
                         href={phoneLink}
                         onClick={() => trackAnalyticsEvent(listing.id, 'contact_click', { contact_type: 'phone' })}
-                        className="flex-1 px-3 py-2 text-xs font-semibold rounded-full bg-white border border-black text-black text-center hover:bg-gray-50 transition-colors"
+                        className="w-full px-3 py-2 text-xs font-semibold rounded-xl bg-gray-50 text-gray-600 text-center hover:bg-gray-100 transition-colors"
                         >
                         {t("msg_call")}
                         </a>
                     )}
                 </div>
             )}
+
+            <MakeOfferModal 
+                isOpen={isOfferModalOpen}
+                onClose={() => setIsOfferModalOpen(false)}
+                onSubmit={handleOfferSubmit}
+                listingTitle={listing.title}
+            />
         </div>
     );
 }

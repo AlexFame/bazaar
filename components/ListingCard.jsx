@@ -342,25 +342,29 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
         {/* Status Badges (Override New/Popular) */}
         {listing.status === 'closed' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-gray-800 text-white text-xs font-bold rounded-lg shadow-md">
-                🔒 Sold
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 backdrop-blur-md bg-black/60 text-white text-xs font-bold rounded-xl shadow-sm border border-white/10 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                Sold
             </div>
         )}
         {listing.status === 'reserved' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-yellow-400 text-black text-xs font-bold rounded-lg shadow-md border border-yellow-500">
-                ⏳ Reserved
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 backdrop-blur-md bg-yellow-400/90 text-black text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-black"></span>
+                Reserved
             </div>
         )}
 
         {/* Micro-labels (New / Popular) - Only if active */}
         {listing.status === 'active' && !isVip && isNew && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-green-500 text-white text-xs font-bold rounded-full shadow-md">
-                🔥 New
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center gap-1.5">
+                <span>✨</span>
+                New
             </div>
         )}
         {listing.status === 'active' && !isVip && !isNew && isPopular && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-orange-500 text-white text-xs font-bold rounded-full shadow-md">
-                ⚡ Popular
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-orange-500/20 flex items-center gap-1.5">
+                <span>🔥</span>
+                Popular
             </div>
         )}
 
