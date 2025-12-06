@@ -22,7 +22,10 @@ export default function CatalogPage() {
     <div className="min-h-screen bg-white pb-24">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-md px-4 py-4 border-b border-gray-100">
-        <h1 className="text-2xl font-bold mb-4">Каталог</h1>
+        <div className="flex items-center gap-3 mb-4">
+            <BackButton />
+            <h1 className="text-2xl font-bold">Каталог</h1>
+        </div>
         
         {/* Search in Catalog */}
         <div className="relative">
@@ -31,7 +34,7 @@ export default function CatalogPage() {
           </div>
           <input
             type="text"
-            placeholder="Поиск категории..."
+            placeholder={t("catalog_search_placeholder") || "Поиск категории..."}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-black transition-all"

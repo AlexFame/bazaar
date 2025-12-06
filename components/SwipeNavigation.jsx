@@ -7,85 +7,131 @@ export default function SwipeNavigation() {
   const router = useRouter();
   const pathname = usePathname();
   const touchStartRef = useRef(null);
+  const currentXRef = useRef(0);
+  const isDraggingRef = useRef(false);
   
   // Configuration
-  const MIN_SWIPE_DISTANCE = 70; // Reduced triggers threshold
-  const MAX_VERTICAL_DEVIATION = 60; // Allowed vertical drift
-
+  const TRIGGER_THRESHOLD = 100; // px to trigger back
+  const MAX_VERTICAL_DEVIATION = 60;
+  
   useEffect(() => {
-    // Disable on root page (Home) - can't go back from home
     if (pathname === '/') return;
 
+    const container = document.querySelector('.telegram-container');
+    if (!container) return; // Should exist
+
     const handleTouchStart = (e) => {
+      // Ignore if multi-touch
+      if (e.touches.length > 1) return;
+
       touchStartRef.current = {
-        x: e.targetTouches[0].clientX,
-        y: e.targetTouches[0].clientY,
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
         target: e.target,
         timestamp: Date.now()
       };
+      isDraggingRef.current = false;
+      currentXRef.current = 0;
+    };
+
+    const handleTouchMove = (e) => {
+      if (!touchStartRef.current) return;
+
+      const x = e.touches[0].clientX;
+      const y = e.touches[0].clientY;
+      const deltaX = x - touchStartRef.current.x;
+      const deltaY = y - touchStartRef.current.y;
+
+      // 1. Check intent if not yet dragging
+      if (!isDraggingRef.current) {
+        // Must be moving Right
+        if (deltaX < 0) return; // moving left
+
+        // Must be mostly horizontal
+        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+             // Vertical scroll intent, ignore this gesture
+             touchStartRef.current = null;
+             return;
+        }
+        
+        // Check for scrollable containers
+        if (Math.abs(deltaX) > 10) { // small buffer
+           if (isTouchInScrollable(touchStartRef.current.target, deltaX)) {
+               // Inside scrollable, ignore
+               touchStartRef.current = null; 
+               return;
+           }
+           // Start dragging!
+           isDraggingRef.current = true;
+           // Disable browser native swipe if possible? 
+           // e.preventDefault(); // Might break scrolling if we are wrong
+        }
+      }
+
+      if (isDraggingRef.current && deltaX > 0) {
+        e.preventDefault(); // Prevent scrolling while dragging horizontally
+        currentXRef.current = deltaX;
+        
+        // Apply transform
+        // Use non-linear resistance/dampening like iOS?
+        // Simple linear for now:
+        container.style.transform = `translateX(${deltaX}px)`;
+        container.style.transition = 'none';
+        
+        // Visual opacity fade?
+        container.style.opacity = `${1 - (deltaX / window.innerWidth) * 0.5}`;
+      }
     };
 
     const handleTouchEnd = (e) => {
       if (!touchStartRef.current) return;
-
-      const touchEnd = {
-        x: e.changedTouches[0].clientX,
-        y: e.changedTouches[0].clientY,
-        timestamp: Date.now()
-      };
-
-      const deltaX = touchEnd.x - touchStartRef.current.x;
-      const deltaY = touchEnd.y - touchStartRef.current.y;
-      const timeDiff = touchEnd.timestamp - touchStartRef.current.timestamp;
-
-      // Logic:
-      // 1. Must be a Right Swipe (positive deltaX)
-      // 2. Must be greater than threshold
-      // 3. Must be mostly horizontal (deltaY within limits)
-      // 4. Must not be a clear scroll gesture (slow diagonal drift) -> optional check
-      // 5. Must not start inside a horizontally scrollable container (unless at start)
-
-      const isRightSwipe = deltaX > MIN_SWIPE_DISTANCE;
-      const isHorizontal = Math.abs(deltaY) < MAX_VERTICAL_DEVIATION;
-      // const isQuick = timeDiff < 500; // Optional speed check
-
-      if (isRightSwipe && isHorizontal) {
-        // Check for Horizontal Scroll Containers
-        if (isTouchInScrollable(touchStartRef.current.target, deltaX)) {
-             // Example: Image Carousel, Horizontal Category List
-             // If I'm scrolling the carousel, don't go back.
-             // But if I'm at the start of the carousel (scrollLeft === 0), maybe allow it?
-             // Standard behavior: if scrollable, consume the event.
-             console.log("Swipe ignored: inside scrollable container");
-             return;
-        }
-
-        // Trigger Back
-         if (navigator.vibrate) navigator.vibrate(15);
-         router.back();
+      
+      const deltaX = currentXRef.current;
+      
+      if (isDraggingRef.current) {
+         // Released
+         if (deltaX > TRIGGER_THRESHOLD) {
+             // Trigger Back
+             if (navigator.vibrate) navigator.vibrate(15);
+             
+             // Animate out
+             container.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+             container.style.transform = `translateX(100%)`;
+             container.style.opacity = '0';
+             
+             setTimeout(() => {
+                 router.back();
+                 // Reset after navigation acts?
+                 // Next.js will likely mount new page or update this one.
+                 // We need to reset opacity/transform for the "new" page state.
+                 // But router.back() is async.
+                 
+                 // Ideally we reset style immediately when pathname changes.
+                 // See cleanup below.
+             }, 200);
+         } else {
+             // Snap back
+             container.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+             container.style.transform = 'translateX(0px)';
+             container.style.opacity = '1';
+         }
       }
 
       touchStartRef.current = null;
+      isDraggingRef.current = false;
+      currentXRef.current = 0;
     };
-
-    // Helper: Check if the touch target is inside a horizontally scrollable element
+    
+    // Helper
     const isTouchInScrollable = (target, deltaX) => {
-      // Handle text nodes (e.g. clicking on text)
       let current = target instanceof Element ? target : target.parentElement;
-      
-      while (current && current !== document.body) {
+      while (current && current !== document.body && current !== container) {
         const style = window.getComputedStyle(current);
         const overflowX = style.overflowX;
-        
-        // Check if element is horizontally scrollable
         if (overflowX === 'scroll' || overflowX === 'auto') {
-           // Does it actually have scrollable content?
            if (current.scrollWidth > current.clientWidth) {
-               // If swiping RIGHT (deltaX > 0), we only block if user CAN scroll LEFT (i.e., scrollLeft > 0)
-               // If scrollLeft is 0, user is at the edge, so we can allow the BACK gesture.
-               if (current.scrollLeft > 0) {
-                   return true; // Consume event, don't trigger back
-               }
+              // If swiping Right (deltaX > 0), block if scrollLeft > 0
+              if (current.scrollLeft > 0) return true;
            }
         }
         current = current.parentElement;
@@ -93,14 +139,35 @@ export default function SwipeNavigation() {
       return false;
     };
 
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
+    document.addEventListener('touchstart', handleTouchStart, { passive: true }); // Passive true to allow scrolling
+    // Touchmove cannot be passive false if we want to preventDefault?
+    // Actually we want to preventDefault only if dragging. 
+    // Attaching dynamic listener is complex.
+    // Let's us passive: false for touchmove to allow preventing scroll
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd, { passive: true });
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
+      
+      // Cleanup visual state
+      container.style.transform = '';
+      container.style.opacity = '';
+      container.style.transition = '';
     };
   }, [pathname, router]);
+
+  // Reset styles immediately on path change
+  useEffect(() => {
+      const container = document.querySelector('.telegram-container');
+      if (container) {
+          container.style.transform = '';
+          container.style.opacity = '';
+          container.style.transition = '';
+      }
+  }, [pathname]);
 
   return null;
 }
