@@ -184,7 +184,7 @@ export default function MyPage() {
         if (activeTab === 'active') {
             query = query.in('status', ['active', 'reserved']);
         } else if (activeTab === 'archive') {
-            query = query.eq('status', 'closed');
+            query = query.in('status', ['closed', 'sold', 'archived']);
         } else {
             query = query.eq('status', activeTab);
         }
