@@ -177,7 +177,7 @@ export default function PopularListingsScroll() {
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg font-bold px-3 mb-3">Популярные Объявления</h2>
+      <h2 className="text-lg font-bold px-3 mb-3">{t("popularListings") || "Популярные Объявления"}</h2>
       <div className="px-3">
         <div className="grid grid-cols-2 gap-3">
           {displayItems.map((listing) => (

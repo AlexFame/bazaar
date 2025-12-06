@@ -82,7 +82,7 @@ export default function BottomNavigation() {
         {/* Home */}
         <NavItem 
           href="/" 
-          label="Главная" 
+          label={t("navbar_home") || "Главная"} 
           IconOutline={HomeIcon} 
           IconSolid={HomeIconSolid} 
           isActive={isActive("/")} 
@@ -91,7 +91,7 @@ export default function BottomNavigation() {
         {/* Catalog */}
         <NavItem 
           href="/catalog" 
-          label="Каталог" 
+          label={t("navbar_catalog") || "Каталог"} 
           IconOutline={Squares2X2Icon} 
           IconSolid={Squares2X2IconSolid} 
           isActive={isActive("/catalog")} 
@@ -108,7 +108,7 @@ export default function BottomNavigation() {
             <PlusIcon className="w-7 h-7" strokeWidth={2.5} />
           </motion.div>
           <span className="text-[10px] font-medium text-gray-500 mt-1">
-            Создать
+            {t("navbar_create") || "Создать"}
           </span>
         </Link>
 
@@ -124,7 +124,7 @@ export default function BottomNavigation() {
         {/* Profile */}
         <NavItem 
           href="/my" 
-          label="Профиль" 
+          label={t("navbar_myAds") || "Профиль"} 
           IconOutline={UserIcon} 
           IconSolid={UserIconSolid} 
           isActive={isActive("/my")} 

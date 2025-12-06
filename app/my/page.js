@@ -38,10 +38,13 @@ const pageTranslations = {
     idLabel: "Telegram ID",
     langLabel: "Язык Telegram",
     confirm_delete: "Вы уверены, что хотите удалить это объявление?",
-    confirm_delete: "Вы уверены, что хотите удалить это объявление?",
     delete_error: "Не удалось удалить объявление",
     tab_archive: "Архив",
     settings: "Настройки",
+    stats_btn: "Статистика",
+    empty_drafts: "У вас нет черновиков.",
+    empty_archive: "Архив пуст.",
+    empty_favorites: "Избранного пока нет."
   },
   ua: {
     my: "Мої оголошення",
@@ -61,10 +64,13 @@ const pageTranslations = {
     idLabel: "Telegram ID",
     langLabel: "Мова Telegram",
     confirm_delete: "Ви впевнені, що хочете видалити це оголошення?",
-    confirm_delete: "Ви впевнені, що хочете видалити це оголошення?",
     delete_error: "Не вдалося видалити оголошення",
     tab_archive: "Архів",
     settings: "Налаштування",
+    stats_btn: "Статистика",
+    empty_drafts: "У вас немає чернеток.",
+    empty_archive: "Архів порожній.",
+    empty_favorites: "Ви ще нічого не вподобали."
   },
   en: {
     my: "My listings",
@@ -85,11 +91,14 @@ const pageTranslations = {
     confirm_delete: "Are you sure you want to delete this listing?",
     delete_error: "Failed to delete listing",
     tab_active: "Active",
-    tab_active: "Active",
     tab_drafts: "Drafts",
     tab_archive: "Archive",
     tab_favorites: "Favorites",
     settings: "Settings",
+    stats_btn: "Statistics",
+    empty_drafts: "You don't have drafts.",
+    empty_archive: "Archive is empty.",
+    empty_favorites: "No favorites yet."
   },
 };
 
@@ -299,7 +308,7 @@ export default function MyPage() {
         {isAdmin && (
             <div className="mb-3">
                 <Link href="/admin" className="w-full py-2 bg-gray-800 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2">
-                    🛡️ Админ-панель
+                    🛡️ {t("admin_panel") || "Админ-панель"}
                 </Link>
             </div>
         )}
@@ -346,10 +355,8 @@ export default function MyPage() {
                 className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:shadow-lg transition-all"
             >
                 <span>📊</span>
-                Статистика
+                {localStrings.stats_btn}
             </Link>
-            
-
             
             {/* Create Listing Button */}
             <Link 
@@ -376,7 +383,12 @@ export default function MyPage() {
 
         {!loading && listings.length === 0 && (
            <div className="bg-white rounded-2xl shadow-sm p-3 text-xs text-black/80 text-center py-8">
-             <p className="text-gray-500 text-sm mb-2">{activeTab === 'active' ? localStrings.empty : "У вас нет черновиков."}</p>
+             <p className="text-gray-500 text-sm mb-2">
+               {activeTab === 'active' ? localStrings.empty : 
+                activeTab === 'draft' ? localStrings.empty_drafts : 
+                activeTab === 'archive' ? localStrings.empty_archive :
+                localStrings.empty_favorites}
+             </p>
              {activeTab === 'active' && <p className="text-black/60">{localStrings.hintCreate}</p>}
            </div>
         )}

@@ -1474,7 +1474,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         <>
                             <div className="flex justify-between items-center px-3 py-2 border-b border-gray-50">
                             <span className="text-xs font-semibold text-gray-500">
-                                Недавние
+                                {txt.recentlyViewed}
                             </span>
                             <button
                                 onClick={(e) => {
@@ -1484,7 +1484,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                 }}
                                 className="text-xs text-red-500 hover:underline"
                             >
-                                Очистить
+                                {txt.clear}
                             </button>
                             </div>
                             {searchHistory.map((item, idx) => (
@@ -1518,7 +1518,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     {/* Empty State / Hint */}
                     {searchHistory.length === 0 && !searchTerm && (
                         <div className="text-center text-gray-400 text-sm py-10">
-                            Введите запрос для поиска...
+                            {txt.search_empty_hint}
                         </div>
                     )}
                  </div>
@@ -1536,7 +1536,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     }}
                     className="text-sm font-medium text-blue-600 px-2 hover:bg-blue-50 rounded-lg py-2 transition-colors"
                 >
-                    Отмена
+                    {txt.cancel}
                 </button>
             ) : (
                 <LangSwitcher />

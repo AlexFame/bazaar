@@ -140,7 +140,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 animate-fade-in overscroll-contain">
-      <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         {/* Scrollable Area */}
         <div className="overflow-y-auto flex-1 overscroll-contain">
         {/* Header */}
@@ -175,7 +175,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                 {/* Recommended badge */}
                 {service.features?.recommended && (
                   <div className="absolute top-2 right-2 bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                    ⭐️ Популярное
+                    ⭐️ {lang === 'en' ? 'Popular' : lang === 'ua' ? 'Популярне' : 'Популярное'}
                   </div>
                 )}
 
@@ -190,7 +190,11 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                         </h3>
                         {service.duration_days && (
                           <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {service.duration_days} {service.duration_days === 1 ? "день" : service.duration_days <= 4 ? "дня" : "дней"}
+                            {service.duration_days} {
+                                lang === 'en' ? (service.duration_days === 1 ? "day" : "days") :
+                                lang === 'ua' ? (service.duration_days === 1 ? "день" : service.duration_days <= 4 ? "дні" : "днів") :
+                                (service.duration_days === 1 ? "день" : service.duration_days <= 4 ? "дня" : "дней")
+                            }
                           </p>
                         )}
                       </div>
@@ -224,7 +228,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                         Загрузка...
                       </span>
                     ) : (
-                      `${t("buy_for") || "Купить за"} ${service.price_stars} ⭐️`
+                      `${t("buy_for") || (lang === 'en' ? "Buy for" : lang === 'ua' ? "Купити за" : "Купить за")} ${service.price_stars} ⭐️`
                     )}
                   </button>
                 </div>

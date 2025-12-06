@@ -789,7 +789,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             className="w-4 h-4"
           />
           <label htmlFor="barter-check" className="text-sm">
-            Возможен обмен (Бартер)
+            {t("barter_label") || "Возможен обмен (Бартер)"}
           </label>
         </div>
 
@@ -856,7 +856,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         {/* Состояние (только для товаров, не для услуг) */}
         {listingType !== "service" && (
         <div className="mb-3">
-          <div className="text-[11px] font-semibold mb-1">Состояние</div>
+          <div className="text-[11px] font-semibold mb-1">{t("condition_label") || "Состояние"}</div>
           <select
             className="w-full border border-black rounded-xl px-3 py-2 text-sm bg-white"
             value={condition}
@@ -904,10 +904,9 @@ export default function CreateListingClient({ onCreated, editId }) {
               </div>
             ) : (
               <>
-                <div className="text-xs font-semibold">Загрузите фото</div>
-                <div className="text-[11px] text-black/60">
-                  Перетащите файлы сюда или нажмите, чтобы выбрать. До 10
-                  изображений.
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <div className="text-xs font-semibold">{t("upload_photos_label") || "Загрузите фото"}</div>
+                  <div className="text-[10px] text-gray-500">{t("field_photos_ph") || "до 10 шт"}</div>
                 </div>
               </>
             )}

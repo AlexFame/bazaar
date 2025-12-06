@@ -466,7 +466,9 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
               <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
               </svg>
-              <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400">Verified Seller</span>
+              <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                  {t("verified_seller") || "Verified Seller"}
+              </span>
             </div>
           )}
         </div>
@@ -483,7 +485,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                   }}
                   className="w-full py-1.5 px-3 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-[11px] font-medium rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors mb-2"
                 >
-                  📊 Статистика
+                  📊 {t("btn_stats")}
                 </button>
             )}
             {onPromote && !isVip && listing.status === 'active' && (
@@ -495,7 +497,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                   }}
                   className="w-full py-1.5 px-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[11px] font-bold rounded-lg shadow-sm hover:shadow-md transition-all"
                 >
-                  🚀 Продвинуть (VIP)
+                  🚀 {t("btn_promote")} (VIP)
                 </button>
             )}
 
