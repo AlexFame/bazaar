@@ -272,7 +272,7 @@ export default function MyPage() {
             <FadeIn>
                 <div className="bg-white dark:bg-transparent rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
             {/* Header / User Info */}
-            <div className={`p-4 rounded-3xl bg-white dark:bg-white/5 shadow-sm mb-6 flex items-center justify-between border border-transparent dark:border-white/10`}>
+            <div className={`p-4 rounded-3xl bg-white dark:bg-white/5 shadow-sm mb-6 flex items-center justify-between border border-transparent dark:border-transparent`}>
                <div className="flex items-center space-x-4">
                   <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl relative overflow-hidden">
                      {tgUser.photo_url ? (

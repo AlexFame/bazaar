@@ -243,6 +243,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
   
   // Handle scroll for header compacting

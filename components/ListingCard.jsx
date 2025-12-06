@@ -329,10 +329,10 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   return (
     <Link href={`/listing/${listing.id}`}>
       <article 
-        className={`group relative flex flex-col h-full bg-white dark:bg-card rounded-2xl overflow-hidden shadow-airbnb hover:shadow-airbnb-hover transition-all duration-300 transform active:scale-[0.98] border border-transparent dark:border-white/10 ${
+        className={`group relative flex flex-col h-full bg-white dark:bg-card rounded-2xl overflow-hidden shadow-airbnb hover:shadow-airbnb-hover transition-all duration-300 transform active:scale-[0.98] border border-transparent dark:border-white/20 ${
         isVip
           ? 'shadow-xl shadow-amber-500/10 border-2 border-amber-400'
-          : 'shadow-airbnb border border-transparent'
+          : 'shadow-airbnb border border-transparent dark:border-white/20'
       }`}
       >
         {/* VIP Badge - Modern Gold Design */}

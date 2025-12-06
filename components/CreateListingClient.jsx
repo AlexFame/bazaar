@@ -693,7 +693,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute left-0 mt-2 w-44 bg-white dark:bg-neutral-900 border border-black dark:border-border rounded-xl shadow-lg z-20 text-xs">
+              <div className="absolute left-0 mt-2 w-44 bg-white dark:bg-neutral-900 border border-black dark:border-white/20 rounded-xl shadow-lg z-20 text-xs">
                 <div className="py-1">
                   {typeOptions.map((opt) => (
                     <button
@@ -748,7 +748,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         </div>
         {/* категория */}
         <div className="flex flex-col mb-3">
-          <div className="text-[11px] font-semibold mb-1">
+          <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
             {t("field_category_label")}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -757,10 +757,10 @@ export default function CreateListingClient({ onCreated, editId }) {
                 key={cat.key}
                 type="button"
                 onClick={() => setCategoryKey(cat.key)}
-                className={`px-3 py-1.5 rounded-full text-[11px] border ${
+                className={`px-3 py-1.5 rounded-full text-[11px] border transition-colors ${
                   categoryKey === cat.key
-                    ? "bg-black text-white border-black"
-                    : "bg-white text-black border-black/10"
+                    ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white"
+                    : "bg-white text-black border-black/10 dark:bg-white/5 dark:text-gray-200 dark:border-white/10 hover:border-black/30 dark:hover:border-white/30"
                 }`}
               >
                 {cat.icon && <span className="mr-1.5">{cat.icon}</span>}
@@ -773,13 +773,13 @@ export default function CreateListingClient({ onCreated, editId }) {
 
         {/* заголовок */}
         <div className="mb-3">
-          <div className="text-[11px] font-semibold mb-1">
+          <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
             {t("field_title_label")}
           </div>
           <input
             type="text"
             placeholder={t("field_title_ph")}
-            className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+            className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm placeholder-gray-500 dark:placeholder-gray-500"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -787,13 +787,13 @@ export default function CreateListingClient({ onCreated, editId }) {
 
         {/* описание */}
         <div className="mb-3">
-          <div className="text-[11px] font-semibold mb-1">
+          <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
             {t("field_desc_label")}
           </div>
           <textarea
             rows={4}
             placeholder={t("field_desc_ph")}
-            className="w-full border border-black rounded-xl px-3 py-2 text-sm resize-none"
+            className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm resize-none placeholder-gray-500 dark:placeholder-gray-500"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
@@ -802,14 +802,14 @@ export default function CreateListingClient({ onCreated, editId }) {
         {/* цена (Скрываем для типа 'free' / 'give_away') */}
         {listingType !== 'free' && (
           <div className="mb-3">
-            <div className="text-[11px] font-semibold mb-1">
+            <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
               {t("field_price_label")}
             </div>
             <input
               type="number"
               min="0"
               placeholder={t("field_price_ph")}
-              className="w-full border border-black rounded-xl px-3 py-2 text-sm"
+              className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm placeholder-gray-500 dark:placeholder-gray-500"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
             />
@@ -823,23 +823,23 @@ export default function CreateListingClient({ onCreated, editId }) {
             id="barter-check"
             checked={isBarter}
             onChange={(e) => setIsBarter(e.target.checked)}
-            className="w-4 h-4"
+            className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-neutral-800"
           />
-          <label htmlFor="barter-check" className="text-sm">
+          <label htmlFor="barter-check" className="text-sm dark:text-gray-300">
             {t("barter_label") || "Возможен обмен (Бартер)"}
           </label>
         </div>
 
         {/* локация */}
         <div className="mb-3">
-          <div className="text-[11px] font-semibold mb-1">
+          <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
             {t("field_location_label")}
           </div>
           <div className="relative">
             <input
               type="text"
               placeholder={t("field_location_ph")}
-              className="w-full border border-black rounded-xl px-3 py-2 text-sm pr-10"
+              className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm pr-10 placeholder-gray-500 dark:placeholder-gray-500"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
             />
