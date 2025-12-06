@@ -505,27 +505,33 @@ export default function CreateListingClient({ onCreated, editId }) {
     const label = filter.label[lang] || filter.label.ru;
     const value = parameters[filter.key] || "";
 
-    if (filter.type === "select") {
-      return (
-        <div key={filter.key} className="mb-3">
-          <div className="text-[11px] font-semibold mb-1">{label}</div>
-          <select
-            className="w-full border border-black rounded-xl px-3 py-2 text-sm bg-white"
-            value={value}
-            onChange={(e) =>
-              setParameters({ ...parameters, [filter.key]: e.target.value })
-            }
-          >
-            <option value="">-</option>
-            {filter.options.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label[lang] || opt.label.ru}
-              </option>
-            ))}
-          </select>
-        </div>
-      );
-    }
+      // select
+      if (filter.type === "select") {
+        return (
+          <div key={filter.key} className="mb-3">
+            <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">{label}</div>
+            <div className="relative">
+              <select
+                className="w-full border border-black dark:border-white/20 rounded-xl px-3 py-2 text-sm bg-white dark:bg-neutral-900 text-foreground dark:text-white appearance-none"
+                value={value}
+                onChange={(e) =>
+                  setParameters({ ...parameters, [filter.key]: e.target.value })
+                }
+              >
+                <option value="">{t("select_option") || "Выбрать"}</option>
+                {filter.options.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label[lang] || opt.label.ru}
+                    </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </div>
+          </div>
+        );
+      }
 
     if (filter.type === "boolean") {
       return (
@@ -939,6 +945,11 @@ export default function CreateListingClient({ onCreated, editId }) {
                <option value="like_new">{t("condition_like_new")}</option>
             </select>
             <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
+        </div>
+        )}<div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
               <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
           </div>

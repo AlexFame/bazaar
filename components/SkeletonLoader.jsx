@@ -90,12 +90,6 @@ export function ChatDetailSkeleton() {
 
 export function CreateListingSkeleton() {
   return (
-        <div className="flex flex-col gap-1">
-          <Skeleton className="h-3 w-1/4" />
-          <Skeleton className="h-10 w-full rounded-xl" />
-        </div>
-
-        {/* Photos */}
         <Skeleton className="h-32 w-full rounded-2xl" />
 
         {/* Buttons */}
