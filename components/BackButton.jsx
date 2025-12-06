@@ -39,7 +39,7 @@ export default function BackButton({ className = "" }) {
   return (
     <button
       onClick={handleBack}
-      className={`inline-flex items-center px-3 py-1.5 rounded-full border border-black text-xs font-medium bg-white hover:bg-black hover:text-white transition-colors ${className}`}
+      className={`inline-flex items-center px-3 py-1.5 rounded-full border border-black dark:border-white text-xs font-medium bg-white dark:bg-black text-black dark:text-white hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors ${className}`}
     >
       ← {label}
     </button>

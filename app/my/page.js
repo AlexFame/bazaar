@@ -272,7 +272,7 @@ export default function MyPage() {
             <FadeIn>
                 <div className="bg-white rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
             {/* Header / User Info */}
-            <div className={`p-4 rounded-3xl bg-white shadow-sm mb-6 flex items-center justify-between`}>
+            <div className={`p-4 rounded-3xl bg-white dark:bg-card shadow-sm mb-6 flex items-center justify-between border border-transparent dark:border-border`}>
                <div className="flex items-center space-x-4">
                   <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl relative overflow-hidden">
                      {tgUser.photo_url ? (
@@ -286,7 +286,7 @@ export default function MyPage() {
                      )}
                   </div>
                   <div>
-                     <h1 className={`text-xl font-bold text-gray-900`}>
+                     <h1 className={`text-xl font-bold text-gray-900 dark:text-foreground`}>
                         {tgUser.first_name} {tgUser.last_name || ""}
                      </h1>
                      <p className={`text-sm text-gray-500`}>

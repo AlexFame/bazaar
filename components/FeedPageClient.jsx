@@ -1553,7 +1553,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
         {/* Filters (only if search query exists) */}
         {hasSearchQuery && (
           <div className="px-3 mt-3">
-            <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div className="bg-card rounded-2xl p-4 shadow-sm border border-border">
               <div className="flex flex-col gap-3">
                 {/* Location Input */}
                 <input

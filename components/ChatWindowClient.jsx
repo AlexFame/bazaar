@@ -364,7 +364,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
   return (
     <div 
-      className="flex flex-col h-[100dvh] w-full max-w-[520px] mx-auto bg-white dark:bg-black" 
+      className="flex flex-col h-[100dvh] w-full max-w-[520px] mx-auto bg-white dark:bg-background" 
       style={{ 
         touchAction: 'pan-y',
         overflowX: 'hidden',

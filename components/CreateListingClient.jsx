@@ -650,7 +650,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-[#F2F3F7] rounded-2xl p-3">
+      <form onSubmit={handleSubmit} className="bg-[#F2F3F7] dark:bg-card rounded-2xl p-3 border border-transparent dark:border-border">
         {/* Honeypot field - hidden from users, bots will fill it */}
         <input
           type="text"
@@ -677,7 +677,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             <button
               type="button"
               onClick={() => setDropdownOpen((prev) => !prev)}
-              className="w-full border border-black rounded-xl px-3 py-2 text-xs flex items-center justify-between bg-white"
+              className="w-full border border-black dark:border-white/20 rounded-xl px-3 py-2 text-xs flex items-center justify-between bg-white dark:bg-card text-foreground"
             >
               <span>
                 {t(typeOptions.find((o) => o.value === listingType).labelKey)}
@@ -686,7 +686,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute left-0 mt-2 w-44 bg-white border border-black rounded-xl shadow-lg z-20 text-xs">
+              <div className="absolute left-0 mt-2 w-44 bg-white dark:bg-neutral-900 border border-black dark:border-border rounded-xl shadow-lg z-20 text-xs">
                 <div className="py-1">
                   {typeOptions.map((opt) => (
                     <button

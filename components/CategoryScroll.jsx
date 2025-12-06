@@ -33,7 +33,7 @@ export default function CategoryScroll() {
           className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap flex items-center gap-1 border transition-colors ${
               isActive 
               ? "bg-black text-white border-black dark:bg-white dark:text-black dark:border-white" 
-              : "bg-[#F2F3F7] dark:bg-[#262626] text-black dark:text-white border-black/5 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-gray-700"
+              : "bg-[#F2F3F7] dark:bg-white/10 text-black dark:text-gray-200 border-black/5 dark:border-white/10 hover:bg-gray-200 dark:hover:bg-white/20"
           }`}
         >
           {cat.icon && (
