@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { useLang } from "@/lib/i18n-client";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import BackButton from "@/components/BackButton";
 
 export default function CatalogPage() {
   const { t, lang } = useLang();
