@@ -22,7 +22,7 @@
 
 html {
   font-size: 19px;
-  background-color: black; /* Force black by default to prevent flashes */
+  /* background is handled by body to allow light mode */
 }
 
 html.dark {
