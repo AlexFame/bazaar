@@ -378,6 +378,17 @@ export default function FeedPageClient({ forcedCategory = null }) {
             if (!seen.has(titleLower)) {
               seen.add(titleLower);
               const category = CATEGORY_DEFS.find((c) => c.key === item.category_key);
+              
+              let publicUrl = null;
+              if (item.main_image_path) {
+                  if (item.main_image_path.startsWith('http')) {
+                      publicUrl = item.main_image_path;
+                  } else {
+                      const { data } = supabase.storage.from("listing-images").getPublicUrl(item.main_image_path);
+                      publicUrl = data?.publicUrl;
+                  }
+              }
+
               unique.push({
                 id: item.id,
                 title: item.title,
@@ -385,7 +396,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 category: category ? category[lang] || category.ru : null,
                 categoryKey: item.category_key,
                 isListing: true,
-                image: item.main_image_path,
+                image: publicUrl,
               });
             }
           });
@@ -413,23 +424,34 @@ export default function FeedPageClient({ forcedCategory = null }) {
   };
 
   const handleSuggestionClick = (suggestion) => {
-    // If it's a listing, navigate to it
-    if (suggestion.isListing && suggestion.id) {
-      router.push(`/listing/${suggestion.id}`);
-      setShowSearchHistory(false);
-      setSuggestions([]);
-      return;
+    // Determine if it's a specific listing or a search term
+    if (suggestion.isListing) {
+        // Direct navigation to listing
+        setIsSearchFocused(false);
+        setShowSearchHistory(false);
+        document.body.style.overflow = ""; // Unlock scroll immediately
+        router.push(`/listing/${suggestion.id}`);
+        return;
     }
-    
-    // Otherwise, use it as search term
+
+    // It is a category or search term
     setSearchTerm(suggestion.title);
+    setShowSearchHistory(false);
+    setIsSearchFocused(false);
+    document.body.style.overflow = "";
+
+    // Add to specific history
     const newHistory = addToSearchHistory(suggestion.title);
     setSearchHistory(newHistory);
-    setShowSearchHistory(false);
-    setSuggestions([]);
+    
+    // Navigate with query
+    const params = new URLSearchParams();
+    params.set("q", suggestion.title);
     if (suggestion.categoryKey) {
-      setCategoryFilter(suggestion.categoryKey);
+        setCategoryFilter(suggestion.categoryKey);
+        params.set("category", suggestion.categoryKey);
     }
+    router.push(`/?${params.toString()}`);
   };
 
   const handleHistoryClick = (term) => {
