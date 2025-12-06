@@ -11,7 +11,13 @@ import { ChatListSkeleton } from "./SkeletonLoader";
 export default function ChatListClient() {
   const router = useRouter();
   const { t } = useLang();
+
   const [activeTab, setActiveTab] = useState("selling"); // 'selling' | 'buying'
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [conversations, setConversations] = useState([]);
+  const [unreadCounts, setUnreadCounts] = useState({});
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     const fetchUserAndChats = async () => {
@@ -172,14 +178,14 @@ export default function ChatListClient() {
                 <Link
                   key={conv.id}
                   href={`/messages/${conv.id}`}
-                  className={`flex items-start gap-3 p-3 hover:bg-gray-50 rounded-2xl transition-colors border-b border-gray-50 last:border-0 ${unread > 0 ? 'bg-blue-50/50' : ''}`}
+                  className={`flex items-start gap-3 p-3 hover:bg-gray-100 dark:hover:bg-white/5 rounded-2xl transition-colors border-b border-border last:border-0 ${unread > 0 ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
                 >
                   {/* Large Avatar */}
-                  <div className="w-14 h-14 rounded-full bg-gray-200 overflow-hidden flex-shrink-0 relative border border-gray-100">
+                  <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
                     {other.avatar_url ? (
                       <img src={other.avatar_url} alt={other.full_name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl font-bold bg-gray-100">
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl font-bold bg-gray-100 dark:bg-gray-800">
                         {other.full_name?.[0]?.toUpperCase() || "?"}
                       </div>
                     )}
@@ -187,10 +193,10 @@ export default function ChatListClient() {
 
                   <div className="flex-1 min-w-0 pt-0.5">
                     <div className="flex justify-between items-start mb-0.5">
-                      <h3 className={`font-semibold text-[15px] truncate ${unread > 0 ? 'text-black' : 'text-gray-900'}`}>
+                      <h3 className={`font-semibold text-[15px] truncate ${unread > 0 ? 'text-black dark:text-white' : 'text-foreground'}`}>
                         {listing?.title || other.full_name}  {/* Show Listing Title first if possible */}
                       </h3>
-                      <span className={`text-[11px] ml-2 ${unread > 0 ? 'text-blue-600 font-medium' : 'text-gray-400'}`}>
+                      <span className={`text-[11px] ml-2 ${unread > 0 ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-400'}`}>
                         {(() => {
                             const d = new Date(conv.updated_at);
                             if (new Date().toDateString() === d.toDateString()) return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -204,7 +210,7 @@ export default function ChatListClient() {
                     </p>
 
                     <div className="flex justify-between items-end">
-                        <p className={`text-[13px] truncate max-w-[85%] ${unread > 0 ? 'font-medium text-gray-900' : 'text-gray-500'}`}>
+                        <p className={`text-[13px] truncate max-w-[85%] ${unread > 0 ? 'font-medium text-foreground' : 'text-gray-500'}`}>
                             {conv.lastMessage?.sender_id === user.id && <span className="text-gray-400">You: </span>}
                             {conv.lastMessage?.content || "No messages"}
                         </p>
