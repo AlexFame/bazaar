@@ -1792,7 +1792,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
               className="mt-8 mb-6 flex justify-center py-4"
             >
               {loadingMore ? (
-                <div className="w-6 h-6 border-2 border-gray-200 border-t-black dark:border-white/10 dark:border-t-white rounded-full animate-spin" />
+                <div className="w-6 h-6 border-2 border-gray-200 border-t-black dark:border-white/10 dark:border-t-gray-500 rounded-full animate-spin" />
               ) : (
                 <div className="h-4" /> // Invisible trigger area
               )}
