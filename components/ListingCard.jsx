@@ -95,7 +95,7 @@ function formatDate(createdAt, lang) {
 }
 
 export default function ListingCard({ listing, showActions, onDelete, onPromote, onAnalytics, onStatusChange, compact }) {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
