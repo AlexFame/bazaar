@@ -79,7 +79,7 @@ export default function BottomNavigation() {
 
   return (
     <div id="mobile-bottom-nav" className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)] z-50 transition-colors duration-300">
-      <div className="flex justify-around items-center h-16 max-w-[520px] mx-auto px-2">
+      <div className="grid grid-cols-5 h-16 max-w-[520px] mx-auto">
         {/* Home */}
         <NavItem 
           href="/" 
@@ -99,7 +99,7 @@ export default function BottomNavigation() {
         />
 
         {/* Create Listing (Prominent) */}
-        <Link href="/create" className="flex flex-col items-center justify-center w-full h-full -mt-4 no-underline">
+        <Link href="/create" className="flex flex-col items-center justify-center w-full h-full -mt-4 no-underline relative z-10">
           <motion.div 
             className="w-12 h-12 bg-rose-600 rounded-full flex items-center justify-center shadow-lg text-white"
             whileTap={{ scale: 0.9 }}

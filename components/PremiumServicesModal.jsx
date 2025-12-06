@@ -185,11 +185,11 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                     <div className="flex items-center gap-2">
                       <span className="text-3xl">{getServiceIcon(service.service_type)}</span>
                       <div>
-                        <h3 className="font-bold text-black dark:text-white">
+                        <h3 className="font-bold text-black dark:text-white leading-tight break-words">
                           {getServiceName(service)}
                         </h3>
                         {service.duration_days && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                             {service.duration_days} {
                                 lang === 'en' ? (service.duration_days === 1 ? "day" : "days") :
                                 lang === 'ua' ? (service.duration_days === 1 ? "день" : service.duration_days <= 4 ? "дні" : "днів") :
@@ -199,7 +199,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex-shrink-0 ml-1">
                       <div className="text-2xl font-bold text-black dark:text-white">
                         {service.price_stars} ⭐️
                       </div>

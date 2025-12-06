@@ -22,7 +22,7 @@
 
 html {
   font-size: 19px;
-  /* background-color: white; - Removed to prevent flash */
+  background-color: black; /* Force black by default to prevent flashes */
 }
 
 html.dark {

@@ -617,9 +617,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 py-4 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-3">
           <BackButton />
-          <h1 className="text-xl font-bold dark:text-white">
-            {editId ? t("create_title_edit") : t("create_title")}
-          </h1>
+          <h1 className="text-2xl font-bold mb-4 dark:text-white text-center">{t(editId ? "create_title_edit" : "create_title")}</h1>
         </div>
       </div>
 

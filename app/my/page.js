@@ -272,7 +272,7 @@ export default function MyPage() {
             <FadeIn>
                 <div className="bg-white dark:bg-transparent rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
             {/* Header / User Info */}
-            <div className={`p-4 rounded-3xl bg-white dark:bg-white/5 shadow-sm mb-6 flex items-center justify-between border border-transparent dark:border-transparent`}>
+            <div className={`p-4 rounded-3xl bg-white dark:bg-white/5 shadow-sm mb-6 flex items-center justify-between border border-transparent`}>
                <div className="flex items-center space-x-4">
                   <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl relative overflow-hidden">
                      {tgUser.photo_url ? (
@@ -295,7 +295,7 @@ export default function MyPage() {
                   </div>
                </div>
                
-                <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
+                <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors border-none">
                    <Cog6ToothIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
                    <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.settings || "Настройки"}</span>
                 </Link>
