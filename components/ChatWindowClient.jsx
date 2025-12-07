@@ -449,7 +449,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                         : "bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-bl-none"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words break-all min-w-[20px]">{msg.content || <span className="italic opacity-50">Пустое сообщение</span>}</p>
+                    <p className="whitespace-pre-wrap break-words min-w-[20px]">{msg.content || <span className="italic opacity-50">Пустое сообщение</span>}</p>
                     <div className={`text-[9px] mt-1 flex items-center justify-end gap-1 ${isMe ? "text-white/60 dark:text-black/60" : "text-black/40 dark:text-white/40"}`}>
                         <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         {isMe && msg.is_read && (

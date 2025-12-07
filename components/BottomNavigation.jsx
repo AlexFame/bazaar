@@ -96,9 +96,9 @@ export default function BottomNavigation() {
 
   return (
     <div id="mobile-bottom-nav" className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)] z-50 transition-colors duration-300">
-      <div className="grid grid-cols-5 h-16 max-w-[520px] mx-auto px-1">
+      <div className="grid grid-cols-5 h-16 max-w-[520px] mx-auto w-full">
         {/* Home */}
-        <div className="h-full">
+        <div className="h-full min-w-0">
             <NavItem 
             href="/" 
             id="home"
@@ -110,7 +110,7 @@ export default function BottomNavigation() {
         </div>
 
         {/* Catalog */}
-        <div className="h-full">
+        <div className="h-full min-w-0">
             <NavItem 
             href="/catalog" 
             id="catalog"
@@ -122,7 +122,7 @@ export default function BottomNavigation() {
         </div>
 
         {/* Create Listing (Prominent - No Pill) */}
-        <div className="h-full relative z-20 overflow-visible flex items-end justify-center pb-2">
+        <div className="h-full min-w-0 relative z-20 overflow-visible flex items-end justify-center pb-2">
             <Link href="/create" className="flex flex-col items-center justify-end w-full h-full no-underline group">
             <motion.div 
                 className="w-12 h-12 bg-rose-600 rounded-full flex items-center justify-center shadow-lg shadow-rose-600/30 text-white mb-1"
@@ -139,11 +139,11 @@ export default function BottomNavigation() {
         </div>
 
         {/* Chat */}
-        <div className="h-full">
+        <div className="h-full min-w-0">
             <NavItem 
             href="/messages" 
             id="messages"
-            label={t("navbar_messages") || "Чат"} 
+            label={t("navbar_chats") || "Чаты"} 
             IconOutline={ChatBubbleOvalLeftIcon} 
             IconSolid={ChatBubbleOvalLeftIconSolid} 
             isActive={isActive("/messages")} 
@@ -151,7 +151,7 @@ export default function BottomNavigation() {
         </div>
 
         {/* Profile */}
-        <div className="h-full">
+        <div className="h-full min-w-0">
             <NavItem 
             href="/my" 
             id="profile"
