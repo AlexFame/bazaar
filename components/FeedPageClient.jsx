@@ -262,6 +262,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
   // Restore scroll on mount
   useEffect(() => {
+    console.log("FeedPageClient mounted. Version debug-940");
     if (listings.length > 0 && scrollPos > 0) {
         window.scrollTo(0, scrollPos);
     }
