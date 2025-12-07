@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -187,8 +187,36 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   }, [listing.id]);
 
   // Auto-translate title when language changes
-  // Auto-translation removed for feed performance
-  // Listing titles will appear in their original language
+  // Lazy Auto-Translation
+  const cardRef = useRef(null);
+  const [hasTranslated, setHasTranslated] = useState(false);
+
+  useEffect(() => {
+    if (!listing?.title || hasTranslated) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        // Card is visible, trigger translation with jitter
+        const delay = Math.random() * 1000; // 0-1s jitter
+        
+        setTimeout(async () => {
+            if (hasTranslated) return;
+            
+            const translated = await translateText(listing.title, lang);
+            setTranslatedTitle(translated);
+            setHasTranslated(true);
+        }, delay);
+
+        observer.disconnect();
+      }
+    }, { rootMargin: '50px' }); // Start slightly before it enters screen
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [listing?.title, lang, hasTranslated]);
 
   const typeMap = typeLabels[lang] || typeLabels.ru;
   const typeKey = listing?.type || "unknown";
@@ -315,6 +343,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   return (
     <Link href={`/listing/${listing.id}`}>
       <article 
+        ref={cardRef}
         className={`group relative flex flex-col h-full bg-white dark:bg-card rounded-2xl overflow-hidden shadow-airbnb hover:shadow-airbnb-hover transition-all duration-300 transform active:scale-[0.98] border-2 border-transparent dark:border-white/20 ${
         isVip
           ? 'shadow-xl shadow-amber-500/10 border-2 border-amber-400'
