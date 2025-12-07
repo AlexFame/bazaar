@@ -414,8 +414,8 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
         maxWidth: '520px'
       }}
     >
-      {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+20px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black sticky top-0 z-10 w-full">
+      {/* Header (Fixed) */}
+      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+20px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black w-full max-w-[520px] mx-auto transition-all duration-200">
         <div className="flex items-center gap-3 flex-1 min-w-0">
             <BackButton />
             
@@ -453,7 +453,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
       </div>
 
       {otherUserTyping && (
-          <div className="absolute top-[65px] left-0 w-full px-3 z-0 pointer-events-none">
+          <div className="fixed top-[calc(env(safe-area-inset-top)+75px)] left-0 right-0 max-w-[520px] mx-auto px-3 z-40 pointer-events-none">
               <div className="text-xs text-gray-500 italic ml-14 animate-pulse">
                  {otherUser?.full_name || "Собеседник"} печатает...
               </div>
@@ -462,7 +462,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
       {/* Messages Area */}
       <div 
-        className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-4 w-full"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-4 w-full pt-[calc(env(safe-area-inset-top)+90px)]"
       >
         <AnimatePresence initial={false} mode="popLayout">
         {messages.map((msg, index) => {
