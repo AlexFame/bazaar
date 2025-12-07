@@ -17,8 +17,7 @@ export function TelegramThemeSync() {
     const applyTheme = () => {
       const colorScheme = tg.colorScheme; // 'light' or 'dark'
       if (colorScheme) {
-        setTheme(colorScheme);
-        // Force background colors if needed, but next-themes should handle 'class' toggle
+        // setTheme(colorScheme); // DISABLED: Force light mode
       }
     };
 
