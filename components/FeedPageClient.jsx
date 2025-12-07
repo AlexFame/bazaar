@@ -243,7 +243,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
     };
   }, [isSearchFocused]);
 
-  useImpressionTracker(listings, "feed");
+  // useImpressionTracker(listings, "feed");
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLive, setIsLive] = useState(false);
@@ -1727,16 +1727,16 @@ export default function FeedPageClient({ forcedCategory = null }) {
         )}
 
         {/* Popular Listings (Horizontal) */}
-        {/* {categoryFilter === "all" && !searchTerm.trim() && (
+        {categoryFilter === "all" && !searchTerm.trim() && (
           <div className="mt-6">
             <PopularListingsScroll />
           </div>
-        )} */}
+        )}
 
         {/* Recently Viewed (Horizontal) */}
-        {/* {categoryFilter === "all" && !searchTerm.trim() && (
+        {categoryFilter === "all" && !searchTerm.trim() && (
           <RecentlyViewedScroll />
-        )} */}
+        )}
 
         {/* Main Feed Header */}
         <div className="px-4 mt-8 mb-4 flex justify-between items-center">
