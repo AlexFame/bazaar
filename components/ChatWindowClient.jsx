@@ -415,7 +415,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
       }}
     >
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black sticky top-0 z-10 w-full">
+      <div className="flex-shrink-0 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+20px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black sticky top-0 z-10 w-full">
         <div className="flex items-center gap-3 flex-1 min-w-0">
             <BackButton />
             
