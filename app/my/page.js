@@ -229,11 +229,11 @@ export default function MyPage() {
   };
 
   useEffect(() => {
-    // Only fetch if tab changed or we have no data
-    if (listings.length === 0 || activeTab !== cachedActiveTab) {
-        loadListings(true);
-    } else {
+    // Check if we have cached data for the current tab
+    if (listings.length > 0 && activeTab === cachedActiveTab) {
         setLoading(false);
+    } else {
+        loadListings(true);
     }
   }, [activeTab]);
 

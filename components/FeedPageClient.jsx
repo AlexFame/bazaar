@@ -305,26 +305,33 @@ export default function FeedPageClient({ forcedCategory = null }) {
   };
 
   // Check if we should use cache
-  const shouldFetch = useMemo(() => {
-     if (listings.length === 0) return true;
-     // Deep compare filters (simple JSON stringify is enough 99% of time)
-     return JSON.stringify(currentFilters) !== JSON.stringify(cachedFilters);
-  }, [currentFilters, listings.length, cachedFilters]);
-
-  // Effect to trigger fetch only if needed
   useEffect(() => {
-      if (shouldFetch) {
-          console.log("Filters changed or cache empty, fetching...");
-          setListings([]); // Clear old list if filters changed
-          setLoading(true);
+     const isFiltersChanged = JSON.stringify(currentFilters) !== JSON.stringify(cachedFilters);
+     const isEmpty = listings.length === 0;
+
+     if (isEmpty || isFiltersChanged) {
+          console.log("Filters changed or cache empty, fetching...", { isEmpty, isFiltersChanged });
+          
+          if (isFiltersChanged) {
+              setListings([]); // Clear if filters changed to show skeleton
+              setLoading(true);
+          } else {
+              if (isEmpty) setLoading(true); // Initial load
+          }
+
           fetchPage(0).then(() => {
             setCachedFilters(currentFilters);
+            setLoading(false);
+          }).catch(e => {
+            console.error(e);
+            setLoading(false);
           });
-      } else {
-          console.log("Using cached listings, no fetch needed.");
+     } else {
+          console.log("Using cached listings.");
           setLoading(false);
-      }
-  }, [shouldFetch]);
+     }
+  }, [JSON.stringify(currentFilters)]); // Depend on stable stringified filters
+
 
 
   // Общие фильтры
