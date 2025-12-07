@@ -2,8 +2,8 @@
 
 import { useRef, useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useAtom } from "jotai"; // Added Jotai
-import { feedListingsAtom, feedFiltersAtom, feedMetaAtom, feedScrollAtom } from "@/lib/store"; // Added atoms
+// import { useAtom } from "jotai"; // Added Jotai
+// import { feedListingsAtom, feedFiltersAtom, feedMetaAtom, feedScrollAtom } from "@/lib/store"; // Added atoms
 import { motion, AnimatePresence } from "framer-motion"; // Added animation lib
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
@@ -249,11 +249,15 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [isLive, setIsLive] = useState(false);
   const lastRefreshRef = useRef(Date.now());
 
-  // --- JOTAI CACHE ---
-  const [listings, setListings] = useAtom(feedListingsAtom);
-  const [cachedFilters, setCachedFilters] = useAtom(feedFiltersAtom);
-  const [cachedMeta, setCachedMeta] = useAtom(feedMetaAtom);
-  const [scrollPos, setScrollPos] = useAtom(feedScrollAtom);
+  // --- JOTAI CACHE DISABLED (Reverted to local state for stability) ---
+  // const [listings, setListings] = useAtom(feedListingsAtom);
+  // const [cachedFilters, setCachedFilters] = useAtom(feedFiltersAtom);
+  // const [cachedMeta, setCachedMeta] = useAtom(feedMetaAtom);
+  // const [scrollPos, setScrollPos] = useAtom(feedScrollAtom);
+  
+  const [listings, setListings] = useState([]);
+  const [cachedFilters, setCachedFilters] = useState(null);
+  const [scrollPos, setScrollPos] = useState(0);
   
   // Local loading state (only true if we need to fetch)
   const [loading, setLoading] = useState(listings.length === 0);
