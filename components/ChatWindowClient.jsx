@@ -354,9 +354,50 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
   const getImageUrl = (path) => {
     if (!path) return null;
-    const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
-    return data?.publicUrl;
+    
+    try {
+        let cleanPath = path;
+        
+        // Handle arrays (sometimes Supabase stores as JSON array)
+        if (Array.isArray(cleanPath)) {
+            cleanPath = cleanPath[0];
+        } else if (typeof cleanPath === 'string' && cleanPath.startsWith('[')) {
+             try {
+                 const parsed = JSON.parse(cleanPath);
+                 if (Array.isArray(parsed)) cleanPath = parsed[0];
+             } catch (e) { /* ignore */ }
+        }
+
+        if (!cleanPath || typeof cleanPath !== 'string') return null;
+        
+        const trimmed = cleanPath.trim();
+        
+        // Filter out placeholders
+        if (trimmed.length < 5 || 
+            trimmed.toLowerCase().includes('фото') || 
+            trimmed.toLowerCase().includes('photo')) {
+            return null;
+        }
+
+        // Check if path looks like a full URL
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+            return trimmed;
+        } 
+        
+        // Safe Supabase call
+        const { data } = supabase.storage
+            .from("listing-images")
+            .getPublicUrl(trimmed);
+            
+        return data?.publicUrl;
+    } catch (error) {
+        console.error("Error generating chat image url:", error);
+        return null;
+    }
   };
+
+  // Pre-calculate image URL to avoid re-calculating on render
+  const listingImageUrl = listing ? getImageUrl(listing.image_path) : null;
 
   if (loading) {
     return <ChatDetailSkeleton />;
@@ -374,33 +415,39 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
       }}
     >
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black sticky top-0 z-10">
-        <BackButton />
-        {otherUser && (
-          <div className="flex items-center gap-2 flex-1 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0">
-              {otherUser.avatar_url ? (
-                <img src={otherUser.avatar_url} alt={otherUser.full_name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center font-bold text-gray-400">
-                  {(otherUser.full_name || "U")[0].toUpperCase()}
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-sm truncate text-black dark:text-white">{otherUser.full_name || "Пользователь"}</div>
-              {listing && (
-                <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{listing.title} · {listing.price} €</div>
-              )}
-            </div>
-          </div>
-        )}
-        {/* Listing Image (Link to listing) */}
-        {listing && (
-            <a href={`/listing/${listing.id}`} className="w-8 h-8 rounded bg-gray-100 dark:bg-gray-800 overflow-hidden flex-shrink-0 block">
-                {listing.image_path && (
-                    <img src={getImageUrl(listing.image_path)} alt={listing.title} className="w-full h-full object-cover" />
+      <div className="flex-shrink-0 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black sticky top-0 z-10 w-full">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+            <BackButton />
+            
+            {otherUser && (
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-white/10">
+                {otherUser.avatar_url ? (
+                    <img src={otherUser.avatar_url} alt={otherUser.full_name} className="w-full h-full object-cover" />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-xs">
+                    {(otherUser.full_name || "U")[0].toUpperCase()}
+                    </div>
                 )}
+                </div>
+                <div className="flex-col justify-center flex-1 min-w-0 flex">
+                <div className="font-bold text-sm truncate text-black dark:text-white leading-tight">
+                    {otherUser.full_name || "Пользователь"}
+                </div>
+                {listing && (
+                    <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate leading-tight mt-0.5">
+                    {listing.title} · {listing.price} {listing.currency || '€'}
+                    </div>
+                )}
+                </div>
+            </div>
+            )}
+        </div>
+
+        {/* Listing Image (Link to listing) */}
+        {listing && listingImageUrl && (
+            <a href={`/listing/${listing.id}`} className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden flex-shrink-0 block border border-gray-100 dark:border-white/10 relative">
+                <img src={listingImageUrl} alt={listing.title} className="w-full h-full object-cover" />
             </a>
         )}
       </div>
