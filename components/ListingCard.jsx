@@ -335,22 +335,22 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
           : 'shadow-airbnb border-2 border-transparent dark:border-white/20'
       }`}
       >
-        {/* VIP Badge - Modern Gold Design */}
+        {/* VIP Badge - Unified Design */}
         {isVip && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-white text-xs font-extrabold rounded-xl shadow-lg shadow-orange-500/30 flex items-center justify-center border border-white/20 backdrop-blur-sm">
-                <span className="drop-shadow-sm tracking-wide">VIP</span>
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#FF385C] text-white text-xs font-extrabold rounded-xl shadow-airbnb flex items-center justify-center border border-white/20">
+                <span className="tracking-wide">VIP</span>
             </div>
         )}
 
-        {/* Status Badges (Override New/Popular) */}
+        {/* Status Badges (Unified Design) */}
         {listing.status === 'closed' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 backdrop-blur-md bg-gradient-to-r from-gray-900 to-black text-white text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-black/80 backdrop-blur-md text-white text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/50"></span>
                 {lang === 'en' ? 'Sold' : 'Продано'}
             </div>
         )}
         {listing.status === 'reserved' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 backdrop-blur-md bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-gray-600/90 backdrop-blur-md text-white text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
                 {lang === 'en' ? 'Reserved' : 'Бронь'}
             </div>
@@ -358,13 +358,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
         {/* Micro-labels (New / Popular) - Only if active */}
         {listing.status === 'active' && !isVip && isNew && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 border border-white/10">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#FF385C] text-white text-xs font-bold rounded-xl shadow-airbnb flex items-center gap-1.5">
                 <span>✨</span>
                 New
             </div>
         )}
         {listing.status === 'active' && !isVip && !isNew && isPopular && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-gradient-to-r from-red-500 to-rose-600 text-white text-xs font-bold rounded-xl shadow-lg shadow-red-500/20 flex items-center gap-1.5 border border-white/10">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#FF385C] text-white text-xs font-bold rounded-xl shadow-airbnb flex items-center gap-1.5">
                 <span>🔥</span>
                 Popular
             </div>

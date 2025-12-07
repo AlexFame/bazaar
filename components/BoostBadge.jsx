@@ -8,27 +8,27 @@ export default function BoostBadge({ boost, service }) {
       urgent_sticker: {
         icon: "🔥",
         text: "Срочно",
-        className: "bg-gradient-to-r from-red-500 to-orange-500 text-white animate-pulse",
+        className: "bg-[#FF385C] text-white animate-pulse", // Airbnb Red
       },
       boost_1d: {
         icon: "⬆️",
         text: "В топе",
-        className: "bg-gradient-to-r from-blue-500 to-cyan-500 text-white",
+        className: "bg-[#FF385C]/90 text-white", // Slightly lighter/transparent red
       },
       boost_3d: {
         icon: "🚀",
         text: "В топе",
-        className: "bg-gradient-to-r from-purple-500 to-pink-500 text-white",
+        className: "bg-[#FF385C] text-white",
       },
       pin_7d: {
         icon: "📌",
         text: "Закреплено",
-        className: "bg-gradient-to-r from-yellow-500 to-amber-500 text-white",
+        className: "bg-black text-white", // Distinctive "Pinned" usually implies stability -> Black/Dark
       },
       combo_7d: {
         icon: "⭐️",
         text: "Премиум",
-        className: "bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white animate-pulse",
+        className: "bg-gradient-to-r from-[#FF385C] to-[#E00B41] text-white animate-pulse", // Red Gradient
       },
     };
     return configs[serviceType] || configs.boost_1d;
