@@ -22,17 +22,18 @@ const NavItem = ({ href, label, IconOutline, IconSolid, isActive, id }) => {
   return (
     <Link href={href} className="group flex flex-col items-center justify-center w-full h-full gap-1 relative no-underline z-10 text-center">
       
-      {/* Active Pill Background (Sliding) */}
-      {isActive && (
-        <motion.div
-          layoutId="nav-pill"
-          className="absolute top-1 left-1/2 -translate-x-1/2 w-12 h-8 bg-rose-100 dark:bg-rose-900/30 rounded-full -z-10"
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        />
-      )}
+      <div className="relative flex items-center justify-center">
+        {/* Active Pill Background (Sliding) */}
+        {isActive && (
+          <motion.div
+            layoutId="nav-pill"
+            className="absolute w-10 h-8 bg-rose-100 dark:bg-rose-900/30 rounded-2xl -z-10"
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          />
+        )}
 
-      <motion.div 
-        className="relative w-6 h-6"
+        <motion.div 
+          className="relative w-6 h-6"
         whileTap={{ scale: 0.8 }}
         transition={{ type: "spring", stiffness: 400, damping: 17 }}
       >
@@ -68,6 +69,7 @@ const NavItem = ({ href, label, IconOutline, IconSolid, isActive, id }) => {
             </motion.div>
         </div>
       </motion.div>
+      </div>
       
       <motion.span 
         animate={{ color: isActive ? "#e11d48" : "var(--nav-text)" }}
