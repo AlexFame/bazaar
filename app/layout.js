@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Suspense } from "react";
 import Link from "next/link";
 import Script from "next/script";
+import SwipeNavigation from "@/components/SwipeNavigation";
 
 
 export const metadata = {
@@ -70,7 +71,9 @@ export default function RootLayout({ children }) {
       <body className="bg-background text-foreground dark:bg-black overflow-x-hidden relative overscroll-none">
         <ErrorBoundary>
           <Providers>
+
             <div className="telegram-container">
+              <SwipeNavigation />
               <Suspense fallback={null}>
                 <AppShell>{children}</AppShell>
               </Suspense>
