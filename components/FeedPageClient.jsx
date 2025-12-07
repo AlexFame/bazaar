@@ -34,7 +34,7 @@ import ThemeSwitcher from "./ThemeSwitcher";
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import PullToRefresh from "@/components/PullToRefresh";
 import BackButton from "@/components/BackButton";
-import { useImpressionTracker } from "@/hooks/useImpressionTracker";
+import useImpressionTracker from "@/hooks/useImpressionTracker";
 
 const MapComponent = dynamic(() => import("./MapComponent"), {
   ssr: false,
