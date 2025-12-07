@@ -309,21 +309,24 @@ export default function FeedPageClient({ forcedCategory = null }) {
      const isFiltersChanged = JSON.stringify(currentFilters) !== JSON.stringify(cachedFilters);
      const isEmpty = listings.length === 0;
 
+     // If filters changed or we have no data
      if (isEmpty || isFiltersChanged) {
           console.log("Filters changed or cache empty, fetching...", { isEmpty, isFiltersChanged });
           
           if (isFiltersChanged) {
-              setListings([]); // Clear if filters changed to show skeleton
+              setListings([]); // Clear to show skeleton
               setLoading(true);
+              setPage(0); // Reset pagination
+              setHasMore(true);
           } else {
               if (isEmpty) setLoading(true); // Initial load
           }
 
-          fetchPage(0).then(() => {
+          fetchPage(0, { append: false }).then(() => {
             setCachedFilters(currentFilters);
             setLoading(false);
           }).catch(e => {
-            console.error(e);
+            console.error("Fetch error:", e);
             setLoading(false);
           });
      } else {
@@ -947,28 +950,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
   }, [hasSearchQuery, categoryFilter, typeFilter, page]);
 
   // первоначальная загрузка и обновление при изменении фильтров
-  useEffect(() => {
-    setPage(0);
-    setHasMore(true);
-    fetchPage(0, { append: false });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    searchTerm,
-    locationFilter,
-    minPrice,
-    maxPrice,
-    categoryFilter,
-    typeFilter,
-    conditionFilter,
-    barterFilter,
-    withPhotoFilter,
-    dateFilter,
-    dynamicFilters,
-    radiusFilter,
-    userLocation,
-    lang,
-    viewMode,
-  ]);
+
 
   async function handleLoadMore() {
     if (loadingMore || !hasMore) return;
