@@ -2,6 +2,8 @@
 
 import { useRef, useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useAtom } from "jotai"; // Added Jotai
+import { feedListingsAtom, feedFiltersAtom, feedMetaAtom, feedScrollAtom } from "@/lib/store"; // Added atoms
 import { motion, AnimatePresence } from "framer-motion"; // Added animation lib
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
@@ -241,11 +243,35 @@ export default function FeedPageClient({ forcedCategory = null }) {
     };
   }, [isSearchFocused]);
 
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  useImpressionTracker(listings, "feed");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLive, setIsLive] = useState(false);
+  const lastRefreshRef = useRef(Date.now());
+
+  // --- JOTAI CACHE ---
+  const [listings, setListings] = useAtom(feedListingsAtom);
+  const [cachedFilters, setCachedFilters] = useAtom(feedFiltersAtom);
+  const [cachedMeta, setCachedMeta] = useAtom(feedMetaAtom);
+  const [scrollPos, setScrollPos] = useAtom(feedScrollAtom);
+  
+  // Local loading state (only true if we need to fetch)
+  const [loading, setLoading] = useState(listings.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
-  
+
+  // Restore scroll on mount
+  useEffect(() => {
+    if (listings.length > 0 && scrollPos > 0) {
+        window.scrollTo(0, scrollPos);
+    }
+    
+    // Save scroll on unmount
+    return () => {
+        setScrollPos(window.scrollY);
+    };
+  }, []); // Only on mount/unmount
+
   // Handle scroll for header compacting
   useEffect(() => {
     const handleScroll = () => {
@@ -254,12 +280,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-  
-  useImpressionTracker(listings, "feed");
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLive, setIsLive] = useState(false);
-  const lastRefreshRef = useRef(Date.now());
 
   // фильтры
   const [searchTerm, setSearchTerm] = useState(urlQuery);
@@ -267,6 +287,45 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [categoryFilter, setCategoryFilter] = useState(forcedCategory || "all");
+
+  // Construct current filter object to compare with cache
+  const currentFilters = {
+      searchTerm,
+      locationFilter,
+      categoryFilter,
+      minPrice, 
+      maxPrice,
+      type: searchParams.get("type") || "all",
+      condition: searchParams.get("condition") || "all",
+      barter: searchParams.get("barter") || "all", 
+      photo: searchParams.get("photo") || "all",
+      date: searchParams.get("date") || "all",
+      radius: searchParams.get("radius") || null,
+      dynamic: Object.fromEntries([...searchParams.entries()].filter(([k]) => k.startsWith("dyn_")))
+  };
+
+  // Check if we should use cache
+  const shouldFetch = useMemo(() => {
+     if (listings.length === 0) return true;
+     // Deep compare filters (simple JSON stringify is enough 99% of time)
+     return JSON.stringify(currentFilters) !== JSON.stringify(cachedFilters);
+  }, [currentFilters, listings.length, cachedFilters]);
+
+  // Effect to trigger fetch only if needed
+  useEffect(() => {
+      if (shouldFetch) {
+          console.log("Filters changed or cache empty, fetching...");
+          setListings([]); // Clear old list if filters changed
+          setLoading(true);
+          fetchPage(0).then(() => {
+            setCachedFilters(currentFilters);
+          });
+      } else {
+          console.log("Using cached listings, no fetch needed.");
+          setLoading(false);
+      }
+  }, [shouldFetch]);
+
 
   // Общие фильтры
   const [typeFilter, setTypeFilter] = useState("all"); // all | buy | sell | services | free

@@ -11,6 +11,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { useAtom } from "jotai";
+import { myListingsAtom, myActiveTabAtom, myIsAdminAtom } from "@/lib/store";
 import { getUserId } from "@/lib/userId";
 import { useLang } from "@/lib/i18n-client";
 import ListingCard from "@/components/ListingCard";
@@ -108,28 +110,37 @@ export default function MyPage() {
   const router = useRouter();
 
   const [userId, setUserId] = useState(null);
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // JOTAI CACHE
+  const [listings, setListings] = useAtom(myListingsAtom);
+  const [cachedActiveTab, setCachedActiveTab] = useAtom(myActiveTabAtom);
+  const [cachedAdmin, setCachedAdmin] = useAtom(myIsAdminAtom);
+  
+  const [loading, setLoading] = useState(listings.length === 0);
+  const [activeTab, setActiveTab] = useState(cachedActiveTab || "active"); // Sync with cache
+  
+  const [isAdmin, setIsAdmin] = useState(cachedAdmin);
   const [tgUser, setTgUser] = useState(null);
-  const [activeTab, setActiveTab] = useState("active"); // 'active' | 'draft'
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState(null);
 
-  // Debug imports
   useEffect(() => {
-    console.log("MyPage Debug:", {
-      useLangType: typeof useLang,
-      getUserIdType: typeof getUserId,
-      getTelegramUserType: typeof getTelegramUser,
-      ListingCardType: typeof ListingCard,
-      BackButtonType: typeof BackButton,
-      lang,
-      tType: typeof t
-    });
-  }, []);
+      // Sync local tab state with cache when it changes
+      setCachedActiveTab(activeTab);
+  }, [activeTab]);
 
-  const loadListings = async () => {
+  useEffect(() => {
+      // Sync admin state
+      if (isAdmin !== cachedAdmin) setCachedAdmin(isAdmin);
+  }, [isAdmin]);
+
+  const loadListings = async (force = false) => {
+    // If we have data and tab hasn't changed (and not forced), skip fetch
+    if (!force && listings.length > 0 && activeTab === cachedActiveTab) {
+        setLoading(false);
+        return;
+    }
+
     setLoading(true);
     let tgUserId = getUserId();
     
@@ -218,8 +229,13 @@ export default function MyPage() {
   };
 
   useEffect(() => {
-    loadListings();
-  }, [activeTab]); // Reload when tab changes
+    // Only fetch if tab changed or we have no data
+    if (listings.length === 0 || activeTab !== cachedActiveTab) {
+        loadListings(true);
+    } else {
+        setLoading(false);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
