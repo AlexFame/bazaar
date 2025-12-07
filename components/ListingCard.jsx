@@ -187,22 +187,8 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   }, [listing.id]);
 
   // Auto-translate title when language changes
-  useEffect(() => {
-    if (!listing?.title) return;
-
-    let isMounted = true;
-
-    async function doTranslate() {
-      const translated = await translateText(listing.title, lang);
-      if (isMounted) {
-        setTranslatedTitle(translated);
-      }
-    }
-
-    doTranslate();
-
-    return () => { isMounted = false; };
-  }, [listing?.title, lang]);
+  // Auto-translation removed for feed performance
+  // Listing titles will appear in their original language
 
   const typeMap = typeLabels[lang] || typeLabels.ru;
   const typeKey = listing?.type || "unknown";
