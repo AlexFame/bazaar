@@ -333,16 +333,21 @@ export default function AppShell({ children }) {
   // Check if we are in a chat conversation (e.g. /messages/123)
   // But NOT the main messages list (/messages)
   const isChatConversation = pathname.startsWith("/messages/") && pathname !== "/messages";
+  
+  // Hide bottom nav on specific pages:
+  // 1. /create (Focus on form)
+  // 2. /messages/[id] (Chat room needs full height for keyboard)
+  const shouldHideBottomNav = pathname.startsWith("/create") || isChatConversation;
 
   return (
     <div className="min-h-screen flex flex-col bg-airbnb-gray">
-      {/* Main Content */}
-      <main className="flex-1 w-full max-w-[520px] mx-auto bg-white min-h-screen relative shadow-2xl pb-20">
+      {/* Main Content - remove bottom padding if nav is hidden */}
+      <main className={`flex-1 w-full max-w-[520px] mx-auto bg-white min-h-screen relative shadow-2xl ${shouldHideBottomNav ? 'pb-0' : 'pb-20'}`}>
         {children}
       </main>
 
-      {/* Bottom Navigation */}
-      <BottomNavigation />
+      {/* Bottom Navigation - hide if requested */}
+      {!shouldHideBottomNav && <BottomNavigation />}
       
       {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
       <OnboardingTutorial />
