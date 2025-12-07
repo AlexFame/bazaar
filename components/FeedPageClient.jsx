@@ -243,7 +243,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
     };
   }, [isSearchFocused]);
 
-  // useImpressionTracker(listings, "feed");
+  useImpressionTracker(listings, "feed");
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLive, setIsLive] = useState(false);
