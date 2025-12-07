@@ -111,8 +111,8 @@ export default function CreateListingClient({ onCreated, editId }) {
                 const loadedImages = rawImages.map(img => ({
                     type: 'existing',
                     id: img.id,
-                    url: supabase.storage.from('listing-images').getPublicUrl(img.image_path).data.publicUrl,
-                    path: img.image_path
+                    url: supabase.storage.from('listing-images').getPublicUrl(img.file_path).data.publicUrl,
+                    path: img.file_path
                 }));
                 setImages(loadedImages);
                 setInitialImageIds(loadedImages.map(img => img.id));
