@@ -22,15 +22,15 @@ export default function BackButton({ className = "" }) {
 
 
 
-  // Try to enable Telegram BackButton
+  // Force HIDE Telegram BackButton to keep "Close" button visible
   useEffect(() => {
       if (typeof window !== 'undefined' && window.Telegram?.WebApp?.BackButton) {
           const bb = window.Telegram.WebApp.BackButton;
-          bb.show();
-          bb.onClick(handleBack);
-
+          // Always hide it, as user requested to keep "Close"
+          bb.hide();
+          
+          // Cleanup just in case
           return () => {
-              bb.offClick(handleBack);
               bb.hide();
           };
       }

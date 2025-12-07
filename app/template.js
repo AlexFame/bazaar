@@ -6,14 +6,13 @@ import { usePathname } from "next/navigation";
 export default function Template({ children }) {
   const pathname = usePathname();
 
-  // Top-level "Tab" routes (Navigation Bar items)
-  // Switching between these should feel like instant/fade tab switching, not a full page slide.
-  const isTabRoute = ["/", "/catalog", "/create", "/messages", "/my"].includes(pathname);
-
+  // Standard "Slide" animation for EVERYTHING.
+  // This provides the most consistent, smooth feel without "jumps".
+  // Using 'easeOut' instead of spring for stability on mobile.
   const variants = {
-    hidden: { opacity: 0, x: isTabRoute ? 0 : 20 },
+    hidden: { opacity: 0, x: 20 },
     enter: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: isTabRoute ? 0 : -20 },
+    exit: { opacity: 0, x: -20 },
   };
 
   return (
@@ -23,11 +22,7 @@ export default function Template({ children }) {
       initial="hidden"
       animate="enter"
       exit="exit"
-      // Use faster/springier transition for tabs (just fade), and standard spring for slides
-      transition={isTabRoute 
-        ? { duration: 0.2, ease: "easeInOut" } // Quick Fade
-        : { type: "spring", stiffness: 260, damping: 20 } // Slide
-      }
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="min-h-screen bg-white"
       style={{ 
         position: "relative",

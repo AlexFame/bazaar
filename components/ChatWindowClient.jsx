@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import BackButton from "@/components/BackButton";
@@ -31,7 +31,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     scrollToBottom();
   }, [messages]);
 
@@ -417,7 +417,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
       <div 
         className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-4 w-full"
       >
-        <AnimatePresence initial={false}>
+        <AnimatePresence initial={false} mode="popLayout">
         {messages.map((msg, index) => {
           const isMe = msg.sender_id === user?.id;
           const showDate = index === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[index - 1].created_at).toDateString();
@@ -425,11 +425,13 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           return (
             <motion.div 
                 key={msg.id} 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+                layout // Animate layout changes smoothly
+                initial={{ opacity: 0, scale: 0.9, y: 10 }} // Subtler entry
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 className="flex flex-col w-full"
             >
+                {/* ... existing message bubble code ... */}
                 {showDate && (
                     <div className="flex justify-center my-4">
                         <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full">
@@ -463,6 +465,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           );
         })}
         </AnimatePresence>
+        <div ref={messagesEndRef} /> 
       </div>
 
       {/* Input Area */}
