@@ -6,13 +6,11 @@ import { usePathname } from "next/navigation";
 export default function Template({ children }) {
   const pathname = usePathname();
 
-  // Standard "Slide" animation for EVERYTHING.
-  // This provides the most consistent, smooth feel without "jumps".
-  // Using 'easeOut' instead of spring for stability on mobile.
+  // Simple Fade animation (No "curtains" / slide)
   const variants = {
-    hidden: { opacity: 0, x: 20 },
-    enter: { opacity: 1, x: 0 },
-    exit: { opacity: 0, x: -20 },
+    hidden: { opacity: 0 },
+    enter: { opacity: 1 },
+    exit: { opacity: 0 },
   };
 
   return (
@@ -22,7 +20,7 @@ export default function Template({ children }) {
       initial="hidden"
       animate="enter"
       exit="exit"
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+      transition={{ duration: 0.2, ease: "easeInOut" }}
       className="min-h-screen bg-white"
       style={{ 
         position: "relative",
