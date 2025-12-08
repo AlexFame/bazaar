@@ -1448,8 +1448,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
   return (
     <main className="min-h-screen pb-20 bg-gray-50 dark:bg-black text-foreground transition-colors duration-300">
       {/* Search Header */}
-      <header className={`sticky top-0 z-30 transition-all duration-300 ${
-        headerCompact ? "bg-white/90 dark:bg-black/90 backdrop-blur-md shadow-sm py-2" : "bg-white dark:bg-black py-3"
+      <header className={`sticky top-0 transition-all duration-300 ${
+        isSearchFocused ? "z-[110]" : "z-30"
+      } ${
+        headerCompact ? "bg-rose-50/95 dark:bg-neutral-900/95 backdrop-blur-md shadow-sm py-2 border-b border-rose-100 dark:border-white/5" : "bg-rose-50 dark:bg-neutral-900 py-3 border-b border-rose-100 dark:border-white/5"
       }`}>
         <div className="flex items-center gap-3 px-4 max-w-[520px] mx-auto"> {/* Added px-4 and gap-3 */}
           {/* Hide BackButton when focused to save space - Animated */}
@@ -1478,7 +1480,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                   ref={searchInputRef}
                   type="text"
                   placeholder={txt.searchPlaceholder}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-none rounded-2xl text-sm focus:bg-white focus:ring-2 focus:ring-black/5 focus:shadow-md transition-all shadow-sm placeholder-gray-500 text-gray-900" 
+                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-white/10 border-none rounded-2xl text-sm focus:ring-2 focus:ring-rose-500/20 focus:shadow-md transition-all shadow-sm placeholder-gray-500 text-gray-900 dark:text-gray-100" 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onFocus={() => {
@@ -1567,11 +1569,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
             <AnimatePresence>
             {isSearchFocused && (searchTerm.length >= 2 && searchSuggestions.length > 0) && (
               <motion.div 
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="fixed top-[64px] left-0 w-full h-[calc(100vh-64px)] bg-white dark:bg-neutral-900 z-[20] overflow-y-auto p-2 pb-20 mt-1 shadow-lg"
+                className="fixed inset-0 pt-[80px] bg-white dark:bg-neutral-900 z-[100] overflow-y-auto pb-20"
               >
                 <div className="max-w-[520px] mx-auto">
                     <div className="px-3 py-2 border-b border-gray-50 dark:border-white/10">
@@ -1625,11 +1627,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
             <AnimatePresence>
             {isSearchFocused && (searchTerm.length < 2 || searchSuggestions.length === 0) && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9, borderRadius: "50px" }}
-                animate={{ opacity: 1, scale: 1, borderRadius: "0px" }}
-                exit={{ opacity: 0, scale: 0.9, borderRadius: "50px" }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed top-[64px] left-0 w-full h-[calc(100vh-64px)] bg-white dark:bg-black z-[100] overflow-y-auto p-2 pb-20"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 pt-[80px] bg-white dark:bg-black z-[100] overflow-y-auto pb-20"
               >
                  <div className="max-w-[520px] mx-auto">
                     {searchHistory.length > 0 && (
@@ -1654,35 +1656,25 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                 key={idx}
                                 className="flex justify-between items-center px-3 py-3 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer rounded-xl transition-colors border-b border-gray-50 dark:border-white/5 last:border-0"
                                 onClick={() => {
-                                    handleHistoryClick(item);
-                                    setIsSearchFocused(false);
-                                    document.body.style.overflow = "";
+                                    handleSearchSubmit(null, item);
                                 }}
                             >
-                                <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
-                                {item}
-                                </span>
-                                <div className="flex items-center">
-                                    <button
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <span className="opacity-40 text-lg">🕒</span>
+                                    <span className="text-sm text-gray-700 dark:text-gray-200 truncate font-medium">
+                                        {item}
+                                    </span>
+                                </div>
+                                <button
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         const h = removeFromSearchHistory(item);
                                         setSearchHistory(h);
                                     }}
-                                    className="text-gray-400 hover:text-red-500 px-2"
-                                    >
-                                    ×
-                                    </button>
-                                    <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSearchSubmit(null, item);
-                                        }}
-                                        className="flex items-center gap-2 px-3.5 py-1.5 bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 rounded-xl text-xs font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-all active:scale-95 ml-2"
-                                    >
-                                        <span className="opacity-50">🕒</span> Выбрать
-                                    </button>
-                                </div>
+                                    className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
+                                >
+                                    ✕
+                                </button>
                             </div>
                             ))}
                         </>
