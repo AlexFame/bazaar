@@ -936,11 +936,12 @@ export default function CreateListingClient({ onCreated, editId }) {
             {images.length > 0 ? (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 w-full justify-items-center">
                 {images.map((img, idx) => (
-                  <div key={idx} className="relative w-full aspect-square">
+                  // Legacy Aspect Ratio Hack (padding-bottom 100%)
+                  <div key={idx} className="relative w-full" style={{ paddingBottom: '100%' }}>
                     <img
                       src={img.url}
                       alt={`Предпросмотр ${idx + 1}`}
-                      className="w-full h-full rounded-xl object-cover border border-gray-100 dark:border-white/10"
+                      className="absolute inset-0 w-full h-full rounded-xl object-cover border border-gray-100 dark:border-white/10"
                     />
                     <button
                       type="button"
