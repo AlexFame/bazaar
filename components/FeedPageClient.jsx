@@ -7,7 +7,6 @@ import { feedListingsAtom, feedFiltersAtom, feedMetaAtom, feedScrollAtom } from 
 import { AnimatePresence, motion } from "framer-motion";
  // Added animation lib
 import { supabase } from "@/lib/supabaseClient";
-import TopNotification from "./TopNotification";
 import Stories from "./Stories";
 import { ListingCardSkeleton } from "./SkeletonLoader";
 import { CATEGORY_DEFS } from "@/lib/categories";
