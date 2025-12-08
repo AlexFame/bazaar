@@ -1551,10 +1551,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 animate={{ height: "auto", opacity: 1, marginTop: 12 }}
                 exit={{ height: 0, opacity: 0, marginTop: 0 }}
                 transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden px-4 max-w-[520px] mx-auto"
+                className="overflow-hidden max-w-[520px] mx-auto"
             >
                 <div className="overflow-x-auto no-scrollbar pb-1">
-                <div className="flex gap-4 min-w-min">
+                <div className="flex gap-4 min-w-min px-4">
                     {/* All Categories "Story" */}
                     <button 
                         onClick={() => router.push('/catalog')}
