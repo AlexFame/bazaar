@@ -1676,6 +1676,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             </div>
                             ))}
                         </>
+
                     )}
 
                 {/* 3. Popular Queries (If no search term) */}
@@ -1695,6 +1696,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                 </button>
                             ))}
                          </div>
+                    </div>
+                )}
+
+                {/* 4. Nothing Found State */}
+                {searchTerm && searchTerm.length >= 2 && searchSuggestions.length === 0 && (
+                    <div className="flex flex-col items-center justify-center pt-10 text-gray-400 opacity-60">
+                        <MagnifyingGlassIcon className="w-12 h-12 mb-2" />
+                        <p className="text-sm font-medium">Ничего не найдено</p>
                     </div>
                 )}
                  </div>
