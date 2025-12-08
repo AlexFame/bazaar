@@ -1553,7 +1553,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                  </div>
                              </div>
                             <span className={`text-[10px] font-medium text-center leading-tight line-clamp-2 max-w-[70px] ${categoryFilter === cat.key ? 'text-black font-bold' : 'text-gray-500'}`}>
-                                {cat.label[lang] || cat.label.ru}
+                                {cat[lang] || cat.ru}
                             </span>
                         </button>
                     ))}
