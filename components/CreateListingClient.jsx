@@ -934,13 +934,13 @@ export default function CreateListingClient({ onCreated, editId }) {
         >
           <label className="flex flex-col items-center justify-center gap-2 cursor-pointer">
             {images.length > 0 ? (
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 w-full justify-items-center">
                 {images.map((img, idx) => (
-                  <div key={idx} className="relative">
+                  <div key={idx} className="relative w-full aspect-square">
                     <img
                       src={img.url}
                       alt={`Предпросмотр ${idx + 1}`}
-                      className="h-24 w-24 rounded-xl object-cover"
+                      className="w-full h-full rounded-xl object-cover border border-gray-100 dark:border-white/10"
                     />
                     <button
                       type="button"
