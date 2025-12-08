@@ -4,7 +4,7 @@ import { useRef, useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAtom } from "jotai"; // Added Jotai
 import { feedListingsAtom, feedFiltersAtom, feedMetaAtom, feedScrollAtom } from "@/lib/store"; // Added atoms
-import { motion, AnimatePresence } from "framer-motion"; // Added animation lib
+import { AnimatePresence, motion, LayoutGroup } from "framer-motion"; // Added animation lib
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { ListingCardSkeleton } from "./SkeletonLoader";
@@ -1453,11 +1453,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
       } ${
         headerCompact ? "bg-rose-50/95 dark:bg-neutral-900/95 backdrop-blur-md shadow-sm py-2 border-b border-rose-100 dark:border-white/5" : "bg-rose-50 dark:bg-neutral-900 py-3 border-b border-rose-100 dark:border-white/5"
       }`}>
-        <div className="flex items-center gap-3 px-4 max-w-[520px] mx-auto"> {/* Added px-4 and gap-3 */}
+        <div className="flex items-center gap-3 px-4 max-w-[520px] mx-auto">
+        <LayoutGroup>
           {/* Hide BackButton when focused to save space - Animated */}
           <AnimatePresence mode="popLayout">
             {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery) && (
                <motion.div
+                 layout
                  initial={{ width: 0, opacity: 0, marginRight: 0 }}
                  animate={{ width: "auto", opacity: 1, marginRight: 8 }}
                  exit={{ width: 0, opacity: 0, marginRight: 0 }}
@@ -1470,7 +1472,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           </AnimatePresence>
           
           {/* Search Input Container */}
-          <div className="flex-1 relative">
+          <motion.div layout className="flex-1 relative z-20">
             <form onSubmit={handleSearchSubmit}>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -1487,26 +1489,35 @@ export default function FeedPageClient({ forcedCategory = null }) {
                       setShowSearchHistory(true);
                       setIsSearchFocused(true);
                   }}
-                  // Removed onBlur to keep overlay open until Cancel/Submit
                   onKeyDown={handleSearchKeyDown}
                 />
               </div>
             </form>
-          </div>
+          </motion.div>
 
-          {/* Favorites Icon (Heart) */}
+          {/* Favorites Icon (Heart) - Animate out */}
+          <AnimatePresence mode="popLayout">
           {!isSearchFocused && (
+            <motion.div layout exit={{ opacity: 0, scale: 0.8, width: 0 }} transition={{ duration: 0.2 }}>
             <button 
               onClick={() => router.push('/my?tab=favorites')} 
-              className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
+              className="p-2.5 rounded-full bg-gray-50 hover:bg-white dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
             >
                <HeartIcon className="w-6 h-6 text-gray-700 dark:text-gray-200 group-hover:text-rose-500 transition-colors" strokeWidth={1.5} />
             </button>
+            </motion.div>
           )}
+          </AnimatePresence>
 
-          {/* Cancel Button (Visible only when search focused) */}
+          {/* Cancel Button (Visible only when search focused) - Animate in */}
+          <AnimatePresence mode="popLayout">
           {isSearchFocused && (
-             <button
+             <motion.button
+                layout
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
                 type="button"
                 onClick={() => {
                     setIsSearchFocused(false);
@@ -1516,8 +1527,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 className="text-sm font-medium text-blue-600 whitespace-nowrap px-2"
              >
                 取消
-             </button>
+             </motion.button>
           )}
+          </AnimatePresence>
+        </LayoutGroup>
+        </div>
           
         </div>
 
