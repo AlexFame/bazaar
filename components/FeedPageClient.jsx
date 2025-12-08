@@ -1502,7 +1502,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           </motion.div>
 
           {/* Favorites Icon (Heart) - Animate out */}
-          <AnimatePresence mode="popLayout">
+
           {/* Favorites Icon (Heart) - Animate Width to 0 */}
           <motion.div 
             animate={{ 
