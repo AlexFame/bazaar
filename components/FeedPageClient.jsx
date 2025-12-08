@@ -1459,7 +1459,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           {/* Hide BackButton when focused - Animated with width */}
           {/* Back Button - Toggle via CSS for DOM stability */}
           {(categoryFilter !== "all" || hasSearchQuery) && (
-             <div className={`shrink-0 mr-2 ${isSearchFocused ? 'hidden' : 'block'}`}>
+             <div className="shrink-0 mr-2">
                <BackButton />
              </div>
           )}
@@ -1494,14 +1494,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
           {/* Favorites Icon - Toggle via CSS */}
             <button 
               onClick={() => router.push('/my?tab=favorites')} 
-              className={`p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group ${isSearchFocused ? 'hidden' : 'block'}`}
+              className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
                <HeartIcon className="w-6 h-6 text-gray-700 dark:text-gray-200 group-hover:text-rose-500 transition-colors" strokeWidth={1.5} />
             </button>
 
-          {/* Cancel Button - Toggle via CSS */}
-             <button
+          {/* Cancel Button - Hidden for testing */}
+             {/* <button
                 type="button"
                 onClick={() => {
                     setIsSearchFocused(false);
@@ -1512,7 +1512,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 style={{ WebkitTapHighlightColor: 'transparent' }}
              >
                 {txt.cancel || "Отмена"}
-             </button>
+             </button> */}
         </div>
           
 
@@ -1568,6 +1568,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       )}
 
             {/* Smart Search Suggestions - Full Screen Overlay Mode */}
+            {/* DISABLED FOR TESTING
             <AnimatePresence>
             {isSearchFocused && (searchTerm.length >= 2 && searchSuggestions.length > 0) && (
               <motion.div 
@@ -1577,6 +1578,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }} // Airbnb easing
                 className="fixed inset-0 pt-[80px] bg-white dark:bg-neutral-900 z-[100] overflow-y-auto pb-20"
               >
+              ...
+              </motion.div>
+            )}
+            </AnimatePresence> 
+            */}
                 <div className="max-w-[520px] mx-auto">
                     <div className="px-3 py-2 border-b border-gray-50 dark:border-white/10">
                     <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
@@ -1621,9 +1627,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     </div>
                     ))}
                 </div>
-              </motion.div>
+              {/* </motion.div>
             )}
-            </AnimatePresence>
+            </AnimatePresence> */}
 
             {/* Search History Dropdown - Full Screen Overlay Mode */}
             <AnimatePresence>
@@ -1634,7 +1640,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 exit={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
                 transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
                 className="fixed inset-0 pt-[80px] bg-white dark:bg-black z-[100] overflow-y-auto pb-20"
-              >
+              > 
+              ...
+             </motion.div>
+            )}
+            </AnimatePresence>
+            */}
                  <div className="max-w-[520px] mx-auto">
                     {searchHistory.length > 0 && (
                         <>
