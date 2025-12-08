@@ -1457,9 +1457,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
         <div className="flex items-center gap-3 px-4 max-w-[520px] mx-auto">
           {/* Hide BackButton when focused to save space - Animated */}
           {/* Hide BackButton when focused - Animated with width */}
-          {/* Back Button - Instant Toggle */}
-          {(categoryFilter !== "all" || hasSearchQuery) && !isSearchFocused && (
-             <div className="shrink-0 mr-2">
+          {/* Back Button - Toggle via CSS for DOM stability */}
+          {(categoryFilter !== "all" || hasSearchQuery) && (
+             <div className={`shrink-0 mr-2 ${isSearchFocused ? 'hidden' : 'block'}`}>
                <BackButton />
              </div>
           )}
@@ -1491,19 +1491,16 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
           {/* Favorites Icon (Heart) - Animate out */}
 
-          {/* Favorites Icon - Hidden when searching */}
-          {!isSearchFocused && (
+          {/* Favorites Icon - Toggle via CSS */}
             <button 
               onClick={() => router.push('/my?tab=favorites')} 
-              className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
+              className={`p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group ${isSearchFocused ? 'hidden' : 'block'}`}
               style={{ WebkitTapHighlightColor: 'transparent' }}
             >
                <HeartIcon className="w-6 h-6 text-gray-700 dark:text-gray-200 group-hover:text-rose-500 transition-colors" strokeWidth={1.5} />
             </button>
-          )}
 
-          {/* Cancel Button - Visible ONLY when searching */}
-          {isSearchFocused && (
+          {/* Cancel Button - Toggle via CSS */}
              <button
                 type="button"
                 onClick={() => {
@@ -1511,12 +1508,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     setShowSearchHistory(false);
                     setSearchTerm(urlQuery); // Reset to URL query
                 }}
-                className="text-sm font-medium text-black dark:text-white whitespace-nowrap px-2 ml-2"
+                className={`text-sm font-medium text-black dark:text-white whitespace-nowrap px-2 ml-2 ${isSearchFocused ? 'block' : 'hidden'}`}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
              >
                 {txt.cancel || "Отмена"}
              </button>
-          )}
         </div>
           
 
