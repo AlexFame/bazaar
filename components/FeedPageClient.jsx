@@ -1449,10 +1449,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
   return (
     <main className="min-h-screen pb-20 bg-gray-50 dark:bg-black text-foreground transition-colors duration-300">
       {/* Search Header */}
-      <header className={`sticky top-0 transition-all duration-300 ${
-        isSearchFocused ? "z-[110]" : "z-30"
-      } ${
-        headerCompact ? "bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md shadow-md py-2 border-b border-gray-100 dark:border-white/5" : "bg-white dark:bg-neutral-900 py-3 border-b border-gray-100 dark:border-white/5"
+      <header className={`sticky top-0 z-30 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-white/5 ${
+        (headerCompact && !isSearchFocused) ? "py-2 shadow-sm" : "py-3"
       }`}>
         <div className="flex items-center gap-3 px-4 max-w-[520px] mx-auto">
           {/* Hide BackButton when focused to save space - Animated */}
