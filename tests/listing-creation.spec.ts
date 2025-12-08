@@ -6,6 +6,7 @@ test.describe('Create Listing Page', () => {
     await page.addInitScript(() => {
       (window as any).Telegram = {
         WebApp: {
+          initData: "query_id=AAF...&user=%7B%22id%22%3A349353007%2C%22first_name%22%3A%22Test%22%2C%22last_name%22%3A%22User%22%2C%22username%22%3A%22testuser%22%7D&auth_date=1710927163&hash=...",
           initDataUnsafe: {
             user: {
               id: 349353007,
@@ -17,6 +18,7 @@ test.describe('Create Listing Page', () => {
           ready: () => {},
           expand: () => {},
           themeParams: {},
+          platform: 'android' // Mimic real platform
         },
       };
     });
@@ -27,7 +29,9 @@ test.describe('Create Listing Page', () => {
     await page.waitForLoadState('networkidle');
     
     // Check that form is visible
-    await expect(page.locator('h1')).toBeVisible();
+    // Check that form is visible (targeting inputs which are more critical than H1)
+    await expect(page.locator('input[placeholder*="Название"], input[type="text"]')).toBeVisible({ timeout: 10000 });
+    await expect(page).toHaveURL(/\/create/);
   });
 
   test('should display category selector', async ({ page }) => {

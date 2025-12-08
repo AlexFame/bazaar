@@ -63,14 +63,16 @@ test.describe('Search and Filters', () => {
     await page.waitForLoadState('networkidle');
     
     // Click on a category button
-    const categoryButton = page.locator('button').filter({ hasText: /🚗|Авто|Auto/ }).first();
+    // Click on a category button (targeting the text specifically if needed or the button container)
+    // We use a broader match because sticking to emoji + text is safer
+    const categoryButton = page.locator('button').filter({ hasText: 'Транспорт' }).first();
     
     if (await categoryButton.isVisible()) {
       await categoryButton.click();
-      await page.waitForLoadState('networkidle');
-      
-      // Check URL contains category
-      await expect(page).toHaveURL(/category=/);
+      // Wait for URL to update
+      await expect(page).toHaveURL(/category=transport/, { timeout: 5000 });
+    } else {
+        console.log('Category button not found/visible, skipping assertion');
     }
   });
 
