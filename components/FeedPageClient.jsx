@@ -1495,7 +1495,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           {/* Favorites Icon (Heart) */}
           {!isSearchFocused && (
             <button 
-              onClick={() => router.push('/my')} 
+              onClick={() => router.push('/my?tab=favorites')} 
               className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
             >
                <HeartIcon className="w-6 h-6 text-gray-700 dark:text-gray-200 group-hover:text-rose-500 transition-colors" strokeWidth={1.5} />
@@ -1525,7 +1525,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 <div className="flex gap-4 min-w-min">
                     {/* All Categories "Story" */}
                     <button 
-                        onClick={() => setCategoryFilter('all')}
+                        onClick={() => router.push('/catalog')}
                         className="flex flex-col items-center gap-1.5 min-w-[64px]"
                     >
                         <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${categoryFilter === 'all' ? 'border-black p-0.5' : 'border-transparent'}`}>

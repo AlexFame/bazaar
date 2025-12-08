@@ -116,9 +116,18 @@ export default function MyPage() {
   const [cachedActiveTab, setCachedActiveTab] = useAtom(myActiveTabAtom);
   const [cachedAdmin, setCachedAdmin] = useAtom(myIsAdminAtom);
   
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams.get("tab");
+
   const [loading, setLoading] = useState(listings.length === 0);
-  const [activeTab, setActiveTab] = useState(cachedActiveTab || "active"); // Sync with cache
+  const [activeTab, setActiveTab] = useState(tabFromUrl || cachedActiveTab || "active"); // Sync with param or cache
   
+  useEffect(() => {
+    if (tabFromUrl && ["active", "archive", "draft", "favorites"].includes(tabFromUrl)) {
+        setActiveTab(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+
   const [isAdmin, setIsAdmin] = useState(cachedAdmin);
   const [tgUser, setTgUser] = useState(null);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
