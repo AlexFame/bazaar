@@ -1565,11 +1565,70 @@ export default function FeedPageClient({ forcedCategory = null }) {
           </div>
       )}
 
-            {/* Smart Search Suggestions - Full Screen Overlay Mode */}
-            {/* Smart Search Suggestions - DISABLED */}
+            {/* Smart Search Suggestions - Static Overlay */}
+            {isSearchFocused && (searchTerm.length >= 2 && searchSuggestions.length > 0) && (
+              <div 
+                className="fixed inset-0 pt-[80px] bg-white dark:bg-neutral-900 z-[100] overflow-y-auto pb-20"
+                style={{ top: '0', height: '100dvh' }}
+              >
+                <div className="max-w-[520px] mx-auto">
+                    <div className="px-3 py-2 border-b border-gray-50 dark:border-white/10">
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                        Предложения
+                    </span>
+                    </div>
+                    {searchSuggestions.map((item, idx) => (
+                    <div
+                        key={idx}
+                        className="flex justify-between items-center px-3 py-3 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer rounded-xl transition-colors border-b border-gray-50 dark:border-white/5 last:border-0"
+                        onClick={() => {
+                            handleSuggestionClick(item);
+                            setIsSearchFocused(false);
+                            document.body.style.overflow = "";
+                        }}
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Item Icon */}
+                          <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-400 dark:text-gray-400">
+                             {item.isListing ? (
+                                item.image ? <img src={item.image} className="w-full h-full object-cover rounded-lg" /> : <span className="text-xs">IMG</span>
+                             ) : (
+                                <MagnifyingGlassIcon className="w-4 h-4" />
+                             )}
+                          </div>
+                          <div className="flex flex-col">
+                             <div className="text-sm font-medium text-gray-900 dark:text-gray-200">
+                                {item.title}
+                             </div>
+                             {item.price && (
+                                 <div className="text-xs text-black font-bold dark:text-white">
+                                     {item.price} {item.currency || '€'}
+                                 </div>
+                             )}
+                          </div>
+                        </div>
+                        <div className="text-gray-300 dark:text-gray-600">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+                          </svg>
+                        </div>
+                    </div>
+                    ))}
+                </div>
+              </div>
+            )}
 
-            {/* Search History Dropdown - Full Screen Overlay Mode */}
-            {/* Search History Dropdown - DISABLED */}
+            {/* Search History Dropdown - Static Overlay */}
+            {isSearchFocused && (searchTerm.length < 2 || searchSuggestions.length === 0) && (
+              <div
+                className="fixed inset-0 pt-[80px] bg-white dark:bg-black z-[100] overflow-y-auto pb-20"
+                style={{ top: '0', height: '100dvh' }}
+                onClick={(e) => {
+                   // If clicking the empty background (not content), close search
+                   if (e.target === e.currentTarget) setIsSearchFocused(false);
+                }}
+              >
+                 <div className="max-w-[520px] mx-auto min-h-full" onClick={(e) => e.stopPropagation()}>
 
       <div className="max-w-[520px] mx-auto">
         {/* Filters (only if search query exists AND not focused) */}
