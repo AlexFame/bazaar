@@ -1718,7 +1718,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
         )}
       </AnimatePresence>
 
-      <main>
       <div className="max-w-[520px] mx-auto">
         {/* Filters (only if search query exists AND not focused) */}
         {!isSearchFocused && hasSearchQuery && (
