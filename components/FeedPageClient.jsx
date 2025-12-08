@@ -1451,7 +1451,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       <header className={`sticky top-0 transition-all duration-300 ${
         isSearchFocused ? "z-[110]" : "z-30"
       } ${
-        headerCompact ? "bg-rose-50/95 dark:bg-neutral-900/95 backdrop-blur-md shadow-sm py-2 border-b border-rose-100 dark:border-white/5" : "bg-rose-50 dark:bg-neutral-900 py-3 border-b border-rose-100 dark:border-white/5"
+        headerCompact ? "bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md shadow-md py-2 border-b border-gray-100 dark:border-white/5" : "bg-white dark:bg-neutral-900 py-3 border-b border-gray-100 dark:border-white/5"
       }`}>
         <div className="flex items-center gap-3 px-4 max-w-[520px] mx-auto">
         <LayoutGroup>
@@ -1506,7 +1506,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
             <motion.div layout exit={{ opacity: 0, scale: 0.8, width: 0 }} transition={{ duration: 0.3 }}>
             <button 
               onClick={() => router.push('/my?tab=favorites')} 
-              className="p-2.5 rounded-full bg-gray-50 hover:bg-white dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
+              className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group tap-transparent"
             >
                <HeartIcon className="w-6 h-6 text-gray-700 dark:text-gray-200 group-hover:text-rose-500 transition-colors" strokeWidth={1.5} />
             </button>
@@ -1529,7 +1529,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     setShowSearchHistory(false);
                     setSearchTerm(urlQuery); // Reset to URL query
                 }}
-                className="text-sm font-medium text-blue-600 whitespace-nowrap px-2"
+                className="text-sm font-medium text-black dark:text-white whitespace-nowrap px-2 tap-transparent"
              >
                 {txt.cancel || "Отмена"}
              </motion.button>
@@ -1541,13 +1541,22 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
 
         {/* Stories / Categories Scroll (Only when not searching/focused) */}
-        {!isSearchFocused && !hasSearchQuery && (
-            <div className={`mt-3 overflow-x-auto no-scrollbar pb-1 px-4 max-w-[520px] mx-auto transition-all duration-300 ${headerCompact ? 'h-0 opacity-0 overflow-hidden mt-0' : 'h-auto opacity-100'}`}>
+        {/* Stories / Categories Scroll (Only when not searching/focused) */}
+        <AnimatePresence>
+        {!isSearchFocused && !hasSearchQuery && !headerCompact && (
+            <motion.div
+                initial={{ height: 0, opacity: 0, marginTop: 0 }}
+                animate={{ height: "auto", opacity: 1, marginTop: 12 }}
+                exit={{ height: 0, opacity: 0, marginTop: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="overflow-hidden px-4 max-w-[520px] mx-auto"
+            >
+                <div className="overflow-x-auto no-scrollbar pb-1">
                 <div className="flex gap-4 min-w-min">
                     {/* All Categories "Story" */}
                     <button 
                         onClick={() => router.push('/catalog')}
-                        className="flex flex-col items-center gap-1.5 min-w-[64px]"
+                        className="flex flex-col items-center gap-1.5 min-w-[64px] tap-transparent"
                     >
                         <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${categoryFilter === 'all' ? 'border-black p-0.5' : 'border-transparent'}`}>
                              <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-white text-xl">
@@ -1563,7 +1572,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         <button 
                             key={cat.key}
                             onClick={() => setCategoryFilter(cat.key)}
-                            className="flex flex-col items-center gap-1.5 min-w-[64px]"
+                            className="flex flex-col items-center gap-1.5 min-w-[64px] tap-transparent"
                         >
                              <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${categoryFilter === cat.key ? 'border-black p-0.5' : 'border-transparent'}`}>
                                  <div 
@@ -1579,8 +1588,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         </button>
                     ))}
                 </div>
-            </div>
+                </div>
+            </motion.div>
         )}
+        </AnimatePresence>
 
       </header>
 
