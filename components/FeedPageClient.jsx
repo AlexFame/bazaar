@@ -31,7 +31,7 @@ import RecentlyViewedScroll from "./RecentlyViewedScroll";
 import LangSwitcher from "./LangSwitcher";
 
 import ThemeSwitcher from "./ThemeSwitcher";
-import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, XMarkIcon, HeartIcon } from "@heroicons/react/24/outline"; // Added HeartIcon
 import PullToRefresh from "@/components/PullToRefresh";
 import BackButton from "@/components/BackButton";
 import useImpressionTracker from "@/hooks/useImpressionTracker";
@@ -1449,9 +1449,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
     <main className="min-h-screen pb-20 bg-gray-50 dark:bg-black text-foreground transition-colors duration-300">
       {/* Search Header */}
       <header className={`sticky top-0 z-30 transition-all duration-300 ${
-        headerCompact ? "bg-white/90 dark:bg-black/90 backdrop-blur-md shadow-sm py-2" : "bg-white dark:bg-black py-4"
+        headerCompact ? "bg-white/90 dark:bg-black/90 backdrop-blur-md shadow-sm py-2" : "bg-white dark:bg-black py-3"
       }`}>
-        <div className="flex items-center gap-2 max-w-[520px] mx-auto">
+        <div className="flex items-center gap-3 px-4 max-w-[520px] mx-auto"> {/* Added px-4 and gap-3 */}
           {/* Hide BackButton when focused to save space - Animated */}
           <AnimatePresence mode="popLayout">
             {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery) && (
@@ -1467,6 +1467,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
             )}
           </AnimatePresence>
           
+          {/* Search Input Container */}
           <div className="flex-1 relative">
             <form onSubmit={handleSearchSubmit}>
               <div className="relative group">
@@ -1477,7 +1478,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                   ref={searchInputRef}
                   type="text"
                   placeholder={txt.searchPlaceholder}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-100 border-none rounded-full text-sm focus:bg-white focus:ring-2 focus:ring-black/5 focus:shadow-md transition-all shadow-sm placeholder-gray-500 text-gray-900"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-none rounded-2xl text-sm focus:bg-white focus:ring-2 focus:ring-black/5 focus:shadow-md transition-all shadow-sm placeholder-gray-500 text-gray-900" 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onFocus={() => {
@@ -1489,6 +1490,78 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 />
               </div>
             </form>
+          </div>
+
+          {/* Favorites Icon (Heart) */}
+          {!isSearchFocused && (
+            <button 
+              onClick={() => router.push('/my')} 
+              className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
+            >
+               <HeartIcon className="w-6 h-6 text-gray-700 dark:text-gray-200 group-hover:text-rose-500 transition-colors" strokeWidth={1.5} />
+            </button>
+          )}
+
+          {/* Cancel Button (Visible only when search focused) */}
+          {isSearchFocused && (
+             <button
+                type="button"
+                onClick={() => {
+                    setIsSearchFocused(false);
+                    setShowSearchHistory(false);
+                    setSearchTerm(urlQuery); // Reset to URL query
+                }}
+                className="text-sm font-medium text-blue-600 whitespace-nowrap px-2"
+             >
+                取消
+             </button>
+          )}
+          
+        </div>
+
+        {/* Stories / Categories Scroll (Only when not searching/focused) */}
+        {!isSearchFocused && !hasSearchQuery && (
+            <div className={`mt-3 overflow-x-auto no-scrollbar pb-1 px-4 max-w-[520px] mx-auto transition-all duration-300 ${headerCompact ? 'h-0 opacity-0 overflow-hidden mt-0' : 'h-auto opacity-100'}`}>
+                <div className="flex gap-4 min-w-min">
+                    {/* All Categories "Story" */}
+                    <button 
+                        onClick={() => setCategoryFilter('all')}
+                        className="flex flex-col items-center gap-1.5 min-w-[64px]"
+                    >
+                        <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${categoryFilter === 'all' ? 'border-black p-0.5' : 'border-transparent'}`}>
+                             <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-white text-xl">
+                                ♾️
+                             </div>
+                        </div>
+                        <span className={`text-[10px] font-medium text-center leading-tight ${categoryFilter === 'all' ? 'text-black font-bold' : 'text-gray-500'}`}>
+                            {txt.allCategories}
+                        </span>
+                    </button>
+
+                    {CATEGORY_DEFS.map(cat => (
+                        <button 
+                            key={cat.key}
+                            onClick={() => setCategoryFilter(cat.key)}
+                            className="flex flex-col items-center gap-1.5 min-w-[64px]"
+                        >
+                             <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${categoryFilter === cat.key ? 'border-black p-0.5' : 'border-transparent'}`}>
+                                 <div 
+                                    className="w-full h-full rounded-full flex items-center justify-center text-2xl shadow-sm"
+                                    style={{ backgroundColor: cat.background || '#f3f4f6' }}
+                                 >
+                                    {cat.icon}
+                                 </div>
+                             </div>
+                            <span className={`text-[10px] font-medium text-center leading-tight line-clamp-2 max-w-[70px] ${categoryFilter === cat.key ? 'text-black font-bold' : 'text-gray-500'}`}>
+                                {cat.label[lang] || cat.label.ru}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        )}
+
+      </header>
 
             {/* Smart Search Suggestions - Full Screen Overlay Mode */}
             <AnimatePresence>
