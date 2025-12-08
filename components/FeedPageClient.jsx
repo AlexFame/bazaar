@@ -1662,36 +1662,31 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                 <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
                                 {item}
                                 </span>
-                                <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    const h = removeFromSearchHistory(item);
-                                    setSearchHistory(h);
-                                }}
-                                className="text-gray-400 hover:text-red-500 px-2"
-                                >
-                                ×
-                                </button>
-                                <button
-                                    key={idx}
-                                    onClick={() => handleSearchSubmit(null, item)}
-                                    className="flex items-center gap-2 px-3.5 py-2 bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-all active:scale-95"
-                                >
-                                    <span className="opacity-50">🕒</span> {item}
-                                    <span 
+                                <div className="flex items-center">
+                                    <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const h = removeFromSearchHistory(item);
+                                        setSearchHistory(h);
+                                    }}
+                                    className="text-gray-400 hover:text-red-500 px-2"
+                                    >
+                                    ×
+                                    </button>
+                                    <button
                                         onClick={(e) => {
                                             e.stopPropagation();
-                                            removeFromSearchHistory(item);
+                                            handleSearchSubmit(null, item);
                                         }}
-                                        className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/20 ml-1"
+                                        className="flex items-center gap-2 px-3.5 py-1.5 bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 rounded-xl text-xs font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-all active:scale-95 ml-2"
                                     >
-                                        ×
-                                    </span>
-                                </button>
+                                        <span className="opacity-50">🕒</span> Выбрать
+                                    </button>
+                                </div>
+                            </div>
                             ))}
-                        </div>
-                    </div>
-                )}
+                        </>
+                    )}
 
                 {/* 3. Popular Queries (If no search term) */}
                 {(!searchTerm || searchTerm.length < 2) && (
