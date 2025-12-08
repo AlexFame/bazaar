@@ -1723,31 +1723,37 @@ export default function FeedPageClient({ forcedCategory = null }) {
         {/* Filters (only if search query exists AND not focused) */}
         {!isSearchFocused && hasSearchQuery && (
           <div className="px-3 mt-3">
-                />
-
-                {/* Compact Filters */}
-                {renderCompactFilters()}
-
-                {/* Popular Queries */}
-                <div className="mt-2">
-                  <div className="text-xs font-medium text-gray-500 mb-2">
-                    {txt.popularQueriesLabel}
+             <div className="bg-card rounded-2xl p-4 shadow-sm border border-border">
+                  <div className="flex flex-col gap-3">
+                      <input
+                          type="text"
+                          placeholder={txt.locationPlaceholder}
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-black focus:ring-0 transition-colors"
+                          value={locationFilter}
+                          onChange={(e) => setLocationFilter(e.target.value)}
+                        />
+                       {renderCompactFilters()}
+                       
+                       {/* Popular Queries in Filter Box */}
+                       <div className="mt-2">
+                           <div className="text-xs font-medium text-gray-500 mb-2">
+                               {txt.popularQueriesLabel}
+                           </div>
+                           <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+                               {popularQueries.map((q) => (
+                               <button
+                                   key={q}
+                                   type="button"
+                                   onClick={() => handlePopularClick(q)}
+                                   className="flex-shrink-0 px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200 transition-colors"
+                               >
+                                   {q}
+                               </button>
+                               ))}
+                           </div>
+                       </div>
                   </div>
-                  <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-                    {popularQueries.map((q) => (
-                      <button
-                        key={q}
-                        type="button"
-                        onClick={() => handlePopularClick(q)}
-                        className="flex-shrink-0 px-3 py-1.5 rounded-full bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200 transition-colors"
-                      >
-                        {q}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+             </div>
           </div>
         )}
 
