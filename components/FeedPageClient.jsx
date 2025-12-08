@@ -1463,7 +1463,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                  initial={{ width: 0, opacity: 0, marginRight: 0 }}
                  animate={{ width: "auto", opacity: 1, marginRight: 8 }}
                  exit={{ width: 0, opacity: 0, marginRight: 0 }}
-                 transition={{ duration: 0.2 }}
+                 transition={{ type: "spring", stiffness: 500, damping: 30, mass: 1 }}
                  className="overflow-hidden"
                >
                  <BackButton className="shrink-0" />
@@ -1472,7 +1472,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
           </AnimatePresence>
           
           {/* Search Input Container */}
-          <motion.div layout className="flex-1 relative z-20">
+          <motion.div 
+            layout 
+            transition={{ type: "spring", stiffness: 500, damping: 30, mass: 1 }}
+            className="flex-1 relative z-20"
+          >
             <form onSubmit={handleSearchSubmit}>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -1517,7 +1521,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.2 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30, mass: 1 }}
                 type="button"
                 onClick={() => {
                     setIsSearchFocused(false);
@@ -1526,7 +1530,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 }}
                 className="text-sm font-medium text-blue-600 whitespace-nowrap px-2"
              >
-                取消
+                {txt.cancel || "Отмена"}
              </motion.button>
           )}
           </AnimatePresence>
