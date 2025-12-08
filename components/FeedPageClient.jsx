@@ -1672,57 +1672,57 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                 >
                                 ×
                                 </button>
-                            </div>
+                                <button
+                                    key={idx}
+                                    onClick={() => handleSearchSubmit(null, item)}
+                                    className="flex items-center gap-2 px-3.5 py-2 bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-200 rounded-xl text-sm font-medium hover:bg-gray-200 dark:hover:bg-white/20 transition-all active:scale-95"
+                                >
+                                    <span className="opacity-50">🕒</span> {item}
+                                    <span 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeFromSearchHistory(item);
+                                        }}
+                                        className="w-4 h-4 flex items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/20 ml-1"
+                                    >
+                                        ×
+                                    </span>
+                                </button>
                             ))}
-                        </>
-                    )}
-                    
-                    {/* Empty State / Hint */}
-                    {searchHistory.length === 0 && !searchTerm && (
-                        <div className="text-center text-gray-400 text-sm py-10">
-                            {txt.search_empty_hint}
                         </div>
-                    )}
-                 </div>
-              </motion.div>
-            )}
-            </AnimatePresence>
-          </div>
-            
-            {/* Cancel Button (Visible only when focused) */}
-            {isSearchFocused ? (
-                <button
-                    onClick={() => {
-                        setIsSearchFocused(false);
-                        setShowSearchHistory(false);
-                        setSearchTerm("");
-                    }}
-                    className="text-sm font-medium text-blue-600 px-2 hover:bg-blue-50 dark:hover:bg-white/10 rounded-lg py-2 transition-colors"
-                >
-                    {t("cancel")}
-                </button>
-            ) : (
-                <div className="flex items-center gap-2">
-                    <LangSwitcher />
-                </div>
-            )}
-            
-          </div>
-      </header>
+                    </div>
+                )}
 
+                {/* 3. Popular Queries (If no search term) */}
+                {(!searchTerm || searchTerm.length < 2) && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                         <div className="flex items-center justify-between mb-3 px-1">
+                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{txt.popularQueriesLabel}</h3>
+                         </div>
+                         <div className="flex flex-wrap gap-2">
+                            {popularQueries.map((q) => (
+                                <button
+                                    key={q}
+                                    onClick={() => handlePopularClick(q)}
+                                    className="px-3.5 py-2 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:border-rose-300 hover:text-rose-600 dark:hover:border-rose-500 dark:hover:text-rose-400 transition-all active:scale-95 bg-transparent"
+                                >
+                                   🔥 {q}
+                                </button>
+                            ))}
+                         </div>
+                    </div>
+                )}
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <main>
       <div className="max-w-[520px] mx-auto">
-        {/* Filters (only if search query exists) */}
-        {hasSearchQuery && (
+        {/* Filters (only if search query exists AND not focused) */}
+        {!isSearchFocused && hasSearchQuery && (
           <div className="px-3 mt-3">
-            <div className="bg-card rounded-2xl p-4 shadow-sm border border-border">
-              <div className="flex flex-col gap-3">
-                {/* Location Input */}
-                <input
-                  type="text"
-                  placeholder={txt.locationPlaceholder}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-black focus:ring-0 transition-colors"
-                  value={locationFilter}
-                  onChange={(e) => setLocationFilter(e.target.value)}
                 />
 
                 {/* Compact Filters */}
