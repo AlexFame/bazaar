@@ -1457,26 +1457,16 @@ export default function FeedPageClient({ forcedCategory = null }) {
         <div className="flex items-center gap-3 px-4 max-w-[520px] mx-auto">
           {/* Hide BackButton when focused to save space - Animated */}
           {/* Hide BackButton when focused - Animated with width */}
-          {(categoryFilter !== "all" || hasSearchQuery) && (
-             <motion.div
-               animate={{
-                 width: isSearchFocused ? 0 : "auto",
-                 opacity: isSearchFocused ? 0 : 1,
-                 marginRight: isSearchFocused ? 0 : 8
-               }}
-               transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
-               className="overflow-hidden"
-             >
-               <BackButton className="shrink-0" />
-             </motion.div>
+          {/* Back Button - Instant Toggle */}
+          {(categoryFilter !== "all" || hasSearchQuery) && !isSearchFocused && (
+             <div className="shrink-0 mr-2">
+               <BackButton />
+             </div>
           )}
           
           {/* Search Input Container */}
-          {/* Search Input Container */}
-          <motion.div 
-            transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
-            className="flex-1 relative z-20"
-          >
+          {/* Search Input Container - Always Flex 1 */}
+          <div className="flex-1 relative z-20">
             <form onSubmit={handleSearchSubmit}>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -1497,21 +1487,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 />
               </div>
             </form>
-          </motion.div>
+          </div>
 
           {/* Favorites Icon (Heart) - Animate out */}
 
-          {/* Favorites Icon (Heart) - Animate Width to 0 */}
-          <motion.div 
-            animate={{ 
-                width: isSearchFocused ? 0 : "auto", 
-                opacity: isSearchFocused ? 0 : 1, 
-                scale: isSearchFocused ? 0.8 : 1,
-                marginLeft: isSearchFocused ? 0 : 0
-            }}
-            transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
-            className="overflow-hidden"
-          >
+          {/* Favorites Icon - Hidden when searching */}
+          {!isSearchFocused && (
             <button 
               onClick={() => router.push('/my?tab=favorites')} 
               className="p-2.5 rounded-full hover:bg-white/10 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
@@ -1519,19 +1500,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
             >
                <HeartIcon className="w-6 h-6 text-white dark:text-gray-200 transition-colors" strokeWidth={1.5} />
             </button>
-          </motion.div>
+          )}
 
-          {/* Cancel Button (Visible only when search focused) - Animate Width from 0 */}
-           <motion.div
-              initial={false}
-              animate={{ 
-                  width: isSearchFocused ? "auto" : 0, 
-                  opacity: isSearchFocused ? 1 : 0,
-                  marginLeft: isSearchFocused ? 8 : 0
-              }}
-              transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
-              className="overflow-hidden whitespace-nowrap"
-           >
+          {/* Cancel Button - Visible ONLY when searching */}
+          {isSearchFocused && (
              <button
                 type="button"
                 onClick={() => {
@@ -1539,12 +1511,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     setShowSearchHistory(false);
                     setSearchTerm(urlQuery); // Reset to URL query
                 }}
-                className="text-sm font-medium text-white whitespace-nowrap px-2"
+                className="text-sm font-medium text-white whitespace-nowrap px-2 ml-2"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
              >
                 {txt.cancel || "Отмена"}
              </button>
-           </motion.div>
+          )}
         </div>
           
 
