@@ -19,7 +19,7 @@ const QUERIES = [
   { term: 'nothing_here' },
   { term: '', category: 'electronics' } // Filter only
 ];
-const REQUESTS = 200;
+const REQUESTS = 1000;
 
 async function runTest() {
   console.log(`🚀 Starting Stress Test: ${REQUESTS} concurrent requests...`);
