@@ -11,8 +11,15 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const QUERIES = ['iphone', 'диван', 'yamaha', 'квартира', 'nothing_here'];
-const REQUESTS = 50;
+const QUERIES = [
+  { term: 'iphone' }, 
+  { term: 'диван', minPrice: 1000 }, 
+  { term: 'yamaha', category: 'transport' }, 
+  { term: 'квартира', maxPrice: 50000 }, 
+  { term: 'nothing_here' },
+  { term: '', category: 'electronics' } // Filter only
+];
+const REQUESTS = 200;
 
 async function runTest() {
   console.log(`🚀 Starting Stress Test: ${REQUESTS} concurrent requests...`);
@@ -21,14 +28,20 @@ async function runTest() {
   let successes = 0;
 
   const promises = Array.from({ length: REQUESTS }).map(async (_, i) => {
-    const term = QUERIES[i % QUERIES.length];
+    const queryData = QUERIES[i % QUERIES.length];
     const reqStart = Date.now();
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('listings')
         .select('id, title')
-        .ilike('title', `%${term}%`)
         .limit(10);
+
+      if (queryData.term) query = query.ilike('title', `%${queryData.term}%`);
+      if (queryData.minPrice) query = query.gte('price', queryData.minPrice);
+      if (queryData.maxPrice) query = query.lte('price', queryData.maxPrice);
+      if (queryData.category) query = query.eq('category_key', queryData.category);
+
+      const { data, error } = await query;
 
       if (error) throw error;
       successes++;
