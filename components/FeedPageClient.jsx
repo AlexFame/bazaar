@@ -1481,13 +1481,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
             <form onSubmit={handleSearchSubmit}>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 group-focus-within:text-black transition-colors" />
+                  <MagnifyingGlassIcon className="h-5 w-5 text-white/80 group-focus-within:text-white transition-colors" />
                 </div>
                 <input
                   ref={searchInputRef}
                   type="text"
                   placeholder={txt.searchPlaceholder}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-white/10 border-none rounded-2xl text-sm focus:ring-2 focus:ring-rose-500/20 focus:shadow-md transition-all shadow-sm placeholder-gray-500 text-gray-900 dark:text-gray-100" 
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#00c4b4] dark:bg-white/10 border-transparent border rounded-2xl text-sm focus:ring-2 focus:ring-[#00c4b4]/50 focus:shadow-md transition-all shadow-sm placeholder-white/70 text-white dark:text-gray-100" 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onFocus={() => {
@@ -1506,7 +1506,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
             <motion.div layout exit={{ opacity: 0, scale: 0.8, width: 0 }} transition={{ duration: 0.3 }}>
             <button 
               onClick={() => router.push('/my?tab=favorites')} 
-              className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group tap-transparent"
+              className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
             >
                <HeartIcon className="w-6 h-6 text-gray-700 dark:text-gray-200 group-hover:text-rose-500 transition-colors" strokeWidth={1.5} />
             </button>
@@ -1529,7 +1530,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     setShowSearchHistory(false);
                     setSearchTerm(urlQuery); // Reset to URL query
                 }}
-                className="text-sm font-medium text-black dark:text-white whitespace-nowrap px-2 tap-transparent"
+                className="text-sm font-medium text-black dark:text-white whitespace-nowrap px-2"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
              >
                 {txt.cancel || "Отмена"}
              </motion.button>
@@ -1556,7 +1558,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     {/* All Categories "Story" */}
                     <button 
                         onClick={() => router.push('/catalog')}
-                        className="flex flex-col items-center gap-1.5 min-w-[64px] tap-transparent"
+                        className="flex flex-col items-center gap-1.5 min-w-[64px]"
+                        style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
                         <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${categoryFilter === 'all' ? 'border-black p-0.5' : 'border-transparent'}`}>
                              <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-white text-xl">
@@ -1572,7 +1575,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         <button 
                             key={cat.key}
                             onClick={() => setCategoryFilter(cat.key)}
-                            className="flex flex-col items-center gap-1.5 min-w-[64px] tap-transparent"
+                            className="flex flex-col items-center gap-1.5 min-w-[64px]"
+                            style={{ WebkitTapHighlightColor: 'transparent' }}
                         >
                              <div className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${categoryFilter === cat.key ? 'border-black p-0.5' : 'border-transparent'}`}>
                                  <div 
