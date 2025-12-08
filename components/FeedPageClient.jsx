@@ -445,7 +445,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           const { data, error } = await supabase
             .from("listings")
             .select("id, title, category_key, price, main_image_path")
-            .or(`title.ilike.%${variant}%,description.ilike.%${variant}%`)
+            .ilike('title', `%${variant}%`)
             .eq("status", "active")
             .limit(10);
           
@@ -639,7 +639,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           const orConditions = allTerms
             .map(
               (t) =>
-                `title.ilike.%${t}%,description.ilike.%${t}%,location_text.ilike.%${t}%`
+                `title.ilike.%${t}%`
             )
             .join(",");
           query = query.or(orConditions);
@@ -740,7 +740,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           const orConditions = allTerms
             .map(
               (t) =>
-                `title.ilike.%${t}%,description.ilike.%${t}%,location_text.ilike.%${t}%`
+                `title.ilike.%${t}%`
             )
             .join(",");
           query = query.or(orConditions);
@@ -1501,7 +1501,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
             </button>
 
           {/* Cancel Button - Hidden for testing */}
-             {/* <button
+          {/* Cancel Button - Toggle via CSS */}
+             <button
                 type="button"
                 onClick={() => {
                     setIsSearchFocused(false);
@@ -1512,7 +1513,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 style={{ WebkitTapHighlightColor: 'transparent' }}
              >
                 {txt.cancel || "Отмена"}
-             </button> */}
+             </button>
         </div>
           
 
