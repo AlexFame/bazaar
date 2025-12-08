@@ -1629,6 +1629,74 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 }}
               >
                  <div className="max-w-[520px] mx-auto min-h-full" onClick={(e) => e.stopPropagation()}>
+                    {searchHistory.length > 0 && (
+                        <>
+                            <div className="flex justify-between items-center px-3 py-2 border-b border-gray-50 dark:border-white/10">
+                            <span className="text-xs font-semibold text-gray-500">
+                                {txt.recentlyViewed}
+                            </span>
+                            <button
+                                onClick={(e) => {
+                                e.preventDefault();
+                                clearSearchHistory();
+                                setSearchHistory([]);
+                                }}
+                                className="text-xs text-red-500 hover:underline"
+                            >
+                                {txt.clear}
+                            </button>
+                            </div>
+                            {searchHistory.map((item, idx) => (
+                            <div
+                                key={idx}
+                                className="flex justify-between items-center px-3 py-3 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer rounded-xl transition-colors border-b border-gray-50 dark:border-white/5 last:border-0"
+                                onClick={() => {
+                                    handleSearchSubmit(null, item);
+                                }}
+                            >
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                    <span className="opacity-40 text-lg">🕒</span>
+                                    <span className="text-sm text-gray-700 dark:text-gray-200 truncate font-medium">
+                                        {item}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const h = removeFromSearchHistory(item);
+                                        setSearchHistory(h);
+                                    }}
+                                    className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            ))}
+                        </>
+                    )}
+
+                {/* 3. Popular Queries (If no search term) */}
+                {(!searchTerm || searchTerm.length < 2) && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                         <div className="flex items-center justify-between mb-3 px-1">
+                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">{txt.popularQueriesLabel}</h3>
+                         </div>
+                         <div className="flex flex-wrap gap-2">
+                            {popularQueries.map((q) => (
+                                <button
+                                    key={q}
+                                    onClick={() => handlePopularClick(q)}
+                                    className="px-3.5 py-2 border border-gray-200 dark:border-white/10 text-gray-600 dark:text-gray-300 rounded-xl text-sm font-medium hover:border-rose-300 hover:text-rose-600 dark:hover:border-rose-500 dark:hover:text-rose-400 transition-all active:scale-95 bg-transparent"
+                                >
+                                   🔥 {q}
+                                </button>
+                            ))}
+                         </div>
+                    </div>
+                )}
+                 </div>
+              </div>
+            )}
 
       <div className="max-w-[520px] mx-auto">
         {/* Filters (only if search query exists AND not focused) */}
