@@ -1473,8 +1473,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
           
           {/* Search Input Container */}
           <motion.div 
-            layout 
-            transition={{ type: "spring", stiffness: 500, damping: 30, mass: 1 }}
+            layout
+            layoutId="search-bar-container"
+            transition={{ type: "spring", stiffness: 400, damping: 30, mass: 1 }}
             className="flex-1 relative z-20"
           >
             <form onSubmit={handleSearchSubmit}>
@@ -1502,7 +1503,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           {/* Favorites Icon (Heart) - Animate out */}
           <AnimatePresence mode="popLayout">
           {!isSearchFocused && (
-            <motion.div layout exit={{ opacity: 0, scale: 0.8, width: 0 }} transition={{ duration: 0.2 }}>
+            <motion.div layout exit={{ opacity: 0, scale: 0.8, width: 0 }} transition={{ duration: 0.3 }}>
             <button 
               onClick={() => router.push('/my?tab=favorites')} 
               className="p-2.5 rounded-full bg-gray-50 hover:bg-white dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
@@ -1521,7 +1522,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30, mass: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30, mass: 1 }}
                 type="button"
                 onClick={() => {
                     setIsSearchFocused(false);
@@ -1587,10 +1588,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
             <AnimatePresence>
             {isSearchFocused && (searchTerm.length >= 2 && searchSuggestions.length > 0) && (
               <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
+                animate={{ opacity: 1, clipPath: "inset(0 0 0% 0)" }}
+                exit={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
+                transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }} // Airbnb easing
                 className="fixed inset-0 pt-[80px] bg-white dark:bg-neutral-900 z-[100] overflow-y-auto pb-20"
               >
                 <div className="max-w-[520px] mx-auto">
@@ -1645,10 +1646,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
             <AnimatePresence>
             {isSearchFocused && (searchTerm.length < 2 || searchSuggestions.length === 0) && (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
+                initial={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
+                animate={{ opacity: 1, clipPath: "inset(0 0 0% 0)" }}
+                exit={{ opacity: 0, clipPath: "inset(0 0 100% 0)" }}
+                transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
                 className="fixed inset-0 pt-[80px] bg-white dark:bg-black z-[100] overflow-y-auto pb-20"
               >
                  <div className="max-w-[520px] mx-auto">
