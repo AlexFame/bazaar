@@ -1533,7 +1533,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
         </LayoutGroup>
         </div>
           
-        </div>
+
 
         {/* Stories / Categories Scroll (Only when not searching/focused) */}
         {!isSearchFocused && !hasSearchQuery && (
