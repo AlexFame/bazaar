@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
  // Added animation lib
 import { supabase } from "@/lib/supabaseClient";
 import Stories from "./Stories";
+import ListingCard from "./ListingCard";
 import { ListingCardSkeleton } from "./SkeletonLoader";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { useLang } from "@/lib/i18n-client";
