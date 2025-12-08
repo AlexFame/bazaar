@@ -4,7 +4,8 @@ import { useRef, useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAtom } from "jotai"; // Added Jotai
 import { feedListingsAtom, feedFiltersAtom, feedMetaAtom, feedScrollAtom } from "@/lib/store"; // Added atoms
-import { AnimatePresence, motion, LayoutGroup } from "framer-motion"; // Added animation lib
+import { AnimatePresence, motion } from "framer-motion";
+ // Added animation lib
 import { supabase } from "@/lib/supabaseClient";
 import ListingCard from "./ListingCard";
 import { ListingCardSkeleton } from "./SkeletonLoader";
@@ -1454,7 +1455,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
         headerCompact ? "bg-[#00c4b4]/95 dark:bg-neutral-900/95 backdrop-blur-md shadow-md py-2 border-b border-[#00c4b4] dark:border-white/5" : "bg-[#00c4b4] dark:bg-neutral-900 py-3 border-b border-[#00c4b4] dark:border-white/5"
       }`}>
         <div className="flex items-center gap-3 px-4 max-w-[520px] mx-auto">
-        <LayoutGroup>
           {/* Hide BackButton when focused to save space - Animated */}
           {/* Hide BackButton when focused - Animated with width */}
           {(categoryFilter !== "all" || hasSearchQuery) && (
@@ -1474,8 +1474,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
           {/* Search Input Container */}
           {/* Search Input Container */}
           <motion.div 
-            layout
-            layoutId="search-bar-container"
             transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
             className="flex-1 relative z-20"
           >
@@ -1547,7 +1545,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 {txt.cancel || "Отмена"}
              </button>
            </motion.div>
-        </LayoutGroup>
         </div>
           
 
