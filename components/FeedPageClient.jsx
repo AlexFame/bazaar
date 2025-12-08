@@ -1456,26 +1456,27 @@ export default function FeedPageClient({ forcedCategory = null }) {
         <div className="flex items-center gap-3 px-4 max-w-[520px] mx-auto">
         <LayoutGroup>
           {/* Hide BackButton when focused to save space - Animated */}
-          <AnimatePresence mode="popLayout">
-            {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery) && (
-               <motion.div
-                 layout
-                 initial={{ width: 0, opacity: 0, marginRight: 0 }}
-                 animate={{ width: "auto", opacity: 1, marginRight: 8 }}
-                 exit={{ width: 0, opacity: 0, marginRight: 0 }}
-                 transition={{ type: "spring", stiffness: 500, damping: 30, mass: 1 }}
-                 className="overflow-hidden"
-               >
-                 <BackButton className="shrink-0" />
-               </motion.div>
-            )}
-          </AnimatePresence>
+          {/* Hide BackButton when focused - Animated with width */}
+          {(categoryFilter !== "all" || hasSearchQuery) && (
+             <motion.div
+               animate={{
+                 width: isSearchFocused ? 0 : "auto",
+                 opacity: isSearchFocused ? 0 : 1,
+                 marginRight: isSearchFocused ? 0 : 8
+               }}
+               transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+               className="overflow-hidden"
+             >
+               <BackButton className="shrink-0" />
+             </motion.div>
+          )}
           
+          {/* Search Input Container */}
           {/* Search Input Container */}
           <motion.div 
             layout
             layoutId="search-bar-container"
-            transition={{ type: "spring", stiffness: 400, damping: 30, mass: 1 }}
+            transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
             className="flex-1 relative z-20"
           >
             <form onSubmit={handleSearchSubmit}>
@@ -1502,8 +1503,17 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
           {/* Favorites Icon (Heart) - Animate out */}
           <AnimatePresence mode="popLayout">
-          {!isSearchFocused && (
-            <motion.div layout exit={{ opacity: 0, scale: 0.8, width: 0 }} transition={{ duration: 0.3 }}>
+          {/* Favorites Icon (Heart) - Animate Width to 0 */}
+          <motion.div 
+            animate={{ 
+                width: isSearchFocused ? 0 : "auto", 
+                opacity: isSearchFocused ? 0 : 1, 
+                scale: isSearchFocused ? 0.8 : 1,
+                marginLeft: isSearchFocused ? 0 : 0
+            }}
+            transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+            className="overflow-hidden"
+          >
             <button 
               onClick={() => router.push('/my?tab=favorites')} 
               className="p-2.5 rounded-full hover:bg-white/10 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
@@ -1511,19 +1521,20 @@ export default function FeedPageClient({ forcedCategory = null }) {
             >
                <HeartIcon className="w-6 h-6 text-white dark:text-gray-200 transition-colors" strokeWidth={1.5} />
             </button>
-            </motion.div>
-          )}
-          </AnimatePresence>
+          </motion.div>
 
-          {/* Cancel Button (Visible only when search focused) - Animate in */}
-          <AnimatePresence mode="popLayout">
-          {isSearchFocused && (
-             <motion.button
-                layout
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ type: "spring", stiffness: 400, damping: 30, mass: 1 }}
+          {/* Cancel Button (Visible only when search focused) - Animate Width from 0 */}
+           <motion.div
+              initial={false}
+              animate={{ 
+                  width: isSearchFocused ? "auto" : 0, 
+                  opacity: isSearchFocused ? 1 : 0,
+                  marginLeft: isSearchFocused ? 8 : 0
+              }}
+              transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+              className="overflow-hidden whitespace-nowrap"
+           >
+             <button
                 type="button"
                 onClick={() => {
                     setIsSearchFocused(false);
@@ -1534,9 +1545,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 style={{ WebkitTapHighlightColor: 'transparent' }}
              >
                 {txt.cancel || "Отмена"}
-             </motion.button>
-          )}
-          </AnimatePresence>
+             </button>
+           </motion.div>
         </LayoutGroup>
         </div>
           
