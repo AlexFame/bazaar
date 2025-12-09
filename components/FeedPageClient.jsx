@@ -34,7 +34,7 @@ import RecentlyViewedScroll from "./RecentlyViewedScroll";
 import LangSwitcher from "./LangSwitcher";
 
 import ThemeSwitcher from "./ThemeSwitcher";
-import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, XMarkIcon, HeartIcon } from "@heroicons/react/24/outline"; // Added HeartIcon
+import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, XMarkIcon, HeartIcon, BellIcon } from "@heroicons/react/24/outline"; // Added HeartIcon, BellIcon
 import PullToRefresh from "@/components/PullToRefresh";
 import BackButton from "@/components/BackButton";
 import useImpressionTracker from "@/hooks/useImpressionTracker";
@@ -1448,6 +1448,52 @@ export default function FeedPageClient({ forcedCategory = null }) {
     );
   };
 
+  const handleSaveSearch = async () => {
+      if (!searchTerm || searchTerm.length < 2) {
+          toast.error("Введите поисковый запрос для подписки");
+          return;
+      }
+      
+      const tgUser = getTelegramUser();
+      if (!tgUser) {
+           toast.error("Только для пользователей Telegram");
+           return;
+      }
+
+      const toastId = toast.loading("Сохраняем подписку...");
+
+      try {
+        const response = await fetch('/api/saved-searches', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                query: searchTerm,
+                initData: window.Telegram?.WebApp?.initData || "",
+                category: categoryFilter !== 'all' ? categoryFilter : null,
+                filters: {
+                    priceMin: filters.priceMin,
+                    priceMax: filters.priceMax
+                }
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) throw new Error(result.error || "Failed to save");
+
+        toast.success(`Вы подписались на "${searchTerm}"! 🔔`, {
+            id: toastId,
+            description: "Мы сообщим, когда появятся новые объявления."
+        });
+
+      } catch (e) {
+        console.error(e);
+        toast.error("Ошибка при сохранении подписки", { id: toastId });
+      }
+  };
+
   return (
     <main className="min-h-screen pb-20 bg-gray-50 dark:bg-black text-foreground transition-colors duration-300">
       {/* Search Header */}
@@ -1845,6 +1891,17 @@ export default function FeedPageClient({ forcedCategory = null }) {
                   ? "Попробуйте выбрать другую категорию"
                   : "Попробуйте изменить параметры поиска"}
               </p>
+              
+              {/* Subscribe Recommendation */}
+              {(hasSearchQuery || (searchTerm && searchTerm.length >= 2)) && (
+                  <button 
+                      onClick={handleSaveSearch}
+                      className="mt-6 px-6 py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium flex items-center gap-2 hover:opacity-90 transition-opacity"
+                  >
+                      <BellIcon className="w-5 h-5" />
+                      Подписаться на "{searchTerm || categoryFilter}"
+                  </button>
+              )}
             </div>
           ) : viewMode === "map" ? (
             <MapComponent
