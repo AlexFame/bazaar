@@ -455,12 +455,16 @@ export default function CreateListingClient({ onCreated, editId }) {
         setTimeout(() => router.push("/"), 2000);
       } else {
         if (editId) {
-             // EDIT CASE: Toast only, no confetti, no redirect (or optional)
+             // EDIT CASE: Toast only, no confetti
              toast.success("Объявление отредактировано! ✅", {
-                 description: "Изменения успешно сохранены."
+                 description: "Возвращаемся к объявлению..."
              });
              notificationOccurred('success');
-             // Stay on page as requested: "видит текст на том же экране"
+             
+             // Redirect back to listing after delay
+             setTimeout(() => {
+                 router.push(`/listing/${editId}`);
+             }, 1500);
         } else {
              // CREATE CASE: Confetti + Success Screen
              triggerConfetti();
