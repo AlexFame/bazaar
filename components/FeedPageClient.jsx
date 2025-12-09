@@ -1466,19 +1466,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
              </div>
           )}
 
-          {/* Logo on Home (Default State) */}
-          {categoryFilter === "all" && !hasSearchQuery && (
-            <div className="shrink-0 mr-2">
-               <Image 
-                 src="/logo.png" 
-                 alt="Bazaar" 
-                 width={32} 
-                 height={32} 
-                 className="w-8 h-8 object-contain"
-                 priority
-               />
-            </div>
-          )}
+
           
           {/* Search Input Container */}
           {/* Search Input Container - Always Flex 1 */}
