@@ -28,6 +28,7 @@ import {
   removeFromSearchHistory,
 } from "@/lib/searchHistory";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import PopularListingsScroll from "./PopularListingsScroll";
 import RecentlyViewedScroll from "./RecentlyViewedScroll";
 import LangSwitcher from "./LangSwitcher";
@@ -1463,6 +1464,20 @@ export default function FeedPageClient({ forcedCategory = null }) {
              <div className="shrink-0 mr-2">
                <BackButton />
              </div>
+          )}
+
+          {/* Logo on Home (Default State) */}
+          {categoryFilter === "all" && !hasSearchQuery && (
+            <div className="shrink-0 mr-2">
+               <Image 
+                 src="/logo.png" 
+                 alt="Bazaar" 
+                 width={32} 
+                 height={32} 
+                 className="w-8 h-8 object-contain"
+                 priority
+               />
+            </div>
           )}
           
           {/* Search Input Container */}

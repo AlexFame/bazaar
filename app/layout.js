@@ -48,6 +48,15 @@ export const metadata = {
     // google: 'your-google-verification-code',
     // yandex: 'your-yandex-verification-code',
   },
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+    other: {
+      rel: 'apple-touch-icon-precomposed',
+      url: '/logo.png',
+    },
+  },
 };
 
 // важно для мобильной верстки и Telegram WebApp
