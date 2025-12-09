@@ -315,6 +315,7 @@ export default function CreateListingClient({ onCreated, editId }) {
 
     // Image moderation
     for (const img of images) {
+        if (img.type === 'existing') continue;
         if (!checkImage(img.file)) {
             alert(`Файл ${img.file.name} слишком большой или имеет недопустимый формат.`);
             return;
