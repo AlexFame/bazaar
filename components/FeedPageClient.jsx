@@ -1496,6 +1496,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
           {/* Favorites Icon (Heart) - Animate out */}
 
           {/* Favorites Icon - Toggle via CSS */}
+          {/* Favorites Icon - Toggle via CSS */}
+          {!isSearchFocused && (
             <button 
               onClick={() => router.push('/my?tab=favorites')} 
               className="p-2.5 rounded-full bg-gray-50 hover:bg-gray-100 dark:bg-zinc-800 dark:hover:bg-zinc-700 active:scale-95 transition-all relative group"
@@ -1503,6 +1505,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
             >
                <HeartIcon className="w-6 h-6 text-gray-700 dark:text-gray-200 group-hover:text-rose-500 transition-colors" strokeWidth={1.5} />
             </button>
+          )}
 
           {/* Cancel Button - Hidden for testing */}
           {/* Cancel Button - Toggle via CSS */}
