@@ -59,7 +59,10 @@ export async function POST(req) {
                  return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
              }
              
-             const { error } = await supa.from('listings').update(payload).eq('id', payload.id);
+             // Strip immutable or protected fields
+             const { id: _, created_by: __, created_at: ___, ...updateData } = payload;
+             
+             const { error } = await supa.from('listings').update(updateData).eq('id', payload.id);
              if (error) throw error;
         } else {
              // INSERT New (with specific ID)
