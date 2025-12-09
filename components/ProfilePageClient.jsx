@@ -12,6 +12,7 @@ import BackButton from "@/components/BackButton";
 
 export default function ProfilePageClient({ profileId }) {
   const [profile, setProfile] = useState(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState(null);
   const [listings, setListings] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +64,18 @@ export default function ProfilePageClient({ profileId }) {
       setLoading(false);
     }
   }, [profileId]);
+
+  // Check current user
+  useEffect(() => {
+     const checkUser = async () => {
+         if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initDataUnsafe?.user) {
+             const tgId = window.Telegram.WebApp.initDataUnsafe.user.id;
+             const { data } = await supabase.from('profiles').select('id').eq('tg_user_id', tgId).single();
+             if (data) setCurrentUserProfile(data);
+         }
+     };
+     checkUser();
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -188,7 +201,10 @@ export default function ProfilePageClient({ profileId }) {
 
             {activeTab === "reviews" && (
                 <div>
-                    <ReviewForm targetUserId={profileId} onReviewSubmitted={loadData} />
+                    {/* Only show form if not owner */}
+                    {(!currentUserProfile || currentUserProfile.id !== profileId) && (
+                        <ReviewForm targetUserId={profileId} onReviewSubmitted={loadData} />
+                    )}
                     <ReviewList reviews={reviews} />
                 </div>
             )}
