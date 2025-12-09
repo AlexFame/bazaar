@@ -452,16 +452,24 @@ export default function CreateListingClient({ onCreated, editId }) {
       if (status === 'draft') {
         toast.success("Объявление сохранено в черновики!");
         notificationOccurred('success');
+        setTimeout(() => router.push("/"), 2000);
       } else {
-        triggerConfetti();
-        notificationOccurred('success');
-        toast.success("Объявление опубликовано! 🎉");
-      }
-      
-      // Delay redirect to show confetti and toast
-      setTimeout(() => {
-        router.push("/");
-      }, 2000); 
+        if (editId) {
+             // EDIT CASE: Toast only, no confetti, no redirect (or optional)
+             toast.success("Объявление отредактировано! ✅", {
+                 description: "Изменения успешно сохранены."
+             });
+             notificationOccurred('success');
+             // Stay on page as requested: "видит текст на том же экране"
+        } else {
+             // CREATE CASE: Confetti + Success Screen
+             triggerConfetti();
+             notificationOccurred('success');
+             setIsSuccessScreen(true);
+             // Auto-redirect after delay (optional, but good UX)
+             setTimeout(() => router.push("/"), 3000);
+        }
+      } 
     } catch (err) {
       console.error("Error creating listing:", err);
       alert("Ошибка при создании объявления: " + err.message);
@@ -635,6 +643,35 @@ export default function CreateListingClient({ onCreated, editId }) {
     );
   }
 
+
+  const [isSuccessScreen, setIsSuccessScreen] = useState(false); // Success state
+
+  // ... (existing code)
+
+  if (isSuccessScreen) {
+      return (
+          <div className="min-h-screen bg-white dark:bg-black flex flex-col items-center justify-center p-6 text-center">
+              <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
+                  <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+              </div>
+              <h1 className="text-2xl font-bold mb-2 dark:text-white">
+                  {t("congrats") || "Поздравляем!"}
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 mb-8">
+                  {t("listing_published") || "Ваше объявление опубликовано!"}
+              </p>
+              
+              <button 
+                  onClick={() => router.push('/')}
+                  className="w-full max-w-xs py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium"
+              >
+                  {t("go_home") || "На главную"}
+              </button>
+          </div>
+      );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-black pb-24">
