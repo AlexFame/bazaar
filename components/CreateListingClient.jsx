@@ -19,6 +19,7 @@ import imageCompression from 'browser-image-compression';
 import { useHaptic } from "@/hooks/useHaptic";
 import { triggerConfetti } from "@/lib/confetti";
 import { toast } from "sonner";
+import { motion } from "framer-motion"; // Animation
 
 const typeOptions = [
   { value: "buy", labelKey: "field_type_buy" },
@@ -704,18 +705,32 @@ export default function CreateListingClient({ onCreated, editId }) {
         );
     }
     
+
     if (isSuccessScreen) {
         return (
           <div className="min-h-screen bg-white dark:bg-black flex flex-col items-center justify-center p-6 text-center">
-              <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
-                  <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <motion.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6"
+              >
+                  <svg className="w-12 h-12 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <motion.path 
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2.5} 
+                        d="M5 13l4 4L19 7" 
+                      />
                   </svg>
-              </div>
-              <h1 className="text-2xl font-bold mb-2 dark:text-white">
+              </motion.div>
+              <h1 className="text-2xl font-bold mb-2 dark:text-white animate-fade-in-up">
                   {t("congrats") || "Поздравляем!"}
               </h1>
-              <p className="text-gray-600 dark:text-gray-300 mb-8">
+              <p className="text-gray-600 dark:text-gray-300 mb-8 animate-fade-in-up delay-100">
                   {t("listing_published") || "Ваше объявление опубликовано!"}
               </p>
               
@@ -725,7 +740,7 @@ export default function CreateListingClient({ onCreated, editId }) {
                       router.refresh();
                       setTimeout(() => router.push('/'), 100);
                   }}
-                  className="w-full max-w-xs py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium"
+                  className="w-full max-w-xs py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium animate-fade-in-up delay-200"
               >
                   {t("go_home") || "На главную"}
               </button>
