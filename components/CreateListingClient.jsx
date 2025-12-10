@@ -276,80 +276,90 @@ export default function CreateListingClient({ onCreated, editId }) {
     if (e) e.preventDefault();
     if (loading) return;
 
-    if (!checkTelegramAccountAge()) {
-      alert("Ваш аккаунт Telegram слишком новый для публикации объявлений.");
-      return;
-    }
-
-    // Basic validation
-    if (!title.trim() || !price.trim()) {
-      alert("Заполните обязательные поля (Заголовок, Цена)");
-      return;
-    }
-
-    // Content moderation
-    if (!checkContent(title) || !checkContent(description)) {
-      alert("Ваше объявление содержит запрещенные слова.");
-      return;
-    }
-
-    if (hasEmoji(title)) {
-      alert("В заголовке нельзя использовать эмодзи.");
-      return;
-    }
-
-    if (!validateTitle(title)) {
-        alert("Заголовок слишком короткий (минимум 3 символа).");
+      const accountAgeCheck = checkTelegramAccountAge();
+      if (!accountAgeCheck.allowed) {
+        alert(accountAgeCheck.reason || "Ваш аккаунт Telegram слишком новый.");
         return;
-    }
+      }
 
-    if (!validateDescription(description)) {
-        alert("Описание слишком короткое (минимум 10 символов).");
+      // Basic validation
+      if (!title.trim() || !price.trim()) {
+        alert("Заполните обязательные поля (Заголовок, Цена)");
         return;
-    }
+      }
 
-    if (!validatePrice(price)) {
-        alert("Цена указана некорректно.");
+      // Content moderation
+      if (!checkContent(title) || !checkContent(description)) {
+        alert("Ваше объявление содержит запрещенные слова.");
         return;
-    }
+      }
 
-    // Image moderation
-    for (const img of images) {
-        if (img.type === 'existing') continue;
-        if (!checkImage(img.file)) {
-            alert(`Файл ${img.file.name} слишком большой или имеет недопустимый формат.`);
-            return;
+      if (hasEmoji(title)) {
+        alert("В заголовке нельзя использовать эмодзи.");
+        return;
+      }
+
+      if (!validateTitle(title)) {
+          alert("Заголовок слишком короткий (минимум 3 символа).");
+          return;
+      }
+
+      if (!validateDescription(description)) {
+          alert("Описание слишком короткое (минимум 10 символов).");
+          return;
+      }
+
+      if (!validatePrice(price)) {
+          alert("Цена указана некорректно.");
+          return;
+      }
+
+      // Image moderation
+      for (const img of images) {
+          if (img.type === 'existing') continue;
+          if (!checkImage(img.file)) {
+              alert(`Файл ${img.file.name} слишком большой или имеет недопустимый формат.`);
+              return;
+          }
+      }
+
+      setLoading(true);
+
+      try {
+        const user = getTelegramUser();
+        const tgUserId = getUserId();
+
+        if (!tgUserId) {
+          alert("Ошибка авторизации. Попробуйте перезагрузить страницу.");
+          setLoading(false);
+          return;
         }
-    }
 
-    setLoading(true);
+        // Get profile UUID from database using Telegram ID
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("tg_user_id", tgUserId)
+          .single();
 
-    try {
-      const user = getTelegramUser();
-      const tgUserId = getUserId();
+        if (profileError || !profile) {
+          alert("Профиль не найден. Пожалуйста, войдите через Telegram.");
+          setLoading(false);
+          return;
+        }
 
-      if (!tgUserId) {
-        alert("Ошибка авторизации. Попробуйте перезагрузить страницу.");
-        setLoading(false);
-        return;
-      }
-
-      // Get profile UUID from database using Telegram ID
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("tg_user_id", tgUserId)
-        .single();
-
-      if (profileError || !profile) {
-        alert("Профиль не найден. Пожалуйста, войдите через Telegram.");
-        setLoading(false);
-        return;
-      }
-
-      const userId = profile.id;
-      // Generate a UUID for the listing upfront so we can use it for the folder
-      const listingId = crypto.randomUUID();
+        const userId = profile.id;
+        // Generate a UUID for the listing safely (fallback for old environments)
+        const generateUUID = () => {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        };
+        const listingId = generateUUID();
 
       // 1. Upload images
       const uploadedPaths = [];
