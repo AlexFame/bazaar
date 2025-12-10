@@ -1066,8 +1066,8 @@ export default function CreateListingClient({ onCreated, editId }) {
           />
         </div>
 
-        {/* цена (Скрываем для типа 'free' / 'give_away') */}
-        {listingType !== 'free' && (
+        {/* цена (Скрываем для типа 'free' и категории 'help_offer') */}
+        {listingType !== 'free' && categoryKey !== 'help_offer' && (
           <div className="mb-3">
             <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
               {t("field_price_label")}
@@ -1163,7 +1163,8 @@ export default function CreateListingClient({ onCreated, editId }) {
         </div>
 
         {/* Состояние (только для товаров, не для услуг, и не для помощи) */}
-        {listingType !== "service" && categoryKey !== 'help_offer' && categoryKey !== 'translations' && (
+        {/* Состояние (Скрываем для услуг, животных, работы и т.д.) */}
+        {listingType !== "service" && !['jobs', 'business', 'education', 'help_offer', 'translations', 'pets', 'exchange'].includes(categoryKey) && (
         <div className="mb-3">
           <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">{t("condition_label") || "Состояние"}</div>
           <div className="relative">
@@ -1172,9 +1173,19 @@ export default function CreateListingClient({ onCreated, editId }) {
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
             >
-               <option value="new">{t("condition_new")}</option>
-               <option value="used">{t("condition_used")}</option>
-               <option value="like_new">{t("condition_like_new")}</option>
+               {categoryKey === 'realty' ? (
+                   <>
+                       {/* Realty specific options */}
+                       <option value="new_building">{t("condition_new_building")}</option>
+                       <option value="secondary">{t("condition_secondary")}</option>
+                   </>
+               ) : (
+                   <>
+                       <option value="new">{t("condition_new")}</option>
+                       <option value="used">{t("condition_used")}</option>
+                       <option value="like_new">{t("condition_like_new")}</option>
+                   </>
+               )}
             </select>
             <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
               <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
