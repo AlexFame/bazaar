@@ -172,20 +172,20 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                     : "border-gray-200 dark:border-gray-700"
                 } transition-all hover:scale-[1.02] hover:shadow-lg`}
               >
-                {/* Recommended badge */}
+                {/* Recommended badge - Moved to left to avoid overlap or adjusting layout */}
                 {service.features?.recommended && (
-                  <div className="absolute top-2 right-2 bg-purple-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  <div className="absolute top-0 right-0 bg-purple-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-xl z-10">
                     ⭐️ {lang === 'en' ? 'Popular' : lang === 'ua' ? 'Популярне' : 'Популярное'}
                   </div>
                 )}
 
-                <div className="p-4">
+                <div className="p-4 pt-6"> {/* Added pt-6 for spacing if badge is top */}
                   {/* Icon and name */}
                   <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 pr-12"> {/* Added pr-12 to prevent text hitting price area if narrow */}
                       <span className="text-3xl">{getServiceIcon(service.service_type)}</span>
                       <div>
-                        <h3 className="font-bold text-black dark:text-white leading-tight break-words">
+                        <h3 className="font-bold text-black dark:text-white leading-tight break-words text-sm sm:text-base">
                           {getServiceName(service)}
                         </h3>
                         {service.duration_days && (
@@ -199,12 +199,12 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                         )}
                       </div>
                     </div>
-                    <div className="text-right flex-shrink-0 ml-1">
-                      <div className="text-2xl font-bold text-black dark:text-white">
+                    <div className="text-right flex-shrink-0 ml-1 relative z-20"> {/* z-20 to be above decoration */}
+                      <div className="text-xl sm:text-2xl font-bold text-black dark:text-white">
                         {service.price_stars} ⭐️
                       </div>
-                      <div className="text-xs text-gray-500">
-                        ≈ €{(service.price_stars * 0.015).toFixed(2)}
+                      <div className="text-xs text-gray-500 font-medium">
+                        ≈ €{(service.price_stars * 0.0215).toFixed(2)}
                       </div>
                     </div>
                   </div>
