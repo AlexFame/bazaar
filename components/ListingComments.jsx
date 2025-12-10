@@ -216,36 +216,13 @@ export default function ListingComments({ listingId, ownerId }) {
 
       {/* Form */}
       {currentUser ? (
-        <form 
-            onSubmit={handleSubmit} 
-            className={`flex gap-2 transition-all duration-200 ${
-                newComment ? "relative z-[60] bg-white" : ""
-            }`}
-        >
+        <form onSubmit={handleSubmit} className="flex gap-2">
             <input
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
-                onFocus={() => {
-                    document.body.classList.add('hide-bottom-nav');
-                    // Ensure form is above nav
-                    const form = document.activeElement?.closest('form');
-                    if(form) {
-                        form.classList.add('relative', 'z-[60]', 'bg-white');
-                    }
-                }}
-                onBlur={() => {
-                   setTimeout(() => {
-                       document.body.classList.remove('hide-bottom-nav');
-                       // Remove z-index override
-                       const form = document.querySelector('form.z-\\[60\\]');
-                       if(form) {
-                           form.classList.remove('z-[60]');
-                       }
-                   }, 100);
-                }}
                 placeholder={t("ask_placeholder") || "Задайте вопрос продавцу..."}
-                className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-xs focus:outline-none focus:border-black bg-white"
+                className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-xs focus:outline-none focus:border-black"
                 disabled={submitting}
             />
             <button 

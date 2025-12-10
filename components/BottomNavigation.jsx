@@ -147,12 +147,42 @@ export default function BottomNavigation() {
       };
   }, []);
 
-  // Helper to determine active tab based on path prefix
-  // Exact match for home, prefix for others
+  // Handle keyboard/input focus to hide nav
+  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    // Handler to detect input focus
+    const handleFocusIn = (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+            setIsKeyboardOpen(true);
+        }
+    };
+
+    const handleFocusOut = () => {
+        // Small delay to prevent flickering if switching inputs
+        setTimeout(() => {
+            if (document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                setIsKeyboardOpen(false);
+            }
+        }, 100);
+    };
+
+    window.addEventListener('focusin', handleFocusIn);
+    window.addEventListener('focusout', handleFocusOut);
+
+    return () => {
+        window.removeEventListener('focusin', handleFocusIn);
+        window.removeEventListener('focusout', handleFocusOut);
+    };
+  }, []);
+
+  // Determine active tab
   const isActive = (path) => {
     if (path === "/") return pathname === "/";
     return pathname.startsWith(path);
   };
+
+  if (isKeyboardOpen) return null;
 
   return (
     <div id="mobile-bottom-nav" className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)] z-50 transition-colors duration-300">
