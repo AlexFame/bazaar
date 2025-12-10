@@ -175,3 +175,8 @@ button:hover, a:hover {
     opacity: 0;
   }
 }
+
+/* Hides bottom nav when input is focused to prevent keyboard overlap issues */
+body.hide-bottom-nav #mobile-bottom-nav {
+  display: none !important;
+}

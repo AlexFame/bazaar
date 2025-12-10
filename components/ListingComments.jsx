@@ -221,6 +221,13 @@ export default function ListingComments({ listingId, ownerId }) {
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}
+                onFocus={() => document.body.classList.add('hide-bottom-nav')}
+                onBlur={() => {
+                   // Small delay to allow button click to register if needed, 
+                   // though fixed nav usually doesn't interfere with clicks on form itself.
+                   // Immediate removal is usually fine, but safe to wrap.
+                   setTimeout(() => document.body.classList.remove('hide-bottom-nav'), 100);
+                }}
                 placeholder={t("ask_placeholder") || "Задайте вопрос продавцу..."}
                 className="flex-1 border border-gray-300 rounded-full px-4 py-2 text-xs focus:outline-none focus:border-black"
                 disabled={submitting}
