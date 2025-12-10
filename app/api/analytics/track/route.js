@@ -32,6 +32,7 @@ export async function POST(request) {
     const userAgent = request.headers.get('user-agent') || 'unknown';
 
     // Insert analytics event
+    const { error } = await supabase
       .from('listing_analytics_events')
       .insert({
         listing_id: listingId,

@@ -289,6 +289,26 @@ export default function CreateListingClient({ onCreated, editId }) {
       }
   }, []); // Mount only
 
+  const handleFileChange = async (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      await processFiles(e.target.files);
+    }
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      await processFiles(e.dataTransfer.files);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  async function processFiles(fileList) {
     const incoming = Array.from(fileList || []);
     if (!incoming.length) return;
 
@@ -348,18 +368,7 @@ export default function CreateListingClient({ onCreated, editId }) {
     setImages((prev) => prev.filter((_, i) => i !== index));
   }
 
-  function handleDragOver(e) {
-    e.preventDefault();
-  }
 
-  function handleDrop(e) {
-    e.preventDefault();
-    addFiles(e.dataTransfer.files);
-  }
-
-  function handleFileChange(e) {
-    addFiles(e.target.files);
-  }
 
   async function handleGeocode() {
     if (!location.trim()) return;
@@ -1153,8 +1162,8 @@ export default function CreateListingClient({ onCreated, editId }) {
           </div>
         </div>
 
-        {/* Состояние (только для товаров, не для услуг) */}
-        {listingType !== "service" && (
+        {/* Состояние (только для товаров, не для услуг, и не для помощи) */}
+        {listingType !== "service" && categoryKey !== 'help_offer' && categoryKey !== 'translations' && (
         <div className="mb-3">
           <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">{t("condition_label") || "Состояние"}</div>
           <div className="relative">
