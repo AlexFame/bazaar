@@ -260,10 +260,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
   
   // Local loading state (only true if we need to fetch)
   
-  // Local loading state (only true if we need to fetch)
   const [loading, setLoading] = useState(listings.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [headerCompact, setHeaderCompact] = useState(false);
+  
+  // Request cancellation
+  const abortControllerRef = useRef(null);
 
   // Restore scroll on mount
   useEffect(() => {
@@ -562,14 +564,15 @@ export default function FeedPageClient({ forcedCategory = null }) {
     setMinPrice(searchParams.get("price_min") || "");
     setMaxPrice(searchParams.get("price_max") || "");
 
-    const cat = searchParams.get("category") || forcedCategory || "all";
-    setCategoryFilter(cat);
-
+    // Optimize category detection to avoid double-render/race condition
+    let cat = searchParams.get("category") || forcedCategory || "all";
+    
     // Smart category detection only if no category in URL and there is a query
     if (cat === "all" && q) {
       const detected = detectCategory(q);
-      if (detected) setCategoryFilter(detected);
+      if (detected) cat = detected;
     }
+    setCategoryFilter(cat);
 
     setTypeFilter(searchParams.get("type") || "all");
     setConditionFilter(searchParams.get("condition") || "all");
@@ -725,6 +728,18 @@ export default function FeedPageClient({ forcedCategory = null }) {
     }
 
     try {
+      // Cancel previous request if exists using AbortController (optional, if Supabase supports it or we just ignore result)
+      // Since Supabase JS client doesn't fully support AbortSignal in v2 for all methods, 
+      // we will use a ref ID tracking pattern or just standard cleanup logic.
+      // But actually, we can just track the current request ID.
+      
+      // Let's use a simple "ignore stale result" pattern via a ref, but `abort` is better for network.
+      if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+      }
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       // 1. Fetch listings (raw, without joins to avoid FK errors)
       let query = supabase
         .from("listings")
@@ -831,6 +846,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
       if (barterFilter === "yes") {
         query = query.contains("parameters", { barter: true });
       }
+
+      // Add signal
+      query = query.abortSignal(controller.signal);
 
       const { data: rawListings, error } = await query;
 
