@@ -95,18 +95,56 @@ export default function BottomNavigation() {
   const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
-      async function loadCount() {
+      let channel;
+
+      async function init() {
           const { data: { user } } = await supabase.auth.getUser();
+          
           if (user) {
+              // Initial load
               const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false);
               setNotifCount(count || 0);
+
+              // Subscribe
+              channel = supabase
+                .channel('realtime:notifications')
+                .on(
+                  'postgres_changes',
+                  {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${user.id}`
+                  },
+                  (payload) => {
+                     if (!payload.new.is_read) {
+                         setNotifCount(prev => prev + 1);
+                     }
+                  }
+                )
+                .on(
+                  'postgres_changes',
+                  {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${user.id}`
+                  },
+                  () => {
+                     // Reload count on update (e.g. read status change)
+                     supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false)
+                       .then(({ count }) => setNotifCount(count || 0));
+                  }
+                )
+                .subscribe();
           }
       }
-      loadCount();
-      
-      // Simple interval for polling (every 30s)
-      const interval = setInterval(loadCount, 30000);
-      return () => clearInterval(interval);
+
+      init();
+
+      return () => {
+          if (channel) supabase.removeChannel(channel);
+      };
   }, []);
 
   // Helper to determine active tab based on path prefix

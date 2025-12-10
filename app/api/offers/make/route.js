@@ -56,7 +56,7 @@ export async function POST(req) {
     // User can cancel old offer.
     // Let's try to insert. 
     
-    const { data, error } = await supa
+    const { data: offerData, error } = await supa
         .from('offers')
         .insert({
             listing_id,
@@ -64,7 +64,11 @@ export async function POST(req) {
             price,
             status: 'pending'
         })
-        .select()
+        .select(`
+            *,
+            listing:listings(id, title, created_by),
+            buyer:profiles!buyer_id(id, full_name, tg_username)
+        `)
         .single();
 
     if (error) {
@@ -73,8 +77,43 @@ export async function POST(req) {
         }
         throw error;
     }
+    
+    // 4. Send Notification to Seller
+    const listing = offerData.listing;
+    const buyer = offerData.buyer;
+    const sellerId = listing.created_by;
+    
+    // Don't notify if making offer on own item (should act. be blocked)
+    if (sellerId && sellerId !== userId) {
+        const fetch = require('node-fetch'); // or use gloabl fetch if available in Next.js 13+
+        // Actually, we can just reuse the logic from notifications route OR simply insert + send here directly
+        // Reuse internal logic is cleaner? But let's just do it directly with 'supa' to be fast.
+        
+        const message = `💸 Новое предложение цены! \n\nПользователь ${buyer.full_name || buyer.tg_username} предложил ${price}€ за "${listing.title}".`;
+        
+        // In-App
+        await supa.from("notifications").insert({
+            user_id: sellerId,
+            type: "offer",
+            title: "Новое предложение",
+            message: message,
+            data: { offer_id: offerData.id, listing_id: listing_id }
+        });
+        
+        // Telegram
+        // Get seller tg_id
+        const { data: sellerProfile } = await supa.from("profiles").select("tg_user_id, notification_preferences").eq("id", sellerId).single();
+        
+        if (sellerProfile && sellerProfile.tg_user_id) {
+             const prefs = sellerProfile.notification_preferences || {};
+             if (prefs.offer !== false) {
+                 const { sendNotification } = require("@/lib/bot");
+                 await sendNotification(sellerProfile.tg_user_id, message);
+             }
+        }
+    }
 
-    return new Response(JSON.stringify({ success: true, offer: data }), { status: 200 });
+    return new Response(JSON.stringify({ success: true, offer: offerData }), { status: 200 });
 
   } catch (err) {
     console.error('Make Offer API Error:', err);

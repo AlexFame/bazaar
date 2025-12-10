@@ -24,15 +24,41 @@ export default function ChatListClient() {
   const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
-    // Fetch notification count
-    async function loadNotifCount() {
+    let channel;
+
+    // Fetch notification count & subscribe
+    async function init() {
        const { data: { user } } = await supabase.auth.getUser();
        if (user) {
-           const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false);
-           setNotifCount(count || 0);
+           const refreshCount = async () => {
+                const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false);
+                setNotifCount(count || 0);
+           };
+           
+           refreshCount();
+
+           channel = supabase
+            .channel('realtime:chat_notifications')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${user.id}`
+                },
+                () => {
+                    refreshCount();
+                }
+            )
+            .subscribe();
        }
     }
-    loadNotifCount();
+    init();
+
+    return () => {
+        if (channel) supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {

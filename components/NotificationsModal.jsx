@@ -12,9 +12,40 @@ export default function NotificationsModal({ isOpen, onClose }) {
   useEffect(() => {
     if (!isOpen) return;
     
-    // Mark all as read when opening? or individually?
-    // Let's mark all as read for simplicity when closing or opening
     loadNotifications();
+
+    let channel;
+    
+    async function subscribe() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        channel = supabase
+            .channel('realtime:modal_notifications')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${user.id}`
+                },
+                (payload) => {
+                    // Prepend new notification
+                    setNotifications(prev => [payload.new, ...prev]);
+                    // Mark as read immediately if modal is open? 
+                    // Maybe better to just show it as unread or read.
+                    // Let's keep it simple: Add it to list.
+                }
+            )
+            .subscribe();
+    }
+    
+    subscribe();
+
+    return () => {
+        if (channel) supabase.removeChannel(channel);
+    };
   }, [isOpen]);
 
   async function loadNotifications() {
