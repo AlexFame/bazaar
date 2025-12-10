@@ -501,14 +501,14 @@ export default function CreateListingClient({ onCreated, editId }) {
 
 
       if (status === 'draft') {
-        toast.success("Объявление сохранено в черновики!");
+        toast.success(t("draft_saved") || "Объявление сохранено в черновики!");
         notificationOccurred('success');
         setTimeout(() => router.push("/"), 2000);
       } else {
         if (editId) {
              // EDIT CASE: Toast only, no confetti
-             toast.success("Объявление отредактировано! ✅", {
-                 description: "Возвращаемся к объявлению..."
+             toast.success(t("listing_edited") || "Объявление отредактировано! ✅", {
+                 description: t("returning_to_listing") || "Возвращаемся к объявлению..."
              });
              notificationOccurred('success');
              

@@ -211,8 +211,20 @@ export default function ListingDetailClient({ id }) {
            if (user) currentUserId = user.id;
         }
 
-        if (currentUserId && listingData.created_by === currentUserId) {
+        if (currentUserId) {
+            console.log("[Ownership Debug] ID Check:", {
+                currentUserId,
+                listingOwner: listingData.created_by,
+                match: currentUserId === listingData.created_by,
+                typeUser: typeof currentUserId,
+                typeOwner: typeof listingData.created_by
+            });
+        }
+
+        if (currentUserId && listingData.created_by && String(currentUserId).trim() === String(listingData.created_by).trim()) {
           setIsOwner(true);
+        } else {
+          setIsOwner(false);
         }
       } catch (err) {
         console.error("Ошибка:", err);
