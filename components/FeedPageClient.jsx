@@ -293,7 +293,17 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [locationFilter, setLocationFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState(forcedCategory || "all");
+  // Helper for initial category state
+  const getInitialCategory = () => {
+    const urlCat = searchParams.get("category");
+    const urlQ = searchParams.get("q");
+    if (!urlCat && urlQ && !forcedCategory) {
+        return detectCategory(urlQ) || "all";
+    }
+    return urlCat || forcedCategory || "all";
+  };
+
+  const [categoryFilter, setCategoryFilter] = useState(getInitialCategory());
 
   // Construct current filter object to compare with cache
   const currentFilters = {
