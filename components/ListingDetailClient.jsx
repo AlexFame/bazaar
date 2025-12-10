@@ -293,15 +293,21 @@ export default function ListingDetailClient({ id }) {
     }
 
     try {
-      const { error } = await supabase
-        .from("listings")
-        .delete()
-        .eq("id", id);
+      // Use API for deletion (Secure RLS)
+      const tg = window.Telegram?.WebApp;
+      const initData = tg?.initData;
+      
+      const res = await fetch("/api/listings/delete", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ id, initData })
+      });
 
-      if (error) {
-        console.error("Ошибка удаления:", error);
-        alert(t("delete_error") || "Не удалось удалить объявление");
-        return;
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Delete failed");
       }
 
       // Перенаправляем на страницу "Мои объявления"
