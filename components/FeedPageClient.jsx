@@ -761,17 +761,19 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
       const term = (searchTerm || "").trim();
       if (term) {
-        const allTerms = expandSearchTerm(term);
-
-        if (allTerms.length > 0) {
-          const orConditions = allTerms
-            .map(
-              (t) =>
-                `title.ilike.%${t}%`
-            )
-            .join(",");
-          query = query.or(orConditions);
-        }
+        // Advanced "Smart" Search: Split into words, expand each, and AND the groups
+        // Example: "iphone 15" -> (title ILIKE %iphone% OR title ILIKE %айфон%) AND (title ILIKE %15%)
+        const words = term.split(/\s+/).filter(w => w.length > 0);
+        
+        words.forEach(word => {
+            const variants = expandSearchTerm(word); // Returns [word, ...synonyms]
+            if (variants.length > 0) {
+                const orCondition = variants
+                    .map(v => `title.ilike.%${v}%`)
+                    .join(",");
+                query = query.or(orCondition);
+            }
+        });
       }
 
       if (locationFilter.trim()) {
