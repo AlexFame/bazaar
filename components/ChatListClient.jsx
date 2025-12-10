@@ -37,20 +37,6 @@ export default function ChatListClient() {
 
   useEffect(() => {
     const fetchUserAndChats = async () => {
-    // ... rest of logic
-    
-  // (Search for return block)
-  
-  return (
-    <div className="min-h-screen bg-white dark:bg-black animate-fade-in pb-20">
-      <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-white/10 px-4 py-3">
-        <div className="flex items-center justify-between gap-3 mb-3">
-            <div className="flex items-center gap-3">
-              <BackButton />
-              <h1 className="text-lg font-bold dark:text-white">{t("navbar_messages")}</h1>
-            </div>
-            {/* Notification Bell */}
-            <button 
       // Try Supabase Auth first
       let { data: { user } } = await supabase.auth.getUser();
 
@@ -129,8 +115,27 @@ export default function ChatListClient() {
     };
 
     fetchUserAndChats();
-    // Realtime setup omitted for brevity in this snippet, assumes it persists
+    
+    // Subscribe to realtime messages
+    const channel = supabase
+      .channel('public:messages')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+          // Ideally fetch the new message or increment count
+           fetchUserAndChats();
+      })
+      .subscribe();
+
+    return () => {
+        supabase.removeChannel(channel);
+    };
+
   }, [router]);
+
+  // Filter conversations
+  const sellingChats = conversations.filter(c => c.seller_id === user?.id);
+  const buyingChats = conversations.filter(c => c.buyer_id === user?.id);
+  
+  const displayedChats = activeTab === 'selling' ? sellingChats : buyingChats;
 
   const getOtherParticipant = (conv) => {
     if (!user) return null;
@@ -144,12 +149,6 @@ export default function ChatListClient() {
   };
 
   if (loading) return <ChatListSkeleton />;
-
-  // Filter conversations
-  const sellingChats = conversations.filter(c => c.seller_id === user?.id);
-  const buyingChats = conversations.filter(c => c.buyer_id === user?.id);
-  
-  const displayedChats = activeTab === 'selling' ? sellingChats : buyingChats;
 
   return (
     <div className="min-h-screen bg-white dark:bg-black animate-fade-in pb-20">
