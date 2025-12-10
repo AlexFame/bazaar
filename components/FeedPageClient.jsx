@@ -983,56 +983,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
     setSearchTerm(term);
   }
 
-  async function handleSaveSearch() {
-    const tgUser = getTelegramUser();
-    if (!tgUser) {
-      alert("Пожалуйста, войдите через Telegram, чтобы сохранять поиски.");
-      return;
-    }
 
-    const name = prompt("Название для поиска:", searchTerm || "Мой поиск");
-    if (name === null) return;
-
-    const params = {
-      searchTerm,
-      locationFilter,
-      minPrice,
-      maxPrice,
-      categoryFilter,
-      typeFilter,
-      conditionFilter,
-      barterFilter,
-      withPhotoFilter,
-      dateFilter,
-      dynamicFilters,
-      radiusFilter,
-    };
-
-    try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("tg_user_id", tgUser.id)
-        .single();
-
-      if (!profile) {
-        alert("Профиль не найден.");
-        return;
-      }
-
-      const { error } = await supabase.from("saved_searches").insert({
-        user_id: profile.id,
-        name: name || "Поиск",
-        query_params: params,
-      });
-
-      if (error) throw error;
-      alert("Поиск сохранен!");
-    } catch (e) {
-      console.error(e);
-      alert("Ошибка сохранения.");
-    }
-  }
 
   function handleResetFilters() {
     setSearchTerm("");
