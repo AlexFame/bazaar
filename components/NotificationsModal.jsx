@@ -48,6 +48,32 @@ export default function NotificationsModal({ isOpen, onClose }) {
     };
   }, [isOpen]);
 
+  async function handleNotificationClick(notification) {
+      // Mark as read if not already
+      if (!notification.is_read) {
+          try {
+              await supabase.from("notifications").update({ is_read: true }).eq("id", notification.id);
+              // Update local state
+              setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n));
+          } catch (e) {
+              console.error("Error marking read:", e);
+          }
+      }
+
+      onClose(); // Close modal
+
+      // Navigate based on type
+      if (notification.type === 'new_comment' || notification.type === 'offer') {
+          if (notification.data?.listing_id) {
+              window.location.href = `/listing/${notification.data.listing_id}`;
+          }
+      } else if (notification.type === 'msg') {
+          // If we had conversation_id
+          window.location.href = `/messages`;
+      }
+      // General fallbacks
+  }
+
   async function loadNotifications() {
     setLoading(true);
     try {
@@ -73,12 +99,11 @@ export default function NotificationsModal({ isOpen, onClose }) {
       if (error) throw error;
       setNotifications(data || []);
       
-      // Mark unread as read
-      const unreadIds = data?.filter(n => !n.is_read).map(n => n.id);
-      if (unreadIds?.length > 0) {
-          await supabase.from("notifications").update({ is_read: true }).in("id", unreadIds);
-      }
-
+      // Removed auto-mark-read on open, doing it on click or just leaving it.
+      // Or maybe mark all as read?
+      // User requested "I don't see where question is". 
+      // Let's NOT mark all read instantly, let them see unread state in list.
+      
     } catch (err) {
       console.error("Error loading notifications:", err);
     } finally {
@@ -111,12 +136,16 @@ export default function NotificationsModal({ isOpen, onClose }) {
             )}
             
             {notifications.map(n => (
-                <div key={n.id} className={`p-3 rounded-xl border ${n.is_read ? 'bg-white dark:bg-black/20 border-gray-100 dark:border-white/5' : 'bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800'}`}>
+                <div 
+                    key={n.id} 
+                    onClick={() => handleNotificationClick(n)}
+                    className={`p-3 rounded-xl border cursor-pointer hover:opacity-80 transition-all ${n.is_read ? 'bg-white dark:bg-black/20 border-gray-100 dark:border-white/5' : 'bg-blue-50 dark:bg-blue-900/10 border-blue-100 dark:border-blue-800'}`}
+                >
                     <div className="flex justify-between items-start mb-1">
-                        <span className="font-semibold text-sm">{n.title || "Уведомление"}</span>
+                        <span className="font-semibold text-sm">{t(n.title) || n.title || t("notification_default") || "Уведомление"}</span>
                         <span className="text-[10px] text-gray-400">{new Date(n.created_at).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug">{n.message}</p>
+                    <p className="text-sm text-gray-800 dark:text-gray-200 leading-snug line-clamp-2">{n.message}</p>
                 </div>
             ))}
         </div>

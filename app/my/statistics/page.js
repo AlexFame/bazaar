@@ -90,6 +90,10 @@ function StatisticsListingItem({ listing, t, sortBy }) {
               <ChartBarIcon className="w-3.5 h-3.5" /> {listing.conversion_rate?.toFixed(1)}%
             </span>
 
+            <span className="text-gray-400 flex items-center gap-1" title="Impressions (CTR)">
+               👁️‍🗨️ {listing.impressions_count || 0} ({listing.ctr?.toFixed(1)}%)
+            </span>
+
             <span className="text-gray-400 flex items-center gap-1 ml-auto">
               <CalendarIcon className="w-3.5 h-3.5" /> {listing.days_active} {t.daysActive}
             </span>
@@ -301,6 +305,47 @@ export default function ProfileStatisticsPage() {
               favorites_count: favoritesMap[l.id] || 0,
               shares_count: shares,
               messages_count: messages,
+              conversion_rate: conversion,
+              days_active: daysActive
+            };
+          });
+          // Fetch Impressions (Search Appearances)
+          const { data: impressionEvents } = await supabase
+            .from("listing_analytics_events")
+            .select("listing_id")
+            .eq("event_type", "impression")
+            .in("listing_id", listingIds);
+          
+          const impressionsMap = {};
+          impressionEvents?.forEach(i => {
+              impressionsMap[i.listing_id] = (impressionsMap[i.listing_id] || 0) + 1;
+          });
+
+          listingsWithStats = listingsData.map(l => {
+            const views = l.views_count || 0;
+            const contacts = l.contacts_count || 0; // Will be populated after migration
+            const messages = messagesMap[l.id] || 0;
+            const shares = sharesMap[l.id] || 0;
+            const impressions = impressionsMap[l.id] || 0;
+             
+            // CTR: Views / Impressions * 100
+             const ctr = impressions > 0 ? (views / impressions) * 100 : 0;
+            
+            // Conversion: (Contacts + Messages) / Views * 100
+            const conversion = views > 0 ? ((contacts + messages) / views) * 100 : 0;
+
+            // Days Active
+            const created = new Date(l.created_at);
+            const now = new Date();
+            const daysActive = Math.max(0, Math.floor((now - created) / (1000 * 60 * 60 * 24)));
+
+            return {
+              ...l,
+              favorites_count: favoritesMap[l.id] || 0,
+              shares_count: shares,
+              messages_count: messages,
+              impressions_count: impressions,
+              ctr: ctr,
               conversion_rate: conversion,
               days_active: daysActive
             };

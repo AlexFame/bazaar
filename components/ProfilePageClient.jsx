@@ -102,7 +102,7 @@ export default function ProfilePageClient({ profileId }) {
   if (!profile) {
       return (
         <div className="w-full flex justify-center mt-8">
-            <div className="text-center text-gray-500">Пользователь не найден</div>
+            <div className="text-center text-gray-500">{t("user_not_found") || "Пользователь не найден"}</div>
         </div>
       );
   }
@@ -155,12 +155,12 @@ export default function ProfilePageClient({ profileId }) {
             <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
                 <div className="flex items-center gap-1">
                     <span>⭐️</span>
-                    <span className="font-semibold text-black">{avgRating || "Нет отзывов"}</span>
+                    <span className="font-semibold text-black">{avgRating || (t("no_reviews") || "Нет отзывов")}</span>
                     {reviews.length > 0 && <span className="text-xs">({reviews.length})</span>}
                 </div>
                 <div className="w-px h-3 bg-gray-300"></div>
                 <div>
-                    На сайте с {new Date(profile.created_at).toLocaleDateString()}
+                    {t("on_site_since") || "На сайте с"} {new Date(profile.created_at).toLocaleDateString()}
                 </div>
             </div>
         </div>
@@ -171,14 +171,14 @@ export default function ProfilePageClient({ profileId }) {
                 onClick={() => setActiveTab("listings")}
                 className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "listings" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
             >
-                Объявления ({listings.length})
+                {t("listings_count") || "Объявления"} ({listings.length})
                 {activeTab === "listings" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
             </button>
             <button 
                 onClick={() => setActiveTab("reviews")}
                 className={`flex-1 pb-3 text-sm font-medium transition-colors relative ${activeTab === "reviews" ? "text-black" : "text-gray-400 hover:text-gray-600"}`}
             >
-                Отзывы ({reviews.length})
+                {t("reviews_count") || "Отзывы"} ({reviews.length})
                 {activeTab === "reviews" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black rounded-t-full"></div>}
             </button>
         </div>
@@ -194,7 +194,7 @@ export default function ProfilePageClient({ profileId }) {
                     </div>
                 ) : (
                     <div className="text-center py-10 text-gray-400 text-sm">
-                        У пользователя нет активных объявлений
+                        {t("user_no_active_listings") || "У пользователя нет активных объявлений"}
                     </div>
                 )
             )}

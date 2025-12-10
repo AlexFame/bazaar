@@ -4,7 +4,7 @@ import { supaAdmin } from "@/lib/supabaseAdmin";
 
 export async function POST(request) {
   try {
-    const { recipientId, message, type = "general" } = await request.json();
+    const { recipientId, message, type = "general", data } = await request.json();
 
     if (!recipientId || !message) {
       return NextResponse.json(
@@ -30,14 +30,17 @@ export async function POST(request) {
     }
 
     // 2. Insert into In-App Notifications
+    // const { data: notificationData } = await request.json(); // REMOVED: Already read above
+    
     await supa.from("notifications").insert({
         user_id: recipientId,
         type: type,
         message: message,
-        title: type === 'new_comment' ? 'Новый вопрос' 
-             : type === 'review' ? 'Новый отзыв'
-             : type === 'offer' ? 'Предложение цены'
-             : 'Уведомление',
+        data: data || null, 
+        title: type === 'new_comment' ? 'notification_new_comment' 
+             : type === 'review' ? 'notification_new_review'
+             : type === 'offer' ? 'notification_new_offer'
+             : 'notification_default',
         is_read: false
     });
 

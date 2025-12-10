@@ -64,56 +64,6 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
       
       {/* Modal - Portaled */}
       {isOpen && typeof document !== 'undefined' && createPortal(
-        <div 
-          className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-          onClick={() => setIsOpen(false)}
-          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
-        >
-          <div 
-            className="bg-white rounded-2xl w-full max-w-sm p-4 shadow-xl relative mb-4 mx-2"
-            onClick={(e) => e.stopPropagation()} 
-          >
-            <button 
-                onClick={() => setIsOpen(false)}
-                className="absolute top-2 right-2 text-gray-400 hover:text-black"
-            >
-                ✕
-            </button>
-            <h3 className="font-semibold mb-3">{t("report_button") || "Пожаловаться"}</h3>
-            
-            {success ? (
-                <div className="text-green-600 text-center py-4">
-                    {t("report_success") || "Спасибо! Жалоба отправлена."}
-                </div>
-            ) : (
-                <form onSubmit={handleSubmit}>
-                    <textarea
-                        className="w-full border border-gray-300 rounded-xl p-3 text-sm mb-3 resize-none focus:outline-none focus:border-black"
-                        rows={3}
-                        placeholder={t("report_reason_ph") || "Опишите причину..."}
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        required
-                    />
-                    
-                    {error && <div className="text-red-500 text-xs mb-2">{error}</div>}
-
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            onClick={() => setIsOpen(false)}
-                            className="flex-1 py-2 rounded-xl border border-gray-300 text-sm hover:bg-gray-50 dark:text-black"
-                        >
-                            {t("cancel") || "Отмена"}
-                        </button>
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-medium disabled:opacity-50 hover:bg-red-600"
-                        >
-                            {loading ? "..." : (t("send") || "Отправить")}
-                        </button>
-                    </div>
                 </form>
             )}
           </div>

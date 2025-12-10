@@ -7,22 +7,23 @@ import { trackAnalyticsEvent } from "@/lib/analytics";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
-function formatLastSeen(lastSeen, lang) {
+// Updated to use t()
+function formatLastSeen(lastSeen, t) {
   if (!lastSeen) return null;
   const date = new Date(lastSeen);
   const now = new Date();
   const diffMinutes = Math.floor((now - date) / 60000);
 
-  if (diffMinutes < 5) return lang === 'en' ? 'Online' : 'Онлайн';
-  if (diffMinutes < 60) return lang === 'en' ? `Was online ${diffMinutes}m ago` : `Был(а) ${diffMinutes} мин. назад`;
+  if (diffMinutes < 5) return t("online") || "Online";
+  if (diffMinutes < 60) return (t("online_m_ago") || "Was online {min}m ago").replace("{min}", diffMinutes);
   if (diffMinutes < 24 * 60) {
       const hours = Math.floor(diffMinutes / 60);
-      return lang === 'en' ? `Was online ${hours}h ago` : `Был(а) ${hours} ч. назад`;
+      return (t("online_h_ago") || "Was online {hours}h ago").replace("{hours}", hours);
   }
   return null; // Too old to show
 }
 
-function getSellerActivityStats(lastSeen, lang) {
+function getSellerActivityStats(lastSeen, t) {
     if (!lastSeen) return null;
     const date = new Date(lastSeen);
     const now = new Date();
@@ -30,16 +31,16 @@ function getSellerActivityStats(lastSeen, lang) {
     
     if (diffMinutes < 15) {
         return {
-            label: lang === 'en' ? 'Very active' : 'Очень активен',
-            sub: lang === 'en' ? 'Replies in ~5 min' : 'Отвечает за ~5 мин',
+            label: t("stats_very_active") || "Very active",
+            sub: t("stats_replies_5m") || "Replies in ~5 min",
             color: 'text-green-600 bg-green-50'
         };
     }
     
     if (diffMinutes < 120) {
         return {
-            label: lang === 'en' ? 'Usually replies fast' : 'Обычно отвечает быстро',
-            sub: lang === 'en' ? 'Replies in ~30 min' : 'Отвечает за ~30 мин',
+            label: t("stats_active") || "Usually replies fast",
+            sub: t("stats_replies_30m") || "Replies in ~30 min",
             color: 'text-blue-600 bg-blue-50'
         };
     }
@@ -108,7 +109,7 @@ export default function SellerCard({ listing, isOwner }) {
             const initData = tg?.initData;
             
             if (!initData) {
-                alert(t.login_telegram || "Пожалуйста, войдите через Telegram для отправки предложения.");
+                alert(t("login_telegram_offer") || "Пожалуйста, войдите через Telegram для отправки предложения.");
                 return;
             }
 
@@ -128,7 +129,7 @@ export default function SellerCard({ listing, isOwner }) {
                 throw new Error(data.error || 'Failed to make offer');
             }
             
-            alert(t.offer_sent || "Предложение отправлено! Продавец получит уведомление.");
+            alert(t("offer_sent") || "Предложение отправлено! Продавец получит уведомление.");
             trackAnalyticsEvent(listing.id, 'make_offer');
         } catch (error) {
             console.error(error);
@@ -191,13 +192,13 @@ export default function SellerCard({ listing, isOwner }) {
                     <div className="text-xs text-gray-500">{t("view_profile")}</div>
                     {profile.last_seen && (
                         <div className="text-[10px] text-green-600 font-medium mt-0.5">
-                            {formatLastSeen(profile.last_seen, lang)}
+                            {formatLastSeen(profile.last_seen, t)}
                         </div>
                     )}
                     
                     {/* Seller Activity Stats */}
                     {(() => {
-                        const stats = getSellerActivityStats(profile.last_seen, lang);
+                        const stats = getSellerActivityStats(profile.last_seen, t);
                         if (!stats) return null;
                         return (
                             <div className={`text-[10px] px-1.5 py-0.5 rounded-md inline-block mt-1 ${stats.color}`}>
@@ -223,7 +224,7 @@ export default function SellerCard({ listing, isOwner }) {
                             onClick={() => setIsOfferModalOpen(true)}
                             className="flex-1 px-3 py-2.5 text-xs font-bold rounded-xl bg-white border border-gray-200 text-black text-center hover:bg-gray-50 transition-colors shadow-sm"
                         >
-                            {lang === 'en' ? 'Make offer' : (lang === 'ua' ? 'Запропонувати ціну' : 'Предложить цену')}
+                            {t("make_offer") || (lang === 'en' ? 'Make offer' : 'Предложить цену')}
                         </button>
                     </div>
                 

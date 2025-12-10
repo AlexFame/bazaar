@@ -66,7 +66,8 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
               body: JSON.stringify({
                   recipientId: targetUserId,
                   message: `⭐ Новый отзыв! Пользователь поставил оценку ${rating}/5: "${comment.trim() || "Без комментария"}"`,
-                  type: "review"
+                  type: "review",
+                  data: { reviewer_id: reviewerProfile.id }
               })
           });
       } catch (notifyErr) {

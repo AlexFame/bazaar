@@ -131,7 +131,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
       // Check if profiles are loaded
       if (!conv.buyer || !conv.seller) {
         console.error("Missing profile data:", { buyer: conv.buyer, seller: conv.seller });
-        setError("Не удалось загрузить данные собеседника");
+        setError(t("chat_error_load") || "Не удалось загрузить данные собеседника");
         setLoading(false);
         return;
       }
@@ -263,7 +263,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
         
         if (convError) {
           console.error("Error creating conversation:", convError);
-          alert("Не удалось создать чат: " + convError.message);
+          alert((t("chat_error_create") || "Не удалось создать чат: ") + convError.message);
           setIsSending(false);
           return;
         }
@@ -336,7 +336,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
     } catch (error) {
       console.error("Error sending message:", error);
-      alert("Ошибка отправки сообщения");
+      alert(t("chat_error_send") || "Ошибка отправки сообщения");
       // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
       setNewMessage(content); // Restore text
@@ -432,7 +432,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                 </div>
                 <div className="flex-col justify-center flex-1 min-w-0 flex">
                 <div className="font-bold text-sm truncate text-black dark:text-white leading-tight">
-                    {otherUser.full_name || "Пользователь"}
+                    {otherUser.full_name || t("chat_partner") || "Собеседник"}
                 </div>
                 {listing && (
                     <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate leading-tight mt-0.5">
@@ -455,7 +455,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
       {otherUserTyping && (
           <div className="fixed top-[calc(env(safe-area-inset-top)+75px)] left-0 right-0 max-w-[520px] mx-auto px-3 z-40 pointer-events-none">
               <div className="text-xs text-gray-500 italic ml-14 animate-pulse">
-                 {otherUser?.full_name || "Собеседник"} печатает...
+                 {otherUser?.full_name || t("chat_partner") || "Собеседник"} {t("chat_typing") || "печатает..."}
               </div>
           </div>
       )}
@@ -496,11 +496,11 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                         : "bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-bl-none"
                     }`}
                   >
-                    <p className="whitespace-pre-wrap break-words min-w-[20px]">{msg.content || <span className="italic opacity-50">Пустое сообщение</span>}</p>
+                    <p className="whitespace-pre-wrap break-words min-w-[20px]">{msg.content || <span className="italic opacity-50">{t("chat_empty_msg") || "Пустое сообщение"}</span>}</p>
                     <div className={`text-[9px] mt-1 flex items-center justify-end gap-1 ${isMe ? "text-white/60 dark:text-black/60" : "text-black/40 dark:text-white/40"}`}>
                         <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                         {isMe && msg.is_read && (
-                            <span className="ml-1 font-medium">Прочитано</span>
+                            <span className="ml-1 font-medium">{t("chat_read") || "Прочитано"}</span>
                         )}
                         {isMe && !msg.is_read && (
                              <span>✓</span>

@@ -78,6 +78,31 @@ export async function POST(req) {
         if (error) throw error;
     }
 
+    // 3. Handle Images (Sync)
+    const { images } = payload;
+    if (Array.isArray(images)) {
+        const listingId = payload.id;
+        
+        // Delete all existing images for this listing
+        // (This fixes the duplication bug where client couldn't delete properly)
+        await supa.from('listing_images').delete().eq('listing_id', listingId);
+
+        // Insert new images
+        if (images.length > 0) {
+            const imageRows = images.map(img => ({
+                listing_id: listingId,
+                file_path: img.path,
+                position: img.position
+            }));
+            
+            const { error: imgError } = await supa.from('listing_images').insert(imageRows);
+            if (imgError) {
+                console.error("Error syncing images:", imgError);
+                // We don't fail the whole request but we log it.
+            }
+        }
+    }
+
     return new Response(JSON.stringify({ success: true }), { status: 200 });
 
   } catch (e) {

@@ -1,8 +1,10 @@
 "use client";
 import React, { useState } from 'react';
 import FadeIn from "@/components/FadeIn";
+import { useLang } from "@/lib/i18n-client";
 
 export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle, symbol = '€' }) {
+    const { t } = useLang();
     const [price, setPrice] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -11,7 +13,7 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!price || isNaN(price) || Number(price) <= 0) {
-            alert("Пожалуйста, введите корректную цену");
+            alert(t("invalid_price") || "Пожалуйста, введите корректную цену");
             return;
         }
         setLoading(true);
@@ -38,20 +40,20 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
                     <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
                         🔖
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">Предложить цену</h3>
+                    <h3 className="text-xl font-bold text-gray-900">{t("make_offer_title") || "Предложить цену"}</h3>
                     <p className="text-sm text-gray-500 mt-1 line-clamp-1">{listingTitle}</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1 ml-1">
-                            Ваша цена ({symbol})
+                            {t("your_price") || "Ваша цена"} ({symbol})
                         </label>
                         <input 
                             type="number"
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
-                            placeholder="Например: 50"
+                            placeholder={t("price_placeholder") || "Например: 50"}
                             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:ring-black transition-all"
                             autoFocus
                         />
@@ -62,11 +64,11 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
                         disabled={loading}
                         className={`w-full py-3.5 bg-black text-white rounded-xl font-bold text-base hover:bg-gray-800 transition-all active:scale-[0.98] ${loading ? 'opacity-70 cursor-wait' : ''}`}
                     >
-                        {loading ? 'Отправка...' : 'Отправить предложение'}
+                        {loading ? (t("sending") || "Отправка...") : (t("send_offer") || "Отправить предложение")}
                     </button>
                     
                     <p className="text-xs text-center text-gray-400">
-                        Продавец получит уведомление и сможет принять или отклонить ваше предложение.
+                        {t("offer_hint") || "Продавец получит уведомление и сможет принять или отклонить ваше предложение."}
                     </p>
                 </form>
             </div>

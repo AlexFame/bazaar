@@ -125,7 +125,7 @@ export default function SearchBar() {
 
   async function handleSubscribe() {
     if (!searchTerm || searchTerm.length < 2) {
-      alert("Введите запрос для подписки");
+      alert(t("search_alert_empty") || "Введите запрос для подписки");
       return;
     }
 
@@ -143,8 +143,8 @@ export default function SearchBar() {
        if (profile) userId = profile.id;
     }
 
-    if (!userId) {
-      alert("Войдите в профиль (Telegram), чтобы сохранять поиски.");
+    if (!user) {
+      alert(t("search_alert_login") || "Войдите в профиль (Telegram), чтобы сохранять поиски.");
       return;
     }
 
@@ -166,11 +166,11 @@ export default function SearchBar() {
         if (error) throw error;
         setIsSaved(true);
         setSavedSearchId(data.id);
-        alert(`Вы подписались на "${searchTerm}"!`);
+        alert(`${t("search_alert_subscribed") || "Вы подписались на"} "${searchTerm}"!`);
       }
     } catch (e) {
       console.error("Error toggling saved search:", e);
-      alert("Ошибка сохранения.");
+      alert(t("search_alert_error") || "Ошибка сохранения.");
     }
   }
 
@@ -195,7 +195,7 @@ export default function SearchBar() {
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
               <div className="text-[10px] text-gray-400 px-3 py-1 bg-gray-50">
-                {searchTerm ? "Рекомендации" : "Популярное"}
+                {searchTerm ? (t("search_recommendations") || "Рекомендации") : (t("search_popular") || "Популярное")}
               </div>
               {suggestions.map((s, i) => (
                 <button
@@ -242,7 +242,7 @@ export default function SearchBar() {
           className={`px-3 py-2 rounded-xl transition-colors flex items-center justify-center ${
             isSaved ? "bg-yellow-100 text-yellow-600" : "bg-gray-100 text-gray-400 hover:bg-gray-200"
           }`}
-          title={isSaved ? "Вы подписаны на этот поиск" : "Подписаться на поиск"}
+          title={isSaved ? (t("subscribed_search") || "Вы подписаны на этот поиск") : (t("subscribe_search") || "Подписаться на поиск")}
         >
           {isSaved ? (
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">

@@ -85,7 +85,8 @@ export default function ListingComments({ listingId, ownerId }) {
           body: JSON.stringify({
             recipientId: ownerId,
             message: `❓ Новый вопрос к объявлению "${listing?.title || "Объявление"}": ${newComment.trim()}`,
-            type: "new_comment"
+            type: "new_comment",
+            data: { listing_id: listingId }
           }),
         })
         .then(res => res.json())
@@ -118,6 +119,14 @@ export default function ListingComments({ listingId, ownerId }) {
       console.error("Error deleting comment:", err);
       alert(t("delete_comment_error") || "Не удалось удалить комментарий");
     }
+  }
+
+  function handleReply(comment) {
+      if (!comment || !comment.profiles) return;
+      const username = comment.profiles.full_name || comment.profiles.tg_username || "User";
+      setNewComment(`@${username}, `);
+      // Ideally focus input
+      document.getElementById("comment-input")?.focus();
   }
 
   async function handleEdit(commentId) {
@@ -196,7 +205,7 @@ export default function ListingComments({ listingId, ownerId }) {
                 ) : (
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-xs text-gray-800 mt-0.5">{comment.content}</p>
-                    {currentUser?.id === comment.user_id && (
+                    {currentUser?.id === comment.user_id ? (
                       <div className="flex gap-2">
                         <button 
                           onClick={() => { setEditingId(comment.id); setEditContent(comment.content); }}
@@ -211,6 +220,15 @@ export default function ListingComments({ listingId, ownerId }) {
                           🗑
                         </button>
                       </div>
+                    ) : (
+                        currentUser?.id === ownerId && (
+                            <button 
+                                onClick={() => handleReply(comment)}
+                                className="text-xs text-blue-600 font-medium hover:underline p-1"
+                            >
+                                Ответить
+                            </button>
+                        )
                     )}
                   </div>
                 )}
@@ -223,6 +241,7 @@ export default function ListingComments({ listingId, ownerId }) {
       {currentUser ? (
         <form onSubmit={handleSubmit} className="flex gap-2">
             <input
+                id="comment-input"
                 type="text"
                 value={newComment}
                 onChange={(e) => setNewComment(e.target.value)}

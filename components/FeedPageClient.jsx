@@ -1430,10 +1430,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
   };
 
   const handleSaveSearch = async () => {
-      if (!searchTerm || searchTerm.length < 2) {
-          toast.error("Введите поисковый запрос для подписки");
+      if (!searchQuery.trim()) {
+          toast.error(t("toast_subscribe_query_needed") || "Введите поисковый запрос для подписки");
           return;
-      }
+        }
       
       const tgUser = getTelegramUser();
       if (!tgUser) {
@@ -1870,7 +1870,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
               <p className="text-sm mt-1 text-gray-500">
                 {categoryFilter !== "all" || typeFilter !== "all"
                   ? "Попробуйте выбрать другую категорию"
-                  : "Попробуйте изменить параметры поиска"}
+                  : (t("search_helper_empty") || "Попробуйте изменить параметры поиска")}
               </p>
               
               {/* Subscribe Recommendation */}

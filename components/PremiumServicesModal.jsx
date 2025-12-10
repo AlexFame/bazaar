@@ -48,7 +48,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
       const initData = tg?.initData;
 
       if (!token && !initData) {
-        alert("Пожалуйста, войдите в систему");
+        alert(t("premium_login_alert") || "Пожалуйста, войдите в систему");
         setPurchasing(null);
         return;
       }
@@ -71,7 +71,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
 
       if (!data.success) {
         console.error("Payment creation failed:", data);
-        alert(`Ошибка создания платежа: ${data.error}\n${data.details?.description || JSON.stringify(data.details) || ""}`);
+        alert(`${t("premium_error_create") || "Ошибка создания платежа: "}${data.error}\n${data.details?.description || JSON.stringify(data.details) || ""}`);
         setPurchasing(null);
         return;
       }
@@ -97,7 +97,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
       }
     } catch (error) {
       console.error("Purchase error:", error);
-      alert("Ошибка при создании платежа");
+      alert(t("premium_error_create") || "Ошибка при создании платежа");
       setPurchasing(null);
     }
   };
@@ -225,7 +225,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                     {purchasing === service.id ? (
                       <span className="flex items-center justify-center gap-2">
                         <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Загрузка...
+                         {t("settings_loading") || "Загрузка..."}
                       </span>
                     ) : (
                       `${t("buy_for") || (lang === 'en' ? "Buy for" : lang === 'ua' ? "Купити за" : "Купить за")} ${service.price_stars} ⭐️`

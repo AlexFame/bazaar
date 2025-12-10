@@ -83,19 +83,36 @@ export async function POST(req) {
     const buyer = offerData.buyer;
     const sellerId = listing.created_by;
     
-    // Don't notify if making offer on own item (should act. be blocked)
+    // Don't notify if making offer on own item
     if (sellerId && sellerId !== userId) {
-        const fetch = require('node-fetch'); // or use gloabl fetch if available in Next.js 13+
-        // Actually, we can just reuse the logic from notifications route OR simply insert + send here directly
-        // Reuse internal logic is cleaner? But let's just do it directly with 'supa' to be fast.
         
-        const message = `💸 Новое предложение цены! \n\nПользователь ${buyer.full_name || buyer.tg_username} предложил ${price}€ за "${listing.title}".`;
+        // Detect locale from initData user (Buyer's locale, but we send it)
+        // Ideally we should use Seller's locale, but we don't know it easily.
+        // Let's at least support UA if the app is used in UA.
+        // Actually, if the Buyer is "uk", we send in UA?
+        // Or if we can assume the platform is multi-lang.
+        // Let's use the explicit locale map based on Buyer's language for now (User's request implies they want everything in UA).
+        
+        const userLang = tgUser.language_code || 'ru';
+        const isUa = userLang === 'uk';
+        const isEn = userLang === 'en';
+
+        let message = `💸 Новое предложение цены! \n\nПользователь ${buyer.full_name || buyer.tg_username} предложил ${price}€ за "${listing.title}".`;
+        let title = "Новое предложение";
+
+        if (isUa) {
+             message = `💸 Нова пропозиція ціни! \n\nКористувач ${buyer.full_name || buyer.tg_username} запропонував ${price}€ за "${listing.title}".`;
+             title = "Нова пропозиція";
+        } else if (isEn) {
+             message = `💸 New offer! \n\nUser ${buyer.full_name || buyer.tg_username} offered ${price}€ for "${listing.title}".`;
+             title = "New offer";
+        }
         
         // In-App
         await supa.from("notifications").insert({
             user_id: sellerId,
             type: "offer",
-            title: "Новое предложение",
+            title: title,
             message: message,
             data: { offer_id: offerData.id, listing_id: listing_id }
         });

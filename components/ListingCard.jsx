@@ -550,7 +550,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                     onClick={(e) => handleStatusChange(e, 'active')}
                     className="w-full py-1.5 px-3 bg-green-50 text-green-700 text-[11px] font-medium rounded-lg hover:bg-green-100 transition-colors"
                 >
-                    Активировать снова
+                  {t("activate_again") || "Активировать снова"}
                 </button>
             )}
 
