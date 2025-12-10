@@ -34,7 +34,10 @@ export async function POST(request) {
         user_id: recipientId,
         type: type,
         message: message,
-        title: type === 'new_comment' ? 'Новый вопрос' : 'Уведомление',
+        title: type === 'new_comment' ? 'Новый вопрос' 
+             : type === 'review' ? 'Новый отзыв'
+             : type === 'offer' ? 'Предложение цены'
+             : 'Уведомление',
         is_read: false
     });
 

@@ -57,6 +57,21 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
       });
 
       if (error) throw error;
+      
+      // Notify the target user (seller)
+      try {
+          await fetch("/api/notifications/telegram", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                  recipientId: targetUserId,
+                  message: `⭐ Новый отзыв! Пользователь поставил оценку ${rating}/5: "${comment.trim() || "Без комментария"}"`,
+                  type: "review"
+              })
+          });
+      } catch (notifyErr) {
+          console.error("Failed to send review notification:", notifyErr);
+      }
 
       alert("Отзыв успешно добавлен!");
       setComment("");
