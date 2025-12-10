@@ -70,6 +70,7 @@ export default function ListingComments({ listingId, ownerId }) {
       if (error) throw error;
 
       // Send notification to seller
+      console.log("Checking notification trigger:", { ownerId, currentUserId: currentUser.id });
       if (ownerId && ownerId !== currentUser.id) {
         const { data: listing } = await supabase
           .from("listings")
@@ -77,6 +78,7 @@ export default function ListingComments({ listingId, ownerId }) {
           .eq("id", listingId)
           .single();
 
+        console.log("Sending notification for listing:", listing?.title);
         fetch("/api/notifications/telegram", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -85,7 +87,10 @@ export default function ListingComments({ listingId, ownerId }) {
             message: `❓ Новый вопрос к объявлению "${listing?.title || "Объявление"}": ${newComment.trim()}`,
             type: "new_comment"
           }),
-        }).catch(err => console.error("Notification error:", err));
+        })
+        .then(res => res.json())
+        .then(data => console.log("Notification API response:", data))
+        .catch(err => console.error("Notification error:", err));
       }
 
       setNewComment("");

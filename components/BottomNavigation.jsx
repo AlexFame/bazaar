@@ -136,7 +136,9 @@ export default function BottomNavigation() {
                        .then(({ count }) => setNotifCount(count || 0));
                   }
                 )
-                .subscribe();
+                .subscribe((status) => {
+                    console.log(`[Realtime] Notifications subscription status: ${status}`, { userId: user.id });
+                });
           }
       }
 
