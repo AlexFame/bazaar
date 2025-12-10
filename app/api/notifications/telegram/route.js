@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendNotification } from "@/lib/bot";
-import { supabase } from "@/lib/supabaseClient";
+import { supaAdmin } from "@/lib/supabaseAdmin";
 
 export async function POST(request) {
   try {
@@ -13,8 +13,10 @@ export async function POST(request) {
       );
     }
 
-    // Get recipient's Telegram user ID and notification preferences
-    const { data: profile, error: profileError } = await supabase
+    const supa = supaAdmin();
+
+    // 1. Get recipient's Telegram user ID and notification preferences (Admin bypass)
+    const { data: profile, error: profileError } = await supa
       .from("profiles")
       .select("tg_user_id, notification_preferences")
       .eq("id", recipientId)
@@ -27,6 +29,16 @@ export async function POST(request) {
       );
     }
 
+    // 2. Insert into In-App Notifications
+    await supa.from("notifications").insert({
+        user_id: recipientId,
+        type: type,
+        message: message,
+        title: type === 'new_comment' ? 'Новый вопрос' : 'Уведомление',
+        is_read: false
+    });
+
+    // 3. Telegram Notification
     // Check if user has this notification type enabled
     const prefs = profile.notification_preferences || {};
     const notificationEnabled = prefs[type] !== false; // Default to true if not set
@@ -45,8 +57,10 @@ export async function POST(request) {
     if (result.success) {
       return NextResponse.json({ success: true });
     } else {
+      // Even if Telegram fails, we saved in-app notification, so partial success?
+      // But let's report error for clarity.
       return NextResponse.json(
-        { error: "Failed to send notification", details: result.error },
+        { error: "Failed to send Telegram notification", details: result.error },
         { status: 500 }
       );
     }

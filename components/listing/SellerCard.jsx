@@ -58,8 +58,10 @@ function buildContactLink(raw) {
   if (contact.includes("t.me/")) {
     return contact.startsWith("http") ? contact : `https://${contact}`;
   }
+  // Remove all non-digit characters except +
   const phone = contact.replace(/[^\d+]/g, "");
-  if (phone.length >= 6) return `tel:${phone}`;
+  // If it still has at least 5 digits, treat as phone
+  if (phone.length >= 5) return `tel:${phone}`;
   return null;
 }
 
@@ -67,8 +69,11 @@ function detectType(raw) {
   if (!raw) return { isPhone: false, isTelegram: false };
   const c = raw.trim();
   const isTelegram = c.startsWith("@") || c.includes("t.me/");
+  
   const cleaned = c.replace(/[^\d+]/g, "");
-  const isPhone = cleaned.length >= 6;
+  // Relaxed phone check: at least 5 digits (some short codes or local numbers)
+  const isPhone = cleaned.length >= 5;
+  
   return { isPhone, isTelegram };
 }
 

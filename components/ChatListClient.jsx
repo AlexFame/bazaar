@@ -8,6 +8,8 @@ import BackButton from "./BackButton";
 import { useLang } from "@/lib/i18n-client";
 import { ChatListSkeleton } from "./SkeletonLoader";
 
+import NotificationsModal from "./NotificationsModal";
+
 export default function ChatListClient() {
   const router = useRouter();
   const { t } = useLang();
@@ -18,9 +20,37 @@ export default function ChatListClient() {
   const [conversations, setConversations] = useState([]);
   const [unreadCounts, setUnreadCounts] = useState({});
   const [fetchError, setFetchError] = useState(null);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch notification count
+    async function loadNotifCount() {
+       const { data: { user } } = await supabase.auth.getUser();
+       if (user) {
+           const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false);
+           setNotifCount(count || 0);
+       }
+    }
+    loadNotifCount();
+  }, []);
 
   useEffect(() => {
     const fetchUserAndChats = async () => {
+    // ... rest of logic
+    
+  // (Search for return block)
+  
+  return (
+    <div className="min-h-screen bg-white dark:bg-black animate-fade-in pb-20">
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-white/10 px-4 py-3">
+        <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3">
+              <BackButton />
+              <h1 className="text-lg font-bold dark:text-white">{t("navbar_messages")}</h1>
+            </div>
+            {/* Notification Bell */}
+            <button 
       // Try Supabase Auth first
       let { data: { user } } = await supabase.auth.getUser();
 
@@ -124,9 +154,24 @@ export default function ChatListClient() {
   return (
     <div className="min-h-screen bg-white dark:bg-black animate-fade-in pb-20">
       <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-white/10 px-4 py-3">
-        <div className="flex items-center gap-3 mb-3">
-            <BackButton />
-            <h1 className="text-lg font-bold dark:text-white">{t("navbar_messages")}</h1>
+        <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3">
+              <BackButton />
+              <h1 className="text-lg font-bold dark:text-white">{t("navbar_messages")}</h1>
+            </div>
+            
+             {/* Notification Bell */}
+            <button 
+              onClick={() => setIsNotifOpen(true)}
+              className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-all"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 dark:text-white text-black">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
+              {notifCount > 0 && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-black"></span>
+              )}
+            </button>
         </div>
         
         {/* Tabs */}
@@ -234,6 +279,8 @@ export default function ChatListClient() {
           </div>
         )}
       </div>
+
+      <NotificationsModal isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
     </div>
   );
 }

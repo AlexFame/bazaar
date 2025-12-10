@@ -18,7 +18,10 @@ import {
 import { useLang } from "@/lib/i18n-client";
 import { motion, AnimatePresence } from "framer-motion";
 
-const NavItem = ({ href, label, IconOutline, IconSolid, isActive, id }) => {
+import { supabase } from "@/lib/supabaseClient";
+import { useEffect, useState } from "react";
+
+const NavItem = ({ href, label, IconOutline, IconSolid, isActive, id, badge }) => {
   return (
     <Link href={href} className="group flex flex-col items-center justify-center w-full h-full gap-1 relative no-underline z-10 text-center">
       
@@ -68,6 +71,9 @@ const NavItem = ({ href, label, IconOutline, IconSolid, isActive, id }) => {
                 <IconSolid className="w-6 h-6 text-rose-600" />
             </motion.div>
         </div>
+        {badge && (
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-black pointer-events-none" />
+        )}
       </motion.div>
       </div>
       
@@ -86,6 +92,22 @@ const NavItem = ({ href, label, IconOutline, IconSolid, isActive, id }) => {
 export default function BottomNavigation() {
   const pathname = usePathname();
   const { t } = useLang();
+  const [notifCount, setNotifCount] = useState(0);
+
+  useEffect(() => {
+      async function loadCount() {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+              const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false);
+              setNotifCount(count || 0);
+          }
+      }
+      loadCount();
+      
+      // Simple interval for polling (every 30s)
+      const interval = setInterval(loadCount, 30000);
+      return () => clearInterval(interval);
+  }, []);
 
   // Helper to determine active tab based on path prefix
   // Exact match for home, prefix for others
@@ -147,6 +169,7 @@ export default function BottomNavigation() {
             IconOutline={ChatBubbleOvalLeftIcon} 
             IconSolid={ChatBubbleOvalLeftIconSolid} 
             isActive={isActive("/messages")} 
+            badge={notifCount > 0}
             />
         </div>
 

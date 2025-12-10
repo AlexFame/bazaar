@@ -520,7 +520,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            handleSend();
+            handleSend(e);
           }}
           className="flex items-end gap-2 w-full"
         >

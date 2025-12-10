@@ -55,6 +55,9 @@ export default function CreateListingClient({ onCreated, editId }) {
   const closeTimeoutRef = useRef(null);
   const { notificationOccurred, impactOccurred } = useHaptic();
   
+
+  const [isSuccessScreen, setIsSuccessScreen] = useState(false); // Success state
+  
   // Quality Score
   const [quality, setQuality] = useState({ score: 0, breakdown: [] });
   
@@ -73,75 +76,112 @@ export default function CreateListingClient({ onCreated, editId }) {
   useEffect(() => {
     if (!editId) return;
 
-    setLoading(true);
-    const fetchListing = async () => {
+    async function loadListing() {
       try {
-        const { data, error } = await supabase
+        setLoading(true);
+        
+        let listingData = null;
+        const tg = window.Telegram?.WebApp;
+        const initData = tg?.initData;
+
+        // 1. Try Secure API (Priority for Telegram WebApp)
+        if (initData) {
+            try {
+                const res = await fetch("/api/listings/get", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ id: editId, initData })
+                });
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.listing) {
+                        listingData = json.listing;
+                        // Map images from relation if available
+                        // .. handled in API sort, just mapped below
+                    }
+                }
+            } catch (e) {
+                console.error("Secure load failed, falling back", e);
+            }
+        }
+
+        // 2. Fallback to Supabase Client (for Web/Dev)
+        if (!listingData) {
+            const { data, error } = await supabase
             .from("listings")
             .select("*, listing_images(*)")
             .eq("id", editId)
             .single();
 
-        if (error) {
-            console.error("Error loading listing:", error);
-            setErrorMsg("Ошибка загрузки объявления: " + error.message);
-            setLoading(false);
-            return;
+            if (error) {
+                console.error("Error loading listing:", error);
+                alert("Ошибка загрузки объявления");
+                return;
+            }
+            listingData = data;
         }
 
-        if (data) {
-            setTitle(data.title || "");
-            setDescription(data.description || "");
-            setPrice(data.price?.toString() || "");
-            setLocation(data.location_text || "");
-            setContacts(data.contacts || "");
-            setListingType(data.type || "buy");
-            setCategoryKey(data.category_key || "kids");
-            setCondition(data.condition || "new");
-            setIsBarter(data.parameters?.barter || false);
-            setParameters(data.parameters || {});
-            
-            if (data.latitude && data.longitude) {
-                setCoordinates({ lat: data.latitude, lng: data.longitude });
-            }
+        if (listingData) {
+          setTitle(listingData.title);
+          setDescription(listingData.description);
+          setPrice(listingData.price?.toString() || "");
+          setCategoryKey(listingData.category_key || "kids");
+          setListingType(listingData.type || "buy");
+          setCondition(listingData.condition || "new");
+          setLocation(listingData.location_text || "");
+          if (listingData.latitude && listingData.longitude) {
+            setCoordinates({
+              lat: listingData.latitude,
+              lng: listingData.longitude,
+            });
+          }
+          setContacts(listingData.contacts || "");
+          setParameters(listingData.parameters || {});
+          setIsBarter(listingData.parameters?.barter || false);
 
-            // Images
-            const rawImages = data.listing_images || [];
-            if (rawImages.length > 0) {
-                const loadedImages = rawImages.map(img => ({
-                    type: 'existing',
-                    id: img.id,
-                    url: supabase.storage.from('listing-images').getPublicUrl(img.file_path).data.publicUrl,
-                    path: img.file_path
-                }));
-                setImages(loadedImages);
-                setInitialImageIds(loadedImages.map(img => img.id));
-            } else if (data.main_image_path) {
+          // Load images
+          if (listingData.listing_images && listingData.listing_images.length > 0) {
+            const loaded = listingData.listing_images
+              .sort((a,b) => a.position - b.position)
+              .map((img) => ({
+                id: img.id,
+                url: null, // Will be generated
+                path: img.file_path,
+                type: "existing",
+              }));
+            
+            // Generate public URLs
+            const resolved = loaded.map(img => {
+                const { data } = supabase.storage.from("listing-images").getPublicUrl(img.path);
+                return { ...img, url: data.publicUrl };
+            });
+            setImages(resolved);
+          } else if (listingData.image_path) {
                 // Fallback: if no relation images, use main_image_path (Legacy support)
-                let url = data.main_image_path;
+                let url = listingData.image_path;
                 // If it's a relative path (not starting with http), get public URL
                 if (!url.startsWith('http')) {
                     const { data: publicData } = supabase.storage.from('listing-images').getPublicUrl(url);
                     url = publicData.publicUrl;
                 }
-                
                 setImages([{
                     type: 'existing',
                     id: 'legacy-main',
                     url: url,
-                    path: data.main_image_path
+                    path: listingData.image_path
                 }]);
-            }
+          }
         }
       } catch (err) {
         console.error("Unexpected error fetching listing:", err);
-        setErrorMsg("Произошла ошибка при загрузке объявления.");
+        // setErrorMsg("Произошла ошибка при загрузке объявления.");
+        alert("Произошла ошибка при загрузке объявления.");
       } finally {
         setLoading(false);
       }
-    };
+    }
 
-    fetchListing();
+    loadListing();
   }, [editId]);
 
   // добавление файлов из input / dnd
@@ -636,34 +676,33 @@ export default function CreateListingClient({ onCreated, editId }) {
     );
   };
 
+
   if (loading) {
-    return <CreateListingSkeleton />;
+     // We will handle loading in the main return to ensure hooks consistency
   }
 
-  // если не в Telegram WebApp – только текст, без формы
-  if (!inTelegram) {
-    return (
-      <section className="w-full max-w-xl mx-auto mt-4 px-3">
-        <h1 className="text-lg font-semibold mb-4">{t("new_heading")}</h1>
-        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-3 py-3 text-xs text-black/80">
-          <div className="font-semibold mb-1">Открой через Telegram</div>
-          <p className="leading-snug">
-            Создавать объявления можно только если ты открыл Bazaar из
-            Telegram-бота. Открой бота, нажми кнопку с WebApp и попробуй ещё
-            раз.
-          </p>
-        </div>
-      </section>
-    );
-  }
-
-
-  const [isSuccessScreen, setIsSuccessScreen] = useState(false); // Success state
-
-  // ... (existing code)
-
-  if (isSuccessScreen) {
-      return (
+  // Define content variables instead of early returns
+  const renderContent = () => {
+    if (loading) return <CreateListingSkeleton />;
+    
+    if (!inTelegram) {
+        return (
+            <section className="w-full max-w-xl mx-auto mt-4 px-3">
+              <h1 className="text-lg font-semibold mb-4">{t("new_heading")}</h1>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-3 py-3 text-xs text-black/80">
+                <div className="font-semibold mb-1">Открой через Telegram</div>
+                <p className="leading-snug">
+                  Создавать объявления можно только если ты открыл Bazaar из
+                  Telegram-бота. Открой бота, нажми кнопку с WebApp и попробуй ещё
+                  раз.
+                </p>
+              </div>
+            </section>
+        );
+    }
+    
+    if (isSuccessScreen) {
+        return (
           <div className="min-h-screen bg-white dark:bg-black flex flex-col items-center justify-center p-6 text-center">
               <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-6">
                   <svg className="w-10 h-10 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -684,7 +723,17 @@ export default function CreateListingClient({ onCreated, editId }) {
                   {t("go_home") || "На главную"}
               </button>
           </div>
-      );
+        );
+    }
+
+    return null; // Main form will be rendered if null
+  };
+  
+  const specialStateContent = renderContent();
+
+
+  if (specialStateContent) {
+      return specialStateContent;
   }
 
   return (
@@ -697,6 +746,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       </div>
 
       <div className="w-full max-w-xl mx-auto mt-4 px-3">
+
       <div className="flex items-center justify-between mb-2">
          <h1 className="text-lg font-semibold dark:text-white">{t("new_heading")}</h1>
          {/* Quality Indicator */}
