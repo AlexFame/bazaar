@@ -521,7 +521,10 @@ export default function CreateListingClient({ onCreated, editId }) {
              notificationOccurred('success');
              setIsSuccessScreen(true);
              // Auto-redirect after delay (optional, but good UX)
-             setTimeout(() => router.push("/"), 3000);
+             setTimeout(() => {
+                 router.refresh();
+                 router.push("/");
+             }, 3000);
         }
       } 
     } catch (err) {
@@ -717,7 +720,11 @@ export default function CreateListingClient({ onCreated, editId }) {
               </p>
               
               <button 
-                  onClick={() => router.push('/')}
+                  onClick={() => {
+                      // Force refresh to show new listing
+                      router.refresh();
+                      setTimeout(() => router.push('/'), 100);
+                  }}
                   className="w-full max-w-xs py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-medium"
               >
                   {t("go_home") || "На главную"}
