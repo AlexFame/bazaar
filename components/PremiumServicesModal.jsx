@@ -220,25 +220,29 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                                 </div>
                                 
                                 <div className="flex-1 min-w-0 pt-0.5">
-                                    <h3 className="text-[15px] font-bold text-gray-900 dark:text-white leading-tight mb-1 pr-14">
-                                        {getServiceName(service)}
-                                    </h3>
+                                    <div className="flex items-center gap-2 mb-1 pr-14">
+                                        <h3 className="text-[15px] font-bold text-gray-900 dark:text-white leading-tight">
+                                            {getServiceName(service)}
+                                        </h3>
+                                        {/* Duration Badge Moved Here */}
+                                        {service.duration_days > 0 && (
+                                            <span className="shrink-0 px-1.5 py-0.5 bg-gray-100 dark:bg-white/10 rounded-md text-[10px] font-semibold text-gray-500 dark:text-gray-400 border border-black/5 dark:border-white/5">
+                                                {service.duration_days} {
+                                                    lang === 'en' ? "d" :
+                                                    lang === 'ua' ? "дн" :
+                                                    "дн"
+                                                }
+                                            </span>
+                                        )}
+                                    </div>
                                     <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-snug">
                                         {getServiceDescription(service)}
                                     </p>
                                 </div>
                             </div>
-
-                            {/* Divider if needed, or just spacing */}
                             
-                            {/* Bottom Row: Duration + Button */}
-                            <div className="flex items-center gap-2 mt-1">
-                                {service.duration_days > 0 && (
-                                    <div className="shrink-0 px-2.5 h-[42px] flex items-center bg-gray-100 dark:bg-white/5 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-300 border border-transparent dark:border-white/5">
-                                        ⏳ {service.duration_days} d
-                                    </div>
-                                )}
-                                
+                            {/* Bottom Row: Button Only (Full Width) */}
+                            <div className="flex items-center mt-1">
                                 <button
                                     onClick={() => handlePurchase(service)}
                                     disabled={purchasing === service.id}
