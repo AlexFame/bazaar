@@ -144,7 +144,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
         {/* Scrollable Area */}
         <div className="overflow-y-auto flex-1 overscroll-contain">
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 p-4 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 p-4 flex items-center justify-between z-30">
           <h2 className="text-xl font-bold text-black dark:text-white">
             🚀 {t("premium_services_title") || "Продвижение объявления"}
           </h2>

@@ -77,14 +77,24 @@ export default function NotificationsModal({ isOpen, onClose }) {
   async function loadNotifications() {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      let { data: { user } } = await supabase.auth.getUser();
       if (!user) {
           // Try Telegram user
           const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-          if (tgUser) {
-              // We need profile id. Assumes logged in context usually.
-              // If not mapped, we can't show.
+          if (tgUser?.id) {
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("id")
+                .eq("tg_user_id", tgUser.id)
+                .single();
+              
+              if (profile) {
+                user = { id: profile.id }; // Mock user object for query
+              }
           }
+      }
+
+      if (!user) {
           setLoading(false);
           return;
       }

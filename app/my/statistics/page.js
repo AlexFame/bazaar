@@ -69,7 +69,7 @@ function StatisticsListingItem({ listing, t, sortBy }) {
           <h3 className="font-semibold text-gray-900 dark:text-white truncate">{listing.title}</h3>
           
           {/* Detailed Stats Row */}
-          <div className="flex items-center gap-3 mt-2 text-xs">
+          <div className="flex items-center gap-3 mt-2 text-xs flex-wrap">
             <span className="text-gray-500 flex items-center gap-1" title={t.views}>
               <EyeIcon className="w-3.5 h-3.5" /> {listing.views_count || 0}
             </span>

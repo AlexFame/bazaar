@@ -149,7 +149,10 @@ export default function SellerCard({ listing, isOwner }) {
 
     return (
         <div className="mb-4">
-             <Link href={`/profile/${profile.id}`} className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors no-underline">
+            <div 
+                onClick={() => router.push(`/profile/${profile.id}`)}
+                className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
+             >
                 <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden relative border border-gray-200">
                     {profile.avatar_url ? (
                         <Image src={profile.avatar_url} alt="Avatar" fill className="object-cover" />
@@ -207,7 +210,7 @@ export default function SellerCard({ listing, isOwner }) {
                         );
                     })()}
                 </div>
-            </Link>
+            </div>
 
             {/* Buttons (Only for non-owners) */}
             {!isOwner && (

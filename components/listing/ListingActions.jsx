@@ -2,7 +2,7 @@
 
 import { useLang } from "@/lib/i18n-client";
 
-export default function ListingActions({ isOwner, onEdit, onDelete, onPromote }) {
+export default function ListingActions({ isOwner, onEdit, onDelete, onPromote, onMarkReserved, onMarkSold }) {
     const { t } = useLang();
 
     if (!isOwner) return null;
@@ -18,6 +18,22 @@ export default function ListingActions({ isOwner, onEdit, onDelete, onPromote })
                 <span>🚀</span>
                 <span>{t("premium_services_title")}</span>
             </button>
+            </div>
+            
+            {/* Status Actions */}
+            <div className="grid grid-cols-2 gap-2 mt-3">
+                 <button
+                    onClick={onMarkReserved}
+                    className="py-2.5 px-3 bg-amber-100 text-amber-800 text-xs font-bold rounded-xl hover:bg-amber-200 transition-colors"
+                >
+                    {t("mark_reserved") || "Забронировать"}
+                </button>
+                <button
+                    onClick={onMarkSold}
+                    className="py-2.5 px-3 bg-gray-100 text-gray-800 text-xs font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                >
+                    {t("mark_sold") || "Продано"}
+                </button>
             </div>
             
             {/* Edit/Delete buttons */}

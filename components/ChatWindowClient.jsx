@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import BackButton from "@/components/BackButton";
+import Link from "next/link";
 import { useLang } from "@/lib/i18n-client";
 import { ChatDetailSkeleton } from "./SkeletonLoader";
 import { motion, AnimatePresence } from "framer-motion";
@@ -420,7 +421,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
             <BackButton />
             
             {otherUser && (
-            <div className="flex items-center gap-3 flex-1 min-w-0">
+            <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-white/10">
                 {otherUser.avatar_url ? (
                     <img src={otherUser.avatar_url} alt={otherUser.full_name} className="w-full h-full object-cover" />
@@ -440,7 +441,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                     </div>
                 )}
                 </div>
-            </div>
+            </Link>
             )}
         </div>
 

@@ -455,6 +455,21 @@ export default function ListingDetailClient({ id }) {
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                   onPromote={() => setIsPremiumModalOpen(true)}
+                  onMarkReserved={async () => {
+                      if (!confirm(t("confirm_reserved") || "Пометить как забронированное?")) return;
+                      const { error } = await supabase.from('listings').update({ status: 'reserved' }).eq('id', listing.id);
+                      if (!error) {
+                          setListing(prev => ({ ...prev, status: 'reserved' }));
+                          alert(t("status_updated") || "Статус обновлен");
+                      }
+                  }}
+                  onMarkSold={async () => {
+                      if (!confirm(t("confirm_sold") || "Пометить как проданное? Объявление будет перемещено в архив.")) return;
+                      const { error } = await supabase.from('listings').update({ status: 'closed' }).eq('id', listing.id);
+                      if (!error) {
+                          router.push('/my?tab=archived');
+                      }
+                  }}
               />
 
               {/* OFFERS (OWNER) */}

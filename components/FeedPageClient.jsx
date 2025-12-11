@@ -1188,10 +1188,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
           </div>
         </FilterDropdown>
 
-        {/* Динамические фильтры категории */}
+        {/* Динамические фильтры категории (Subtype first) */}
         {categoryFilter !== "all" &&
-          categoryFiltersDef.map((filter) => {
-            if (filter.key === "condition") return null;
+          [...categoryFiltersDef]
+            .sort((a, b) => (a.key === 'subtype' ? -1 : b.key === 'subtype' ? 1 : 0))
+            .map((filter) => {
+             // Скрываем condition для определенных категорий (уже скрыт через filter, но на всякий случай)
+             if (filter.key === "condition") return null;
             const val = dynamicFilters[filter.key];
             const label = filter.label[lang] || filter.label.ru;
 
