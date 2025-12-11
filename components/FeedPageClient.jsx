@@ -1188,6 +1188,48 @@ export default function FeedPageClient({ forcedCategory = null }) {
           </div>
         </FilterDropdown>
 
+        {/* Subcategory Pills (Horizontal Scroll) */}
+        {(() => {
+             const subFilter = categoryFiltersDef.find(f => f.key === 'subtype');
+             if (categoryFilter !== "all" && subFilter && subFilter.options) {
+                 const currentSub = dynamicFilters.subtype || "";
+                 return (
+                     <div className="w-full overflow-x-auto no-scrollbar mb-4 -mx-4 px-4">
+                         <div className="flex gap-2 min-w-min">
+                             <button
+                                 onClick={() => {
+                                     const newDyn = { ...dynamicFilters };
+                                     delete newDyn.subtype;
+                                     setDynamicFilters(newDyn);
+                                 }}
+                                 className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                                     !currentSub
+                                         ? "bg-black text-white border-black"
+                                         : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+                                 }`}
+                             >
+                                 {t("all") || "Все"}
+                             </button>
+                             {subFilter.options.map(opt => (
+                                 <button
+                                     key={opt.value}
+                                     onClick={() => setDynamicFilters({ ...dynamicFilters, subtype: opt.value })}
+                                     className={`whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                                         currentSub === opt.value
+                                             ? "bg-black text-white border-black"
+                                             : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
+                                     }`}
+                                 >
+                                     {opt.label[lang] || opt.label.ru}
+                                 </button>
+                             ))}
+                         </div>
+                     </div>
+                 );
+             }
+             return null;
+        })()}
+
         {/* Динамические фильтры категории (Subtype first) */}
         {categoryFilter !== "all" &&
           [...categoryFiltersDef]

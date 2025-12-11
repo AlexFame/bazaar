@@ -61,9 +61,31 @@ export default function CatalogPage() {
             </div>
             
             {/* Title */}
-            <span className="text-base font-bold text-center text-gray-900 dark:text-gray-100 leading-tight">
+            <span className="text-base font-bold text-center text-gray-900 dark:text-gray-100 leading-tight mb-2">
               {cat[lang] || cat.ru}
             </span>
+
+            {/* Subcategories Preview */}
+            {(() => {
+                const subFilter = cat.filters?.find(f => f.key === 'subtype');
+                if (subFilter && subFilter.options) {
+                    return (
+                        <div className="flex flex-wrap justify-center gap-1 mt-2">
+                            {subFilter.options.slice(0, 3).map(opt => (
+                                <span key={opt.value} className="px-2 py-0.5 bg-gray-50 dark:bg-white/10 rounded-md text-[10px] text-gray-500 dark:text-gray-400">
+                                    {opt.label[lang] || opt.label.ru}
+                                </span>
+                            ))}
+                            {subFilter.options.length > 3 && (
+                                <span className="px-2 py-0.5 bg-gray-50 dark:bg-white/10 rounded-md text-[10px] text-gray-500 dark:text-gray-400">
+                                    +{subFilter.options.length - 3}
+                                </span>
+                            )}
+                        </div>
+                    );
+                }
+                return null;
+            })()}
           </Link>
         ))}
       </div>
