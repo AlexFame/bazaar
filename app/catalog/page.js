@@ -47,7 +47,12 @@ export default function CatalogPage() {
   const handleSubcategoryClick = (catKey, subKey = null) => {
       const params = new URLSearchParams();
       if (typeFilter !== 'all') params.set("type", typeFilter);
-      if (subKey) params.set("dyn_subtype", subKey);
+      
+      if (subKey) {
+        // Determine primary filter key (default 'subtype', overrides for specific categories)
+        const primaryKey = (catKey === 'jobs') ? 'industry' : (catKey === 'pets') ? 'product_type' : 'subtype';
+        params.set(`dyn_${primaryKey}`, subKey);
+      }
       
       router.push(`/category/${catKey}?${params.toString()}`);
   };
