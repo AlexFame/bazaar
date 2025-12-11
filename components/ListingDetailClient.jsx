@@ -252,17 +252,10 @@ export default function ListingDetailClient({ id }) {
     const hasViewed = localStorage.getItem(viewedKey);
 
     if (!hasViewed) {
-      // Если еще не смотрели в этой сессии, увеличиваем счетчик
-      supabase
-        .rpc("increment_view_count", { listing_id: id })
-        .then(({ error }) => {
-          if (!error) {
-            localStorage.setItem(viewedKey, "true");
-            console.log("View count incremented");
-          } else {
-            console.error("Error incrementing view count:", error);
-          }
-        });
+      // Use unified analytics tracking
+      trackAnalyticsEvent(id, 'view');
+      localStorage.setItem(viewedKey, "true");
+      console.log("View tracked via analytics");
     }
   }, [id]);
 
