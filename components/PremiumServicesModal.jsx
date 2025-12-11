@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { getTG } from "@/lib/telegram";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
   const { t, lang } = useLang();
@@ -77,7 +78,6 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
       }
 
       // Open Telegram payment
-      // tg is already defined above
       if (tg?.openInvoice) {
         tg.openInvoice(data.invoiceLink, (status) => {
           if (status === "paid") {
@@ -127,122 +127,152 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
 
   const getServiceColor = (serviceType) => {
     const colors = {
-      urgent_sticker: "bg-red-500",
-      boost_1d: "bg-blue-500",
-      boost_3d: "bg-purple-500",
-      pin_7d: "bg-amber-500",
-      combo_7d: "bg-indigo-600",
+      urgent_sticker: "from-orange-500 to-red-500",
+      boost_1d: "from-blue-400 to-blue-600",
+      boost_3d: "from-violet-500 to-purple-600",
+      pin_7d: "from-amber-400 to-amber-600",
+      combo_7d: "from-fuchsia-500 to-pink-600",
     };
-    return colors[serviceType] || "bg-gray-600";
+    return colors[serviceType] || "from-gray-500 to-gray-700";
   };
 
-  if (!isOpen) return null;
+  // Determine if it should interact as a bottom sheet (mobile) or modal (desktop)
+  // We'll use CSS media queries in the class names for responsiveness
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 animate-fade-in overscroll-contain">
-      <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden transition-all">
-        {/* Scrollable Area */}
-        <div className="overflow-y-auto flex-1 overscroll-contain">
-        {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 p-4 flex items-center justify-between z-30">
-          <h2 className="text-xl font-bold text-black dark:text-white">
-            🚀 {t("premium_services_title") || "Продвижение объявления"}
-          </h2>
-          <button
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            ✕
-          </button>
-        </div>
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+          />
 
-        {/* Services */}
-        <div className="p-4 space-y-3">
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="w-8 h-8 border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : (
-            services.map((service, index) => (
-              <div
-                key={service.id}
-                className={`relative overflow-hidden rounded-2xl border-2 ${
-                  service.features?.recommended
-                    ? "border-purple-500"
-                    : "border-gray-200 dark:border-gray-700"
-                } transition-all hover:scale-[1.02] hover:shadow-lg`}
-              >
-                {/* Recommended badge - Moved to left to avoid overlap or adjusting layout */}
-                {service.features?.recommended && (
-                  <div className="absolute top-0 right-0 bg-purple-500 text-white text-[10px] font-bold px-2 py-1 rounded-bl-xl z-10">
-                    ⭐️ {lang === 'en' ? 'Popular' : lang === 'ua' ? 'Популярне' : 'Популярное'}
+          {/* Modal Container Wrapper */}
+          <div className="fixed inset-0 z-[101] flex items-end sm:items-center justify-center pointer-events-none p-0 sm:p-4">
+            <motion.div
+              initial={{ y: "100%", opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: "100%", opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300, mass: 0.8 }}
+              className="w-full max-w-lg bg-[#F2F2F7] dark:bg-black sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden pointer-events-auto flex flex-col max-h-[85vh] sm:max-h-[90vh]"
+            >
+              {/* Header */}
+              <div className="relative pt-3 pb-4 px-5 bg-white dark:bg-[#1C1C1E] border-b border-gray-200 dark:border-white/5 z-20 shrink-0">
+                {/* Mobile Drag Handle */}
+                <div className="w-10 h-1 bg-gray-300 dark:bg-white/20 rounded-full mx-auto mb-4 sm:hidden" />
+                
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-[19px] font-bold text-black dark:text-white leading-tight">
+                      {t("premium_services_title") || "Продвижение"}
+                    </h2>
+                    <p className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">
+                      {t("premium_subtitle") || "Ускорьте продажу товара"}
+                    </p>
                   </div>
-                )}
-
-                <div className="p-4 pt-6"> {/* Added pt-6 for spacing if badge is top */}
-                  {/* Icon and name */}
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2 pr-12"> {/* Added pr-12 to prevent text hitting price area if narrow */}
-                      <span className="text-3xl">{getServiceIcon(service.service_type)}</span>
-                      <div>
-                        <h3 className="font-bold text-black dark:text-white leading-tight break-words text-sm sm:text-base">
-                          {getServiceName(service)}
-                        </h3>
-                        {service.duration_days && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            {service.duration_days} {
-                                lang === 'en' ? (service.duration_days === 1 ? "day" : "days") :
-                                lang === 'ua' ? (service.duration_days === 1 ? "день" : service.duration_days <= 4 ? "дні" : "днів") :
-                                (service.duration_days === 1 ? "день" : service.duration_days <= 4 ? "дня" : "дней")
-                            }
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0 ml-1 relative z-20"> {/* z-20 to be above decoration */}
-                      <div className="text-xl sm:text-2xl font-bold text-black dark:text-white">
-                        {service.price_stars} ⭐️
-                      </div>
-                      <div className="text-xs text-gray-500 font-medium">
-                        ≈ €{(service.price_stars * 0.0215).toFixed(2)}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Description */}
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
-                    {getServiceDescription(service)}
-                  </p>
-
-                  {/* Buy button */}
                   <button
-                    onClick={() => handlePurchase(service)}
-                    disabled={purchasing === service.id}
-                    className={`w-full py-3 rounded-xl font-bold text-white shadow-sm ${getServiceColor(
-                      service.service_type
-                    )} hover:opacity-90 transition-opacity disabled:opacity-50`}
+                    onClick={onClose}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/60 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
                   >
-                    {purchasing === service.id ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                         {t("settings_loading") || "Загрузка..."}
-                      </span>
-                    ) : (
-                      `${t("buy_for") || (lang === 'en' ? "Buy for" : lang === 'ua' ? "Купити за" : "Купить за")} ${service.price_stars} ⭐️`
-                    )}
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
               </div>
-            ))
-          )}
-        </div>
 
-        </div>
-        {/* Info - Fixed at bottom */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400 text-center leading-tight">
-          {t("payment_stars") || "💡 Оплата через Telegram Stars. Безопасно и мгновенно."}
-        </div>
-      </div>
-    </div>
+              {/* Scrollable Content */}
+              <div className="overflow-y-auto flex-1 p-4 space-y-3 overscroll-contain bg-[#F2F2F7] dark:bg-black">
+                {loading ? (
+                  <div className="flex flex-col items-center justify-center py-12 gap-3">
+                    <div className="w-8 h-8 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm text-gray-400 font-medium">{t("loading") || "Загрузка..."}</span>
+                  </div>
+                ) : (
+                  services.map((service) => {
+                    const isRecommended = service.features?.recommended;
+                    return (
+                      <div
+                        key={service.id}
+                        className={`group relative overflow-hidden rounded-2xl transition-all duration-300 ${
+                          isRecommended
+                            ? "bg-white dark:bg-[#1C1C1E] ring-[1.5px] ring-[#FF385C] shadow-lg shadow-[#FF385C]/15"
+                            : "bg-white dark:bg-[#1C1C1E] shadow-sm border border-gray-200 dark:border-white/5"
+                        }`}
+                      >
+                         {/* Recommended Badge */}
+                        {isRecommended && (
+                          <div className="absolute top-0 right-0 bg-[#FF385C] text-white text-[9px] uppercase font-bold px-2.5 py-1 rounded-bl-xl z-10 tracking-wider shadow-sm">
+                            {lang === 'en' ? 'Best Value' : lang === 'ua' ? 'Хіт' : 'Хит продаж'}
+                          </div>
+                        )}
+
+                        <div className="p-4 flex flex-col gap-3">
+                            {/* Top Row: Icon + Info */}
+                            <div className="flex items-start gap-3.5">
+                                <div className="w-[46px] h-[46px] shrink-0 bg-gray-50 dark:bg-white/5 rounded-xl flex items-center justify-center text-2xl shadow-inner border border-black/5 dark:border-white/5">
+                                    {getServiceIcon(service.service_type)}
+                                </div>
+                                
+                                <div className="flex-1 min-w-0 pt-0.5">
+                                    <h3 className="text-[15px] font-bold text-gray-900 dark:text-white leading-tight mb-1 pr-14">
+                                        {getServiceName(service)}
+                                    </h3>
+                                    <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-snug">
+                                        {getServiceDescription(service)}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Divider if needed, or just spacing */}
+                            
+                            {/* Bottom Row: Duration + Button */}
+                            <div className="flex items-center gap-2 mt-1">
+                                {service.duration_days > 0 && (
+                                    <div className="shrink-0 px-2.5 h-[42px] flex items-center bg-gray-100 dark:bg-white/5 rounded-xl text-xs font-semibold text-gray-600 dark:text-gray-300 border border-transparent dark:border-white/5">
+                                        ⏳ {service.duration_days} d
+                                    </div>
+                                )}
+                                
+                                <button
+                                    onClick={() => handlePurchase(service)}
+                                    disabled={purchasing === service.id}
+                                    className={`flex-1 relative overflow-hidden h-[42px] rounded-xl font-bold text-white shadow-md active:scale-[0.98] transition-all bg-gradient-to-r ${getServiceColor(service.service_type)} hover:brightness-110`}
+                                >
+                                    <div className="absolute inset-0 bg-white/0 hover:bg-white/10 transition-colors" />
+                                    {purchasing === service.id ? (
+                                        <div className="flex items-center justify-center gap-2 h-full">
+                                            <div className="w-4 h-4 border-2 border-white/80 border-t-transparent rounded-full animate-spin" />
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-center gap-1.5 h-full relative z-10">
+                                            <span className="text-[15px]">{service.price_stars} ⭐️</span>
+                                        </div>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer Info */}
+              <div className="p-3 bg-gray-50 dark:bg-[#1C1C1E] border-t border-gray-200 dark:border-white/5 text-center shrink-0 safe-area-bottom">
+                <p className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
+                    Powered by <span className="font-semibold text-blue-500">Telegram Stars</span>
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        </>
+      )}
+    </AnimatePresence>
   );
 }
