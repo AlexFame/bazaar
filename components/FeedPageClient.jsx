@@ -279,7 +279,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
     };
   }, []); // Only on mount/unmount
 
-  // Handle scroll for header compacting
+  // Subcategory Modal State
+  const [pendingCategory, setPendingCategory] = useState(null);
+  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
+
+  // Filter handlerscroll for header compacting
   useEffect(() => {
     const handleScroll = () => {
       setHeaderCompact(window.scrollY > 20);
@@ -1037,6 +1041,26 @@ export default function FeedPageClient({ forcedCategory = null }) {
   );
   const categoryFiltersDef = currentCategory?.filters || [];
 
+  // Handler for Category Select from Stories
+  const handleCategoryClick = (key) => {
+      if (key === 'all') {
+          setCategoryFilter('all');
+          return;
+      }
+
+      const catDef = CATEGORY_DEFS.find(c => c.key === key);
+      const subFilter = catDef?.filters?.find(f => f.key === 'subtype');
+
+      if (subFilter && subFilter.options && subFilter.options.length > 0) {
+          // Open Modal
+          setPendingCategory(key);
+          setIsSubModalOpen(true);
+      } else {
+          // Direct Select
+          setCategoryFilter(key);
+      }
+  };
+
   const FilterDropdown = ({ label, active, children, id, align = "left" }) => (
     <div className="relative inline-block text-left mr-2 mb-2">
       <button
@@ -1606,7 +1630,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       {!isSearchFocused && !hasSearchQuery && (
         <Stories 
             categoryFilter={categoryFilter} 
-            setCategoryFilter={setCategoryFilter} 
+            setCategoryFilter={handleCategoryClick} 
             lang={lang} 
             txt={txt} 
         />
@@ -1975,6 +1999,63 @@ export default function FeedPageClient({ forcedCategory = null }) {
           )}
         </div>
       </div>
+
+        {/* Subcategory Selection Modal */}
+        {isSubModalOpen && pendingCategory && (() => {
+            const catDef = CATEGORY_DEFS.find(c => c.key === pendingCategory);
+            const subFilter = catDef?.filters?.find(f => f.key === 'subtype');
+            
+            return (
+                <div 
+                    className="fixed inset-0 z-[120] flex items-end justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => setIsSubModalOpen(false)}
+                >
+                    <div 
+                       className="bg-white dark:bg-zinc-900 w-full max-w-[500px] rounded-t-3xl p-5 flex flex-col gap-4 shadow-2xl animate-in slide-in-from-bottom duration-300"
+                       onClick={e => e.stopPropagation()}
+                    >
+                        <div className="w-12 h-1 bg-gray-300 dark:bg-white/20 rounded-full mx-auto mb-2" />
+                        
+                        <div className="flex items-center gap-3 mb-2">
+                             <span className="text-3xl">{catDef?.icon}</span>
+                             <h3 className="text-xl font-bold dark:text-white">
+                                 {catDef?.[lang] || catDef?.ru}
+                             </h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto">
+                            <button
+                                onClick={() => {
+                                    setCategoryFilter(pendingCategory);
+                                    // Reset subtype
+                                    const newDyn = { ...dynamicFilters };
+                                    delete newDyn.subtype;
+                                    setDynamicFilters(newDyn);
+                                    setIsSubModalOpen(false);
+                                }}
+                                className="p-3 bg-black text-white rounded-xl text-sm font-bold text-center"
+                            >
+                                {t("all") || "Все"}
+                            </button>
+                            
+                            {subFilter?.options?.map(opt => (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => {
+                                        setCategoryFilter(pendingCategory);
+                                        setDynamicFilters({ ...dynamicFilters, subtype: opt.value });
+                                        setIsSubModalOpen(false);
+                                    }}
+                                    className="p-3 bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-gray-100 dark:hover:bg-white/10 hover:bg-gray-200 rounded-xl text-sm font-medium text-center transition-colors"
+                                >
+                                    {opt.label[lang] || opt.label.ru}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        })()}
     </main>
   );
 }

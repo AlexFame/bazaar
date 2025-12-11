@@ -12,6 +12,20 @@ export default function CatalogPage() {
   const { t, lang } = useLang();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
+  const [pendingCategory, setPendingCategory] = useState(null);
+  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
+
+  const handleCategoryClick = (key) => {
+      const catDef = CATEGORY_DEFS.find(c => c.key === key);
+      const subFilter = catDef?.filters?.find(f => f.key === 'subtype');
+
+      if (subFilter && subFilter.options && subFilter.options.length > 0) {
+          setPendingCategory(key);
+          setIsSubModalOpen(true);
+      } else {
+          router.push(`/category/${key}`);
+      }
+  };
 
   // Filter categories based on search
   const filteredCategories = CATEGORY_DEFS.filter((cat) => {
@@ -46,10 +60,10 @@ export default function CatalogPage() {
       {/* Categories Grid */}
       <div className="p-4 grid grid-cols-2 gap-4">
         {filteredCategories.map((cat) => (
-          <Link 
+          <button 
             key={cat.key} 
-            href={`/category/${cat.key}`}
-            className="group relative flex flex-col items-center justify-center p-6 bg-white dark:bg-white/5 rounded-3xl hover:shadow-airbnb-hover transition-all duration-300 active:scale-95 shadow-airbnb border border-gray-100 dark:border-white/10"
+            onClick={() => handleCategoryClick(cat.key)}
+            className="group relative flex flex-col items-center justify-center p-6 bg-white dark:bg-white/5 rounded-3xl hover:shadow-airbnb-hover transition-all duration-300 active:scale-95 shadow-airbnb border border-gray-100 dark:border-white/10 w-full"
           >
             {/* Icon/Emoji */}
             <div className="relative w-full flex items-center justify-center mb-3">
@@ -65,12 +79,12 @@ export default function CatalogPage() {
               {cat[lang] || cat.ru}
             </span>
 
-            {/* Subcategories Preview */}
+            {/* Subcategories Preview (Visual Only) */}
             {(() => {
                 const subFilter = cat.filters?.find(f => f.key === 'subtype');
                 if (subFilter && subFilter.options) {
                     return (
-                        <div className="flex flex-wrap justify-center gap-1 mt-2">
+                        <div className="flex flex-wrap justify-center gap-1 mt-2 pointer-events-none">
                             {subFilter.options.slice(0, 3).map(opt => (
                                 <span key={opt.value} className="px-2 py-0.5 bg-gray-50 dark:bg-white/10 rounded-md text-[10px] text-gray-500 dark:text-gray-400">
                                     {opt.label[lang] || opt.label.ru}
@@ -86,9 +100,61 @@ export default function CatalogPage() {
                 }
                 return null;
             })()}
-          </Link>
+          </button>
         ))}
       </div>
+
+        {/* Subcategory Selection Modal */}
+        {isSubModalOpen && pendingCategory && (() => {
+            const catDef = CATEGORY_DEFS.find(c => c.key === pendingCategory);
+            const subFilter = catDef?.filters?.find(f => f.key === 'subtype');
+            
+            return (
+                <div 
+                    className="fixed inset-0 z-[120] flex items-end justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+                    onClick={() => setIsSubModalOpen(false)}
+                >
+                    <div 
+                       className="bg-white dark:bg-zinc-900 w-full max-w-[500px] rounded-t-3xl p-5 flex flex-col gap-4 shadow-2xl animate-in slide-in-from-bottom duration-300"
+                       onClick={e => e.stopPropagation()}
+                    >
+                        <div className="w-12 h-1 bg-gray-300 dark:bg-white/20 rounded-full mx-auto mb-2" />
+                        
+                        <div className="flex items-center gap-3 mb-2">
+                             <span className="text-3xl">{catDef?.icon}</span>
+                             <h3 className="text-xl font-bold dark:text-white">
+                                 {catDef?.[lang] || catDef?.ru}
+                             </h3>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto">
+                            <button
+                                onClick={() => {
+                                    router.push(`/category/${pendingCategory}`);
+                                    setIsSubModalOpen(false);
+                                }}
+                                className="p-3 bg-black text-white rounded-xl text-sm font-bold text-center"
+                            >
+                                {t("all") || "Все"}
+                            </button>
+                            
+                            {subFilter?.options?.map(opt => (
+                                <button
+                                    key={opt.value}
+                                    onClick={() => {
+                                        router.push(`/category/${pendingCategory}?dyn_subtype=${opt.value}`);
+                                        setIsSubModalOpen(false);
+                                    }}
+                                    className="p-3 bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-gray-100 dark:hover:bg-white/10 hover:bg-gray-200 rounded-xl text-sm font-medium text-center transition-colors"
+                                >
+                                    {opt.label[lang] || opt.label.ru}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        })()}
     </div>
   );
 }
