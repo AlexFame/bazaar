@@ -13,7 +13,6 @@ import { trackAnalyticsEvent } from "@/lib/analytics";
 
 import { motion } from "framer-motion";
 import { useHaptic } from "@/hooks/useHaptic";
-import { PencilSquareIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 const typeLabels = {
   ru: {
@@ -555,22 +554,18 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                 </button>
             )}
 
-            <div className="flex gap-2 mt-2">
-                <button
-                onClick={handleEdit}
-                className="flex-1 py-2 px-3 bg-gray-100 dark:bg-gray-800 text-black dark:text-white text-[11px] font-medium rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1.5"
-                >
-                <PencilSquareIcon className="w-3.5 h-3.5" />
-                {t("edit")}
-                </button>
-                <button
-                onClick={handleDelete}
-                className="flex-0 py-2 px-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[11px] font-medium rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors flex items-center justify-center"
-                title="Удалить"
-                >
-                <XMarkIcon className="w-4 h-4" />
-                </button>
-            </div>
+            <button
+              onClick={handleEdit}
+              className="w-full py-1.5 px-3 bg-gray-100 dark:bg-gray-800 text-black dark:text-white text-[11px] font-medium rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            >
+              {t("edit")}
+            </button>
+            <button
+              onClick={handleDelete}
+              className="w-full py-1.5 px-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[11px] font-medium rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+            >
+              Удалить
+            </button>
           </div>
         )}
       </article>

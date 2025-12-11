@@ -227,7 +227,7 @@ export default function SellerCard({ listing, isOwner }) {
                             onClick={() => setIsOfferModalOpen(true)}
                             className="flex-1 px-3 py-2.5 text-xs font-bold rounded-xl bg-white border border-gray-200 text-black text-center hover:bg-gray-50 transition-colors shadow-sm"
                         >
-                            {t("bargain_btn") || "Торг"}
+                            {t("make_offer") || (lang === 'en' ? 'Make offer' : 'Предложить цену')}
                         </button>
                     </div>
                 
@@ -248,8 +248,6 @@ export default function SellerCard({ listing, isOwner }) {
                 onClose={() => setIsOfferModalOpen(false)}
                 onSubmit={handleOfferSubmit}
                 listingTitle={listing.title}
-                currentPrice={listing.price}
-                symbol={listing.currency || '€'}
             />
         </div>
     );
