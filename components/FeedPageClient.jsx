@@ -539,11 +539,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
   const handleSearchKeyDown = (e) => {
     if (e.key === "Enter") {
-      const newHistory = addToSearchHistory(searchTerm);
-      setSearchHistory(newHistory);
-      setShowSearchHistory(false);
-      setSuggestions([]);
-      e.target.blur();
+        e.preventDefault();
+        const newHistory = addToSearchHistory(searchTerm);
+        setSearchHistory(newHistory);
+        setShowSearchHistory(false);
+        setSuggestions([]);
+        e.target.blur(); // Hide keyboard
+        if (onSearchFocusChange) onSearchFocusChange(false);
     }
   };
 
@@ -664,7 +666,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
         .not("latitude", "is", null)
         .not("longitude", "is", null)
         .not("longitude", "is", null)
-        .eq("status", "active")
+        .neq("status", "closed") // Use neq closed instead of eq active
         .order("created_at", { ascending: false });
 
       // Apply same filters as main list
@@ -775,7 +777,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       let query = supabase
         .from("listings")
         .select("*, profiles!inner(is_verified, rating)") // Attempt inner join for filtering
-        .eq("status", "active")
+        .neq("status", "closed") // Filter out sold items
         .order("is_vip", { ascending: false });
 
         // Sorting

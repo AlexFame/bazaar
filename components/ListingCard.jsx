@@ -368,7 +368,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
         {listing.status === 'reserved' && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-gray-600/90 backdrop-blur-md text-white text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
-                {lang === 'en' ? 'Reserved' : 'Бронь'}
+                {lang === 'en' ? 'Reserved' : 'Забронировано'}
             </div>
         )}
 

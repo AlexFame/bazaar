@@ -19,7 +19,9 @@ export default function CatalogPage() {
   const handleCategoryClick = (key) => {
       // Check if we are selecting a main category with subtypes
       const catDef = CATEGORY_DEFS.find(c => c.key === key);
-      const subFilter = catDef?.filters?.find(f => f.key === 'subtype');
+      // Determine primary filter key (default 'subtype', overrides for specific categories)
+      const primaryKey = (key === 'jobs') ? 'industry' : (key === 'pets') ? 'product_type' : 'subtype';
+      const subFilter = catDef?.filters?.find(f => f.key === primaryKey);
 
       if (!selectedCategory && subFilter && subFilter.options && subFilter.options.length > 0) {
           // Open Subcategory View
@@ -55,7 +57,8 @@ export default function CatalogPage() {
   });
 
   const currentCategoryDef = selectedCategory ? CATEGORY_DEFS.find(c => c.key === selectedCategory) : null;
-  const subcategories = currentCategoryDef?.filters?.find(f => f.key === 'subtype')?.options || [];
+  const primaryKey = (selectedCategory === 'jobs') ? 'industry' : (selectedCategory === 'pets') ? 'product_type' : 'subtype';
+  const subcategories = currentCategoryDef?.filters?.find(f => f.key === primaryKey)?.options || [];
 
   return (
     <div className="min-h-screen bg-white dark:bg-black pb-24">
@@ -123,7 +126,7 @@ export default function CatalogPage() {
                     onClick={() => handleSubcategoryClick(selectedCategory)}
                     className="flex justify-between items-center p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-98 transition-all"
                 >
-                    <span className="font-bold text-lg dark:text-white">{t("all") || "Все объявления"}</span>
+                    <span className="font-bold text-lg dark:text-white">{t("allListings") || "Все объявления"}</span>
                     <span className="text-2xl">♾️</span>
                 </button>
 
@@ -148,7 +151,7 @@ export default function CatalogPage() {
                     href="/"
                     className="flex justify-between items-center p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-98 transition-all"
                 >
-                    <span className="font-bold text-lg dark:text-white">{t("allCategories") || "Все объявления"}</span>
+                    <span className="font-bold text-lg dark:text-white">{t("allListings") || "Все объявления"}</span>
                     <span className="text-2xl">♾️</span>
                 </Link>
 
@@ -160,11 +163,11 @@ export default function CatalogPage() {
                     >
                         <div className="flex items-center gap-4">
                             <span className="text-2xl">{cat.icon}</span>
-                            <span className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                            <span className="font-bold text-lg text-gray-900 dark:text-gray-100 text-left leading-tight break-words">
                                 {cat[lang] || cat.ru}
                             </span>
                         </div>
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400 flex-shrink-0">
                              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
                     </button>
