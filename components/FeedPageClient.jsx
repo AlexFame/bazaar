@@ -776,7 +776,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
       // 1. Fetch listings (raw, without joins to avoid FK errors)
       let query = supabase
         .from("listings")
-        .select("*, profiles(is_verified, rating)") // Left join to include listings without profiles
+        .select("*") // Removed profiles join to prevent errors/filtering
+        // .select("*, profiles(is_verified, rating)")
         .order("is_vip", { ascending: false });
         // Sorting
         if (sortFilter === 'date_desc') {
