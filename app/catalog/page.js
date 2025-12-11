@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { useLang } from "@/lib/i18n-client";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
@@ -10,11 +10,20 @@ import BackButton from "@/components/BackButton";
 
 export default function CatalogPage() {
   const { t, lang } = useLang();
+  // const { t, lang } = useLang(); // Removed duplicate
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   // Simple state for Catalog Filters (to be passed via URL)
   const [typeFilter, setTypeFilter] = useState("all"); 
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  
+  // Sync state with URL param 'cat'
+  const catParam = searchParams.get("cat");
+  const [selectedCategory, setSelectedCategory] = useState(catParam || null);
+
+  useEffect(() => {
+      setSelectedCategory(catParam || null);
+  }, [catParam]);
 
   const handleCategoryClick = (key) => {
       // Check if we are selecting a main category with subtypes
@@ -24,8 +33,9 @@ export default function CatalogPage() {
       const subFilter = catDef?.filters?.find(f => f.key === primaryKey);
 
       if (!selectedCategory && subFilter && subFilter.options && subFilter.options.length > 0) {
-          // Open Subcategory View
-          setSelectedCategory(key);
+          // Open Subcategory View by updating URL
+          // We use router.push to add to history stack, so Back button works naturally
+          router.push(`/catalog?cat=${key}`);
       } else {
           // Navigation to Feed
           const params = new URLSearchParams();
@@ -44,7 +54,8 @@ export default function CatalogPage() {
 
   const handleBack = () => {
       if (selectedCategory) {
-          setSelectedCategory(null);
+          // Go back to main catalogue view
+          router.push('/catalog');
       } else {
           router.back();
       }
@@ -148,7 +159,7 @@ export default function CatalogPage() {
             <div className="flex flex-col gap-2">
                  {/* All Listings Link */}
                  <Link
-                    href="/"
+                    href="/category/all"
                     className="flex justify-between items-center p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-98 transition-all"
                 >
                     <span className="font-bold text-lg dark:text-white">{t("allListings") || "Все объявления"}</span>

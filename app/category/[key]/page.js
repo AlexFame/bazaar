@@ -9,7 +9,7 @@ export default function CategoryPage() {
   const categoryKey = params.key;
 
   // Verify if category exists
-  const categoryExists = CATEGORY_DEFS.some(c => c.key === categoryKey);
+  const categoryExists = CATEGORY_DEFS.some(c => c.key === categoryKey) || categoryKey === 'all';
 
   if (!categoryExists) {
     return (
