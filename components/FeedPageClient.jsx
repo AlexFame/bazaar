@@ -666,8 +666,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
         .not("latitude", "is", null)
         .not("longitude", "is", null)
         .not("longitude", "is", null)
-        // .neq("status", "closed") // Use neq closed instead of eq active
-        .or("status.neq.closed,status.is.null")
+        // .or("status.neq.closed,status.is.null") // Removed to restore listings
         .order("created_at", { ascending: false });
 
       // Apply same filters as main list
@@ -778,9 +777,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       let query = supabase
         .from("listings")
         .select("*, profiles!inner(is_verified, rating)") // Attempt inner join for filtering
-        // .neq("status", "closed") // This excludes NULLs in SQL!
-        .or("status.neq.closed,status.is.null") // Include active(null) and reserved
-
+        .order("is_vip", { ascending: false });
         // Sorting
         if (sortFilter === 'date_desc') {
             query = query.order("created_at", { ascending: false });
