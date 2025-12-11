@@ -539,12 +539,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
   const handleSearchKeyDown = (e) => {
     if (e.key === "Enter") {
-        e.preventDefault();
-        const newHistory = addToSearchHistory(searchTerm);
-        setSearchHistory(newHistory);
-        setShowSearchHistory(false);
-        setSuggestions([]);
-        e.target.blur(); // Hide keyboard
+        handleSearchSubmit(e);
         if (onSearchFocusChange) onSearchFocusChange(false);
     }
   };
@@ -1066,7 +1061,22 @@ export default function FeedPageClient({ forcedCategory = null }) {
     if (searchInputRef.current) {
       searchInputRef.current.blur();
     }
-    // Search will happen automatically via useEffect watching searchTerm
+
+    // Explicit Navigation logic (Restored)
+    const expandedQuery = expandSearchTerm(term);
+    const detectedCat = detectCategory(expandedQuery); // Using expanded query for detection
+
+    // Reset filters for new search
+    setFilters({}); 
+    setListings([]); 
+    setPage(0); 
+    setHasMore(true);
+
+    if (detectedCat) {
+      router.push(`/category/${detectedCat}?q=${encodeURIComponent(term)}`);
+    } else {
+      router.push(`/?q=${encodeURIComponent(term)}`);
+    }
   }
 
   function handlePopularClick(term) {
