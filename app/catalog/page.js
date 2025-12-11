@@ -141,51 +141,34 @@ export default function CatalogPage() {
                 ))}
             </div>
         ) : (
-            // Main Categories Grid
-            <div className="grid grid-cols-2 gap-4">
-                {filteredCategories.map((cat) => (
-                    <button 
-                        key={cat.key} 
-                        onClick={() => handleCategoryClick(cat.key)}
-                        className="group relative flex flex-col items-center justify-center p-6 bg-white dark:bg-white/5 rounded-3xl hover:shadow-airbnb-hover transition-all duration-300 active:scale-95 shadow-airbnb border border-gray-100 dark:border-white/10 w-full"
-                    >
-            {/* Icon/Emoji */}
-            <div className="relative w-full flex items-center justify-center mb-3">
-              <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-white/10 dark:to-white/5 rounded-2xl group-hover:scale-110 transition-transform duration-300">
-                <span className="text-4xl drop-shadow-sm">
-                  {cat.icon}
-                </span>
-              </div>
-            </div>
-            
-            {/* Title */}
-            <span className="text-base font-bold text-center text-gray-900 dark:text-gray-100 leading-tight mb-2">
-              {cat[lang] || cat.ru}
-            </span>
+            // Main Categories List View (Same style as Subcategories)
+            <div className="flex flex-col gap-2">
+                 {/* All Listings Link */}
+                 <Link
+                    href="/"
+                    className="flex justify-between items-center p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-98 transition-all"
+                >
+                    <span className="font-bold text-lg dark:text-white">{t("allCategories") || "Все объявления"}</span>
+                    <span className="text-2xl">♾️</span>
+                </Link>
 
-            {/* Subcategories Preview (Visual Only) */}
-            {(() => {
-                const subFilter = cat.filters?.find(f => f.key === 'subtype');
-                if (subFilter && subFilter.options) {
-                    return (
-                        <div className="flex flex-wrap justify-center gap-1 mt-2 pointer-events-none">
-                            {subFilter.options.slice(0, 3).map(opt => (
-                                <span key={opt.value} className="px-2 py-0.5 bg-gray-50 dark:bg-white/10 rounded-md text-[10px] text-gray-500 dark:text-gray-400">
-                                    {opt.label[lang] || opt.label.ru}
-                                </span>
-                            ))}
-                            {subFilter.options.length > 3 && (
-                                <span className="px-2 py-0.5 bg-gray-50 dark:bg-white/10 rounded-md text-[10px] text-gray-500 dark:text-gray-400">
-                                    +{subFilter.options.length - 3}
-                                </span>
-                            )}
+                {filteredCategories.map((cat) => (
+                    <button
+                        key={cat.key}
+                        onClick={() => handleCategoryClick(cat.key)}
+                        className="flex justify-between items-center p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-98 transition-all"
+                    >
+                        <div className="flex items-center gap-4">
+                            <span className="text-2xl">{cat.icon}</span>
+                            <span className="font-bold text-lg text-gray-900 dark:text-gray-100">
+                                {cat[lang] || cat.ru}
+                            </span>
                         </div>
-                    );
-                }
-                return null;
-            })()}
-          </button>
-        ))}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                ))}
             </div>
         )}
       </div>

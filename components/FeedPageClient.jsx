@@ -663,7 +663,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
         )
         .not("latitude", "is", null)
         .not("longitude", "is", null)
-        // .eq("status", "active")
+        .not("longitude", "is", null)
+        .eq("status", "active")
         .order("created_at", { ascending: false });
 
       // Apply same filters as main list
@@ -774,6 +775,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       let query = supabase
         .from("listings")
         .select("*, profiles!inner(is_verified, rating)") // Attempt inner join for filtering
+        .eq("status", "active")
         .order("is_vip", { ascending: false });
 
         // Sorting
