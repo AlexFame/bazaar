@@ -665,7 +665,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
         )
         .not("latitude", "is", null)
         .not("longitude", "is", null)
-        .not("longitude", "is", null)
+        // .not("longitude", "is", null) // Removed duplicate
         // .or("status.neq.closed,status.is.null") // Removed to restore listings
         .order("created_at", { ascending: false });
 
@@ -776,7 +776,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       // 1. Fetch listings (raw, without joins to avoid FK errors)
       let query = supabase
         .from("listings")
-        .select("*, profiles!inner(is_verified, rating)") // Attempt inner join for filtering
+        .select("*, profiles(is_verified, rating)") // Left join to include listings without profiles
         .order("is_vip", { ascending: false });
         // Sorting
         if (sortFilter === 'date_desc') {
