@@ -1,6 +1,7 @@
 "use client";
 
 import { useLang } from "@/lib/i18n-client";
+import { PencilSquareIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function ListingActions({ isOwner, onEdit, onDelete, onPromote, onMarkReserved, onMarkSold }) {
     const { t } = useLang();
@@ -40,15 +41,17 @@ export default function ListingActions({ isOwner, onEdit, onDelete, onPromote, o
             <div className="flex gap-2 mt-3">
             <button
                 onClick={onEdit}
-                className="flex-1 py-2 px-3 bg-black text-white text-xs font-semibold rounded-full hover:bg-black/80 transition-colors"
+                className="flex-1 py-2.5 px-3 bg-black text-white text-xs font-semibold rounded-xl hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
             >
+                <PencilSquareIcon className="w-4 h-4" />
                 {t("edit")}
             </button>
             <button
                 onClick={onDelete}
-                className="flex-1 py-2 px-3 bg-red-600 text-white text-xs font-semibold rounded-full hover:bg-red-700 transition-colors"
+                className="flex-1 py-2.5 px-3 bg-red-50 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
             >
-                {t("delete")}
+                <XMarkIcon className="w-5 h-5" />
+                {/* {t("delete")} Use Cross Icon primarily or with text? User said "replace basket with cross", maybe icon only? No, keeping text is safe. */}
             </button>
             </div>
         </div>
