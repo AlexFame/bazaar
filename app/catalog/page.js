@@ -12,19 +12,15 @@ export default function CatalogPage() {
   const { t, lang } = useLang();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
-  const [pendingCategory, setPendingCategory] = useState(null);
-  const [isSubModalOpen, setIsSubModalOpen] = useState(false);
+  // Simple state for Catalog Filters (to be passed via URL)
+  const [typeFilter, setTypeFilter] = useState("all"); 
 
   const handleCategoryClick = (key) => {
-      const catDef = CATEGORY_DEFS.find(c => c.key === key);
-      const subFilter = catDef?.filters?.find(f => f.key === 'subtype');
-
-      if (subFilter && subFilter.options && subFilter.options.length > 0) {
-          setPendingCategory(key);
-          setIsSubModalOpen(true);
-      } else {
-          router.push(`/category/${key}`);
-      }
+      // Build query string
+      const params = new URLSearchParams();
+      if (typeFilter !== 'all') params.set("type", typeFilter);
+      
+      router.push(`/category/${key}?${params.toString()}`);
   };
 
   // Filter categories based on search
@@ -54,6 +50,30 @@ export default function CatalogPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="block w-full pl-10 pr-3 py-3 border border-gray-200 dark:border-white/10 rounded-xl leading-5 bg-gray-50 dark:bg-white/10 dark:text-white placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-black focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
           />
+        </div>
+
+        
+        {/* Type Filters */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mt-4">
+           {[
+               { key: 'all', label: t("typeAny") || "Все" },
+               { key: 'sell', label: t("typeSell") || "Продам" },
+               { key: 'buy', label: t("typeBuy") || "Куплю" },
+               { key: 'services', label: t("typeServices") || "Услуги" },
+               // { key: 'free', label: t("typeFree") || "Даром" }
+           ].map(opt => (
+               <button
+                  key={opt.key}
+                  onClick={() => setTypeFilter(opt.key)}
+                  className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                      typeFilter === opt.key
+                          ? "bg-black text-white border-black"
+                          : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200 dark:hover:bg-white/20"
+                  }`}
+               >
+                  {opt.label}
+               </button>
+           ))}
         </div>
       </div>
 
@@ -102,59 +122,7 @@ export default function CatalogPage() {
             })()}
           </button>
         ))}
-      </div>
 
-        {/* Subcategory Selection Modal */}
-        {isSubModalOpen && pendingCategory && (() => {
-            const catDef = CATEGORY_DEFS.find(c => c.key === pendingCategory);
-            const subFilter = catDef?.filters?.find(f => f.key === 'subtype');
-            
-            return (
-                <div 
-                    className="fixed inset-0 z-[120] flex items-end justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
-                    onClick={() => setIsSubModalOpen(false)}
-                >
-                    <div 
-                       className="bg-white dark:bg-zinc-900 w-full max-w-[500px] rounded-t-3xl p-5 flex flex-col gap-4 shadow-2xl animate-in slide-in-from-bottom duration-300"
-                       onClick={e => e.stopPropagation()}
-                    >
-                        <div className="w-12 h-1 bg-gray-300 dark:bg-white/20 rounded-full mx-auto mb-2" />
-                        
-                        <div className="flex items-center gap-3 mb-2">
-                             <span className="text-3xl">{catDef?.icon}</span>
-                             <h3 className="text-xl font-bold dark:text-white">
-                                 {catDef?.[lang] || catDef?.ru}
-                             </h3>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto">
-                            <button
-                                onClick={() => {
-                                    router.push(`/category/${pendingCategory}`);
-                                    setIsSubModalOpen(false);
-                                }}
-                                className="p-3 bg-black text-white rounded-xl text-sm font-bold text-center"
-                            >
-                                {t("all") || "Все"}
-                            </button>
-                            
-                            {subFilter?.options?.map(opt => (
-                                <button
-                                    key={opt.value}
-                                    onClick={() => {
-                                        router.push(`/category/${pendingCategory}?dyn_subtype=${opt.value}`);
-                                        setIsSubModalOpen(false);
-                                    }}
-                                    className="p-3 bg-gray-100 dark:bg-white/5 text-gray-900 dark:text-gray-100 dark:hover:bg-white/10 hover:bg-gray-200 rounded-xl text-sm font-medium text-center transition-colors"
-                                >
-                                    {opt.label[lang] || opt.label.ru}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            );
-        })()}
     </div>
   );
 }
