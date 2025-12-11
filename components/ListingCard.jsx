@@ -101,7 +101,12 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   const [isFavorite, setIsFavorite] = useState(false);
   const [profileId, setProfileId] = useState(null);
   const [translatedTitle, setTranslatedTitle] = useState("");
+  const [status, setStatus] = useState(listing.status); // Local status state
   const { impactOccurred } = useHaptic();
+
+  useEffect(() => {
+    setStatus(listing.status);
+  }, [listing.status]);
 
   useEffect(() => {
     try {
@@ -331,6 +336,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
         throw new Error(errData.error || 'Failed to update status');
       }
 
+      setStatus(newStatus); // Optimistic update
       if (onStatusChange) onStatusChange();
     } catch (error) {
       console.error("Error updating status:", error);
@@ -359,13 +365,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
         )}
 
         {/* Status Badges (Unified Design) */}
-        {listing.status === 'closed' && (
+        {status === 'closed' && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-black/80 backdrop-blur-md text-white text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/50"></span>
                 {lang === 'en' ? 'Sold' : 'Продано'}
             </div>
         )}
-        {listing.status === 'reserved' && (
+        {status === 'reserved' && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-gray-600/90 backdrop-blur-md text-white text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
                 {lang === 'en' ? 'Reserved' : 'Забронировано'}
@@ -373,13 +379,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
         )}
 
         {/* Micro-labels (New / Popular) - Only if active */}
-        {listing.status === 'active' && !isVip && isNew && (
+        {status === 'active' && !isVip && isNew && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#FF385C] text-white text-xs font-bold rounded-xl shadow-airbnb flex items-center gap-1.5">
                 <span>✨</span>
                 New
             </div>
         )}
-        {listing.status === 'active' && !isVip && !isNew && isPopular && (
+        {status === 'active' && !isVip && !isNew && isPopular && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#FF385C] text-white text-xs font-bold rounded-xl shadow-airbnb flex items-center gap-1.5">
                 <span>🔥</span>
                 Popular
@@ -497,7 +503,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                   📊 {t("btn_stats")}
                 </button>
             )}
-            {onPromote && !isVip && listing.status === 'active' && (
+            {onPromote && !isVip && status === 'active' && (
                 <button
                   onClick={(e) => {
                       e.preventDefault();
@@ -511,7 +517,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             )}
 
             {/* Status Actions */}
-            {listing.status === 'active' && (
+            {status === 'active' && (
                 <div className="flex gap-2">
                     <button
                         onClick={(e) => handleStatusChange(e, 'reserved')}
@@ -528,7 +534,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                 </div>
             )}
 
-            {listing.status === 'reserved' && (
+            {status === 'reserved' && (
                 <div className="flex gap-2">
                     <button
                         onClick={(e) => handleStatusChange(e, 'active')}
@@ -545,7 +551,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                 </div>
             )}
 
-            {listing.status === 'closed' && (
+            {status === 'closed' && (
                 <button
                     onClick={(e) => handleStatusChange(e, 'active')}
                     className="w-full py-1.5 px-3 bg-green-50 text-green-700 text-[11px] font-medium rounded-lg hover:bg-green-100 transition-colors"
