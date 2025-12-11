@@ -222,6 +222,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
     type: t("type"),
     more: t("more"),
     foundInCategory: t("foundInCategory"),
+    foundInCategory: t("foundInCategory"),
+    sort: t("sort") || "Сортировка",
+    sortDateDesc: t("sortDateDesc") || "Самые новые",
+    sortDateAsc: t("sortDateAsc") || "Самые старые",
+    sortPriceAsc: t("sortPriceAsc") || "Дешевые",
+    sortPriceDesc: t("sortPriceDesc") || "Дорогие",
+    sortDistance: t("sortDistance") || "Ближайшие",
   };
 
   const searchParams = useSearchParams();
@@ -321,7 +328,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
       photo: searchParams.get("photo") || "all",
       date: searchParams.get("date") || "all",
       radius: searchParams.get("radius") || null,
-      dynamic: Object.fromEntries([...searchParams.entries()].filter(([k]) => k.startsWith("dyn_")))
+      dynamic: Object.fromEntries([...searchParams.entries()].filter(([k]) => k.startsWith("dyn_"))),
+      sort: searchParams.get("sort") || "date_desc",
+      photoCount: searchParams.get("photo_count") || "any",
+      sellerStatus: searchParams.get("seller_status") || "any",
+      delivery: searchParams.get("delivery") || "all"
   };
 
   // Check if we should use cache
@@ -369,6 +380,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [gettingLocation, setGettingLocation] = useState(false);
   const [withPhotoFilter, setWithPhotoFilter] = useState(searchParams.get("photo") || "all"); // all | yes | no
   const [dateFilter, setDateFilter] = useState(searchParams.get("date") || "all"); // all | today | used | like_new
+
+  // Advanced Filters
+  const [sortFilter, setSortFilter] = useState(searchParams.get("sort") || "date_desc"); // date_desc | date_asc | price_asc | price_desc | distance
+  const [photoCountFilter, setPhotoCountFilter] = useState(searchParams.get("photo_count") || "any"); // any | 1 | 3 | 5
+  const [sellerStatusFilter, setSellerStatusFilter] = useState(searchParams.get("seller_status") || "any"); // any | verified | rating_4
+  const [deliveryFilter, setDeliveryFilter] = useState(searchParams.get("delivery") || "all"); // all | pickup | delivery | meet
 
   // Динамические фильтры (JSONB)
   const [dynamicFilters, setDynamicFilters] = useState({});
@@ -756,11 +773,25 @@ export default function FeedPageClient({ forcedCategory = null }) {
       // 1. Fetch listings (raw, without joins to avoid FK errors)
       let query = supabase
         .from("listings")
-        .select("*")
-        .order("is_vip", { ascending: false })
-        .order("created_at", { ascending: false })
-        // .eq("status", "active") // Removed strict filter
-        .range(from, to);
+        .select("*, profiles!inner(is_verified, rating)") // Attempt inner join for filtering
+        .order("is_vip", { ascending: false });
+
+        // Sorting
+        if (sortFilter === 'date_desc') {
+            query = query.order("created_at", { ascending: false });
+        } else if (sortFilter === 'date_asc') {
+            query = query.order("created_at", { ascending: true });
+        } else if (sortFilter === 'price_asc') {
+            query = query.order("price", { ascending: true });
+        } else if (sortFilter === 'price_desc') {
+             query = query.order("price", { ascending: false });
+        } else {
+             // Default
+             query = query.order("created_at", { ascending: false });
+        }
+        
+        // Paging
+        query = query.range(from, to);
 
       const term = (searchTerm || "").trim();
       if (term) {
@@ -810,11 +841,25 @@ export default function FeedPageClient({ forcedCategory = null }) {
         query = query.eq("condition", conditionFilter);
       }
 
-      // С фото (проверяем main_image_path не null)
-      if (withPhotoFilter === "yes") {
-        query = query.not("main_image_path", "is", null);
+      // С фото (Photo Logic)
+      if (withPhotoFilter === "yes" || photoCountFilter !== "any") {
+         // If "yes" or any specific count, we at least need a main image
+         query = query.not("main_image_path", "is", null);
       } else if (withPhotoFilter === "no") {
-        query = query.is("main_image_path", null);
+         query = query.is("main_image_path", null);
+      }
+      
+      // Seller Status Filtering using the joined profile
+      if (sellerStatusFilter === 'verified') {
+          query = query.eq('profiles.is_verified', true);
+      } else if (sellerStatusFilter === 'rating_4') {
+          query = query.gte('profiles.rating', 4);
+      }
+
+      // Delivery (Assumption: delivery options are in 'parameters' or 'type')
+      if (deliveryFilter !== 'all') {
+          if (deliveryFilter === 'pickup') query = query.contains('parameters', { pickup: true });
+          if (deliveryFilter === 'delivery') query = query.contains('parameters', { delivery: true });
       }
 
       // Дата
@@ -1027,8 +1072,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
     setTypeFilter("all");
     setConditionFilter("all");
     setBarterFilter("all");
+    setBarterFilter("all");
     setWithPhotoFilter("all");
     setDateFilter("all");
+    setSortFilter("date_desc");
+    setPhotoCountFilter("any");
+    setSellerStatusFilter("any");
+    setDeliveryFilter("all");
     setDynamicFilters({});
     setRadiusFilter(null);
     setUserLocation(null);
@@ -1366,20 +1416,93 @@ export default function FeedPageClient({ forcedCategory = null }) {
           })}
 
         {/* Фото */}
-        <button
-          onClick={() =>
-            setWithPhotoFilter(
-              withPhotoFilter === "yes" ? "all" : "yes"
-            )
-          }
-          className={`mr-2 mb-2 px-3 py-2 rounded-lg border text-xs font-medium ${
-            withPhotoFilter === "yes"
-              ? "bg-black text-white border-black"
-              : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-          }`}
+        {/* Сортировка */}
+        <FilterDropdown
+            id="sort"
+            label={
+                 sortFilter === 'date_desc' ? txt.sortDateDesc :
+                 sortFilter === 'date_asc' ? txt.sortDateAsc :
+                 sortFilter === 'price_asc' ? txt.sortPriceAsc :
+                 sortFilter === 'price_desc' ? txt.sortPriceDesc :
+                 sortFilter === 'distance' ? txt.sortDistance : txt.sort
+            }
+            active={sortFilter !== 'date_desc'}
         >
-          {txt.withPhoto}
-        </button>
+            <div className="flex flex-col">
+                {[
+                    { key: 'date_desc', label: txt.sortDateDesc },
+                    { key: 'date_asc', label: txt.sortDateAsc },
+                    { key: 'price_asc', label: txt.sortPriceAsc },
+                    { key: 'price_desc', label: txt.sortPriceDesc },
+                    { key: 'distance', label: txt.sortDistance },
+                ].map((opt) => (
+                    <button
+                        key={opt.key}
+                        className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${
+                            sortFilter === opt.key ? "bg-gray-100 font-bold" : "hover:bg-gray-50"
+                        }`}
+                        onClick={() => {
+                            setSortFilter(opt.key);
+                            setOpenDropdown(null);
+                        }}
+                    >
+                        {opt.label}
+                    </button>
+                ))}
+            </div>
+        </FilterDropdown>
+
+        {/* Дата размещения (Date Filter) */}
+         <FilterDropdown
+            id="date"
+            label={dateFilter === "all" ? txt.dateAll : dateFilter === "today" ? txt.dateToday : dateFilter === "3d" ? txt.date3d : dateFilter === "7d" ? txt.date7d : txt.date30d}
+            active={dateFilter !== "all"}
+         >
+            <div className="flex flex-col">
+                {['all', 'today', '3d', '7d', '30d'].map((d) => (
+                    <button
+                        key={d}
+                        className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${
+                            dateFilter === d ? "bg-gray-100 font-bold" : "hover:bg-gray-50"
+                        }`}
+                        onClick={() => {
+                            setDateFilter(d);
+                            setOpenDropdown(null);
+                        }}
+                    >
+                        {d === 'all' ? txt.dateAll : d === 'today' ? txt.dateToday : d === '3d' ? txt.date3d : d === '7d' ? txt.date7d : txt.date30d}
+                    </button>
+                ))}
+            </div>
+         </FilterDropdown>
+
+
+        {/* Фото (Photo Count) */}
+        <FilterDropdown
+             id="photoCount"
+             label={`Фото${photoCountFilter !== 'any' ? ': ' + photoCountFilter + '+' : ''}`}
+             active={photoCountFilter !== 'any'}
+        >
+             <div className="flex flex-col">
+                 <button className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${photoCountFilter === 'any' ? "bg-gray-100 font-bold" : "hover:bg-gray-50"}`} onClick={() => { setPhotoCountFilter('any'); setOpenDropdown(null); }}>Любое кол-во</button>
+                 <button className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${photoCountFilter === '1' ? "bg-gray-100 font-bold" : "hover:bg-gray-50"}`} onClick={() => { setPhotoCountFilter('1'); setOpenDropdown(null); }}>1+ фото</button>
+                 <button className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${photoCountFilter === '3' ? "bg-gray-100 font-bold" : "hover:bg-gray-50"}`} onClick={() => { setPhotoCountFilter('3'); setOpenDropdown(null); }}>3+ фото</button>
+                 <button className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${photoCountFilter === '5' ? "bg-gray-100 font-bold" : "hover:bg-gray-50"}`} onClick={() => { setPhotoCountFilter('5'); setOpenDropdown(null); }}>5+ фото</button>
+             </div>
+        </FilterDropdown>
+
+        {/* Статус продавца */}
+         <FilterDropdown
+             id="sellerStatus"
+             label={sellerStatusFilter === 'any' ? "Продавец" : sellerStatusFilter === 'verified' ? "Проверенный" : "Рейтинг 4+"}
+             active={sellerStatusFilter !== 'any'}
+        >
+             <div className="flex flex-col">
+                 <button className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${sellerStatusFilter === 'any' ? "bg-gray-100 font-bold" : "hover:bg-gray-50"}`} onClick={() => { setSellerStatusFilter('any'); setOpenDropdown(null); }}>Любой</button>
+                 <button className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${sellerStatusFilter === 'verified' ? "bg-gray-100 font-bold" : "hover:bg-gray-50"}`} onClick={() => { setSellerStatusFilter('verified'); setOpenDropdown(null); }}>Проверенный</button>
+                 <button className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${sellerStatusFilter === 'rating_4' ? "bg-gray-100 font-bold" : "hover:bg-gray-50"}`} onClick={() => { setSellerStatusFilter('rating_4'); setOpenDropdown(null); }}>Рейтинг 4+</button>
+             </div>
+        </FilterDropdown>
 
         {/* Бартер */}
         <button

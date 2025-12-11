@@ -14,13 +14,38 @@ export default function CatalogPage() {
   const [searchTerm, setSearchTerm] = useState("");
   // Simple state for Catalog Filters (to be passed via URL)
   const [typeFilter, setTypeFilter] = useState("all"); 
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   const handleCategoryClick = (key) => {
-      // Build query string
+      // Check if we are selecting a main category with subtypes
+      const catDef = CATEGORY_DEFS.find(c => c.key === key);
+      const subFilter = catDef?.filters?.find(f => f.key === 'subtype');
+
+      if (!selectedCategory && subFilter && subFilter.options && subFilter.options.length > 0) {
+          // Open Subcategory View
+          setSelectedCategory(key);
+      } else {
+          // Navigation to Feed
+          const params = new URLSearchParams();
+          if (typeFilter !== 'all') params.set("type", typeFilter);
+          router.push(`/category/${key}?${params.toString()}`);
+      }
+  };
+
+  const handleSubcategoryClick = (catKey, subKey = null) => {
       const params = new URLSearchParams();
       if (typeFilter !== 'all') params.set("type", typeFilter);
+      if (subKey) params.set("dyn_subtype", subKey);
       
-      router.push(`/category/${key}?${params.toString()}`);
+      router.push(`/category/${catKey}?${params.toString()}`);
+  };
+
+  const handleBack = () => {
+      if (selectedCategory) {
+          setSelectedCategory(null);
+      } else {
+          router.back();
+      }
   };
 
   // Filter categories based on search
@@ -29,13 +54,21 @@ export default function CatalogPage() {
     return name.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  const currentCategoryDef = selectedCategory ? CATEGORY_DEFS.find(c => c.key === selectedCategory) : null;
+  const subcategories = currentCategoryDef?.filters?.find(f => f.key === 'subtype')?.options || [];
+
   return (
     <div className="min-h-screen bg-white dark:bg-black pb-24">
-      {/* Header */}
       <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 py-4 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-3 mb-4">
-            <BackButton />
-            <h1 className="text-2xl font-bold dark:text-white">Каталог</h1>
+            <button onClick={handleBack} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 dark:text-white">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+            </button>
+            <h1 className="text-2xl font-bold dark:text-white">
+                {selectedCategory ? (currentCategoryDef?.[lang] || currentCategoryDef?.ru) : "Каталог"}
+            </h1>
         </div>
         
         {/* Search in Catalog */}
@@ -53,38 +86,69 @@ export default function CatalogPage() {
         </div>
 
         
-        {/* Type Filters */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mt-4">
-           {[
-               { key: 'all', label: t("typeAny") || "Все" },
-               { key: 'sell', label: t("typeSell") || "Продам" },
-               { key: 'buy', label: t("typeBuy") || "Куплю" },
-               { key: 'services', label: t("typeServices") || "Услуги" },
-               // { key: 'free', label: t("typeFree") || "Даром" }
-           ].map(opt => (
-               <button
-                  key={opt.key}
-                  onClick={() => setTypeFilter(opt.key)}
-                  className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
-                      typeFilter === opt.key
-                          ? "bg-black text-white border-black"
-                          : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200 dark:hover:bg-white/20"
-                  }`}
-               >
-                  {opt.label}
-               </button>
-           ))}
-        </div>
+        
+        {/* Type Filters - Only show on main level */}
+        {!selectedCategory && (
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mt-4">
+            {[
+                { key: 'all', label: t("typeAny") || "Все" },
+                { key: 'sell', label: t("typeSell") || "Продам" },
+                { key: 'buy', label: t("typeBuy") || "Куплю" },
+                { key: 'services', label: t("typeServices") || "Услуги" },
+                // { key: 'free', label: t("typeFree") || "Даром" }
+            ].map(opt => (
+                <button
+                    key={opt.key}
+                    onClick={() => setTypeFilter(opt.key)}
+                    className={`whitespace-nowrap px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                        typeFilter === opt.key
+                            ? "bg-black text-white border-black"
+                            : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200 dark:hover:bg-white/20"
+                    }`}
+                >
+                    {opt.label}
+                </button>
+            ))}
+            </div>
+        )}
       </div>
 
-      {/* Categories Grid */}
-      <div className="p-4 grid grid-cols-2 gap-4">
-        {filteredCategories.map((cat) => (
-          <button 
-            key={cat.key} 
-            onClick={() => handleCategoryClick(cat.key)}
-            className="group relative flex flex-col items-center justify-center p-6 bg-white dark:bg-white/5 rounded-3xl hover:shadow-airbnb-hover transition-all duration-300 active:scale-95 shadow-airbnb border border-gray-100 dark:border-white/10 w-full"
-          >
+      {/* Categories Grid or Subcategories List */}
+      <div className="p-4">
+        {selectedCategory ? (
+            // Subcategories List View
+            <div className="flex flex-col gap-2">
+                 {/* All in Category */}
+                 <button 
+                    onClick={() => handleSubcategoryClick(selectedCategory)}
+                    className="flex justify-between items-center p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-98 transition-all"
+                >
+                    <span className="font-bold text-lg dark:text-white">{t("all") || "Все объявления"}</span>
+                    <span className="text-2xl">♾️</span>
+                </button>
+
+                {subcategories.map(sub => (
+                    <button 
+                        key={sub.value}
+                        onClick={() => handleSubcategoryClick(selectedCategory, sub.value)}
+                        className="flex justify-between items-center p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-98 transition-all"
+                    >
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{sub.label[lang] || sub.label.ru}</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400">
+                             <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                        </svg>
+                    </button>
+                ))}
+            </div>
+        ) : (
+            // Main Categories Grid
+            <div className="grid grid-cols-2 gap-4">
+                {filteredCategories.map((cat) => (
+                    <button 
+                        key={cat.key} 
+                        onClick={() => handleCategoryClick(cat.key)}
+                        className="group relative flex flex-col items-center justify-center p-6 bg-white dark:bg-white/5 rounded-3xl hover:shadow-airbnb-hover transition-all duration-300 active:scale-95 shadow-airbnb border border-gray-100 dark:border-white/10 w-full"
+                    >
             {/* Icon/Emoji */}
             <div className="relative w-full flex items-center justify-center mb-3">
               <div className="w-16 h-16 flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-white/10 dark:to-white/5 rounded-2xl group-hover:scale-110 transition-transform duration-300">
@@ -122,8 +186,9 @@ export default function CatalogPage() {
             })()}
           </button>
         ))}
-
-    </div>
+            </div>
+        )}
+      </div>
     </div>
   );
 }
