@@ -1,1 +1,1 @@
-select status, count(*) from listings group by status;
+SELECT status, COUNT(*) FROM listings GROUP BY status;

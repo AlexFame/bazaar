@@ -137,8 +137,7 @@ export default function CatalogPage() {
                     onClick={() => handleSubcategoryClick(selectedCategory)}
                     className="flex justify-between items-center p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-98 transition-all"
                 >
-                    <span className="font-bold text-lg dark:text-white">{t("allListings") || "Все объявления"}</span>
-                    <span className="text-2xl">♾️</span>
+                     <span className="font-bold text-lg dark:text-white px-2">{t("allListings") || "Все объявления"}</span>
                 </button>
 
                 {subcategories.map(sub => (
@@ -162,8 +161,7 @@ export default function CatalogPage() {
                     href="/category/all"
                     className="flex justify-between items-center p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-98 transition-all"
                 >
-                    <span className="font-bold text-lg dark:text-white">{t("allListings") || "Все объявления"}</span>
-                    <span className="text-2xl">♾️</span>
+                    <span className="font-bold text-lg dark:text-white px-2">{t("allListings") || "Все объявления"}</span>
                 </Link>
 
                 {filteredCategories.map((cat) => (
