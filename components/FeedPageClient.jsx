@@ -1043,16 +1043,25 @@ export default function FeedPageClient({ forcedCategory = null }) {
     await fetchPage(page + 1, { append: true });
   }
 
-  function handleSearchSubmit(e) {
-    e.preventDefault();
-    // Close autocomplete
+  function handleSearchSubmit(e, query = null) {
+    if (e) e.preventDefault();
+    
+    const term = query || searchTerm;
+    if (!term.trim()) return;
+
+    // Use the query if provided
+    if (query) setSearchTerm(query);
+
+    // Close autocomplete & overlay
     setShowSearchHistory(false);
     setSuggestions([]);
+    setIsSearchFocused(false);
+    document.body.style.overflow = "";
+
     // Add to history
-    if (searchTerm.trim()) {
-      const newHistory = addToSearchHistory(searchTerm);
-      setSearchHistory(newHistory);
-    }
+    const newHistory = addToSearchHistory(term);
+    setSearchHistory(newHistory);
+    
     // Blur input
     if (searchInputRef.current) {
       searchInputRef.current.blur();
