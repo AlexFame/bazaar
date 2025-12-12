@@ -59,7 +59,7 @@ export default function ReportButton({ targetId, targetType = "listing" }) {
         onClick={() => setIsOpen(true)}
         className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gray-100/80 dark:bg-white/10 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
       >
-        <span className="text-xs font-medium">{t("report_button") || "Пожаловаться"}</span>
+        <span className="text-xs font-medium">{t("btn_report") || "Пожаловаться"}</span>
       </button>
       
       {/* Modal - Portaled */}

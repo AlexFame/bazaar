@@ -248,6 +248,7 @@ export default function SellerCard({ listing, isOwner }) {
                 onClose={() => setIsOfferModalOpen(false)}
                 onSubmit={handleOfferSubmit}
                 listingTitle={listing.title}
+                listingPrice={listing.price}
             />
         </div>
     );

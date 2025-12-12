@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import FadeIn from "@/components/FadeIn";
 import { useLang } from "@/lib/i18n-client";
 
-export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle, symbol = '€' }) {
+export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle, listingPrice, symbol = '€' }) {
     const { t } = useLang();
     const [price, setPrice] = useState('');
     const [loading, setLoading] = useState(false);
@@ -57,6 +57,24 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
                             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:ring-black transition-all"
                             autoFocus
                         />
+                        
+                        {/* Price Slider */}
+                        {listingPrice && (
+                            <div className="mt-4 px-1">
+                                <input
+                                    type="range"
+                                    min={Math.floor(listingPrice * 0.5)}
+                                    max={listingPrice}
+                                    value={Number(price) || Math.floor(listingPrice * 0.5)}
+                                    onChange={(e) => setPrice(e.target.value)}
+                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
+                                />
+                                <div className="flex justify-between mt-1 text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                                    <span>Min: {Math.floor(listingPrice * 0.5)}{symbol}</span>
+                                    <span>Max: {listingPrice}{symbol}</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <button 
