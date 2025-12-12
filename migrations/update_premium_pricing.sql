@@ -15,7 +15,7 @@ INSERT INTO premium_services (service_type, name_ru, name_ua, name_en, descripti
  'Поднимите объявление в топ на 1 день. Ваше объявление увидят больше людей',
  'Підніміть оголошення в топ на 1 день. Ваше оголошення побачать більше людей',
  'Boost your listing to the top for 1 day. More people will see your listing',
- 249,
+ 250,
  1,
  '{"priority": 1}',
  true),

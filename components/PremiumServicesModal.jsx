@@ -256,6 +256,9 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                                     ) : (
                                         <div className="flex items-center justify-center gap-1.5 h-full relative z-10">
                                             <span className="text-[15px]">{service.price_stars} ⭐️</span>
+                                            <span className="text-[12px] text-white/90 font-medium">
+                                                (~€{(service.price_stars * 0.021).toFixed(2)})
+                                            </span>
                                         </div>
                                     )}
                                 </button>
