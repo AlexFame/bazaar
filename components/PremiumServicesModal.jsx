@@ -187,7 +187,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
               </div>
 
               {/* Scrollable Content */}
-              <div className="overflow-y-auto flex-1 p-4 space-y-3 overscroll-contain bg-[#F2F2F7] dark:bg-black">
+              <div className="overflow-y-auto flex-1 p-4 pb-24 space-y-3 overscroll-contain bg-[#F2F2F7] dark:bg-black">
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-12 gap-3">
                     <div className="w-8 h-8 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin"></div>
