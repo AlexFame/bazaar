@@ -719,6 +719,19 @@ export default function CreateListingClient({ onCreated, editId }) {
       if (filter.key === "size_shoes" && currentSubtype !== "shoes") return null;
     }
 
+    // --- Conditional Logic for Kids (Brand/Material) ---
+    if (categoryKey === "kids") {
+         const currentSubtype = parameters["subtype"];
+         // Hide Brand & Material for: Toys, Food, Books
+         if (["toys", "food", "books"].includes(currentSubtype) && (filter.key === "brand" || filter.key === "material")) {
+             return null;
+         }
+         // Hide Brand for: Furniture
+         if (currentSubtype === "furniture" && filter.key === "brand") {
+             return null;
+         }
+    }
+
     // --- Conditional Logic for Realty ---
     if (categoryKey === "realty" && (filter.key === "deposit" || filter.key === "utilities_included")) {
       const currentDealType = parameters["deal_type"];
@@ -1066,8 +1079,8 @@ export default function CreateListingClient({ onCreated, editId }) {
           />
         </div>
 
-        {/* цена (Скрываем для типа 'free' и категории 'help_offer') */}
-        {listingType !== 'free' && categoryKey !== 'help_offer' && (
+        {/* цена (Скрываем для типа 'free' и категории 'help_offer' и 'free') */}
+        {listingType !== 'free' && categoryKey !== 'help_offer' && categoryKey !== 'free' && (
           <div className="mb-3">
             <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
               {t("field_price_label")}
@@ -1163,8 +1176,8 @@ export default function CreateListingClient({ onCreated, editId }) {
         </div>
 
         {/* Состояние (только для товаров, не для услуг, и не для помощи) */}
-        {/* Состояние (Скрываем для услуг, животных, работы и т.д.) */}
-        {listingType !== "service" && !['jobs', 'business', 'education', 'help_offer', 'translations', 'pets', 'exchange'].includes(categoryKey) && (
+        {/* Состояние (Скрываем для услуг, животных, работы и т.д.) - EDUCATION REMOVED so it shows */}
+        {listingType !== "service" && !['jobs', 'business', 'help_offer', 'translations', 'pets', 'exchange'].includes(categoryKey) && (
         <div className="mb-3">
           <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">{t("condition_label") || "Состояние"}</div>
           <div className="relative">
