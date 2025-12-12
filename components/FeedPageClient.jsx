@@ -1702,256 +1702,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       }
   };
 
-  // --- NEW ALL FILTERS MODAL ---
-  const FiltersModal = () => {
-     if (!showFiltersModal) return null;
 
-     return (
-        <div className="fixed inset-0 z-[150] bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom-10 duration-200">
-           {/* Modal Header */}
-           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
-               <h2 className="text-lg font-bold">{t("filters") || "Фильтры"}</h2>
-               <button onClick={() => setShowFiltersModal(false)} className="p-2 bg-gray-100 dark:bg-white/10 rounded-full">
-                   <XMarkIcon className="w-5 h-5 text-gray-500" />
-               </button>
-           </div>
-
-           {/* Modal Content - Scrollable */}
-           <div className="flex-1 overflow-y-auto p-4 pb-24">
-                {/* Global Filters Section */}
-                <div className="space-y-6">
-                    
-                    {/* Location */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.locationPlaceholder}</label>
-                        <input
-                            type="text"
-                            placeholder="Город, район..."
-                            className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900"
-                            value={locationFilter}
-                            onChange={(e) => setLocationFilter(e.target.value)}
-                        />
-                         {/* Radius */}
-                         <div className="flex gap-2 overflow-x-auto no-scrollbar pt-2">
-                            {[null, 5, 10, 30, 50, 100].map(r => (
-                                <button
-                                    key={r}
-                                    onClick={() => setRadiusFilter(r)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap ${
-                                        radiusFilter === r 
-                                        ? "bg-black text-white border-black" 
-                                        : "border-gray-200 dark:border-white/20 text-gray-600 dark:text-gray-400"
-                                    }`}
-                                >
-                                    {r === null ? "Вся страна" : `+${r} км`}
-                                </button>
-                            ))}
-                         </div>
-                    </div>
-
-                    <hr className="border-gray-100 dark:border-white/10" />
-
-                     {/* Sort Order */}
-                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.sort || "Сортировка"}</label>
-                        <select 
-                            value={sortFilter}
-                            onChange={(e) => setSortFilter(e.target.value)}
-                            className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900 appearance-none outline-none"
-                        >
-                            <option value="date_desc">{txt.sortDateDesc}</option>
-                            <option value="price_asc">{txt.sortPriceAsc}</option>
-                            <option value="price_desc">{txt.sortPriceDesc}</option>
-                            {userLocation && <option value="distance">{txt.sortDistance}</option>}
-                        </select>
-                     </div>
-
-                     <hr className="border-gray-100 dark:border-white/10" />
-
-                     {/* Price Range */}
-                     <div className="space-y-2">
-                         <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.price}</label>
-                         <div className="flex gap-3">
-                             <div className="flex-1 relative">
-                                 <span className="absolute left-3 top-3 text-gray-400 text-xs text-[10px] uppercase">От</span>
-                                 <input 
-                                    type="number" 
-                                    className="w-full pl-3 pr-3 pt-5 pb-2 border border-gray-200 dark:border-white/20 rounded-xl text-sm font-medium bg-gray-50 dark:bg-neutral-900"
-                                    value={minPrice}
-                                    onChange={(e) => setMinPrice(e.target.value)}
-                                 />
-                             </div>
-                             <div className="flex-1 relative">
-                                 <span className="absolute left-3 top-3 text-gray-400 text-xs text-[10px] uppercase">До</span>
-                                 <input 
-                                    type="number" 
-                                    className="w-full pl-3 pr-3 pt-5 pb-2 border border-gray-200 dark:border-white/20 rounded-xl text-sm font-medium bg-gray-50 dark:bg-neutral-900"
-                                    value={maxPrice}
-                                    onChange={(e) => setMaxPrice(e.target.value)}
-                                 />
-                             </div>
-                         </div>
-                     </div>
-
-                     <hr className="border-gray-100 dark:border-white/10" />
-
-                     {/* Dynamic Categories Filters */}
-                     {categoryFilter !== 'all' && (
-                         <div className="space-y-6">
-                            {categoryFiltersDef.map(filter => {
-                                const val = dynamicFilters[filter.key];
-
-                                // RANGE INPUTS (From/To)
-                                if (filter.type === 'range') {
-                                    const minKey = `${filter.key}_min`;
-                                    const maxKey = `${filter.key}_max`;
-                                    const minVal = dynamicFilters[minKey] || '';
-                                    const maxVal = dynamicFilters[maxKey] || '';
-
-                                    return (
-                                        <div key={filter.key} className="space-y-2">
-                                            <label className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                                {filter.label[lang] || filter.label.ru}
-                                            </label>
-                                            <div className="flex gap-3">
-                                                 <div className="flex-1 relative">
-                                                     <span className="absolute left-3 top-3 text-gray-400 text-[10px] uppercase">От</span>
-                                                     <input 
-                                                        type="number" 
-                                                        className="w-full pl-3 pr-3 pt-5 pb-2 border border-gray-200 dark:border-white/20 rounded-xl text-sm font-medium bg-gray-50 dark:bg-neutral-900"
-                                                        value={minVal}
-                                                        onChange={(e) => setDynamicFilters({...dynamicFilters, [minKey]: e.target.value})}
-                                                     />
-                                                 </div>
-                                                 <div className="flex-1 relative">
-                                                     <span className="absolute left-3 top-3 text-gray-400 text-[10px] uppercase">До</span>
-                                                     <input 
-                                                        type="number" 
-                                                        className="w-full pl-3 pr-3 pt-5 pb-2 border border-gray-200 dark:border-white/20 rounded-xl text-sm font-medium bg-gray-50 dark:bg-neutral-900"
-                                                        value={maxVal}
-                                                        onChange={(e) => setDynamicFilters({...dynamicFilters, [maxKey]: e.target.value})}
-                                                     />
-                                                 </div>
-                                            </div>
-                                        </div>
-                                    );
-                                }
-
-                                // SELECT INPUTS
-                                if (filter.type === 'select') {
-                                    return (
-                                        <div key={filter.key} className="space-y-2">
-                                            <label className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                                {filter.label[lang] || filter.label.ru}
-                                            </label>
-                                            <div className="flex flex-wrap gap-2">
-                                                <button
-                                                    onClick={() => {
-                                                        const d = {...dynamicFilters};
-                                                        delete d[filter.key];
-                                                        setDynamicFilters(d);
-                                                    }}
-                                                    className={`px-3 py-2 rounded-xl text-xs font-medium border ${
-                                                        !val ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'
-                                                    }`}
-                                                >
-                                                    {t("all") || "Все"}
-                                                </button>
-                                                {filter.options.map(opt => (
-                                                    <button
-                                                        key={opt.value}
-                                                        onClick={() => setDynamicFilters({...dynamicFilters, [filter.key]: opt.value})}
-                                                        className={`px-3 py-2 rounded-xl text-xs font-medium border ${
-                                                            val === opt.value ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'
-                                                        }`}
-                                                    >
-                                                        {opt.label[lang] || opt.label.ru}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    );
-                                }
-                                
-                                // BOOLEAN & TEXT support ...
-                                return null; 
-                            })}
-                             <hr className="border-gray-100 dark:border-white/10" />
-                         </div>
-                     )}
-
-                    {/* Common Filters */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.condition}</label>
-                        <div className="flex flex-wrap gap-2">
-                            {['all', 'new', 'used'].map(c => (
-                                <button 
-                                    key={c}
-                                    onClick={() => setConditionFilter(c)}
-                                    className={`px-4 py-2 rounded-xl text-sm font-medium border ${
-                                        conditionFilter === c 
-                                        ? "bg-black text-white border-black" 
-                                        : "bg-white border-gray-200 text-gray-700"
-                                    }`}
-                                >
-                                    {c === 'all' ? txt.conditionAny : c === 'new' ? txt.conditionNew : txt.conditionUsed}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">Наличие фото</label>
-                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-xl">
-                            <span className="text-sm">Только с фото</span>
-                            <input 
-                                type="checkbox" 
-                                className="w-5 h-5 rounded border-gray-300 text-black focus:ring-black"
-                                checked={withPhotoFilter === 'yes'}
-                                onChange={(e) => setWithPhotoFilter(e.target.checked ? 'yes' : 'all')}
-                            />
-                        </div>
-                    </div>
-                     
-                    {/* Delivery Toggle (New) */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">Доставка</label>
-                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-xl">
-                            <span className="text-sm">Возможна доставка</span>
-                            <input 
-                                type="checkbox" 
-                                className="w-5 h-5 rounded border-gray-300 text-black focus:ring-black"
-                                checked={deliveryFilter === 'delivery'}
-                                onChange={(e) => setDeliveryFilter(e.target.checked ? 'delivery' : 'all')}
-                            />
-                        </div>
-                     </div>
-
-
-                </div>
-           </div>
-
-           {/* Modal Footer */}
-           <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3">
-               <button 
-                  onClick={handleResetFilters}
-                  className="flex-1 py-3.5 bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-xl font-bold text-sm"
-               >
-                  Сбросить
-               </button>
-               <button 
-                  onClick={() => {
-                      handleRefresh();
-                      setShowFiltersModal(false);
-                  }}
-                  className="flex-[2] py-3.5 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-sm shadow-lg"
-               >
-                  Показать объявления
-               </button>
-           </div>
-        </div>
-     );
-  };
 
 
   return (
@@ -2189,8 +1940,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
             )}
 
       <div className="max-w-[520px] mx-auto">
-        {/* Persistent Filter Bar - Always Visible */}
-        {!isSearchFocused && (
+        {/* Persistent Filter Bar - Visible only in categories or search */ }
+        {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery) && (
             <div className="px-3 mt-3">
                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                      {/* All Filters Button */}
@@ -2233,8 +1984,242 @@ export default function FeedPageClient({ forcedCategory = null }) {
             </div>
         )}
 
-      {/* RENDER MODAL */}
-      <FiltersModal />
+      {/* RENDER MODAL (INLINED) */}
+      {showFiltersModal && (
+        <div className="fixed inset-0 z-[150] bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom-10 duration-200">
+           {/* Modal Header */}
+           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
+               <h2 className="text-lg font-bold">{t("filters") || "Фильтры"}</h2>
+               <button onClick={() => setShowFiltersModal(false)} className="p-2 bg-gray-100 dark:bg-white/10 rounded-full">
+                   <XMarkIcon className="w-5 h-5 text-gray-500" />
+               </button>
+           </div>
+
+           {/* Modal Content - Scrollable */}
+           <div className="flex-1 overflow-y-auto p-4 pb-24">
+                {/* Global Filters Section */}
+                <div className="space-y-6">
+                    
+                    {/* Location */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.locationPlaceholder}</label>
+                        <input
+                            type="text"
+                            placeholder="Город, район..."
+                            className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900"
+                            value={locationFilter}
+                            onChange={(e) => setLocationFilter(e.target.value)}
+                        />
+                         {/* Radius */}
+                         <div className="flex gap-2 overflow-x-auto no-scrollbar pt-2">
+                            {[null, 5, 10, 30, 50, 100].map(r => (
+                                <button
+                                    key={r}
+                                    onClick={() => setRadiusFilter(r)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap ${
+                                        radiusFilter === r 
+                                        ? "bg-black text-white border-black" 
+                                        : "border-gray-200 dark:border-white/20 text-gray-600 dark:text-gray-400"
+                                    }`}
+                                >
+                                    {r === null ? "Вся страна" : `+${r} км`}
+                                </button>
+                            ))}
+                         </div>
+                    </div>
+
+                    <hr className="border-gray-100 dark:border-white/10" />
+
+                     {/* Sort Order */}
+                     <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.sort || "Сортировка"}</label>
+                        <select 
+                            value={sortFilter}
+                            onChange={(e) => setSortFilter(e.target.value)}
+                            className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900 appearance-none outline-none"
+                        >
+                            <option value="date_desc">{txt.sortDateDesc}</option>
+                            <option value="price_asc">{txt.sortPriceAsc}</option>
+                            <option value="price_desc">{txt.sortPriceDesc}</option>
+                            {userLocation && <option value="distance">{txt.sortDistance}</option>}
+                        </select>
+                     </div>
+
+                     <hr className="border-gray-100 dark:border-white/10" />
+
+                     {/* Price Range (Slider) */}
+                     <div className="space-y-2">
+                         <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.price}</label>
+                         <PriceSlider 
+                            min={minPrice} 
+                            max={maxPrice} 
+                            onChange={(min, max) => {
+                                setMinPrice(min);
+                                setMaxPrice(max);
+                            }}
+                            minLimit={0}
+                            maxLimit={5000}
+                         />
+                     </div>
+
+                     <hr className="border-gray-100 dark:border-white/10" />
+
+                     {/* Dynamic Categories Filters */}
+                     {categoryFilter !== 'all' && (
+                         <div className="space-y-6">
+                            {categoryFiltersDef.map(filter => {
+                                const val = dynamicFilters[filter.key];
+
+                                // RANGE INPUTS (From/To)
+                                if (filter.type === 'range') {
+                                    const minKey = `${filter.key}_min`;
+                                    const maxKey = `${filter.key}_max`;
+                                    const minVal = dynamicFilters[minKey] || '';
+                                    const maxVal = dynamicFilters[maxKey] || '';
+
+                                    return (
+                                        <div key={filter.key} className="space-y-2">
+                                            <label className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                                {filter.label[lang] || filter.label.ru}
+                                            </label>
+                                            <div className="flex gap-3">
+                                                 <div className="flex-1 relative">
+                                                     <span className="absolute left-3 top-3 text-gray-400 text-[10px] uppercase">От</span>
+                                                     <input 
+                                                        type="number" 
+                                                        className="w-full pl-3 pr-3 pt-5 pb-2 border border-gray-200 dark:border-white/20 rounded-xl text-sm font-medium bg-gray-50 dark:bg-neutral-900"
+                                                        value={minVal}
+                                                        onChange={(e) => setDynamicFilters({...dynamicFilters, [minKey]: e.target.value})}
+                                                     />
+                                                 </div>
+                                                 <div className="flex-1 relative">
+                                                     <span className="absolute left-3 top-3 text-gray-400 text-[10px] uppercase">До</span>
+                                                     <input 
+                                                        type="number" 
+                                                        className="w-full pl-3 pr-3 pt-5 pb-2 border border-gray-200 dark:border-white/20 rounded-xl text-sm font-medium bg-gray-50 dark:bg-neutral-900"
+                                                        value={maxVal}
+                                                        onChange={(e) => setDynamicFilters({...dynamicFilters, [maxKey]: e.target.value})}
+                                                     />
+                                                 </div>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+
+                                // SELECT INPUTS
+                                if (filter.type === 'select') {
+                                    return (
+                                        <div key={filter.key} className="space-y-2">
+                                            <label className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                                {filter.label[lang] || filter.label.ru}
+                                            </label>
+                                            <div className="flex flex-wrap gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        const d = {...dynamicFilters};
+                                                        delete d[filter.key];
+                                                        setDynamicFilters(d);
+                                                    }}
+                                                    className={`px-3 py-2 rounded-xl text-xs font-medium border ${
+                                                        !val ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'
+                                                    }`}
+                                                >
+                                                    {t("all") || "Все"}
+                                                </button>
+                                                {filter.options.map(opt => (
+                                                    <button
+                                                        key={opt.value}
+                                                        onClick={() => setDynamicFilters({...dynamicFilters, [filter.key]: opt.value})}
+                                                        className={`px-3 py-2 rounded-xl text-xs font-medium border ${
+                                                            val === opt.value ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'
+                                                        }`}
+                                                    >
+                                                        {opt.label[lang] || opt.label.ru}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                                
+                                // BOOLEAN & TEXT support ...
+                                return null; 
+                            })}
+                             <hr className="border-gray-100 dark:border-white/10" />
+                         </div>
+                     )}
+
+                    {/* Common Filters */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.condition}</label>
+                        <div className="flex flex-wrap gap-2">
+                            {['all', 'new', 'used'].map(c => (
+                                <button 
+                                    key={c}
+                                    onClick={() => setConditionFilter(c)}
+                                    className={`px-4 py-2 rounded-xl text-sm font-medium border ${
+                                        conditionFilter === c 
+                                        ? "bg-black text-white border-black" 
+                                        : "bg-white border-gray-200 text-gray-700"
+                                    }`}
+                                >
+                                    {c === 'all' ? txt.conditionAny : c === 'new' ? txt.conditionNew : txt.conditionUsed}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">Наличие фото</label>
+                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-xl">
+                            <span className="text-sm">Только с фото</span>
+                            <input 
+                                type="checkbox" 
+                                className="w-5 h-5 rounded border-gray-300 text-black focus:ring-black"
+                                checked={withPhotoFilter === 'yes'}
+                                onChange={(e) => setWithPhotoFilter(e.target.checked ? 'yes' : 'all')}
+                            />
+                        </div>
+                    </div>
+                     
+                    {/* Delivery Toggle (New) */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">Доставка</label>
+                        <div className="flex items-center justify-between p-3 border border-gray-200 rounded-xl">
+                            <span className="text-sm">Возможна доставка</span>
+                            <input 
+                                type="checkbox" 
+                                className="w-5 h-5 rounded border-gray-300 text-black focus:ring-black"
+                                checked={deliveryFilter === 'delivery'}
+                                onChange={(e) => setDeliveryFilter(e.target.checked ? 'delivery' : 'all')}
+                            />
+                        </div>
+                     </div>
+
+
+                </div>
+           </div>
+
+           {/* Modal Footer */}
+           <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3">
+               <button 
+                  onClick={handleResetFilters}
+                  className="flex-1 py-3.5 bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-xl font-bold text-sm"
+               >
+                  Сбросить
+               </button>
+               <button 
+                  onClick={() => {
+                      handleRefresh();
+                      setShowFiltersModal(false);
+                  }}
+                  className="flex-[2] py-3.5 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-sm shadow-lg"
+               >
+                  Показать объявления
+               </button>
+           </div>
+        </div>
+      )}
 
         {/* Active Category Indicator */}
         {categoryFilter !== "all" && (
