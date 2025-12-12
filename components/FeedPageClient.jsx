@@ -1999,6 +1999,31 @@ export default function FeedPageClient({ forcedCategory = null }) {
            <div className="flex-1 overflow-y-auto p-4 pb-24">
                 {/* Global Filters Section */}
                 <div className="space-y-6">
+
+                    {/* Category Selector (NEW) */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.category || "Категория"}</label>
+                        <select
+                            value={categoryFilter}
+                            onChange={(e) => {
+                                const newCat = e.target.value;
+                                setCategoryFilter(newCat);
+                                // Clear dynamic filters when switching categories (except global ones?)
+                                // Actually, dynamic filters are category specific, so we should clear them.
+                                setDynamicFilters({});
+                            }}
+                            className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900 appearance-none outline-none"
+                        >
+                            <option value="all">{t("allCategories") || "Все категории"}</option>
+                            {CATEGORY_DEFS.map(cat => (
+                                <option key={cat.key} value={cat.key}>
+                                    {cat[lang] || cat.ru}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <hr className="border-gray-100 dark:border-white/10" />
                     
                     {/* Location */}
                     <div className="space-y-2">
@@ -2226,7 +2251,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 </div>
            </div>
 
-           {/* Modal Footer */}
            <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3">
                <button 
                   onClick={handleResetFilters}
@@ -2236,6 +2260,32 @@ export default function FeedPageClient({ forcedCategory = null }) {
                </button>
                <button 
                   onClick={() => {
+                      const currentCat = forcedCategory || 'all';
+                      // If category changed, navigate to new category page
+                      if (categoryFilter !== currentCat) {
+                          const params = new URLSearchParams();
+                          if (minPrice) params.set('min_price', minPrice);
+                          if (maxPrice) params.set('max_price', maxPrice);
+                          if (typeFilter !== 'all') params.set('type', typeFilter);
+                          if (conditionFilter !== 'all') params.set('condition', conditionFilter);
+                          if (withPhotoFilter === 'yes') params.set('has_photo', 'true');
+                          if (deliveryFilter === 'delivery') params.set('delivery', 'true');
+                          if (sortFilter !== 'date_desc') params.set('sort', sortFilter);
+
+                          // Dynamic params
+                          Object.entries(dynamicFilters).forEach(([k, v]) => {
+                             if (v) params.set(`dyn_${k}`, v);
+                          });
+
+                          // Search term?
+                          if (searchTerm) params.set('q', searchTerm);
+                          
+                          // Handle 'all' category -> /category/all
+                          const targetPath = `/category/${categoryFilter}`;
+                          router.push(`${targetPath}?${params.toString()}`);
+                          return;
+                      }
+
                       handleRefresh();
                       setShowFiltersModal(false);
                   }}
