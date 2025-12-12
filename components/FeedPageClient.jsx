@@ -13,9 +13,9 @@ import { ListingCardSkeleton } from "./SkeletonLoader";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { useLang } from "@/lib/i18n-client";
 import { expandSearchTerm, detectCategory, SYNONYMS } from "@/lib/searchUtils";
-import { expandSearchTerm, detectCategory, SYNONYMS } from "@/lib/searchUtils";
+
 import { getTelegramUser } from "@/lib/telegram";
-import { XMarkIcon, AdjustmentsHorizontalIcon } from "@heroicons/react/24/solid";
+import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, XMarkIcon, HeartIcon, BellIcon } from "@heroicons/react/24/outline";
 import {
   getUserLocation,
   saveUserLocation,
@@ -34,9 +34,7 @@ import Image from "next/image";
 import PopularListingsScroll from "./PopularListingsScroll";
 import RecentlyViewedScroll from "./RecentlyViewedScroll";
 import LangSwitcher from "./LangSwitcher";
-
 import ThemeSwitcher from "./ThemeSwitcher";
-import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, XMarkIcon, HeartIcon, BellIcon } from "@heroicons/react/24/outline"; // Added HeartIcon, BellIcon
 import PullToRefresh from "@/components/PullToRefresh";
 import BackButton from "@/components/BackButton";
 import useImpressionTracker from "@/hooks/useImpressionTracker";
