@@ -1996,7 +1996,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
            </div>
 
            {/* Modal Content - Scrollable */}
-           <div className="flex-1 overflow-y-auto p-4 pb-24">
+           <div className="flex-1 overflow-y-auto p-4">
                 {/* Global Filters Section */}
                 <div className="space-y-6">
 
@@ -2289,7 +2289,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 </div>
            </div>
 
-           <div className="absolute bottom-0 left-0 right-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3">
+           {/* Modal Footer (Static) */}
+           <div className="shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3">
                <button 
                   onClick={handleResetFilters}
                   className="flex-1 py-3.5 bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-xl font-bold text-sm"
