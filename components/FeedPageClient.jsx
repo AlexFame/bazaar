@@ -2023,6 +2023,44 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         </select>
                     </div>
 
+                    {/* Subcategory Selector (NEW) */}
+                    {categoryFilter !== 'all' && (() => {
+                        const currentCatDef = CATEGORY_DEFS.find(c => c.key === categoryFilter);
+                        const subFilter = currentCatDef?.filters?.find(f => f.key === 'subtype' || f.key === 'industry' || f.key === 'product_type');
+                        
+                        if (subFilter && subFilter.options) {
+                            // Determine the key for state (subtype, industry, product_type)
+                            const subKey = subFilter.key;
+                            const subVal = dynamicFilters[subKey] || "";
+
+                            return (
+                                <div className="space-y-2">
+                                    <label className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                                        {subFilter.label[lang] || subFilter.label.ru}
+                                    </label>
+                                    <select
+                                        value={subVal}
+                                        onChange={(e) => {
+                                            setDynamicFilters({
+                                                ...dynamicFilters,
+                                                [subKey]: e.target.value
+                                            });
+                                        }}
+                                        className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900 appearance-none outline-none"
+                                    >
+                                        <option value="">{t("all") || "Все"}</option>
+                                        {subFilter.options.map(opt => (
+                                            <option key={opt.value} value={opt.value}>
+                                                {opt.label[lang] || opt.label.ru}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            );
+                        }
+                        return null;
+                    })()}
+
                     <hr className="border-gray-100 dark:border-white/10" />
                     
                     {/* Location */}
