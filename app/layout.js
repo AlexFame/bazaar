@@ -82,7 +82,9 @@ export default function RootLayout({ children }) {
           <Providers>
 
             <div className="telegram-container">
-              <SwipeNavigation />
+              <Suspense fallback={null}>
+                <SwipeNavigation />
+              </Suspense>
               <Suspense fallback={null}>
                 <AppShell>{children}</AppShell>
               </Suspense>
