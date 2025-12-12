@@ -613,7 +613,16 @@ export default function CreateListingClient({ onCreated, editId }) {
         latitude: coordinates?.lat || null,
         longitude: coordinates?.lng || null,
         contacts: contacts || "",
-        parameters: parameters, 
+        parameters: Object.entries(parameters).reduce((acc, [key, val]) => {
+            // Find definition
+            const def = currentCategory?.filters?.find(f => f.key === key);
+            if (def && (def.type === 'number' || def.type === 'range') && val !== "") {
+                acc[key] = Number(val);
+            } else {
+                acc[key] = val;
+            }
+            return acc;
+        }, {}), 
         status: status,
         id: editId || listingId,
         // Pass the full image list to be synced by the server
