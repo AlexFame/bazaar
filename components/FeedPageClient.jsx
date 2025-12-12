@@ -2189,8 +2189,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
             )}
 
       <div className="max-w-[520px] mx-auto">
-        {/* Persistent Filter Bar - Visible only in categories or search */ }
-        {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery) && (
+        {/* Persistent Filter Bar - Always Visible */}
+        {!isSearchFocused && (
             <div className="px-3 mt-3">
                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                      {/* All Filters Button */}
