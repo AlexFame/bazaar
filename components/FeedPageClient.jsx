@@ -1940,8 +1940,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
             )}
 
       <div className="max-w-[520px] mx-auto">
-        {/* Persistent Filter Bar - Visible only in categories or search */ }
-        {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery) && (
+        {/* Persistent Filter Bar - Visible only in categories or search or on All Listings page */ }
+        {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery || forcedCategory === "all") && (
             <div className="px-3 mt-3">
                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                      {/* All Filters Button */}
@@ -2148,6 +2148,32 @@ export default function FeedPageClient({ forcedCategory = null }) {
                              <hr className="border-gray-100 dark:border-white/10" />
                          </div>
                      )}
+
+                     {/* Type Filter (Buy/Sell) - No Services */ }
+                     <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.type || "Тип"}</label>
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { key: 'all', label: txt.typeAny || "Все" },
+                                { key: 'sell', label: txt.typeSell || "Продам" },
+                                { key: 'buy', label: txt.typeBuy || "Куплю" }
+                            ].map(opt => (
+                                <button 
+                                    key={opt.key}
+                                    onClick={() => setTypeFilter(opt.key)}
+                                    className={`px-4 py-2 rounded-xl text-sm font-medium border ${
+                                        typeFilter === opt.key
+                                        ? "bg-black text-white border-black" 
+                                        : "bg-white border-gray-200 text-gray-700"
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                     </div>
+                     
+                     <hr className="border-gray-100 dark:border-white/10" />
 
                     {/* Common Filters */}
                     <div className="space-y-2">
