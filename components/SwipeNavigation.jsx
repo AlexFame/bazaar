@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 export default function SwipeNavigation() {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const touchStartRef = useRef(null);
   const currentXRef = useRef(0);
   const isDraggingRef = useRef(false);
@@ -158,7 +159,7 @@ export default function SwipeNavigation() {
     };
   }, [pathname, router]);
 
-  // Reset styles immediately on path change
+  // Reset styles immediately on path change or search params change
   useEffect(() => {
       const container = document.querySelector('.telegram-container');
       if (container) {
@@ -166,7 +167,7 @@ export default function SwipeNavigation() {
           container.style.opacity = '';
           container.style.transition = '';
       }
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   return null;
 }
