@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import { validateComment } from "@/lib/moderation";
 import { useLang } from "@/lib/i18n-client";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function ListingComments({ listingId, ownerId }) {
   const { t } = useLang();
@@ -217,7 +218,7 @@ export default function ListingComments({ listingId, ownerId }) {
                           onClick={() => handleDelete(comment.id)}
                           className="text-base text-gray-400 hover:text-red-600 p-1"
                         >
-                          🗑
+                          <XMarkIcon className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (

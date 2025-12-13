@@ -1907,9 +1907,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
       <div className="max-w-[520px] mx-auto">
         {/* Persistent Filter Bar - Visible only in categories or search or on All Listings page */ }
-        {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery || forcedCategory === "all") && (
+        {/* Persistent Filter Bar - Visible only in categories or search or on All Listings page */ }
+        {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery || forcedCategory === "all" || showFiltersModal) && (
             <div className="px-3 mt-3">
                  <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+
                      {/* All Filters Button */}
                      <button
                         onClick={() => setShowFiltersModal(true)}
