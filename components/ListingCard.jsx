@@ -517,6 +517,8 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             )}
 
 
+            {/* Status Actions */}
+            {status === 'active' && (
                 <div className="flex gap-2">
                     <button
                         onClick={(e) => handleStatusChange(e, 'reserved')}
