@@ -26,7 +26,14 @@ export default function Stories({ categoryFilter, setCategoryFilter, lang, txt }
             </span>
           </button>
 
-          {CATEGORY_DEFS.map(cat => (
+          {CATEGORY_DEFS.map(cat => {
+              const getSafeLabel = (obj, fallback) => {
+                  if (typeof obj === 'string') return obj;
+                  if (!obj || typeof obj !== 'object') return fallback;
+                  return obj[lang] || obj.ru || obj.en || obj.ua || fallback;
+              };
+
+            return (
             <button
               key={cat.key}
               onClick={() => setCategoryFilter(cat.key)}
@@ -42,10 +49,11 @@ export default function Stories({ categoryFilter, setCategoryFilter, lang, txt }
                 </div>
               </div>
               <span className={`text-[10px] font-medium text-center leading-tight line-clamp-2 max-w-[70px] ${categoryFilter === cat.key ? 'text-black font-bold' : 'text-gray-500'}`}>
-                {cat[lang] || cat.ru}
+                {getSafeLabel(cat, cat.ru)}
               </span>
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

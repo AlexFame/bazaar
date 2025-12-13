@@ -83,6 +83,13 @@ export default function CatalogPage() {
   const primaryKey = selectedCategory ? getPrimaryFilterKey(selectedCategory) : 'subtype';
   const subcategories = currentCategoryDef?.filters?.find(f => f.key === primaryKey)?.options || [];
 
+  // Helper to safely render labels
+  const getSafeLabel = (obj, fallback) => {
+    if (typeof obj === 'string') return obj;
+    if (!obj || typeof obj !== 'object') return fallback;
+    return obj[lang] || obj.ru || obj.en || obj.ua || fallback;
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-black pb-24">
       <div 
@@ -96,7 +103,7 @@ export default function CatalogPage() {
                 </svg>
             </button>
             <h1 className="text-2xl font-bold dark:text-white">
-                {selectedCategory ? (currentCategoryDef?.[lang] || currentCategoryDef?.ru) : "Каталог"}
+                {selectedCategory ? getSafeLabel(currentCategoryDef, currentCategoryDef?.ru) : "Каталог"}
             </h1>
         </div>
         
@@ -161,7 +168,7 @@ export default function CatalogPage() {
                         onClick={() => handleSubcategoryClick(selectedCategory, sub.value)}
                         className="flex justify-between items-center p-4 bg-white dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-98 transition-all"
                     >
-                        <span className="font-medium text-gray-900 dark:text-gray-100">{sub.label[lang] || sub.label.ru}</span>
+                        <span className="font-medium text-gray-900 dark:text-gray-100">{getSafeLabel(sub.label, sub.label?.ru)}</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400">
                              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
@@ -188,7 +195,7 @@ export default function CatalogPage() {
                         <div className="flex items-center gap-4">
                             <span className="text-2xl">{cat.icon}</span>
                             <span className="font-bold text-lg text-gray-900 dark:text-gray-100 text-left leading-tight break-words">
-                                {cat[lang] || cat.ru}
+                                {getSafeLabel(cat, cat.ru)}
                             </span>
                         </div>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-gray-400 flex-shrink-0">
