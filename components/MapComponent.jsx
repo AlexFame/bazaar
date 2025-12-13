@@ -14,7 +14,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-function LocateControl() {
+function LocateControl({ onLocationFound }) {
     const map = useMap();
     const [loading, setLoading] = useState(false);
 
@@ -34,8 +34,7 @@ function LocateControl() {
                 const { latitude, longitude } = position.coords;
                 map.flyTo([latitude, longitude], 13);
                 setLoading(false);
-                // Optional: Show a marker or popup?
-                // For now just flying there is enough visual feedback
+                if (onLocationFound) onLocationFound({ lat: latitude, lng: longitude });
             },
             (error) => {
                 console.error("Geolocation error:", error);
@@ -57,7 +56,7 @@ function LocateControl() {
             {
                 enableHighAccuracy: true,
                 timeout: 10000,
-                maximumAge: 0 // Force fresh location
+                maximumAge: 0 
             }
         );
     };
@@ -70,6 +69,7 @@ function LocateControl() {
                     className="bg-white w-10 h-10 flex items-center justify-center cursor-pointer hover:bg-gray-100 text-black font-bold text-lg rounded shadow-md transition-colors"
                     title="Где я?"
                     disabled={loading}
+                    type="button" 
                 >
                     {loading ? (
                         <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
@@ -83,9 +83,15 @@ function LocateControl() {
 }
 
 export default function MapComponent({ listings, userLocation }) {
+  // Internal state for user location found via the map button
+  const [internalUserPos, setInternalUserPos] = useState(null);
+
+  // Effective user location: either passed prop or internally found
+  const effectiveUserLoc = internalUserPos || userLocation;
+
   // Default center (Tbilisi) if no user location
-  const center = userLocation ? [userLocation.lat, userLocation.lng] : [41.7151, 44.8271];
-  const zoom = userLocation ? 13 : 11;
+  const center = effectiveUserLoc ? [effectiveUserLoc.lat, effectiveUserLoc.lng] : [41.7151, 44.8271];
+  const zoom = effectiveUserLoc ? 13 : 11;
 
   const validListings = listings.filter(l => {
       const lat = parseFloat(l.latitude);
@@ -100,50 +106,64 @@ export default function MapComponent({ listings, userLocation }) {
   };
 
   return (
-    <div className="h-[60vh] w-full rounded-xl overflow-hidden shadow-sm border border-gray-200 relative z-0 mt-4">
-      <MapContainer center={center} zoom={zoom} style={{ height: "100%", width: "100%" }}>
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-        />
-        
-        <LocateControl />
+    <div className="w-full h-full relative rounded-xl overflow-hidden shadow-sm border border-gray-100 z-0">
+        <MapContainer 
+            center={center} 
+            zoom={zoom} 
+            style={{ height: "100%", width: "100%" }}
+            className="z-0"
+        >
+            <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            
+            <LocateControl onLocationFound={setInternalUserPos} />
 
-        {validListings.map(listing => (
-          <Marker key={listing.id} position={[parseFloat(listing.latitude), parseFloat(listing.longitude)]}>
-            <Popup>
-               <div className="w-[160px] flex flex-col gap-1">
-                   {listing.image_path && (
-                       <img 
-                        src={getImageUrl(listing.image_path)} 
-                        alt={listing.title}
-                        className="w-full h-24 object-cover rounded-md"
-                       />
-                   )}
-                   <div className="font-bold text-sm mt-1">{listing.price} €</div>
-                   <div className="text-xs text-gray-600 truncate">{listing.title}</div>
-                   <Link href={`/listing/${listing.id}`} className="block mt-2 text-center bg-black text-white text-xs py-1.5 rounded hover:bg-gray-800 no-underline">
-                       Открыть
-                   </Link>
-               </div>
-            </Popup>
-          </Marker>
-        ))}
-        
-        {/* Marker for user location */}
-        {userLocation && (
-            <Marker position={[userLocation.lat, userLocation.lng]} icon={new L.Icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            })}>
-                <Popup>Вы здесь</Popup>
-            </Marker>
-        )}
-      </MapContainer>
+            {/* User Location Marker */}
+            {effectiveUserLoc && (
+                <Marker 
+                    position={[effectiveUserLoc.lat, effectiveUserLoc.lng]}
+                    icon={L.divIcon({
+                        className: 'user-location-marker',
+                        html: '<div style="background-color: #3b82f6; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);"></div>',
+                        iconSize: [12, 12],
+                        iconAnchor: [6, 6]
+                    })}
+                >
+                    <Popup>
+                        <div className="text-center">
+                            <span className="font-bold">Вы здесь</span>
+                        </div>
+                    </Popup>
+                </Marker>
+            )}
+
+            {validListings.map(listing => (
+                <Marker 
+                    key={listing.id} 
+                    position={[parseFloat(listing.latitude), parseFloat(listing.longitude)]}
+                >
+                    <Popup>
+                        <div className="min-w-[150px]">
+                            {getImageUrl(listing.main_image_path) && (
+                                <div className="w-full h-24 relative mb-2 rounded overflow-hidden">
+                                     <img 
+                                        src={getImageUrl(listing.main_image_path)} 
+                                        alt={listing.title}
+                                        className="w-full h-full object-cover"
+                                     />
+                                </div>
+                            )}
+                            <Link href={`/listing/${listing.id}`} className="font-bold hover:underline block mb-1 text-sm">
+                                {listing.title}
+                            </Link>
+                            <p className="text-sm font-semibold">{listing.price} €</p>
+                        </div>
+                    </Popup>
+                </Marker>
+            ))}
+        </MapContainer>
     </div>
   );
 }

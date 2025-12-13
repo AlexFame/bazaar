@@ -165,6 +165,24 @@ export default function ProfilePageClient({ profileId }) {
             </div>
         </div>
 
+        {/* Actions for Owner */}
+        {currentUserProfile?.id === profileId && (
+            <div className="flex gap-2 mb-6">
+                <Link 
+                    href="/saved-searches"
+                    className="flex-1 py-2 bg-gray-100 text-black text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-2 hover:bg-gray-200 transition"
+                >
+                    🔍 {t("subscribed_search") || "Подписки"}
+                </Link>
+                <Link
+                    href="/settings" 
+                    className="flex-1 py-2 bg-gray-100 text-black text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-2 hover:bg-gray-200 transition"
+                >
+                    ⚙️ {t("settings_title") || "Настройки"}
+                </Link>
+            </div>
+        )}
+
         {/* Tabs */}
         <div className="flex mt-6 border-b border-gray-200">
             <button 
