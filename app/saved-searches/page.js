@@ -5,7 +5,35 @@ import { getTelegramUser } from "@/lib/telegram";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { useLang } from "@/lib/i18n-client";
+
+const translations = {
+  ru: {
+    back: "← Назад",
+    title: "Сохраненные поиски",
+    loading: "Загрузка...",
+    empty: "Нет сохраненных поисков.",
+    confirm_delete: "Удалить этот поиск?"
+  },
+  ua: {
+    back: "← Назад",
+    title: "Збережені пошуки",
+    loading: "Завантаження...",
+    empty: "Немає збережених пошуків.",
+    confirm_delete: "Видалити цей пошук?"
+  },
+  en: {
+    back: "← Back",
+    title: "Saved Searches",
+    loading: "Loading...",
+    empty: "No saved searches.",
+    confirm_delete: "Delete this search?"
+  }
+};
+
 export default function SavedSearchesPage() {
+  const { lang } = useLang();
+  const t = translations[lang] || translations.ru;
   const [searches, setSearches] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -40,7 +68,7 @@ export default function SavedSearchesPage() {
   }, []);
 
   async function handleDelete(id) {
-      if(!confirm("Удалить этот поиск?")) return;
+      if(!confirm(t.confirm_delete)) return;
       
       const { error } = await supabase.from("saved_searches").delete().eq("id", id);
       if (!error) {
@@ -52,7 +80,10 @@ export default function SavedSearchesPage() {
       const p = search.query_params;
       const params = new URLSearchParams();
       
-      if (p.searchTerm) params.set("q", p.searchTerm);
+      // Support both new 'query' and legacy/current 'searchTerm'
+      if (p.query) params.set("q", p.query);
+      else if (p.searchTerm) params.set("q", p.searchTerm);
+
       if (p.locationFilter) params.set("location", p.locationFilter);
       if (p.minPrice) params.set("price_min", p.minPrice);
       if (p.maxPrice) params.set("price_max", p.maxPrice);
@@ -77,14 +108,14 @@ export default function SavedSearchesPage() {
   return (
     <div className="max-w-md mx-auto p-4">
       <div className="flex items-center gap-2 mb-4">
-        <Link href="/my" className="text-sm text-gray-500">← Назад</Link>
-        <h1 className="text-xl font-bold">Сохраненные поиски</h1>
+        <Link href="/my" className="text-sm text-gray-500">{t.back}</Link>
+        <h1 className="text-xl font-bold">{t.title}</h1>
       </div>
 
-      {loading && <p>Загрузка...</p>}
+      {loading && <p>{t.loading}</p>}
 
       {!loading && searches.length === 0 && (
-          <p className="text-gray-500 text-center mt-10">Нет сохраненных поисков.</p>
+          <p className="text-gray-500 text-center mt-10">{t.empty}</p>
       )}
 
       <div className="space-y-3">
