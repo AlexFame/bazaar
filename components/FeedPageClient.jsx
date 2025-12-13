@@ -2021,7 +2021,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             <option value="all">{t("allCategories") || "Все категории"}</option>
                             {CATEGORY_DEFS.map(cat => (
                                 <option key={cat.key} value={cat.key}>
-                                    {cat[lang] || cat.ru}
+                                    {getSafeLabel(cat, cat.ru)}
                                 </option>
                             ))}
                         </select>

@@ -58,6 +58,12 @@ export default function CreateListingClient({ onCreated, editId }) {
   
 
   const [isSuccessScreen, setIsSuccessScreen] = useState(false); // Success state
+
+  const getSafeLabel = (obj, fallback) => {
+    if (typeof obj === 'string') return obj;
+    if (!obj || typeof obj !== 'object') return fallback;
+    return obj[lang] || obj.ru || obj.en || obj.ua || fallback;
+  };
   
   // Quality Score
   const [quality, setQuality] = useState({ score: 0, breakdown: [] });
@@ -751,7 +757,7 @@ export default function CreateListingClient({ onCreated, editId }) {
     }
 
 
-    const label = filter.label[lang] || filter.label.ru;
+    const label = getSafeLabel(filter.label, filter.key);
     const value = parameters[filter.key] || "";
 
       // select
@@ -770,7 +776,7 @@ export default function CreateListingClient({ onCreated, editId }) {
                 <option value="">{t("select_option") || "Выбрать"}</option>
                 {filter.options.map((opt) => (
                     <option key={opt.value} value={opt.value}>
-                      {opt.label[lang] || opt.label.ru}
+                      {getSafeLabel(opt.label, opt.value)}
                     </option>
                 ))}
               </select>
@@ -1054,7 +1060,7 @@ export default function CreateListingClient({ onCreated, editId }) {
               >
                 {cat.icon && <span className="mr-1.5">{cat.icon}</span>}
                 {/* БЕРЁМ ТЕКСТ ПРЯМО ИЗ CATEGORY_DEFS */}
-                <span>{cat[lang] || cat.ru}</span>
+                <span>{getSafeLabel(cat, cat.ru)}</span>
               </button>
             ))}
           </div>

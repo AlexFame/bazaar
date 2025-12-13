@@ -41,7 +41,7 @@ export default function CategoryScroll() {
               {cat.icon}
             </span>
           )}
-          <span>{cat[lang] || cat.ru}</span>
+          <span>{typeof (cat[lang] || cat.ru) === 'object' ? (cat[lang]?.ru || cat.ru) : (cat[lang] || cat.ru)}</span>
         </button>
       );
   };
