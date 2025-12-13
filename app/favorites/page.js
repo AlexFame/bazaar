@@ -119,7 +119,7 @@ export default function FavoritesPage() {
   return (
     <div 
       className="w-full flex justify-center mt-3"
-      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+      style={{ paddingTop: 'calc(env(safe-area-inset-top) + 40px)' }}
     >
       <div className="w-full max-w-[520px] px-3">
         <div className="mb-3">

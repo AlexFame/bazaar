@@ -86,7 +86,7 @@ export default function CatalogPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black pb-24">
       <div 
-        style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)' }}
+        style={{ paddingTop: 'calc(env(safe-area-inset-top) + 40px)' }}
         className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 pb-4 border-b border-gray-100 dark:border-white/10"
       >
         <div className="flex items-center gap-3 mb-4">
