@@ -1939,17 +1939,28 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             const isMax = k.endsWith('_max');
                             const key = k.replace('_min','').replace('_max','');
                             
+                            // Helper to safely get label string
+                            const getSafeLabel = (obj, fallback) => {
+                                if (!obj) return fallback;
+                                if (typeof obj === 'string') return obj;
+                                if (typeof obj === 'object') {
+                                    return obj[lang] || obj.ru || obj.en || fallback;
+                                }
+                                return fallback;
+                            };
+
                             // Find filter definition
                             const def = categoryFiltersDef.find(f => f.key === key);
+                            
                             // Correctly resolve filter label
-                            const label = def?.label ? (def.label[lang] || def.label.ru) : key;
+                            const label = def ? getSafeLabel(def.label, key) : key;
                             
                             // Resolve value label if it's a select option
                             let displayValue = v;
                             if (def && def.options) {
-                                const option = def.options.find(o => o.value == v); // loose equality for numbers/strings
+                                const option = def.options.find(o => o.value == v); 
                                 if (option) {
-                                    displayValue = option.label[lang] || option.label.ru;
+                                    displayValue = getSafeLabel(option.label, v);
                                 }
                             }
 
