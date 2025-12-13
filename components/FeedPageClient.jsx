@@ -1656,6 +1656,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
             body: JSON.stringify({
                 query: searchTerm,
                 initData: window.Telegram?.WebApp?.initData || "",
+                tgUserId: tgUser?.id, // Fallback for auth if initData missing
                 category: categoryFilter !== 'all' ? categoryFilter : null,
                 filters: {
                     priceMin: filters.priceMin,
@@ -2004,6 +2005,35 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 {/* Global Filters Section */}
                 <div className="space-y-6">
 
+                    {/* Type Filter (Buy/Sell) - MOVED TO TOP */}
+                    {!['jobs', 'business', 'help_offer'].includes(categoryFilter) && (
+                     <div className="space-y-2">
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.type || "Type"}</label>
+                        <div className="flex flex-wrap gap-2">
+                            {[
+                                { key: 'exchange', label: txt.typeExchange || "Exchange" },
+                                { key: 'all', label: txt.typeAny || "All" },
+                                { key: 'sell', label: txt.typeSell || "Sell" },
+                                { key: 'buy', label: txt.typeBuy || "Buy" },
+                                { key: 'free', label: txt.typeFree || "Free" },
+                            ].map(opt => (
+                                <button 
+                                    key={opt.key}
+                                    onClick={() => setTypeFilter(opt.key)}
+                                    className={`px-4 py-2 rounded-xl text-sm font-medium border ${
+                                        typeFilter === opt.key
+                                        ? "bg-black text-white border-black" 
+                                        : "bg-white border-gray-200 text-gray-700"
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                        <hr className="border-gray-100 dark:border-white/10 mt-4" />
+                     </div>
+                     )}
+
                     {/* Category Selector (NEW) */}
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.category || "Category"}</label>
@@ -2222,38 +2252,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
                          </div>
                      )}
 
-                     {/* Type Filter (Buy/Sell) - No Services */ }
-                     {/* Type Filter (Buy/Sell) - No Services */ }
-                     {categoryFilter !== 'jobs' && (
-                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.type || "Type"}</label>
-                        <div className="flex flex-wrap gap-2">
-                            {[
-                                { key: 'all', label: txt.typeAny || "All" },
-                                { key: 'sell', label: txt.typeSell || "Sell" },
-                                { key: 'buy', label: txt.typeBuy || "Buy" },
-                                { key: 'free', label: txt.typeFree || "Free" },
-                                { key: 'exchange', label: txt.typeExchange || "Exchange" }
-                            ].map(opt => (
-                                <button 
-                                    key={opt.key}
-                                    onClick={() => setTypeFilter(opt.key)}
-                                    className={`px-4 py-2 rounded-xl text-sm font-medium border ${
-                                        typeFilter === opt.key
-                                        ? "bg-black text-white border-black" 
-                                        : "bg-white border-gray-200 text-gray-700"
-                                    }`}
-                                >
-                                    {opt.label}
-                                </button>
-                            ))}
-                        </div>
-                     </div>
-                     )}
-                     
-                     <hr className="border-gray-100 dark:border-white/10" />
+                     {/* Type Filter MOVED UP */}
 
                     {/* Common Filters */}
+                    {/* Common Filters - Condition */}
+                    {!['jobs', 'business', 'help_offer'].includes(categoryFilter) && (
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.condition}</label>
                         <div className="flex flex-wrap gap-2">
@@ -2272,6 +2275,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             ))}
                         </div>
                     </div>
+                    )}
 
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{t("has_photo") || "Has photo"}</label>

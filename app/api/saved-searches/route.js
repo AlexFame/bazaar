@@ -5,7 +5,7 @@ import { supaAdmin } from '@/lib/supabaseAdmin';
 
 export async function POST(req) {
   try {
-    const { query, initData, ...filters } = await req.json();
+    const { query, initData, tgUserId, ...filters } = await req.json();
     
     // Auth Check (Need robust auth here usually, using header/initData)
     // Assuming client passes initData or we verify user.
@@ -37,6 +37,12 @@ export async function POST(req) {
             const { data } = await supaAdmin().from('profiles').select('id').eq('tg_user_id', tgUser.id).single();
             if (data) profileId = data.id;
         }
+    }
+
+    // Fallback if initData failed or missing but tgUserId is provided (for Dev/Desktop)
+    if (!profileId && tgUserId) {
+         const { data } = await supaAdmin().from('profiles').select('id').eq('tg_user_id', tgUserId).single();
+         if (data) profileId = data.id;
     }
 
     if (!profileId) {
