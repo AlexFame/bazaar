@@ -1978,7 +1978,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
                             return (
                                 <span key={k} className="text-[10px] px-2 py-1 bg-gray-200 dark:bg-white/20 rounded-lg">
-                                    {label}: {isMin ? 'от ' : isMax ? 'до ' : ''}{displayValue}
+                                    {label}: {isMin ? `${t("from_label") || "от"} ` : isMax ? `${t("to_label") || "до"} ` : ''}{displayValue}
                                 </span>
                             )
                         })}
@@ -1993,20 +1993,20 @@ export default function FeedPageClient({ forcedCategory = null }) {
         <div className="fixed inset-0 z-[150] bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom-10 duration-200 h-[100dvh]">
            {/* Modal Header */}
            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
-               <h2 className="text-lg font-bold">{t("filters") || "Фильтры"}</h2>
+               <h2 className="text-lg font-bold">{t("filters") || "Filters"}</h2>
                <button onClick={() => setShowFiltersModal(false)} className="p-2 bg-gray-100 dark:bg-white/10 rounded-full">
                    <XMarkIcon className="w-5 h-5 text-gray-500" />
                </button>
            </div>
 
            {/* Modal Content - Scrollable */}
-           <div className="flex-1 overflow-y-auto p-4">
+           <div className="flex-1 overflow-y-auto px-4 pt-4 pb-32">
                 {/* Global Filters Section */}
                 <div className="space-y-6">
 
                     {/* Category Selector (NEW) */}
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.category || "Категория"}</label>
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.category || "Category"}</label>
                         <select
                             value={categoryFilter}
                             onChange={(e) => {
@@ -2018,7 +2018,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             }}
                             className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900 appearance-none outline-none"
                         >
-                            <option value="all">{t("allCategories") || "Все категории"}</option>
+                            <option value="all">{t("allCategories") || "All categories"}</option>
                             {CATEGORY_DEFS.map(cat => (
                                 <option key={cat.key} value={cat.key}>
                                     {getSafeLabel(cat, cat.ru)}
@@ -2040,7 +2040,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             return (
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                        {t("subcategory") || "Подкатегория"}
+                                        {t("subcategory") || "Subcategory"}
                                     </label>
                                     <select
                                         value={subVal}
@@ -2052,7 +2052,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                         }}
                                         className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900 appearance-none outline-none"
                                     >
-                                        <option value="">{t("allSubcategories") || "Все подкатегории"}</option>
+                                        <option value="">{t("allSubcategories") || "All subcategories"}</option>
                                         {subFilter.options.map(opt => (
                                             <option key={opt.value} value={opt.value}>
                                                 {getSafeLabel(opt.label, opt.value)}
@@ -2072,7 +2072,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.locationPlaceholder}</label>
                         <input
                             type="text"
-                            placeholder="Город, район..."
+                            placeholder={t("locationPlaceholder") || "City, district..."}
                             className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900"
                             value={locationFilter}
                             onChange={(e) => setLocationFilter(e.target.value)}
@@ -2089,7 +2089,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                         : "border-gray-200 dark:border-white/20 text-gray-600 dark:text-gray-400"
                                     }`}
                                 >
-                                    {r === null ? "Вся страна" : `+${r} км`}
+
+                                    {r === null ? (t("whole_country") || "Whole country") : `+${r} km`}
                                 </button>
                             ))}
                          </div>
@@ -2099,7 +2100,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
                      {/* Sort Order */}
                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.sort || "Сортировка"}</label>
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.sort || "Sort"}</label>
                         <select 
                             value={sortFilter}
                             onChange={(e) => setSortFilter(e.target.value)}
@@ -2156,7 +2157,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                             </label>
                                             <div className="flex gap-3">
                                                  <div className="flex-1 relative">
-                                                     <span className="absolute left-3 top-3 text-gray-400 text-[10px] uppercase">От</span>
+                                                     <span className="absolute left-3 top-3 text-gray-400 text-[10px] uppercase">{t("from_label") || "from"}</span>
                                                      <input 
                                                         type="number" 
                                                         className="w-full pl-3 pr-3 pt-5 pb-2 border border-gray-200 dark:border-white/20 rounded-xl text-sm font-medium bg-gray-50 dark:bg-neutral-900"
@@ -2165,7 +2166,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                                      />
                                                  </div>
                                                  <div className="flex-1 relative">
-                                                     <span className="absolute left-3 top-3 text-gray-400 text-[10px] uppercase">До</span>
+                                                     <span className="absolute left-3 top-3 text-gray-400 text-[10px] uppercase">{t("to_label") || "to"}</span>
                                                      <input 
                                                         type="number" 
                                                         className="w-full pl-3 pr-3 pt-5 pb-2 border border-gray-200 dark:border-white/20 rounded-xl text-sm font-medium bg-gray-50 dark:bg-neutral-900"
@@ -2196,7 +2197,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                                         !val ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'
                                                     }`}
                                                 >
-                                                    {t("all") || "Все"}
+                                                    {t("all") || "All"}
                                                 </button>
                                                 {filter.options.map(opt => (
                                                     <button
@@ -2223,14 +2224,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
                      {/* Type Filter (Buy/Sell) - No Services */ }
                      <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.type || "Тип"}</label>
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.type || "Type"}</label>
                         <div className="flex flex-wrap gap-2">
                             {[
-                                { key: 'all', label: txt.typeAny || "Все" },
-                                { key: 'sell', label: txt.typeSell || "Продам" },
-                                { key: 'buy', label: txt.typeBuy || "Куплю" },
-                                { key: 'free', label: txt.typeFree || "Отдам" },
-                                { key: 'exchange', label: txt.typeExchange || "Обмен" }
+                                { key: 'all', label: txt.typeAny || "All" },
+                                { key: 'sell', label: txt.typeSell || "Sell" },
+                                { key: 'buy', label: txt.typeBuy || "Buy" },
+                                { key: 'free', label: txt.typeFree || "Free" },
+                                { key: 'exchange', label: txt.typeExchange || "Exchange" }
                             ].map(opt => (
                                 <button 
                                     key={opt.key}
@@ -2270,9 +2271,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">Наличие фото</label>
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{t("has_photo") || "Has photo"}</label>
                         <div className="flex items-center justify-between p-3 border border-gray-200 rounded-xl">
-                            <span className="text-sm">Только с фото</span>
+                            <span className="text-sm">{t("only_with_photo") || "Only with photo"}</span>
                             <input 
                                 type="checkbox" 
                                 className="w-5 h-5 rounded border-gray-300 text-black focus:ring-black"
@@ -2284,9 +2285,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
                      
                     {/* Delivery Toggle (New) */}
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">Доставка</label>
+                        <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{t("delivery_label") || "Delivery"}</label>
                         <div className="flex items-center justify-between p-3 border border-gray-200 rounded-xl">
-                            <span className="text-sm">Возможна доставка</span>
+                            <span className="text-sm">{t("delivery_possible") || "Delivery available"}</span>
                             <input 
                                 type="checkbox" 
                                 className="w-5 h-5 rounded border-gray-300 text-black focus:ring-black"
@@ -2301,12 +2302,15 @@ export default function FeedPageClient({ forcedCategory = null }) {
            </div>
 
            {/* Modal Footer (Static) */}
-           <div className="shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative">
+           <div 
+                className="shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative"
+                style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+           >
                <button 
                   onClick={handleResetFilters}
                   className="flex-1 py-3.5 bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-xl font-bold text-sm"
                >
-                  Сбросить
+                  {t("reset") || "Reset"}
                </button>
                <button 
                   onClick={() => {
@@ -2341,7 +2345,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                   }}
                   className="flex-[2] py-3.5 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-sm shadow-lg"
                >
-                  Показать объявления
+                  {t("show_listings") || "Show results"}
                </button>
            </div>
         </div>
