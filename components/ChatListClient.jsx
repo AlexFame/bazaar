@@ -98,7 +98,9 @@ export default function ChatListClient() {
           seller_id,
           listing:listings(id, title, image_path, price),
           buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
-          seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url)
+          seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url),
+          deleted_by_buyer,
+          deleted_by_seller
         `)
         .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
         .order("updated_at", { ascending: false });
@@ -157,11 +159,47 @@ export default function ChatListClient() {
 
   }, [router]);
 
-  // Filter conversations
-  const sellingChats = conversations.filter(c => c.seller_id === user?.id);
-  const buyingChats = conversations.filter(c => c.buyer_id === user?.id);
+  // Filter conversations (exclude deleted)
+  const activeConversations = conversations.filter(c => {
+    if (!user) return false;
+    if (c.buyer_id === user.id && c.deleted_by_buyer) return false;
+    if (c.seller_id === user.id && c.deleted_by_seller) return false;
+    return true;
+  });
+
+  const sellingChats = activeConversations.filter(c => c.seller_id === user?.id);
+  const buyingChats = activeConversations.filter(c => c.buyer_id === user?.id);
   
   const displayedChats = activeTab === 'selling' ? sellingChats : buyingChats;
+
+  const handleDeleteChat = async (e, conversationId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!confirm(t("delete_chat") + "?")) return;
+    
+    const conv = conversations.find(c => c.id === conversationId);
+    if (!conv) return;
+
+    const updates = {};
+    if (user.id === conv.buyer_id) updates.deleted_by_buyer = true;
+    else if (user.id === conv.seller_id) updates.deleted_by_seller = true;
+
+    try {
+        const { error } = await supabase
+            .from('conversations')
+            .update(updates)
+            .eq('id', conversationId);
+            
+        if (error) throw error;
+        
+        // Remove from local state
+        setConversations(prev => prev.filter(c => c.id !== conversationId));
+    } catch (e) {
+        console.error("Error deleting chat:", e);
+        alert(t("delete_error") || "Ошибка удаления");
+    }
+  };
 
   const getOtherParticipant = (conv) => {
     if (!user) return null;
@@ -248,8 +286,8 @@ export default function ChatListClient() {
               if (!other) return null;
 
               return (
+                <div key={conv.id} className="relative group">
                 <Link
-                  key={conv.id}
                   href={`/messages/${conv.id}`}
                   className={`flex items-start gap-3 p-3 hover:bg-gray-100 dark:hover:bg-white/5 rounded-2xl transition-colors border-b border-border last:border-0 ${unread > 0 ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
                 >
@@ -302,6 +340,17 @@ export default function ChatListClient() {
                     </div>
                   )}
                 </Link>
+                {/* Delete Button (Visible on Hover/Swipe) */}
+                <button
+                    onClick={(e) => handleDeleteChat(e, conv.id)}
+                    className="absolute top-3 right-3 p-2 bg-white dark:bg-black rounded-full shadow-sm text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    title={t("delete_chat")}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                </button>
+                </div>
               );
             })}
           </div>
