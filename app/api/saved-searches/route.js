@@ -47,8 +47,8 @@ export async function POST(req) {
       .from('saved_searches')
       .insert({
         user_id: profileId,
-        query: query,
-        filters: filters
+        name: query,
+        query_params: { query, ...filters }
       })
       .select()
       .single();
