@@ -13,6 +13,7 @@ import { trackAnalyticsEvent } from "@/lib/analytics";
 
 import { motion } from "framer-motion";
 import { useHaptic } from "@/hooks/useHaptic";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 
 const typeLabels = {
   ru: {
@@ -526,7 +527,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                   className="z-20 absolute top-2 right-2 p-2 bg-red-500/90 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm"
                   title={t("delete") || "Удалить"}
                 >
-                  <TrashIcon className="w-4 h-4" />
+                  <XMarkIcon className="w-4 h-4" />
                 </button>
             )}
 

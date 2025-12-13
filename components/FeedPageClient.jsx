@@ -1470,41 +1470,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           })}
 
         {/* Фото */}
-        {/* Сортировка */}
-        <FilterDropdown
-            id="sort"
-            label={
-                 sortFilter === 'date_desc' ? txt.sortDateDesc :
-                 sortFilter === 'date_asc' ? txt.sortDateAsc :
-                 sortFilter === 'price_asc' ? txt.sortPriceAsc :
-                 sortFilter === 'price_desc' ? txt.sortPriceDesc :
-                 sortFilter === 'distance' ? txt.sortDistance : txt.sort
-            }
-            active={sortFilter !== 'date_desc'}
-        >
-            <div className="flex flex-col">
-                {[
-                    { key: 'date_desc', label: txt.sortDateDesc },
-                    { key: 'date_asc', label: txt.sortDateAsc },
-                    { key: 'price_asc', label: txt.sortPriceAsc },
-                    { key: 'price_desc', label: txt.sortPriceDesc },
-                    { key: 'distance', label: txt.sortDistance },
-                ].map((opt) => (
-                    <button
-                        key={opt.key}
-                        className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${
-                            sortFilter === opt.key ? "bg-gray-100 font-bold" : "hover:bg-gray-50"
-                        }`}
-                        onClick={() => {
-                            setSortFilter(opt.key);
-                            setOpenDropdown(null);
-                        }}
-                    >
-                        {opt.label}
-                    </button>
-                ))}
-            </div>
-        </FilterDropdown>
+
 
         {/* Дата размещения (Date Filter) */}
          <FilterDropdown
