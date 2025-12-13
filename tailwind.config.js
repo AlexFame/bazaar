@@ -36,11 +36,11 @@ module.exports = {
         "brand-purple-dark": "#582DCB",
         "brand-purple-light": "#E6D9FF",
 
-        // Airbnb Style overridden for Neo-Brutalism (Black)
-        "airbnb-red": "#000000",
-        "airbnb-gray": "#F7F5F0", // Cream
-        "airbnb-text": "#000000",
-        "airbnb-text-secondary": "#404040",
+        // Airbnb Style
+        "airbnb-red": "#FF385C",
+        "airbnb-gray": "#F7F7F7",
+        "airbnb-text": "#222222",
+        "airbnb-text-secondary": "#717171",
 
         // Semantic Colors (CSS Variables)
         background: "hsl(var(--background))",
@@ -52,25 +52,11 @@ module.exports = {
         primary: "hsl(var(--primary))",
         "primary-foreground": "hsl(var(--primary-foreground))",
 
-        // Overrides to force consistency
-        rose: {
-            50: '#F7F5F0',
-            100: '#E6E6E6',
-            200: '#CCCCCC',
-            300: '#B3B3B3',
-            400: '#999999',
-            500: '#000000', // Base Brand Color -> Black
-            600: '#000000', // Primary Action -> Black
-            700: '#1A1A1A',
-            800: '#333333',
-            900: '#4D4D4D',
-        },
-
         // Anzo Dark Mode (Kept for reference or specific use)
         "anzo-black": "#000000",
         "anzo-dark": "#0A0A0A",
         "anzo-card": "#121212",
-        "anzo-red": "#FF2E00", // Red-600 -> Orange for dark mode accents
+        "anzo-red": "#DC2626", // Red-600
       },
       boxShadow: {
         'airbnb': '0 6px 16px rgba(0,0,0,0.12)',

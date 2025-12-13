@@ -340,9 +340,9 @@ export default function AppShell({ children }) {
   const shouldHideBottomNav = pathname.startsWith("/create") || isChatConversation;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FF2E00]">
+    <div className="min-h-screen flex flex-col bg-airbnb-gray">
       {/* Main Content - remove bottom padding if nav is hidden */}
-      <main className={`flex-1 w-full max-w-[520px] mx-auto bg-[#FF2E00] min-h-screen relative shadow-2xl ${shouldHideBottomNav ? 'pb-0' : 'pb-20'}`}>
+      <main className={`flex-1 w-full max-w-[520px] mx-auto bg-white min-h-screen relative shadow-2xl ${shouldHideBottomNav ? 'pb-0' : 'pb-20'}`}>
         {children}
       </main>
 
