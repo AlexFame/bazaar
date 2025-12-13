@@ -1967,7 +1967,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
       {/* RENDER MODAL (INLINED) */}
       {showFiltersModal && (
-        <div className="fixed inset-0 z-[150] bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom-10 duration-200">
+        <div className="fixed inset-0 z-[150] bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom-10 duration-200 h-[100dvh]">
            {/* Modal Header */}
            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
                <h2 className="text-lg font-bold">{t("filters") || "Фильтры"}</h2>
@@ -2017,7 +2017,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             return (
                                 <div className="space-y-2">
                                     <label className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                        {subFilter.label[lang] || subFilter.label.ru}
+                                        {t("subcategory") || "Подкатегория"}
                                     </label>
                                     <select
                                         value={subVal}
@@ -2112,6 +2112,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
                      {categoryFilter !== 'all' && (
                          <div className="space-y-6">
                             {categoryFiltersDef.map(filter => {
+                                // SKIP primary filters that are already rendered above as a main selector
+                                if (['subtype', 'industry', 'product_type', 'body_type', 'service_type'].includes(filter.key)) {
+                                    return null;
+                                }
+
                                 const val = dynamicFilters[filter.key];
 
                                 // RANGE INPUTS (From/To)
