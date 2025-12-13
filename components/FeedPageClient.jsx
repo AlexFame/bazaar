@@ -198,6 +198,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
     typeSell: t("typeSell"),
     typeServices: t("typeServices"),
     typeFree: t("typeFree"),
+    typeExchange: t("typeExchange"),
     dateAll: t("dateAll"),
     dateToday: t("dateToday"),
     date3d: t("date3d"),
