@@ -372,7 +372,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             </div>
         )}
         {status === 'reserved' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-yellow-400 text-black text-[10px] font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-yellow-400 text-black text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
                 {t("status_reserved") || "Бронь"}
             </div>
         )}
