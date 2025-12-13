@@ -1677,7 +1677,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
       } catch (e) {
         console.error(e);
-        toast.error("Ошибка при сохранении подписки", { id: toastId });
+        toast.error(e.message || "Ошибка при сохранении подписки", { id: toastId });
       }
   };
 
