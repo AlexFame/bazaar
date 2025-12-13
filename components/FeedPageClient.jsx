@@ -1660,8 +1660,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 tgUserId: tgUser?.id, // Fallback for auth if initData missing
                 category: categoryFilter !== 'all' ? categoryFilter : null,
                 filters: {
-                    priceMin: filters.priceMin,
-                    priceMax: filters.priceMax
+                    priceMin: minPrice,
+                    priceMax: maxPrice
                 }
             })
         });
