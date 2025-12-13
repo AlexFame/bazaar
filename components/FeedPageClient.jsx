@@ -2055,7 +2055,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                         <option value="">{t("allSubcategories") || "Все подкатегории"}</option>
                                         {subFilter.options.map(opt => (
                                             <option key={opt.value} value={opt.value}>
-                                                {opt.label[lang] || opt.label.ru}
+                                                {getSafeLabel(opt.label, opt.value)}
                                             </option>
                                         ))}
                                     </select>
