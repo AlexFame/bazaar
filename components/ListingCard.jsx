@@ -372,7 +372,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             </div>
         )}
         {status === 'reserved' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-yellow-400 text-black text-xs font-extrabold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-indigo-500 text-white text-xs font-extrabold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
                 {t("status_reserved") || "Бронь"}
             </div>
         )}
@@ -522,7 +522,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                 <div className="flex gap-2">
                     <button
                         onClick={(e) => handleStatusChange(e, 'reserved')}
-                        className="flex-1 py-1.5 px-3 bg-yellow-50 text-yellow-700 text-[11px] font-medium rounded-lg hover:bg-yellow-100 transition-colors"
+                        className="flex-1 py-1.5 px-3 bg-indigo-50 text-indigo-700 text-[11px] font-medium rounded-lg hover:bg-indigo-100 transition-colors"
                     >
                         Бронь
                     </button>

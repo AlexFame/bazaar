@@ -22,9 +22,9 @@ export default function ListingActions({ isOwner, onEdit, onDelete, onPromote, o
             
             {/* Status Actions */}
             <div className="grid grid-cols-2 gap-2 mt-3">
-                 <button
+                <button
                     onClick={onMarkReserved}
-                    className="py-2.5 px-3 bg-amber-100 text-amber-800 text-xs font-bold rounded-xl hover:bg-amber-200 transition-colors"
+                    className="py-2.5 px-3 bg-indigo-100 text-indigo-800 text-xs font-bold rounded-xl hover:bg-indigo-200 transition-colors"
                 >
                     {t("mark_reserved") || "Забронировать"}
                 </button>
