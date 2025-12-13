@@ -324,16 +324,10 @@ export default function MyPage() {
                   </div>
                </div>
                
-                <div className="flex flex-col gap-2">
-                 <Link href="/saved-searches" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors border-none">
-                   <MagnifyingGlassIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                   <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.saved_searches || "Подписки"}</span>
-                 </Link>
-                 <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors border-none">
-                    <Cog6ToothIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.settings || "Настройки"}</span>
-                 </Link>
-                </div>
+                <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors border-none">
+                   <Cog6ToothIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                   <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.settings || "Настройки"}</span>
+                </Link>
              </div>
                 </div>
             </FadeIn>
@@ -400,6 +394,15 @@ export default function MyPage() {
             >
                 <span>+</span>
                 {localStrings.createBtn}
+            </Link>
+
+            {/* Saved Searches Button */}
+            <Link 
+                href="/saved-searches"
+                className="w-full py-3 bg-white border border-gray-200 dark:bg-white/10 dark:border-white/10 dark:text-white text-black rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+            >
+                <MagnifyingGlassIcon className="h-5 w-5" />
+                {localStrings.saved_searches || "Подписки"}
             </Link>
         </div>
 
