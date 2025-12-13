@@ -372,7 +372,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             </div>
         )}
         {status === 'reserved' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-yellow-400 text-black text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-yellow-400 text-black text-xs font-extrabold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
                 {t("status_reserved") || "Бронь"}
             </div>
         )}
@@ -503,7 +503,20 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                   📊 {t("btn_stats")}
                 </button>
             )}
-            {showDeleteButton && onDelete && (
+            {onPromote && !isVip && status === 'active' && (
+                <button
+                  onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onPromote();
+                  }}
+                  className="w-full py-1.5 px-3 bg-rose-600 text-white text-[11px] font-bold rounded-lg shadow-sm hover:bg-rose-700 transition-all"
+                >
+                  🚀 {t("btn_promote")} (VIP)
+                </button>
+            )}
+
+            {onDelete && (
                 <button 
                   onClick={(e) => {
                     e.preventDefault();
