@@ -87,7 +87,11 @@ export default function MapComponent({ listings, userLocation }) {
   const center = userLocation ? [userLocation.lat, userLocation.lng] : [41.7151, 44.8271];
   const zoom = userLocation ? 13 : 11;
 
-  const validListings = listings.filter(l => l.latitude && l.longitude);
+  const validListings = listings.filter(l => {
+      const lat = parseFloat(l.latitude);
+      const lng = parseFloat(l.longitude);
+      return !isNaN(lat) && !isNaN(lng);
+  });
 
   const getImageUrl = (path) => {
       if (!path) return null;
@@ -106,7 +110,7 @@ export default function MapComponent({ listings, userLocation }) {
         <LocateControl />
 
         {validListings.map(listing => (
-          <Marker key={listing.id} position={[listing.latitude, listing.longitude]}>
+          <Marker key={listing.id} position={[parseFloat(listing.latitude), parseFloat(listing.longitude)]}>
             <Popup>
                <div className="w-[160px] flex flex-col gap-1">
                    {listing.image_path && (

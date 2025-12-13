@@ -461,6 +461,11 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                     👁️ {listing.views_count}
                 </span>
               )}
+               {listing.status === 'reserved' && (
+                  <span className="absolute top-2 right-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">
+                    {t("status_reserved") || "Бронь"}
+                  </span>
+               )}
             </div>
             
             <h3 className="font-medium text-foreground line-clamp-2 text-sm leading-snug min-h-[2.5em]">
@@ -503,16 +508,17 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                   📊 {t("btn_stats")}
                 </button>
             )}
-            {onPromote && !isVip && status === 'active' && (
-                <button
+            {showDeleteButton && onDelete && (
+                <button 
                   onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onPromote();
+                    e.preventDefault();
+                    if (!confirm(t("confirm_delete") || "Удалить это объявление?")) return;
+                    onDelete(listing.id);
                   }}
-                  className="w-full py-1.5 px-3 bg-rose-600 text-white text-[11px] font-bold rounded-lg shadow-sm hover:bg-rose-700 transition-all"
+                  className="z-20 absolute top-2 right-2 p-2 bg-red-500/90 text-white rounded-full hover:bg-red-600 transition-colors shadow-sm"
+                  title={t("delete") || "Удалить"}
                 >
-                  🚀 {t("btn_promote")} (VIP)
+                  <TrashIcon className="w-4 h-4" />
                 </button>
             )}
 

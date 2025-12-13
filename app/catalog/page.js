@@ -113,7 +113,8 @@ export default function CatalogPage() {
                 { key: 'all', label: t("typeAny") || "Все" },
                 { key: 'sell', label: t("typeSell") || "Продам" },
                 { key: 'buy', label: t("typeBuy") || "Куплю" },
-                // { key: 'free', label: t("typeFree") || "Даром" }
+                { key: 'free', label: t("typeFree") || "Отдам" },
+                { key: 'exchange', label: t("typeExchange") || "Обмен" }
             ].map(opt => (
                 <button
                     key={opt.key}

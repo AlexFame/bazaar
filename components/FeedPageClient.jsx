@@ -2219,7 +2219,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             {[
                                 { key: 'all', label: txt.typeAny || "Все" },
                                 { key: 'sell', label: txt.typeSell || "Продам" },
-                                { key: 'buy', label: txt.typeBuy || "Куплю" }
+                                { key: 'buy', label: txt.typeBuy || "Куплю" },
+                                { key: 'free', label: txt.typeFree || "Отдам" },
+                                { key: 'exchange', label: txt.typeExchange || "Обмен" }
                             ].map(opt => (
                                 <button 
                                     key={opt.key}
@@ -2397,12 +2399,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
         <div className="px-4 mt-8 mb-4 flex justify-between items-center">
           <h2 className="text-lg font-bold text-gray-900 tracking-tight">
             {hasSearchQuery
-              ? "Результаты"
+              ? t("search_results") || "Результаты"
               : categoryFilter !== "all"
-              ? "Объявления"
+              ? (currentCategoryDef ? (currentCategoryDef[lang] || currentCategoryDef.ru) : (t("category") || "Категория"))
               : typeFilter !== "all"
-              ? "Объявления"
-              : "Объявления"}
+              ? (t("listings_header") || "Объявления")
+              : (t("listings_header") || "Объявления")}
           </h2>
 
           {/* View Mode Toggle & Counter */}
