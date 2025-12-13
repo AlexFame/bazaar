@@ -1656,13 +1656,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
             },
             body: JSON.stringify({
                 query: searchTerm,
+                ...currentFilters, // Send ALL filters matching SavedSearchesPage expectations
                 initData: window.Telegram?.WebApp?.initData || "",
-                tgUserId: tgUser?.id, // Fallback for auth if initData missing
-                category: categoryFilter !== 'all' ? categoryFilter : null,
-                filters: {
-                    priceMin: minPrice,
-                    priceMax: maxPrice
-                }
+                tgUserId: tgUser?.id
             })
         });
 
