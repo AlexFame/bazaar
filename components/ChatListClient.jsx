@@ -178,7 +178,10 @@ export default function ChatListClient() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black animate-fade-in pb-20">
-      <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-white/10 px-4 py-3">
+      <div 
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
+        className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-gray-100 dark:border-white/10 px-4 py-3"
+      >
         <div className="flex items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-3">
               <BackButton />

@@ -85,7 +85,10 @@ export default function CatalogPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-black pb-24">
-      <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 py-4 border-b border-gray-100 dark:border-white/10">
+      <div 
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 16px)' }}
+        className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 pb-4 border-b border-gray-100 dark:border-white/10"
+      >
         <div className="flex items-center gap-3 mb-4">
             <button onClick={handleBack} className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 dark:text-white">

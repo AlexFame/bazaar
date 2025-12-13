@@ -113,7 +113,10 @@ export default function ProfilePageClient({ profileId }) {
     : null;
 
   return (
-    <div className="w-full flex justify-center mt-3 mb-20">
+    <div 
+      className="w-full flex justify-center mt-3 mb-20"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="w-full max-w-[520px] px-3">
         
         {/* Header with Back Button */}

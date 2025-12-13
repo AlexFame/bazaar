@@ -117,7 +117,10 @@ export default function FavoritesPage() {
   };
 
   return (
-    <div className="w-full flex justify-center mt-3">
+    <div 
+      className="w-full flex justify-center mt-3"
+      style={{ paddingTop: 'env(safe-area-inset-top)' }}
+    >
       <div className="w-full max-w-[520px] px-3">
         <div className="mb-3">
             <BackButton />

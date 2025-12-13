@@ -1675,7 +1675,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
   return (
     <main className="min-h-screen pb-20 bg-gray-50 dark:bg-black text-foreground transition-colors duration-300">
       {/* Search Header */}
-      <header className={`sticky top-0 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-white/5 ${
+      <header 
+        style={{ paddingTop: 'max(env(safe-area-inset-top), 12px)' }}
+        className={`sticky top-0 bg-white dark:bg-neutral-900 border-b border-gray-100 dark:border-white/5 ${
         isSearchFocused ? "z-[110]" : "z-30"
       } ${
         (headerCompact && !isSearchFocused) ? "py-2 shadow-sm" : "py-3"
