@@ -7,7 +7,8 @@ import {
   TrashIcon,
   PencilSquareIcon,
   HeartIcon,
-  Cog6ToothIcon
+  Cog6ToothIcon,
+  MagnifyingGlassIcon
 } from "@heroicons/react/24/outline";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
@@ -46,7 +47,8 @@ const pageTranslations = {
     stats_btn: "Статистика",
     empty_drafts: "У вас нет черновиков.",
     empty_archive: "Архив пуст.",
-    empty_favorites: "Избранного пока нет."
+    empty_favorites: "Избранного пока нет.",
+    saved_searches: "Подписки"
   },
   ua: {
     my: "Мій профіль", // Changed from "Мої оголошення"
@@ -72,7 +74,8 @@ const pageTranslations = {
     stats_btn: "Статистика",
     empty_drafts: "У вас немає чернеток.",
     empty_archive: "Архів порожній.",
-    empty_favorites: "Ви ще нічого не вподобали."
+    empty_favorites: "Ви ще нічого не вподобали.",
+    saved_searches: "Підписки"
   },
   en: {
     my: "My Profile", // Changed from "My listings"
@@ -100,7 +103,8 @@ const pageTranslations = {
     stats_btn: "Statistics",
     empty_drafts: "You don't have drafts.",
     empty_archive: "Archive is empty.",
-    empty_favorites: "No favorites yet."
+    empty_favorites: "No favorites yet.",
+    saved_searches: "Saved Searches"
   },
 };
 
@@ -320,10 +324,16 @@ export default function MyPage() {
                   </div>
                </div>
                
-                <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors border-none">
-                   <Cog6ToothIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                   <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.settings || "Настройки"}</span>
-                </Link>
+                <div className="flex flex-col gap-2">
+                 <Link href="/saved-searches" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors border-none">
+                   <MagnifyingGlassIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                   <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.saved_searches || "Подписки"}</span>
+                 </Link>
+                 <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors border-none">
+                    <Cog6ToothIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                    <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.settings || "Настройки"}</span>
+                 </Link>
+                </div>
              </div>
                 </div>
             </FadeIn>
