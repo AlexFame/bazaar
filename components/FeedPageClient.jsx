@@ -2137,7 +2137,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                          <div className="space-y-6">
                             {categoryFiltersDef.map(filter => {
                                 // SKIP primary filters that are already rendered above as a main selector
-                                if (['subtype', 'industry', 'product_type', 'body_type', 'service_type'].includes(filter.key)) {
+                                if (['subtype', 'industry', 'product_type', 'body_type', 'service_type', 'condition'].includes(filter.key)) {
                                     return null;
                                 }
 
