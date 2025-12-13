@@ -10,32 +10,28 @@
 /* Делаем фон всего сайта белым */
 @layer base {
   :root {
-    --background: 14 100% 50%; /* #FF2E00 - Vibrant Orange */
-    --foreground: 0 0% 0%; /* Black text */
-    --card: 60 10% 98%; /* #FBFBF9 - Cream/Off-white */
+    --background: 0 0% 100%; /* #ffffff */
+    --foreground: 0 0% 0%; /* #000000 */
+    --card: 0 0% 100%;
     --card-foreground: 0 0% 0%;
-    --border: 0 0% 0%; /* Black borders for brutalism */
-    --input: 60 10% 96%;
-    --primary: 0 0% 0%; /* Black buttons */
-    --primary-foreground: 0 0% 100%; /* White text on buttons */
+    --border: 220 13% 91%; /* gray-200 */
+    --input: 220 13% 91%;
+    --primary: 346 87% 43%; /* rose-600 #e11d48 */
+    --primary-foreground: 0 0% 100%;
     
     --nav-bg: 0 0% 100%;
-    --nav-border: 0 0% 0%;
-    --nav-text: 0 0% 0%;
+    --nav-border: 220 13% 91%;
+    --nav-text: 215 19% 35%; /* gray-500 */
   }
 
-  /* Dark mode - keep as "Midnight" or similar high contrast? 
-     For now, let's make dark mode also bold or revert to standard dark.
-     Let's keep standard dark for safety, but maybe with orange accents.
-  */
   .dark {
     --background: 0 0% 0%; /* #000000 */
     --foreground: 0 0% 100%;
-    --card: 0 0% 10%; 
+    --card: 0 0% 5%; /* Slightly lighter than black #0d0d0d */
     --card-foreground: 0 0% 100%;
-    --border: 0 0% 20%;
+    --border: 0 0% 12%; /* #1a1a1a */
     --input: 240 3.7% 15.9%;
-    --primary: 14 100% 50%; /* Orange buttons in dark mode */
+    --primary: 346 87% 43%;
     --primary-foreground: 0 0% 100%;
     
     --nav-bg: 0 0% 0%;
