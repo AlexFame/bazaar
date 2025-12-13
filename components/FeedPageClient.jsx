@@ -1635,7 +1635,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
   };
 
   const handleSaveSearch = async () => {
-      if (!searchQuery.trim()) {
+      if (!searchTerm?.trim()) {
           toast.error(t("toast_subscribe_query_needed") || "Введите поисковый запрос для подписки");
           return;
         }
