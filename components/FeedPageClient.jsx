@@ -1340,7 +1340,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                              : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
                                      }`}
                                  >
-                                     {opt.label[lang] || opt.label.ru}
+                                     {getSafeLabel(opt.label, opt.value)}
                                  </button>
                              ))}
                          </div>
@@ -1358,7 +1358,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
              // Скрываем condition для определенных категорий (уже скрыт через filter, но на всякий случай)
              if (filter.key === "condition") return null;
             const val = dynamicFilters[filter.key];
-            const label = filter.label[lang] || filter.label.ru;
+            const label = getSafeLabel(filter.label, filter.key);
 
             return (
               <FilterDropdown
@@ -1402,7 +1402,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             setOpenDropdown(null);
                           }}
                         >
-                          {opt.label[lang] || opt.label.ru}
+                          {getSafeLabel(opt.label, opt.value)}
                         </button>
                       ))}
                     </>
