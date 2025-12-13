@@ -66,6 +66,7 @@ export default function AnalyticsPage() {
     messages: 0,
     favorites: 0
   });
+  const [errorMsg, setErrorMsg] = useState(null);
 
   useEffect(() => {
     async function loadData() {
@@ -82,21 +83,24 @@ export default function AnalyticsPage() {
         }
 
         // If not found, try Telegram Auth (via local storage / WebApp)
+        // DEBUG: explicitly convert ID to number if possible
         if (!currentProfileId) {
              const tgUser = getTelegramUser();
              if (tgUser) {
-                  const { data: profile } = await supabase
+                  const { data: profile, error: profileError } = await supabase
                     .from('profiles')
                     .select('id')
                     .eq('tg_user_id', tgUser.id)
                     .single();
                   
                   if (profile) currentProfileId = profile.id;
+                  if (profileError) console.error("Profile fetch error:", profileError);
              }
         }
 
         if (!currentProfileId) {
-          router.push("/login"); // or redirect to main profile
+          setErrorMsg("Не удалось определить пользователя. Попробуйте перезайти.");
+          // router.push("/login"); 
           return;
         }
 
@@ -109,12 +113,13 @@ export default function AnalyticsPage() {
 
         if (listingError || !listingData) {
           console.error("Error loading listing:", listingError);
-          router.push("/my");
+          setErrorMsg("Объявление не найдено или ошибка сети.");
           return;
         }
 
         if (listingData.created_by !== currentProfileId) {
-          router.push("/my"); // Not owner
+             setErrorMsg(`Доступ запрещен. Вы не владелец этого объявления.`);
+          // router.push("/my"); // Not owner
           return;
         }
 
@@ -148,6 +153,7 @@ export default function AnalyticsPage() {
 
       } catch (error) {
         console.error("Error:", error);
+        setErrorMsg("Произошла неизвестная ошибка: " + error.message);
       } finally {
         setLoading(false);
       }
@@ -162,6 +168,16 @@ export default function AnalyticsPage() {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black dark:border-white"></div>
       </div>
     );
+  }
+
+  if (errorMsg) {
+      return (
+          <div className="min-h-screen bg-white dark:bg-black p-6 flex flex-col items-center justify-center text-center">
+              <h1 className="text-xl font-bold text-red-500 mb-2">Ошибка доступа</h1>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">{errorMsg}</p>
+              <BackButton />
+          </div>
+      );
   }
 
   if (!listing) return null;
