@@ -238,6 +238,16 @@ export default function FeedPageClient({ forcedCategory = null }) {
   
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
+  // Helper to safely resolve translation labels
+  const getSafeLabel = (obj, fallback) => {
+    if (!obj) return fallback;
+    if (typeof obj === 'string') return obj;
+    if (typeof obj === 'object') {
+        return obj[lang] || obj.ru || obj.en || fallback;
+    }
+    return fallback;
+  };
+
   // Lock body scroll and hide bottom navigation when search is active
   useEffect(() => {
     const nav = document.getElementById("mobile-bottom-nav");
@@ -2142,7 +2152,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                     return (
                                         <div key={filter.key} className="space-y-2">
                                             <label className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                                {filter.label[lang] || filter.label.ru}
+                                                {getSafeLabel(filter.label, filter.key)}
                                             </label>
                                             <div className="flex gap-3">
                                                  <div className="flex-1 relative">
@@ -2173,7 +2183,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                     return (
                                         <div key={filter.key} className="space-y-2">
                                             <label className="text-sm font-bold text-gray-900 dark:text-gray-100">
-                                                {filter.label[lang] || filter.label.ru}
+                                                {getSafeLabel(filter.label, filter.key)}
                                             </label>
                                             <div className="flex flex-wrap gap-2">
                                                 <button
@@ -2196,7 +2206,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                                             val === opt.value ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'
                                                         }`}
                                                     >
-                                                        {opt.label[lang] || opt.label.ru}
+                                                        {getSafeLabel(opt.label, opt.value)}
                                                     </button>
                                                 ))}
                                             </div>
