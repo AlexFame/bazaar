@@ -2370,7 +2370,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
             {hasSearchQuery
               ? t("search_results") || "Результаты"
               : categoryFilter !== "all"
-              ? (currentCategoryDef ? (currentCategoryDef[lang] || currentCategoryDef.ru) : (t("category") || "Категория"))
+              ? (CATEGORY_DEFS.find(c => c.key === categoryFilter)?.[lang] || CATEGORY_DEFS.find(c => c.key === categoryFilter)?.ru || t("category") || "Категория")
               : typeFilter !== "all"
               ? (t("listings_header") || "Объявления")
               : (t("listings_header") || "Объявления")}
