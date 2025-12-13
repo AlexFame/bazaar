@@ -2292,6 +2292,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     </div>
                      
                     {/* Delivery Toggle (New) */}
+                    {!['jobs', 'translations', 'education', 'free', 'help_offer'].includes(categoryFilter) && (
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{t("delivery_label") || "Delivery"}</label>
                         <div className="flex items-center justify-between p-3 border border-gray-200 rounded-xl">
@@ -2303,7 +2304,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                 onChange={(e) => setDeliveryFilter(e.target.checked ? 'delivery' : 'all')}
                             />
                         </div>
-                     </div>
+                    </div>
+                    )}
 
 
                 </div>
