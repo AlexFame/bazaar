@@ -1995,7 +1995,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     {/* Subcategory Selector (NEW) */}
                     {categoryFilter !== 'all' && (() => {
                         const currentCatDef = CATEGORY_DEFS.find(c => c.key === categoryFilter);
-                        const subFilter = currentCatDef?.filters?.find(f => f.key === 'subtype' || f.key === 'industry' || f.key === 'product_type');
+                        const subFilter = currentCatDef?.filters?.find(f => f.key === 'subtype' || f.key === 'industry' || f.key === 'product_type' || f.key === 'body_type' || f.key === 'service_type');
                         
                         if (subFilter && subFilter.options) {
                             // Determine the key for state (subtype, industry, product_type)
