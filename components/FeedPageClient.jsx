@@ -1990,7 +1990,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
       {/* RENDER MODAL (INLINED) */}
       {showFiltersModal && (
-        <div className="fixed inset-0 z-[150] bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom-10 duration-200 h-[100dvh]">
+        <div className="fixed inset-0 z-40 bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom-10 duration-200 h-[100vh]">
            {/* Modal Header */}
            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
                <h2 className="text-lg font-bold">{t("filters") || "Filters"}</h2>
@@ -2307,7 +2307,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
            {/* Modal Footer (Static) */}
            <div 
                 className="shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative"
-                style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+                style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
            >
                <button 
                   onClick={handleResetFilters}
