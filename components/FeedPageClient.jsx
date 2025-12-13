@@ -2223,6 +2223,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                      )}
 
                      {/* Type Filter (Buy/Sell) - No Services */ }
+                     {/* Type Filter (Buy/Sell) - No Services */ }
+                     {categoryFilter !== 'jobs' && (
                      <div className="space-y-2">
                         <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.type || "Type"}</label>
                         <div className="flex flex-wrap gap-2">
@@ -2247,6 +2249,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             ))}
                         </div>
                      </div>
+                     )}
                      
                      <hr className="border-gray-100 dark:border-white/10" />
 
