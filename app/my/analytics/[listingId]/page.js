@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import BackButton from "@/components/BackButton";
 import Image from "next/image";
+import { getTelegramUser } from "@/lib/telegram";
 
 export default function AnalyticsPage() {
   const { listingId } = useParams();
@@ -71,13 +72,35 @@ export default function AnalyticsPage() {
       if (!listingId) return;
 
       try {
-        // 1. Verify ownership and get listing details
+        // 1. Verify ownership
+        let currentProfileId = null;
+
+        // Try Supabase Auth first
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          router.push("/login");
+        if (user) {
+             currentProfileId = user.id;
+        }
+
+        // If not found, try Telegram Auth (via local storage / WebApp)
+        if (!currentProfileId) {
+             const tgUser = getTelegramUser();
+             if (tgUser) {
+                  const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('tg_user_id', tgUser.id)
+                    .single();
+                  
+                  if (profile) currentProfileId = profile.id;
+             }
+        }
+
+        if (!currentProfileId) {
+          router.push("/login"); // or redirect to main profile
           return;
         }
 
+        // 2. Get Listing
         const { data: listingData, error: listingError } = await supabase
           .from("listings")
           .select("*, listing_images(image_path)")
@@ -90,14 +113,14 @@ export default function AnalyticsPage() {
           return;
         }
 
-        if (listingData.created_by !== user.id) {
+        if (listingData.created_by !== currentProfileId) {
           router.push("/my"); // Not owner
           return;
         }
 
         setListing(listingData);
 
-        // 2. Load daily stats for the last 30 days
+        // 3. Load daily stats for the last 30 days
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -110,7 +133,6 @@ export default function AnalyticsPage() {
 
         if (statsError) {
           console.error("Error loading stats:", statsError);
-          // Don't fail if stats table doesn't exist, just show empty stats
         }
 
         const loadedStats = statsData || [];
@@ -126,7 +148,6 @@ export default function AnalyticsPage() {
 
       } catch (error) {
         console.error("Error:", error);
-        // Don't redirect on error, just show what we have
       } finally {
         setLoading(false);
       }
@@ -183,26 +204,26 @@ export default function AnalyticsPage() {
           {/* Overview Cards */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
-              <div className="text-blue-500 dark:text-blue-400 text-xs font-medium mb-1">Просмотры</div>
+              <div className="text-blue-500 dark:text-blue-400 text-xs font-medium mb-1">{t.views}</div>
               <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{totalStats.views}</div>
             </div>
             <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
-              <div className="text-green-500 dark:text-green-400 text-xs font-medium mb-1">Контакты</div>
+              <div className="text-green-500 dark:text-green-400 text-xs font-medium mb-1">{t.contacts}</div>
               <div className="text-2xl font-bold text-green-700 dark:text-green-300">{totalStats.contacts}</div>
             </div>
             <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
-              <div className="text-purple-500 dark:text-purple-400 text-xs font-medium mb-1">Сообщения</div>
+              <div className="text-purple-500 dark:text-purple-400 text-xs font-medium mb-1">{t.messages}</div>
               <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">{totalStats.messages}</div>
             </div>
             <div className="p-4 bg-pink-50 dark:bg-pink-900/20 rounded-2xl">
-              <div className="text-pink-500 dark:text-pink-400 text-xs font-medium mb-1">В избранном</div>
+              <div className="text-pink-500 dark:text-pink-400 text-xs font-medium mb-1">{t.favorites}</div>
               <div className="text-2xl font-bold text-pink-700 dark:text-pink-300">{totalStats.favorites}</div>
             </div>
           </div>
 
           {/* Views Chart */}
           <div className="bg-white dark:bg-white/5 rounded-2xl p-4 border border-gray-100 dark:border-white/5">
-            <h3 className="text-sm font-bold text-black dark:text-white mb-4">Просмотры за 30 дней</h3>
+            <h3 className="text-sm font-bold text-black dark:text-white mb-4">{t.chartTitle}</h3>
             
             <div className="h-40 flex items-end gap-1">
               {stats.length > 0 ? stats.map((day, i) => {
@@ -221,13 +242,13 @@ export default function AnalyticsPage() {
                 )
               }) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                  Нет данных за этот период
+                  {t.noData}
                 </div>
               )}
             </div>
             <div className="flex justify-between mt-2 text-[10px] text-gray-400">
-              <span>30 дней назад</span>
-              <span>Сегодня</span>
+              <span>{t.daysAgo}</span>
+              <span>{t.today}</span>
             </div>
           </div>
 
@@ -235,10 +256,9 @@ export default function AnalyticsPage() {
           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl flex gap-3">
             <div className="text-2xl">💡</div>
             <div>
-              <h3 className="text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-1">Совет</h3>
+              <h3 className="text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-1">{t.tipTitle}</h3>
               <p className="text-xs text-yellow-700 dark:text-yellow-300">
-                Чтобы получить больше просмотров, попробуйте обновить фотографии или добавить более подробное описание.
-                Также вы можете воспользоваться услугами продвижения.
+                {t.tipText}
               </p>
             </div>
           </div>
