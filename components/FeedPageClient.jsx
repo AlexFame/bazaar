@@ -1933,20 +1933,32 @@ export default function FeedPageClient({ forcedCategory = null }) {
                  {(minPrice || maxPrice || Object.keys(dynamicFilters).length > 0) && (
                      <div className="flex flex-wrap gap-2 mt-3">
                          {minPrice && <span className="text-[10px] px-2 py-1 bg-black text-white rounded-lg">От {minPrice}</span>}
-                         {Object.entries(dynamicFilters).map(([k,v]) => {
-                             if(!v) return null;
-                             const isMin = k.endsWith('_min');
-                             const isMax = k.endsWith('_max');
-                             const key = k.replace('_min','').replace('_max','');
-                             // Find label
-                             const def = categoryFiltersDef.find(f => f.key === key);
-                             const label = def?.label[lang]?.ru || key;
-                             return (
-                                 <span key={k} className="text-[10px] px-2 py-1 bg-gray-200 dark:bg-white/20 rounded-lg">
-                                     {label}: {isMin ? 'от ' : isMax ? 'до ' : ''}{v}
-                                 </span>
-                             )
-                         })}
+                        {Object.entries(dynamicFilters).map(([k,v]) => {
+                            if(!v) return null;
+                            const isMin = k.endsWith('_min');
+                            const isMax = k.endsWith('_max');
+                            const key = k.replace('_min','').replace('_max','');
+                            
+                            // Find filter definition
+                            const def = categoryFiltersDef.find(f => f.key === key);
+                            // Correctly resolve filter label
+                            const label = def?.label ? (def.label[lang] || def.label.ru) : key;
+                            
+                            // Resolve value label if it's a select option
+                            let displayValue = v;
+                            if (def && def.options) {
+                                const option = def.options.find(o => o.value == v); // loose equality for numbers/strings
+                                if (option) {
+                                    displayValue = option.label[lang] || option.label.ru;
+                                }
+                            }
+
+                            return (
+                                <span key={k} className="text-[10px] px-2 py-1 bg-gray-200 dark:bg-white/20 rounded-lg">
+                                    {label}: {isMin ? 'от ' : isMax ? 'до ' : ''}{displayValue}
+                                </span>
+                            )
+                        })}
                          <button onClick={handleResetFilters} className="text-[10px] underline text-gray-500">Сбросить</button>
                      </div>
                  )}
