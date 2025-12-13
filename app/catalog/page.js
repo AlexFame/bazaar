@@ -25,16 +25,25 @@ export default function CatalogPage() {
       setSelectedCategory(catParam || null);
   }, [catParam]);
 
+  // Helper to determine primary sub-filter key
+  const getPrimaryFilterKey = (catKey) => {
+    switch(catKey) {
+        case 'jobs': return 'industry';
+        case 'pets': return 'product_type';
+        case 'business': return 'service_type';
+        case 'auto': return 'body_type';
+        default: return 'subtype';
+    }
+  };
+
   const handleCategoryClick = (key) => {
       // Check if we are selecting a main category with subtypes
       const catDef = CATEGORY_DEFS.find(c => c.key === key);
-      // Determine primary filter key (default 'subtype', overrides for specific categories)
-      const primaryKey = (key === 'jobs') ? 'industry' : (key === 'pets') ? 'product_type' : 'subtype';
+      const primaryKey = getPrimaryFilterKey(key);
       const subFilter = catDef?.filters?.find(f => f.key === primaryKey);
 
       if (!selectedCategory && subFilter && subFilter.options && subFilter.options.length > 0) {
           // Open Subcategory View by updating URL
-          // We use router.push to add to history stack, so Back button works naturally
           router.push(`/catalog?cat=${key}`);
       } else {
           // Navigation to Feed
@@ -49,8 +58,7 @@ export default function CatalogPage() {
       if (typeFilter !== 'all') params.set("type", typeFilter);
       
       if (subKey) {
-        // Determine primary filter key (default 'subtype', overrides for specific categories)
-        const primaryKey = (catKey === 'jobs') ? 'industry' : (catKey === 'pets') ? 'product_type' : 'subtype';
+        const primaryKey = getPrimaryFilterKey(catKey);
         params.set(`dyn_${primaryKey}`, subKey);
       }
       
@@ -59,7 +67,6 @@ export default function CatalogPage() {
 
   const handleBack = () => {
       if (selectedCategory) {
-          // Go back to main catalogue view
           router.push('/catalog');
       } else {
           router.back();
@@ -73,7 +80,7 @@ export default function CatalogPage() {
   });
 
   const currentCategoryDef = selectedCategory ? CATEGORY_DEFS.find(c => c.key === selectedCategory) : null;
-  const primaryKey = (selectedCategory === 'jobs') ? 'industry' : (selectedCategory === 'pets') ? 'product_type' : 'subtype';
+  const primaryKey = selectedCategory ? getPrimaryFilterKey(selectedCategory) : 'subtype';
   const subcategories = currentCategoryDef?.filters?.find(f => f.key === primaryKey)?.options || [];
 
   return (
