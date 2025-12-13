@@ -372,9 +372,8 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             </div>
         )}
         {status === 'reserved' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-gray-600/90 backdrop-blur-md text-white text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/80"></span>
-                {lang === 'en' ? 'Reserved' : 'Забронировано'}
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-yellow-400 text-black text-[10px] font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
+                {t("status_reserved") || "Бронь"}
             </div>
         )}
 
@@ -461,11 +460,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                     👁️ {listing.views_count}
                 </span>
               )}
-               {listing.status === 'reserved' && (
-                  <span className="absolute top-2 right-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">
-                    {t("status_reserved") || "Бронь"}
-                  </span>
-               )}
+
             </div>
             
             <h3 className="font-medium text-foreground line-clamp-2 text-sm leading-snug min-h-[2.5em]">
