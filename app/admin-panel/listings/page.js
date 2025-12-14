@@ -103,7 +103,14 @@ export default function AdminListings() {
                             <div className="h-10 w-10 flex-shrink-0">
                                 <div className="h-10 w-10 rounded-lg bg-gray-200 overflow-hidden relative">
                                     {item.main_image_path ? (
-                                        <Image src={item.main_image_path} alt="" fill className="object-cover" />
+                                        <Image 
+                                            src={item.main_image_path.startsWith('http') 
+                                                ? item.main_image_path 
+                                                : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listings/${item.main_image_path}`} 
+                                            alt="" 
+                                            fill 
+                                            className="object-cover" 
+                                        />
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center text-xs text-gray-500">
                                             No Img
