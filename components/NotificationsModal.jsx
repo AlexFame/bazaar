@@ -52,9 +52,17 @@ export default function NotificationsModal({ isOpen, onClose }) {
       // Mark as read if not already
       if (!notification.is_read) {
           try {
-              await supabase.from("notifications").update({ is_read: true }).eq("id", notification.id);
+              // Use API to mark as read
+              await fetch('/api/notifications', {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ id: notification.id })
+              });
+              
               // Update local state
               setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n));
+              
+              // Also update Supabase cache/realtime triggers might handle it, but local update is instant
           } catch (e) {
               console.error("Error marking read:", e);
           }

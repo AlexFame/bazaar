@@ -571,7 +571,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
               onClick={handleDelete}
               className="w-full py-1.5 px-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[11px] font-medium rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
             >
-              Удалить
+              {t("delete") || "Удалить"}
             </button>
           </div>
         )}

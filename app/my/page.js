@@ -22,6 +22,7 @@ import { getTelegramUser } from "@/lib/telegram";
 import BackButton from "@/components/BackButton";
 import PremiumServicesModal from "@/components/PremiumServicesModal";
 import FadeIn from "@/components/FadeIn";
+import NotificationsModal from "@/components/NotificationsModal"; // Added import
 
 const pageTranslations = {
   ru: {
@@ -146,6 +147,55 @@ export default function MyPage() {
       // Sync admin state
       if (isAdmin !== cachedAdmin) setCachedAdmin(isAdmin);
   }, [isAdmin]);
+
+  // Notifications Logic
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifCount, setNotifCount] = useState(0);
+
+  useEffect(() => {
+    let channel;
+    async function initNotif() {
+       const { data: { user } } = await supabase.auth.getUser();
+       // Fallback for TG user managed in loadListings but let's try safely here
+       let uid = user?.id;
+       if (!uid) {
+           const tgu = getUserId(); // ensure we use the same helper
+           if (tgu) {
+               const { data: p } = await supabase.from('profiles').select('id').eq('tg_user_id', tgu).single();
+               uid = p?.id;
+           }
+       }
+       
+       if (uid) {
+           const refreshCount = async () => {
+                const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('is_read', false);
+                setNotifCount(count || 0);
+           };
+           refreshCount();
+
+           channel = supabase
+            .channel('realtime:profile_notifications')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${uid}`
+                },
+                () => {
+                    refreshCount();
+                }
+            )
+            .subscribe();
+       }
+    }
+    initNotif();
+
+    return () => {
+        if (channel) supabase.removeChannel(channel);
+    };
+  }, []);
 
   const loadListings = async (force = false) => {
     // If we have data and tab hasn't changed (and not forced), skip fetch
@@ -301,33 +351,52 @@ export default function MyPage() {
             <FadeIn>
                 <div className="bg-white dark:bg-transparent rounded-2xl shadow-sm p-3 mb-3 text-[13px]">
             {/* Header / User Info */}
-            <div className={`p-4 dark:p-0 rounded-3xl bg-white dark:bg-transparent shadow-sm dark:shadow-none mb-6 flex items-center justify-between border-none`}>
-               <div className="flex items-center space-x-4">
-                  <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl relative overflow-hidden">
-                     {tgUser.photo_url ? (
-                        <img 
-                           src={tgUser.photo_url} 
-                           alt="Avatar" 
-                           className="h-full w-full object-cover"
-                        />
-                     ) : (
-                        <span>{tgUser.first_name?.[0]}{tgUser.last_name?.[0]}</span>
-                     )}
-                  </div>
-                  <div>
-                     <h1 className={`text-xl font-bold text-gray-900 dark:text-foreground`}>
-                        {tgUser.first_name} {tgUser.last_name || ""}
-                     </h1>
-                     <p className={`text-sm text-gray-500`}>
-                        {tgUser.username ? `@${tgUser.username}` : t('no_username')}
-                     </p>
-                  </div>
+            <div className={`p-4 dark:p-0 rounded-3xl bg-white dark:bg-transparent shadow-sm dark:shadow-none mb-6 flex flex-col gap-4 border-none`}>
+               <div className="flex items-center justify-between w-full"> 
+                   {/* User Avatar & Name */}
+                   <div className="flex items-center space-x-4">
+                      <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl relative overflow-hidden">
+                         {tgUser.photo_url ? (
+                            <img 
+                               src={tgUser.photo_url} 
+                               alt="Avatar" 
+                               className="h-full w-full object-cover"
+                            />
+                         ) : (
+                            <span>{tgUser.first_name?.[0]}{tgUser.last_name?.[0]}</span>
+                         )}
+                      </div>
+                      <div>
+                         <h1 className={`text-xl font-bold text-gray-900 dark:text-foreground`}>
+                            {tgUser.first_name} {tgUser.last_name || ""}
+                         </h1>
+                         <p className={`text-sm text-gray-500`}>
+                            {tgUser.username ? `@${tgUser.username}` : t('no_username')}
+                         </p>
+                      </div>
+                   </div>
+
+                   {/* Notification Bell (Right aligned) */}
+                   <button 
+                     onClick={() => setIsNotifOpen(true)}
+                     className="relative p-2 rounded-full hover:bg-gray-100 dark:hover:bg-white/10 active:scale-95 transition-all self-start mt-1 mr-[-8px]"
+                   >
+                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 dark:text-white text-black">
+                         <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                       </svg>
+                       {notifCount > 0 && (
+                         <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-black animate-pulse"></span>
+                       )}
+                   </button>
                </div>
                
-                <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors border-none">
-                   <Cog6ToothIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                   <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.settings || "Настройки"}</span>
-                </Link>
+               {/* Settings Button (Moved below or next to it? Logic kept from original but wrapped in new layout) */}
+                <div className="flex justify-start"> {/* Or justify-end if previous design intended it */}
+                    <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors border-none w-full justify-center">
+                       <Cog6ToothIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+                       <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.settings || "Настройки"}</span>
+                    </Link>
+                </div>
              </div>
                 </div>
             </FadeIn>
@@ -457,6 +526,12 @@ export default function MyPage() {
         listingId={selectedListingId}
         isOpen={isPremiumModalOpen}
         onClose={() => setIsPremiumModalOpen(false)}
+      />
+
+      {/* Notifications Modal */}
+      <NotificationsModal 
+        isOpen={isNotifOpen} 
+        onClose={() => setIsNotifOpen(false)} 
       />
     </div>
   );
