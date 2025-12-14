@@ -379,13 +379,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
      }
   }, [JSON.stringify(currentFilters)]); // Depend on stable stringified filters
 
-  // Fetch map data when switching to map view
-  useEffect(() => {
-    if (viewMode === "map" && mapListings.length === 0) {
-        fetchMapListings();
-    }
-  }, [viewMode]);
-
 
 
   // Общие фильтры
