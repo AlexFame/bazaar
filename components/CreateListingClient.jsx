@@ -462,20 +462,12 @@ export default function CreateListingClient({ onCreated, editId }) {
           return;
       }
 
-      if (validation.missing.length > 0) {
-          console.warn("Validation missing:", validation.missing);
-          // Use hardcoded Russian or t() if available, but for safety revert to simple string if t() access is tricky here without verifying scope
-          // Accessing t() is fine as it's likely in scope.
-          alert(t("alert_fill_required") || "Заполните обязательные поля (Заголовок, Цена)");
-          setIsSubmitting(false);
+      const priceValue = Number(price);
+      if (isNaN(priceValue) || priceValue < 0 || priceValue > 100000000) {
+          alert(t("alert_price_invalid") || "Цена указана некорректно.");
           return;
       }
 
-      if (priceNum < 0 || priceNum > 1000000) {
-          alert(t("alert_price_invalid") || "Цена указана некорректно.");
-          setIsSubmitting(false);
-          return;
-      }
       for (const img of images) {
           if (img.type === 'existing') continue;
           if (!checkImage(img.file)) {
