@@ -73,82 +73,62 @@ export default function AnalyticsPage() {
       if (!listingId) return;
 
       try {
-        // 1. Verify ownership
-        let currentProfileId = null;
-
-        // Try Supabase Auth first
+        // 1. Verify Authentication (Standard)
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-             currentProfileId = user.id;
+        if (!user) {
+            // For Analytics, we really need a session for the RPC to work with auth.uid()
+            // If user is not logged in via Supabase, RLS/RPC might fail if it relies on auth.uid()
+            // The RPC uses `auth.uid()`.
+            // So we need to ensure we are logged in.
+            // If we are getting "Access Denied", implies we ARE logged in but ID mismatch OR not logged in.
+            
+            // Try to rely on the generic fetch if RPC fails?
+            // No, let's try RPC first.
         }
 
-        // If not found, try Telegram Auth (via local storage / WebApp)
-        // DEBUG: explicitly convert ID to number if possible
-        if (!currentProfileId) {
-             const tgUser = getTelegramUser();
-             if (tgUser) {
-                  const { data: profile, error: profileError } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('tg_user_id', tgUser.id)
-                    .single();
-                  
-                  if (profile) currentProfileId = profile.id;
-                  if (profileError) console.error("Profile fetch error:", profileError);
-             }
+        // 2. Fetch via RPC
+        const { data, error } = await supabase
+          .rpc('get_listing_analytics', { target_listing_id: listingId });
+
+        if (error) {
+            console.error("RPC Error:", error);
+            // Fallback? Or just report error.
+            // If RPC is missing, error.code will be distinctive.
+            // But let's assume the user applies the migration.
+            
+            // If error is "Access denied", show it.
+            if (error.message.includes("Access denied")) {
+                 setErrorMsg("Доступ запрещен. Вы не владелец этого объявления.");
+            } else if (error.message.includes("Not authenticated")) {
+                 setErrorMsg("Пожалуйста, войдите в систему.");
+            } else {
+                 setErrorMsg("Ошибка загрузки данных: " + error.message);
+            }
+            return;
         }
 
-        if (!currentProfileId) {
-          setErrorMsg("Не удалось определить пользователя. Попробуйте перезайти.");
-          // router.push("/login"); 
-          return;
+        if (!data || data.length === 0) {
+             setErrorMsg("Объявление не найдено.");
+             return;
         }
 
-        // 2. Get Listing
-        const { data: listingData, error: listingError } = await supabase
-          .from("listings")
-          .select("*, listing_images(image_path)")
-          .eq("id", listingId)
-          .single();
+        const row = data[0];
+        
+        // Fetch listing details for preview (Title, Image) - simpler query
+        const { data: listingData } = await supabase
+            .from('listings')
+            .select('title, price, main_image_path')
+            .eq('id', listingId)
+            .single();
 
-        if (listingError || !listingData) {
-          console.error("Error loading listing:", listingError);
-          setErrorMsg("Объявление не найдено или ошибка сети.");
-          return;
-        }
+        setListing(listingData || { title: 'Объявление', price: 0 });
 
-        if (listingData.created_by !== currentProfileId) {
-             setErrorMsg(`Доступ запрещен. Вы не владелец этого объявления.`);
-          // router.push("/my"); // Not owner
-          return;
-        }
-
-        setListing(listingData);
-
-        // 3. Load daily stats for the last 30 days
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-        const { data: statsData, error: statsError } = await supabase
-          .from("listing_daily_stats")
-          .select("*")
-          .eq("listing_id", listingId)
-          .gte("date", thirtyDaysAgo.toISOString().split('T')[0])
-          .order("date", { ascending: true });
-
-        if (statsError) {
-          console.error("Error loading stats:", statsError);
-        }
-
-        const loadedStats = statsData || [];
-        setStats(loadedStats);
-
-        // Calculate totals
+        setStats(row.daily_stats || []);
         setTotalStats({
-            views: listingData.views_count || 0,
-            contacts: loadedStats.reduce((sum, d) => sum + (d.contact_clicks || 0), 0),
-            messages: loadedStats.reduce((sum, d) => sum + (d.message_clicks || 0), 0),
-            favorites: loadedStats.reduce((sum, d) => sum + (d.favorite_adds || 0), 0),
+            views: row.views_count,
+            contacts: row.contacts_count,
+            messages: row.messages_count,
+            favorites: row.favorites_count
         });
 
       } catch (error) {

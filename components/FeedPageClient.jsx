@@ -1029,7 +1029,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
       }
 
       if (append) {
-        setListings((prev) => [...prev, ...chunk]);
+        setListings((prev) => {
+            // Filter out duplicates based on ID
+            const existingIds = new Set(prev.map(p => p.id));
+            const uniqueChunk = chunk.filter(item => !existingIds.has(item.id));
+            if (uniqueChunk.length === 0) return prev;
+            return [...prev, ...uniqueChunk];
+        });
       } else {
         setListings(chunk);
       }
