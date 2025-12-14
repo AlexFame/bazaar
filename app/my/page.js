@@ -50,7 +50,8 @@ const pageTranslations = {
     empty_drafts: "У вас нет черновиков.",
     empty_archive: "Архив пуст.",
     empty_favorites: "Избранного пока нет.",
-    saved_searches: "Подписки"
+    saved_searches: "Подписки",
+    reviews_about_you: "Отзывы о вас"
   },
   ua: {
     my: "Мій профіль", // Changed from "Мої оголошення"
@@ -77,7 +78,8 @@ const pageTranslations = {
     empty_drafts: "У вас немає чернеток.",
     empty_archive: "Архів порожній.",
     empty_favorites: "Ви ще нічого не вподобали.",
-    saved_searches: "Підписки"
+    saved_searches: "Підписки",
+    reviews_about_you: "Відгуки про вас"
   },
   en: {
     my: "My Profile", // Changed from "My listings"
@@ -106,7 +108,8 @@ const pageTranslations = {
     empty_drafts: "You don't have drafts.",
     empty_archive: "Archive is empty.",
     empty_favorites: "No favorites yet.",
-    saved_searches: "Saved Searches"
+    saved_searches: "Saved Searches",
+    reviews_about_you: "Reviews about you"
   },
 };
 
@@ -553,6 +556,9 @@ export default function MyPage() {
 
         {!loading && activeTab === 'reviews' && (
             <div>
+                 <h2 className="text-lg font-bold mb-3 px-1 dark:text-white">
+                    {t("reviews_about_you") || "Отзывы о вас"}
+                 </h2>
                  {reviews.length === 0 ? (
                      <div className="text-center py-10 text-gray-400 text-sm bg-white dark:bg-white/5 rounded-2xl">
                          {t("no_reviews") || "Отзывов пока нет"}
