@@ -9,7 +9,7 @@ import { useLang } from "@/lib/i18n-client";
 import { ChatListSkeleton } from "./SkeletonLoader";
 
 import NotificationsModal from "./NotificationsModal";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion"; // Import motion
+import { motion, AnimatePresence, useAnimation } from "framer-motion"; // Import motion
 
 export default function ChatListClient() {
   const router = useRouter();
@@ -173,21 +173,19 @@ export default function ChatListClient() {
   
   const displayedChats = activeTab === 'selling' ? sellingChats : buyingChats;
 
-  /* handleDeleteChat modified to not take event, just ID */
-  const handleDeleteChat = async (conversationId) => {
-    // e.preventDefault(); // Removed event
-    // e.stopPropagation(); 
-    
-    // Using native confirm for now, in a nicer UI we might use a modal or UNDO toast.
-    // Ideally Swipe -> Confirm -> Delete. Or Swipe -> Delete -> Toast Undo.
-    // User asked for "swipe to delete", let's make it intuitive: Swipe Left -> Show Red BG -> Release -> Confirm?
-    // Or Swipe far left -> Auto delete?
+  /* handleDeleteChat modified to accept onCancel callback for reset */
+  const handleDeleteChat = async (conversationId, onCancel) => {
     // Safety first: Confirm.
-
-    if (!confirm(t("delete_chat"))) return;
+    if (!confirm(t("delete_chat"))) {
+        if (onCancel) onCancel(); // Reset swipe
+        return;
+    }
     
     const conv = conversations.find(c => c.id === conversationId);
-    if (!conv) return;
+    if (!conv) {
+        if (onCancel) onCancel();
+        return;
+    }
 
     const updates = {};
     if (user.id === conv.buyer_id) updates.deleted_by_buyer = true;
@@ -206,6 +204,7 @@ export default function ChatListClient() {
     } catch (e) {
         console.error("Error deleting chat:", e);
         alert(t("delete_error") || "Ошибка удаления");
+        if (onCancel) onCancel(); // Reset swipe on error
     }
   };
 
@@ -287,89 +286,16 @@ export default function ChatListClient() {
           </div>
         ) : (
           <div className="flex flex-col gap-2">
-            {displayedChats.map((conv) => {
-              const other = getOtherParticipant(conv);
-              const listing = conv.listing;
-              const unread = unreadCounts[conv.id] || 0;
-              if (!other) return null;
-
-              return (
-                <div key={conv.id} className="relative group overflow-hidden mb-2">
-                    {/* Background Delete Action */}
-                    <div className="absolute inset-0 bg-red-500 rounded-2xl flex items-center justify-end px-6">
-                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-white">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                          </svg>
-                    </div>
-
-                    <motion.div
-                       drag="x"
-                       dragConstraints={{ left: -100, right: 0 }}
-                       dragElastic={0.1}
-                       onDragEnd={(e, { offset, velocity }) => {
-                           if (offset.x < -60) {
-                               handleDeleteChat(conv.id);
-                           }
-                       }}
-                       className="relative bg-white dark:bg-black rounded-2xl z-10"
-                    >
-                    <Link
-                      href={`/messages/${conv.id}`}
-                      className={`flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-2xl transition-colors border-b border-border last:border-0 ${unread > 0 ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
-                    >
-                      {/* Large Avatar */}
-                      <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
-                        {other.avatar_url ? (
-                          <img src={other.avatar_url} alt={other.full_name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl font-bold bg-gray-100 dark:bg-gray-800">
-                            {other.full_name?.[0]?.toUpperCase() || "?"}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0 pt-0.5">
-                        <div className="flex justify-between items-start mb-0.5">
-                          <h3 className={`font-semibold text-[15px] truncate ${unread > 0 ? 'text-black dark:text-white' : 'text-foreground'}`}>
-                            {listing?.title || other.full_name}  {/* Show Listing Title first if possible */}
-                          </h3>
-                          <span className={`text-[11px] ml-2 ${unread > 0 ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-400'}`}>
-                            {(() => {
-                                const d = new Date(conv.updated_at);
-                                if (new Date().toDateString() === d.toDateString()) return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                                return d.toLocaleDateString([], {day: 'numeric', month: 'short'});
-                            })()}
-                          </span>
-                        </div>
-
-                        <p className="text-xs text-gray-500 mb-1 truncate">
-                            {other.full_name}
-                        </p>
-
-                        <div className="flex justify-between items-end">
-                            <p className={`text-[13px] truncate max-w-[85%] ${unread > 0 ? 'font-medium text-foreground' : 'text-gray-500'}`}>
-                                {conv.lastMessage?.sender_id === user.id && <span className="text-gray-400">You: </span>}
-                                {conv.lastMessage?.content || "No messages"}
-                            </p>
-                            {unread > 0 && (
-                                <span className="bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-                                    {unread}
-                                </span>
-                            )}
-                        </div>
-                      </div>
-                      
-                      {/* Listing Image Thumbnail */}
-                      {listing?.image_path && (
-                        <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 ml-1 border border-gray-200">
-                            <img src={getImageUrl(listing.image_path)} className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                    </Link>
-                    </motion.div>
-                </div>
-              );
-            })}
+            {displayedChats.map((conv) => (
+                <ChatItem 
+                    key={conv.id} 
+                    conv={conv} 
+                    user={user} 
+                    unreadCounts={unreadCounts} 
+                    onDelete={handleDeleteChat} 
+                    getImageUrl={getImageUrl}
+                />
+            ))}
           </div>
         )}
       </div>
@@ -377,4 +303,103 @@ export default function ChatListClient() {
       <NotificationsModal isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
     </div>
   );
+}
+
+function ChatItem({ conv, user, unreadCounts, onDelete, getImageUrl }) {
+    const controls = useAnimation();
+    const unread = unreadCounts[conv.id] || 0;
+    const listing = conv.listing;
+
+    // Helper logic extracted from parent
+    const getOtherParticipant = (c) => {
+        if (!user) return null;
+        return c.buyer_id === user.id ? c.seller : c.buyer;
+    };
+    const other = getOtherParticipant(conv);
+    if (!other) return null;
+
+    return (
+        <div className="relative group overflow-hidden mb-2">
+            {/* Background Delete Action */}
+            <div className="absolute inset-0 bg-red-500 rounded-2xl flex items-center justify-end px-6">
+                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-white">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                  </svg>
+            </div>
+
+            <motion.div
+               animate={controls}
+               drag="x"
+               dragConstraints={{ left: -100, right: 0 }}
+               dragElastic={0.1}
+               onDragEnd={(e, { offset }) => {
+                   if (offset.x < -60) {
+                       // Trigger delete with callback to reset if failed/cancelled
+                       onDelete(conv.id, () => {
+                           controls.start({ x: 0 });
+                       });
+                   } else {
+                       // Snap back if threshold not met
+                       controls.start({ x: 0 });
+                   }
+               }}
+               className="relative bg-white dark:bg-black rounded-2xl z-10"
+            >
+            <Link
+              href={`/messages/${conv.id}`}
+              className={`flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-2xl transition-colors border-b border-border last:border-0 ${unread > 0 ? 'bg-blue-50/50 dark:bg-blue-900/20' : ''}`}
+              draggable={false}
+              onDragStart={e => e.preventDefault()}
+            >
+              {/* Large Avatar */}
+              <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
+                {other.avatar_url ? (
+                  <img src={other.avatar_url} alt={other.full_name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl font-bold bg-gray-100 dark:bg-gray-800">
+                    {other.full_name?.[0]?.toUpperCase() || "?"}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0 pt-0.5">
+                <div className="flex justify-between items-start mb-0.5">
+                  <h3 className={`font-semibold text-[15px] truncate ${unread > 0 ? 'text-black dark:text-white' : 'text-foreground'}`}>
+                    {listing?.title || other.full_name} 
+                  </h3>
+                  <span className={`text-[11px] ml-2 ${unread > 0 ? 'text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-400'}`}>
+                    {(() => {
+                        const d = new Date(conv.updated_at);
+                        if (new Date().toDateString() === d.toDateString()) return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        return d.toLocaleDateString([], {day: 'numeric', month: 'short'});
+                    })()}
+                  </span>
+                </div>
+
+                <p className="text-xs text-gray-500 mb-1 truncate">
+                    {other.full_name}
+                </p>
+
+                <div className="flex justify-between items-end">
+                    <p className={`text-[13px] truncate max-w-[85%] ${unread > 0 ? 'font-medium text-foreground' : 'text-gray-500'}`}>
+                        {conv.lastMessage?.sender_id === user.id && <span className="text-gray-400">You: </span>}
+                        {conv.lastMessage?.content || "No messages"}
+                    </p>
+                    {unread > 0 && (
+                        <span className="bg-blue-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                            {unread}
+                        </span>
+                    )}
+                </div>
+              </div>
+              
+              {listing?.image_path && (
+                <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 ml-1 border border-gray-200">
+                    <img src={getImageUrl(listing.image_path)} className="w-full h-full object-cover" />
+                </div>
+              )}
+            </Link>
+            </motion.div>
+        </div>
+    );
 }

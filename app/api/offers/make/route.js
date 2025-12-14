@@ -112,7 +112,7 @@ export async function POST(req) {
         await supa.from("notifications").insert({
             user_id: sellerId,
             type: "offer",
-            title: title,
+            title: 'notification_new_offer',
             message: message,
             data: { offer_id: offerData.id, listing_id: listing_id }
         });

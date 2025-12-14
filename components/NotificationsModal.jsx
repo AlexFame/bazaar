@@ -145,7 +145,7 @@ export default function NotificationsModal({ isOpen, onClose }) {
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {loading && <div className="text-center py-4 text-gray-500">Загрузка...</div>}
+            {loading && <div className="text-center py-4 text-gray-500">{t("loading") || "Загрузка..."}</div>}
             
             {!loading && notifications.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
