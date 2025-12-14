@@ -606,7 +606,6 @@ export default function CreateListingClient({ onCreated, editId }) {
       // 3. Call API
       const tg = window.Telegram?.WebApp;
       const initData = tg?.initData;
-      if (!initData) throw new Error("InitData missing");
 
       const payload = {
         title,
@@ -635,16 +634,57 @@ export default function CreateListingClient({ onCreated, editId }) {
         images: finalImages,
         main_image_path: finalImages.length > 0 ? finalImages[0].path : null
       };
+      
+      if (initData) {
+           // Secure API Call (Telegram)
+           const res = await fetch('/api/listings/save', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...payload, initData })
+           });
 
-      const res = await fetch('/api/listings/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...payload, initData })
-      });
+           if (!res.ok) {
+              const dat = await res.json();
+              throw new Error(dat.error || "Save failed");
+           }
+      } else {
+           // Fallback: Supabase Client (Web/Dev)
+           // RLS must allow this (Policy: "Users can update their own listings")
+           const { data: { user } } = await supabase.auth.getUser();
+           if (!user) throw new Error("not_logged_in"); // "Not logged in"
 
-      if (!res.ok) {
-          const dat = await res.json();
-          throw new Error(dat.error || "Save failed");
+           // 1. Save Listing
+           // Note: payload.id is set. created_by must match auth.uid()
+           const dbPayload = { ...payload, created_by: user.id };
+           delete dbPayload.images; // Relations handled separately
+           delete dbPayload.main_image_path; // Computed
+           
+           // Restore main_image_path logic if needed, but DB trigger/logic might handle it?
+           // Actually API helper does: "main_image_path: finalImages.length > 0 ? finalImages[0].path : null"
+           // We should pass it to DB too.
+           dbPayload.main_image_path = payload.main_image_path;
+           
+           const { error: saveError } = await supabase
+               .from('listings')
+               .upsert(dbPayload);
+           
+           if (saveError) throw saveError;
+
+           // 2. Sync Images
+           const listingId = payload.id;
+           // Delete existing (if RLS allows)
+           await supabase.from('listing_images').delete().eq('listing_id', listingId);
+           
+           // Insert new
+           if (payload.images && payload.images.length > 0) {
+               const imageRows = payload.images.map(img => ({
+                    listing_id: listingId,
+                    file_path: img.path,
+                    position: img.position
+               }));
+               const { error: imgError } = await supabase.from('listing_images').insert(imageRows);
+               if (imgError) console.error("Image sync error:", imgError);
+           }
       }
 
       // Error checking was done inside the blocks above.
