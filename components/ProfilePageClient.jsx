@@ -10,7 +10,10 @@ import Image from "next/image";
 import Link from "next/link";
 import BackButton from "@/components/BackButton";
 
+import { useLang } from "@/lib/i18n-client";
+
 export default function ProfilePageClient({ profileId }) {
+  const { t } = useLang();
   const [profile, setProfile] = useState(null);
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
   const [listings, setListings] = useState([]);
