@@ -22,7 +22,8 @@ import { getTelegramUser } from "@/lib/telegram";
 import BackButton from "@/components/BackButton";
 import PremiumServicesModal from "@/components/PremiumServicesModal";
 import FadeIn from "@/components/FadeIn";
-import NotificationsModal from "@/components/NotificationsModal"; // Added import
+import NotificationsModal from "@/components/NotificationsModal";
+import ReviewList from "@/components/ReviewList"; // Added import
 
 const pageTranslations = {
   ru: {
@@ -137,6 +138,7 @@ export default function MyPage() {
   const [tgUser, setTgUser] = useState(null);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState(null);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
       // Sync local tab state with cache when it changes
@@ -240,7 +242,7 @@ export default function MyPage() {
 
       let data, error;
 
-      if (activeTab === 'favorites') {
+        if (activeTab === 'favorites') {
         // Fetch favorites
         const { data: favoritesData, error: favoritesError } = await supabase
           .from("favorites")
@@ -256,6 +258,23 @@ export default function MyPage() {
             .map(f => f.listings)
             .filter(l => l !== null); // Filter out any nulls if listing was deleted
         }
+      } else if (activeTab === 'reviews') {
+          // Fetch Reviews
+          const { data: reviewsData, error: reviewsError } = await supabase
+              .from("reviews")
+              .select("*, reviewer:profiles!reviewer_id(full_name, tg_username, avatar_url)")
+              .eq("target_id", profileData.id)
+              .order("created_at", { ascending: false });
+          
+          if (reviewsError) error = reviewsError;
+          else {
+              // Store reviews in a separate state or reuse 'listings' state?
+              // 'listings' expects listing objects. 'reviews' are different.
+              // Let's create a separate state for reviews to avoid confusion, OR use 'listings' as generic 'data' holder.
+              // Using generic holder is risky for rendering.
+              // Better: setReviews(reviewsData)
+              setReviews(reviewsData || []);
+          }
       } else {
         // Fetch own listings
         let query = supabase
@@ -443,6 +462,13 @@ export default function MyPage() {
                 {t("tab_favorites")}
                 {activeTab === "favorites" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black dark:bg-white rounded-t-full"></div>}
             </button>
+            <button 
+                onClick={() => setActiveTab("reviews")}
+                className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "reviews" ? "text-black dark:text-white" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
+            >
+                {t("reviews_count") || "Отзывы"}
+                {activeTab === "reviews" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black dark:bg-white rounded-t-full"></div>}
+            </button>
         </div>
 
         {/* Action Buttons */}
@@ -500,7 +526,7 @@ export default function MyPage() {
            </div>
         )}
 
-        {!loading && listings.length > 0 && (
+        {!loading && activeTab !== 'reviews' && listings.length > 0 && (
           <FadeIn delay={0.2}>
             <div className="bg-white dark:bg-transparent rounded-2xl shadow-sm p-3">
               <div className="grid grid-cols-2 gap-2">
@@ -518,6 +544,18 @@ export default function MyPage() {
               </div>
             </div>
           </FadeIn>
+        )}
+
+        {!loading && activeTab === 'reviews' && (
+            <div>
+                 {reviews.length === 0 ? (
+                     <div className="text-center py-10 text-gray-400 text-sm bg-white dark:bg-white/5 rounded-2xl">
+                         {t("no_reviews") || "Отзывов пока нет"}
+                     </div>
+                 ) : (
+                     <ReviewList reviews={reviews} />
+                 )}
+            </div>
         )}
       </div>
 

@@ -12,7 +12,10 @@ import BackButton from "@/components/BackButton";
 
 import { useLang } from "@/lib/i18n-client";
 
+import { useRouter } from "next/navigation";
+
 export default function ProfilePageClient({ profileId }) {
+  const router = useRouter();
   const { t } = useLang();
   const [profile, setProfile] = useState(null);
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
@@ -83,6 +86,12 @@ export default function ProfilePageClient({ profileId }) {
   useEffect(() => {
     loadData();
   }, [profileId]);
+
+  useEffect(() => {
+     if (currentUserProfile && profileId && currentUserProfile.id === profileId) {
+         router.replace("/my?tab=active");
+     }
+  }, [currentUserProfile, profileId, router]);
 
   if (loading) {
       return (
@@ -171,23 +180,7 @@ export default function ProfilePageClient({ profileId }) {
             </div>
         </div>
 
-        {/* Actions for Owner */}
-        {currentUserProfile?.id === profileId && (
-            <div className="flex gap-2 mb-6">
-                <Link 
-                    href="/saved-searches"
-                    className="flex-1 py-2 bg-gray-100 dark:bg-neutral-800 text-black dark:text-white text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-neutral-700 transition"
-                >
-                    🔍 {t("my_subscriptions") || "Мои подписки"}
-                </Link>
-                <Link
-                    href="/profile/settings" 
-                    className="flex-1 py-2 bg-gray-100 dark:bg-neutral-800 text-black dark:text-white text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-neutral-700 transition"
-                >
-                    ⚙️ {t("settings_title") || "Настройки"}
-                </Link>
-            </div>
-        )}
+
 
         {/* Tabs */}
         <div className="flex mt-6 border-b border-gray-200">
