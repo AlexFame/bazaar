@@ -1,6 +1,6 @@
 {
-  "name": "Bazaar",
-  "short_name": "Bazaar",
+  "name": "MINT",
+  "short_name": "MINT",
   "description": "Покупайте и продавайте товары, находите услуги и общайтесь с продавцами в вашем городе.",
   "start_url": "/",
   "display": "standalone",

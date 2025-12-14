@@ -379,6 +379,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
      }
   }, [JSON.stringify(currentFilters)]); // Depend on stable stringified filters
 
+  // Fetch map data when switching to map view
+  useEffect(() => {
+    if (viewMode === "map" && mapListings.length === 0) {
+        fetchMapListings();
+    }
+  }, [viewMode]);
+
 
 
   // Общие фильтры
@@ -2501,10 +2508,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
               )}
             </div>
           ) : viewMode === "map" ? (
-            <MapComponent
-              listings={mapListings}
-              userLocation={userLocation}
-            />
+            <div className="h-[75vh] w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 relative z-0">
+                 <MapComponent
+                    listings={mapListings}
+                    userLocation={userLocation}
+                  />
+            </div>
           ) : (
             <>
               {/* Список объявлений */}
