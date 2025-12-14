@@ -519,7 +519,7 @@ export default function MyPage() {
               </div>
         )}
 
-        {!loading && listings.length === 0 && (
+        {!loading && activeTab !== 'reviews' && listings.length === 0 && (
            <div className="bg-white dark:bg-white/5 rounded-2xl shadow-sm p-3 text-xs text-black/80 dark:text-white/80 text-center py-8">
              <p className="text-gray-500 text-sm mb-2">
                {activeTab === 'active' ? localStrings.empty : 
