@@ -1,6 +1,7 @@
 "use client";
 
 import { useLang } from "@/lib/i18n-client";
+import Image from "next/image";
 
 export default function ReviewList({ reviews }) {
   const { t } = useLang();

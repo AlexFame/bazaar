@@ -297,13 +297,18 @@ export default function MyPage() {
       }
 
       if (error) {
-        console.error("Error loading listings:", error);
+        console.error("Error loading listings/reviews:", error);
+        // Temporary debugging alert
+        // alert(`Error: ${error.message || JSON.stringify(error)}`); 
+        // Better: set error state to show in UI
         setListings([]);
+        // If it was reviews error, distinct handling?
       } else {
         setListings(data || []);
       }
     } catch (e) {
       console.error("Error loading listings:", e);
+      alert(`Error loading data: ${e.message}`); // Show alert to user
       setListings([]);
     } finally {
       setLoading(false);
