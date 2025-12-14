@@ -176,13 +176,13 @@ export default function ProfilePageClient({ profileId }) {
             <div className="flex gap-2 mb-6">
                 <Link 
                     href="/saved-searches"
-                    className="flex-1 py-2 bg-gray-100 text-black text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-2 hover:bg-gray-200 transition"
+                    className="flex-1 py-2 bg-gray-100 dark:bg-neutral-800 text-black dark:text-white text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-neutral-700 transition"
                 >
-                    🔍 {t("subscribed_search") || "Подписки"}
+                    🔍 {t("my_subscriptions") || "Мои подписки"}
                 </Link>
                 <Link
-                    href="/settings" 
-                    className="flex-1 py-2 bg-gray-100 text-black text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-2 hover:bg-gray-200 transition"
+                    href="/profile/settings" 
+                    className="flex-1 py-2 bg-gray-100 dark:bg-neutral-800 text-black dark:text-white text-xs font-semibold rounded-xl text-center flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-neutral-700 transition"
                 >
                     ⚙️ {t("settings_title") || "Настройки"}
                 </Link>
