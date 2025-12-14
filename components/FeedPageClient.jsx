@@ -359,6 +359,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           
           if (isFiltersChanged) {
               setListings([]); // Clear to show skeleton
+              setMapLoaded(false); // Reset map loaded state so it fetches fresh on switch
               setLoading(true);
               setPage(0); // Reset pagination
               setHasMore(true);
@@ -663,6 +664,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
   }
 
   const [mapListings, setMapListings] = useState([]);
+  const [mapLoaded, setMapLoaded] = useState(false); // To prevent infinite loops if no results
+
+  // Fetch map data when switching to map view
+  useEffect(() => {
+    if (viewMode === "map" && !mapLoaded) {
+        fetchMapListings();
+    }
+  }, [viewMode, mapLoaded]);
 
   async function fetchMapListings() {
     setLoading(true);
@@ -747,6 +756,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       if (error) throw error;
 
       setMapListings(data || []);
+      setMapLoaded(true); // Mark as loaded
     } catch (err) {
       console.error("Error fetching map listings:", err);
     } finally {
