@@ -5,7 +5,10 @@ import { supabase } from "@/lib/supabaseClient";
 import { getTelegramUser } from "@/lib/telegram";
 import { validateComment } from "@/lib/moderation";
 
+import { useLang } from "@/lib/i18n-client";
+
 export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
+  const { t } = useLang();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -15,7 +18,7 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
     
     const tgUser = getTelegramUser();
     if (!tgUser) {
-      alert("Пожалуйста, войдите через Telegram, чтобы оставить отзыв.");
+      alert(t("login_review") || "Пожалуйста, войдите через Telegram, чтобы оставить отзыв.");
       return;
     }
 
@@ -29,13 +32,13 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
         .single();
 
       if (!reviewerProfile) {
-        alert("Профиль не найден. Пожалуйста, создайте профиль.");
+        alert(t("profile_not_found") || "Профиль не найден. Пожалуйста, создайте профиль.");
         return;
       }
 
       // Prevent self-review
       if (reviewerProfile.id === targetUserId) {
-        alert("Вы не можете оставить отзыв самому себе.");
+        alert("Вы не можете оставить отзыв самому себе."); // TODO: Add key if needed
         return;
       }
 
@@ -60,12 +63,13 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
       
       // Notify the target user (seller)
       try {
+          const message = `⭐ ${t("notification_new_review") || "Новый отзыв"}! ${rating}/5: "${comment.trim() ||"..."}"`;
           await fetch("/api/notifications/telegram", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                   recipientId: targetUserId,
-                  message: `⭐ Новый отзыв! Пользователь поставил оценку ${rating}/5: "${comment.trim() || "Без комментария"}"`,
+                  message,
                   type: "review",
                   data: { reviewer_id: reviewerProfile.id }
               })
@@ -74,14 +78,14 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
           console.error("Failed to send review notification:", notifyErr);
       }
 
-      alert("Отзыв успешно добавлен!");
+      alert(t("review_success") || "Отзыв успешно добавлен!");
       setComment("");
       setRating(5);
       
       if (onReviewSubmitted) onReviewSubmitted();
     } catch (err) {
       console.error("Error submitting review:", err);
-      alert("Ошибка при добавлении отзыва.");
+      alert(t("review_error") || "Ошибка при добавлении отзыва.");
     } finally {
       setSubmitting(false);
     }
@@ -89,11 +93,11 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-4">
-      <h3 className="text-sm font-bold mb-3">Оставить отзыв</h3>
+      <h3 className="text-sm font-bold mb-3">{t("leave_review") || "Оставить отзыв"}</h3>
       
       {/* Rating */}
       <div className="mb-3">
-        <label className="text-xs text-gray-600 mb-1 block">Оценка</label>
+        <label className="text-xs text-gray-600 mb-1 block">{t("rating") || "Оценка"}</label>
         <div className="flex gap-1 text-2xl">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -110,13 +114,13 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
 
       {/* Comment */}
       <div className="mb-3">
-        <label className="text-xs text-gray-600 mb-1 block">Комментарий (необязательно)</label>
+        <label className="text-xs text-gray-600 mb-1 block">{t("comment_label") || "Комментарий (необязательно)"}</label>
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"
           rows={3}
-          placeholder="Расскажите о вашем опыте..."
+          placeholder={t("comment_ph") || "Расскажите о вашем опыте..."}
         />
       </div>
 
@@ -125,7 +129,7 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
         disabled={submitting}
         className="w-full bg-black text-white py-2 rounded-lg text-sm font-medium hover:bg-gray-800 disabled:bg-gray-400 transition-colors"
       >
-        {submitting ? "Отправка..." : "Отправить отзыв"}
+        {submitting ? (t("sending") || "Отправка...") : (t("send_review") || "Отправить отзыв")}
       </button>
     </form>
   );

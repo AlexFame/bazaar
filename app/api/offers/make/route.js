@@ -94,18 +94,21 @@ export async function POST(req) {
         // Let's use the explicit locale map based on Buyer's language for now (User's request implies they want everything in UA).
         
         const userLang = tgUser.language_code || 'ru';
-        const isUa = userLang === 'uk';
+        const isUa = userLang === 'uk' || userLang === 'ua';
         const isEn = userLang === 'en';
 
+        // Use translation keys for format?
+        // Ideally we should use the recipient's language, but we only know sender's here easily.
+        // Or we should store standard keys and format on client.
+        // For now, improving the message construction.
+        
         let message = `💸 Новое предложение цены! \n\nПользователь ${buyer.full_name || buyer.tg_username} предложил ${price}€ за "${listing.title}".`;
-        let title = "Новое предложение";
+        let title = "notification_new_offer";
 
         if (isUa) {
              message = `💸 Нова пропозиція ціни! \n\nКористувач ${buyer.full_name || buyer.tg_username} запропонував ${price}€ за "${listing.title}".`;
-             title = "Нова пропозиція";
         } else if (isEn) {
              message = `💸 New offer! \n\nUser ${buyer.full_name || buyer.tg_username} offered ${price}€ for "${listing.title}".`;
-             title = "New offer";
         }
         
         // In-App

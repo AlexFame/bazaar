@@ -1,12 +1,14 @@
 "use client";
 
-import Image from "next/image";
+import { useLang } from "@/lib/i18n-client";
 
 export default function ReviewList({ reviews }) {
+  const { t } = useLang();
+
   if (!reviews || reviews.length === 0) {
     return (
       <div className="text-center py-10 text-gray-400 text-sm">
-        Отзывов пока нет
+        {t("no_reviews") || "Отзывов пока нет"}
       </div>
     );
   }
@@ -33,7 +35,7 @@ export default function ReviewList({ reviews }) {
               </div>
               <div>
                 <div className="text-xs font-bold">
-                  {review.reviewer?.full_name || review.reviewer?.tg_username || "Пользователь"}
+                  {review.reviewer?.full_name || review.reviewer?.tg_username || t("user_default") || "Пользователь"}
                 </div>
                 <div className="text-[10px] text-gray-400">
                   {new Date(review.created_at).toLocaleDateString()}
