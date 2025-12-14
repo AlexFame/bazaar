@@ -1,12 +1,10 @@
 import "../styles/globals.css";
 import Providers from "./providers";
-import AppShell from "@/components/AppShell";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { Toaster } from "@/components/ui/sonner";
 import { Suspense } from "react";
 import Link from "next/link";
 import Script from "next/script";
-import SwipeNavigation from "@/components/SwipeNavigation";
 
 
 export const metadata = {
@@ -80,16 +78,14 @@ export default function RootLayout({ children }) {
       <body className="bg-background text-foreground dark:bg-black overflow-x-hidden relative overscroll-none">
         <ErrorBoundary>
           <Providers>
-
-            <div className="telegram-container">
               <Suspense fallback={null}>
-                <SwipeNavigation />
+                 {/* SwipeNavigation removed from here, moved to (main) */}
               </Suspense>
-              <Suspense fallback={null}>
-                <AppShell>{children}</AppShell>
-              </Suspense>
+              
+              {/* No container here, allowing full width for admin */}
+              {children}
+              
               <Toaster />
-            </div>
           </Providers>
         </ErrorBoundary>
       </body>
