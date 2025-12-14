@@ -95,58 +95,54 @@ export default function BottomNavigation() {
   const [notifCount, setNotifCount] = useState(0);
 
   useEffect(() => {
-      let channel;
+     let channel;
+     async function init() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if(!user) return;
 
-      async function init() {
-          const { data: { user } } = await supabase.auth.getUser();
-          
-          if (user) {
-              // Initial load
-              const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false);
-              setNotifCount(count || 0);
+        // Count unread MESSAGES where receiver is me (so sender != me) AND is_read = false
+        // RLS for messages allows viewing messages in my conversations
+        // We really want to count unique CONVERSATIONS with unread messages, or total messages? behavior varies.
+        // User asked "Nad Chats tak i visit". Usually means unread chats.
+        // Let's count unread messages.
+        
+        const fetchUnread = async () => {
+             const { count } = await supabase
+                .from('messages')
+                .select('id', { count: 'exact', head: true })
+                .eq('is_read', false)
+                .neq('sender_id', user.id); // Incoming messages
+             setNotifCount(count || 0);
+        };
+        fetchUnread();
 
-              // Subscribe
-              channel = supabase
-                .channel('realtime:notifications')
-                .on(
-                  'postgres_changes',
-                  {
-                    event: 'INSERT',
+        // Subscribe to messages table
+        // We need to listen to INSERT (new msg) and UPDATE (read status changed)
+        // Since we can't filter by "neq sender_id" in realtime filter easily (supports simple eqs),
+        // we might get events for our own messages, but we can filter in callback.
+        // Also RLS might filter events for us.
+        channel = supabase
+            .channel('realtime:bottom_nav_messages')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
                     schema: 'public',
-                    table: 'notifications',
-                    filter: `user_id=eq.${user.id}`
-                  },
-                  (payload) => {
-                     if (!payload.new.is_read) {
-                         setNotifCount(prev => prev + 1);
-                     }
-                  }
-                )
-                .on(
-                  'postgres_changes',
-                  {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'notifications',
-                    filter: `user_id=eq.${user.id}`
-                  },
-                  () => {
-                     // Reload count on update (e.g. read status change)
-                     supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false)
-                       .then(({ count }) => setNotifCount(count || 0));
-                  }
-                )
-                .subscribe((status) => {
-                    console.log(`[Realtime] Notifications subscription status: ${status}`, { userId: user.id });
-                });
-          }
-      }
-
-      init();
-
-      return () => {
-          if (channel) supabase.removeChannel(channel);
-      };
+                    table: 'messages'
+                    // We can't filter effectively by receiver here because messages don't have receiver_id (conversations do).
+                    // But RLS ensures we only receive events for OUR conversations.
+                },
+                () => {
+                    // Just refresh the count on any change in messages we see
+                    fetchUnread(); 
+                }
+            )
+            .subscribe();
+     }
+     init();
+     return () => {
+         if (channel) supabase.removeChannel(channel);
+     };
   }, []);
 
   // Handle keyboard/input focus to hide nav

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 
-export default function NotificationsModal({ isOpen, onClose }) {
+export default function NotificationsModal({ isOpen, onClose, onUpdate }) {
   const { t } = useLang();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +67,8 @@ export default function NotificationsModal({ isOpen, onClose }) {
               console.error("Error marking read:", e);
           }
       }
+
+      if (onUpdate) onUpdate();
 
       onClose(); // Close modal
 

@@ -532,6 +532,26 @@ export default function MyPage() {
       <NotificationsModal 
         isOpen={isNotifOpen} 
         onClose={() => setIsNotifOpen(false)} 
+        onUpdate={() => {
+            // Refresh count immediately
+            const initNotif = async () => {
+               const { data: { user } } = await supabase.auth.getUser();
+               // Fallback logic
+               let uid = user?.id;
+               if (!uid) {
+                   const tgu = getUserId();
+                   if (tgu) {
+                       const { data: p } = await supabase.from('profiles').select('id').eq('tg_user_id', tgu).single();
+                       uid = p?.id;
+                   }
+               }
+               if (uid) {
+                   const { count } = await supabase.from('notifications').select('id', { count: 'exact', head: true }).eq('user_id', uid).eq('is_read', false);
+                   setNotifCount(count || 0);
+               }
+            };
+            initNotif();
+        }}
       />
     </div>
   );
