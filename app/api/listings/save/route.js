@@ -48,6 +48,12 @@ export async function POST(req) {
     const userId = profile.id;
 
     // 2. Handle Operation
+    // Strip 'images' and other non-DB fields
+    const { images: _img, id: _id, created_by: _cb, created_at: _ca, ...listingData } = payload;
+    
+    // Ensure 'main_image_path' is preserved if present
+    // It should be in payload from client
+
     if (payload.id) {
         // Check if listing exists
         const { data: existing } = await supa.from('listings').select('created_by').eq('id', payload.id).maybeSingle();
@@ -59,22 +65,19 @@ export async function POST(req) {
                  return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
              }
              
-             // Strip immutable or protected fields
-             const { id: _, created_by: __, created_at: ___, ...updateData } = payload;
-             
-             const { error } = await supa.from('listings').update(updateData).eq('id', payload.id);
+             const { error } = await supa.from('listings').update(listingData).eq('id', payload.id);
              if (error) throw error;
         } else {
              // INSERT New (with specific ID)
-             payload.created_by = userId;
-             const { error } = await supa.from('listings').insert(payload);
+             // Manually add created_by and id
+             const insertData = { ...listingData, created_by: userId, id: payload.id };
+             const { error } = await supa.from('listings').insert(insertData);
              if (error) throw error;
         }
     } else {
-        // INSERT
-        // Force created_by to be the authenticated user
-        payload.created_by = userId;
-        const { error } = await supa.from('listings').insert(payload);
+        // INSERT (no ID provided)
+        const insertData = { ...listingData, created_by: userId };
+        const { error } = await supa.from('listings').insert(insertData);
         if (error) throw error;
     }
 
