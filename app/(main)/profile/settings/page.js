@@ -88,7 +88,7 @@ export default function SettingsPage() {
   return (
     <div className="pb-24 max-w-md mx-auto bg-white dark:bg-black min-h-screen">
       <div className="flex items-center p-4 border-b border-gray-100 dark:border-gray-800 sticky top-0 bg-white/80 dark:bg-black/80 backdrop-blur-md z-10">
-        <Link href="/profile" className="mr-4">
+        <Link href="/my" className="mr-4">
           <ChevronLeftIcon className="h-6 w-6" />
         </Link>
         <h1 className="text-xl font-bold">{t("settings_title")}</h1>

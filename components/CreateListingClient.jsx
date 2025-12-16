@@ -442,23 +442,23 @@ export default function CreateListingClient({ onCreated, editId }) {
 
       // Basic validation
       if (!title.trim() || !price.trim()) {
-        alert("Заполните обязательные поля (Заголовок, Цена)");
+        alert(t("alert_fill_required") || "Заполните обязательные поля (Заголовок, Цена)");
         return;
       }
 
       // Content moderation
       if (!checkContent(title) || !checkContent(description)) {
-        alert("Ваше объявление содержит запрещенные слова.");
+        alert(t("alert_forbidden_content") || "Ваше объявление содержит запрещенные слова.");
         return;
       }
 
       if (hasEmoji(title)) {
-        alert("В заголовке нельзя использовать эмодзи.");
+        alert(t("alert_no_emoji") || "В заголовке нельзя использовать эмодзи.");
         return;
       }
 
       if (!validateTitle(title)) {
-          alert("Заголовок слишком короткий (минимум 3 символа).");
+          alert(t("alert_title_short") || "Заголовок слишком короткий (минимум 3 символа).");
           return;
       }
 
@@ -477,7 +477,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       }
 
       if (!validateDescription(description)) {
-          alert("Описание слишком короткое (минимум 10 символов).");
+          alert(t("alert_desc_short") || "Описание слишком короткое (минимум 10 символов).");
           return;
       }
 

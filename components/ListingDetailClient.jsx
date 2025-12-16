@@ -259,7 +259,8 @@ export default function ListingDetailClient({ id }) {
     }
   }, [id]);
 
-  // Auto-translation effect
+  // Auto-translation effect DISABLED
+  /*
   useEffect(() => {
     if (!listing) return;
 
@@ -285,6 +286,7 @@ export default function ListingDetailClient({ id }) {
 
     return () => { isMounted = false; };
   }, [listing, lang]);
+  */
 
   // handleScroll moved to ListingGallery
 
