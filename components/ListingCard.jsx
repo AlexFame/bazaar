@@ -196,6 +196,8 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   const cardRef = useRef(null);
   const [hasTranslated, setHasTranslated] = useState(false);
 
+  /* AUTO-TRANSLATION DISABLED AS PER USER REQUEST */
+  /*
   useEffect(() => {
     if (!listing?.title || hasTranslated) return;
 
@@ -222,6 +224,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
     return () => observer.disconnect();
   }, [listing?.title, lang, hasTranslated]);
+  */
 
   const typeMap = typeLabels[lang] || typeLabels.ru;
   const typeKey = listing?.type || "unknown";
@@ -377,6 +380,14 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             </div>
         )}
 
+        {/* URGENT Badge (Red Fire) - Highest Priority */}
+        {status === 'active' && listing.is_urgent && (
+            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-red-600 text-white text-xs font-extrabold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5 animate-pulse">
+                <span>🔥</span>
+                {t("urgent") || "URGENT"}
+            </div>
+        )}
+
         {/* Micro-labels (New / Popular) - Only if active */}
         {status === 'active' && !isVip && isNew && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#FF385C] text-white text-xs font-bold rounded-xl shadow-airbnb flex items-center gap-1.5">
@@ -465,7 +476,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             </div>
             
             <h3 className="font-medium text-foreground line-clamp-2 text-sm leading-snug min-h-[2.5em]">
-                {translatedTitle || listing.title}
+                {/* translatedTitle || */ listing.title}
             </h3>
           </div>
 

@@ -65,14 +65,19 @@ begin
       )
     )
   order by
-    -- Rank by relevance if searching
+    -- 1. Premium Priority (Pinned)
+    priority_score desc,
+    
+    -- 2. Search Relevance (if searching)
     case when search_query is not null and search_query != '' then
       ts_rank(fts, websearch_to_tsquery('russian', search_query)) +
       ts_rank(fts, websearch_to_tsquery('english', search_query)) +
-      (case when title % search_query then 0.5 else 0 end) -- Bonus for fuzzy match
+      (case when title % search_query then 0.5 else 0 end)
     else
       0
     end desc,
+    
+    -- 3. Created Date (Newest first)
     created_at desc
   limit limit_count
   offset offset_count;

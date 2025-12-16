@@ -209,6 +209,13 @@ export default function SellerCard({ listing, isOwner }) {
                             </div>
                         );
                     })()}
+
+                    {/* Sold Count */}
+                    {profile.sold_count > 0 && (
+                        <div className="text-[10px] text-gray-500 font-medium mt-1 pl-0.5">
+                            🛍️ {t("sold_items") || "Sold"}: <span className="text-black font-bold">{profile.sold_count}</span>
+                        </div>
+                    )}
                 </div>
             </div>
 
