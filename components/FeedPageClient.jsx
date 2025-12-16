@@ -1759,11 +1759,20 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         return;
                       }
 
-                      if (isListening) return; // Prevent double click
+                      // Manual Stop
+                      if (isListening) {
+                          window.voiceRecognition?.stop();
+                          setIsListening(false);
+                          return;
+                      }
 
                       const recognition = new SpeechRecognition();
+                      window.voiceRecognition = recognition; // Store to allow global access for stopping
+                      
                       const langMap = { 'ru': 'ru-RU', 'ua': 'uk-UA', 'en': 'en-US' };
                       recognition.lang = langMap[lang] || 'ru-RU';
+                      recognition.continuous = false; // Stop after one sentence
+                      recognition.interimResults = false;
                       
                       recognition.onstart = () => {
                           setIsListening(true);
@@ -1771,13 +1780,19 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
                       recognition.onend = () => {
                           setIsListening(false);
+                          window.voiceRecognition = null;
+                      };
+
+                      recognition.onerror = (event) => {
+                          console.error("Voice error:", event.error);
+                          setIsListening(false);
+                          window.voiceRecognition = null;
                       };
 
                       recognition.onresult = (event) => {
                           const transcript = event.results[0][0].transcript;
                           setSearchTerm(transcript);
                           
-                          // Auto-submit search
                           if (transcript) {
                               setIsSearchFocused(false);
                               setShowSearchHistory(false);
@@ -1787,12 +1802,23 @@ export default function FeedPageClient({ forcedCategory = null }) {
                           }
                       };
                       
-                      recognition.start();
+                      try {
+                        recognition.start();
+                      } catch (e) {
+                         console.error("Recognition start error", e);
+                         setIsListening(false);
+                      }
                     }}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`w-5 h-5 ${isListening ? "scale-110" : ""}`}>
-                        <path d="M8.25 4.5a3.75 3.75 0 117.5 0v8.25a3.75 3.75 0 11-7.5 0V4.5z" />
-                        <path d="M6 10.5a.75.75 0 01.75.75v1.5a5.25 5.25 0 1010.5 0v-1.5a.75.75 0 011.5 0v1.5a6.751 6.751 0 01-6 6.709v2.291h3a.75.75 0 010 1.5h-7.5a.75.75 0 010-1.5h3v-2.291a6.751 6.751 0 01-6-6.709v-1.5A.75.75 0 016 10.5z" />
+                        {isListening ? (
+                             <path fillRule="evenodd" d="M4.5 7.5a3 3 0 013-3h9a3 3 0 013 3v9a3 3 0 01-3 3h-9a3 3 0 01-3-3v-9z" clipRule="evenodd" />
+                        ) : (
+                             <>
+                                <path d="M8.25 4.5a3.75 3.75 0 117.5 0v8.25a3.75 3.75 0 11-7.5 0V4.5z" />
+                                <path d="M6 10.5a.75.75 0 01.75.75v1.5a5.25 5.25 0 1010.5 0v-1.5a.75.75 0 011.5 0v1.5a6.751 6.751 0 01-6 6.709v2.291h3a.75.75 0 010 1.5h-7.5a.75.75 0 010-1.5h3v-2.291a6.751 6.751 0 01-6-6.709v-1.5A.75.75 0 016 10.5z" />
+                             </>
+                        )}
                     </svg>
                 </button>
               </div>
