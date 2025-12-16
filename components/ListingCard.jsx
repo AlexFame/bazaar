@@ -455,11 +455,12 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
               <span className="text-lg font-bold text-foreground">
                 {listing.price} {listing.currency || "€"}
               </span>
-              {listing.views_count > 0 && (
+              {/* View count removed as per user request (redundant with stats) */}
+              {/* {listing.views_count > 0 && (
                 <span className="text-[10px] text-gray-400 flex items-center gap-1">
                     👁️ {listing.views_count}
                 </span>
-              )}
+              )} */}
 
             </div>
             
