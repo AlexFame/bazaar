@@ -153,7 +153,10 @@ export default function CatalogPage() {
                   setIsListening(false);
                   window.voiceRecognition = null;
               };
-              recognition.onerror = () => {
+              recognition.onerror = (event) => {
+                  if (event.error !== 'no-speech') {
+                    console.error("Voice error:", event.error);
+                  }
                   setIsListening(false);
                   window.voiceRecognition = null;
               };

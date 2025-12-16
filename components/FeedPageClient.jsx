@@ -1767,11 +1767,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
                       }
 
                       const recognition = new SpeechRecognition();
-                      window.voiceRecognition = recognition; // Store to allow global access for stopping
+                      window.voiceRecognition = recognition;
                       
                       const langMap = { 'ru': 'ru-RU', 'ua': 'uk-UA', 'en': 'en-US' };
                       recognition.lang = langMap[lang] || 'ru-RU';
-                      recognition.continuous = false; // Stop after one sentence
+                      recognition.continuous = false;
                       recognition.interimResults = false;
                       
                       recognition.onstart = () => {
@@ -1784,7 +1784,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
                       };
 
                       recognition.onerror = (event) => {
-                          console.error("Voice error:", event.error);
+                          // Ignore 'no-speech' error to avoid spamming user
+                          if (event.error !== 'no-speech') {
+                              console.error("Voice error:", event.error);
+                          }
                           setIsListening(false);
                           window.voiceRecognition = null;
                       };
