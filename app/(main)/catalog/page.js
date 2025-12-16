@@ -13,7 +13,9 @@ export default function CatalogPage() {
   // const { t, lang } = useLang(); // Removed duplicate
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [searchTerm, setSearchTerm] = useState("");
+  const startSearch = searchParams.get("q") || "";
+  const [searchTerm, setSearchTerm] = useState(startSearch);
+  const [isListening, setIsListening] = useState(false);
   // Simple state for Catalog Filters (to be passed via URL)
   const [typeFilter, setTypeFilter] = useState("all"); 
   
@@ -123,7 +125,9 @@ export default function CatalogPage() {
           {/* Voice Search Button */}
           <button
             type="button"
-            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+            className={`absolute inset-y-0 right-0 pr-3 flex items-center transition-colors ${
+                isListening ? "text-red-500 animate-pulse" : "text-gray-400 hover:text-black dark:hover:text-white"
+            }`}
             onClick={() => {
               const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
               if (!SpeechRecognition) {
@@ -131,9 +135,14 @@ export default function CatalogPage() {
                 return;
               }
 
+              if (isListening) return;
+
               const recognition = new SpeechRecognition();
               const langMap = { 'ru': 'ru-RU', 'ua': 'uk-UA', 'en': 'en-US' };
               recognition.lang = langMap[lang] || 'ru-RU';
+              
+              recognition.onstart = () => setIsListening(true);
+              recognition.onend = () => setIsListening(false);
               
               recognition.onresult = (event) => {
                   const transcript = event.results[0][0].transcript;
@@ -143,7 +152,7 @@ export default function CatalogPage() {
               recognition.start();
             }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`w-5 h-5 ${isListening ? "scale-110" : ""}`}>
               <path d="M8.25 4.5a3.75 3.75 0 117.5 0v8.25a3.75 3.75 0 11-7.5 0V4.5z" />
               <path d="M6 10.5a.75.75 0 01.75.75v1.5a5.25 5.25 0 1010.5 0v-1.5a.75.75 0 011.5 0v1.5a6.751 6.751 0 01-6 6.709v2.291h3a.75.75 0 010 1.5h-7.5a.75.75 0 010-1.5h3v-2.291a6.751 6.751 0 01-6-6.709v-1.5A.75.75 0 016 10.5z" />
             </svg>
