@@ -10,6 +10,7 @@ import {
   Cog6ToothIcon,
   MagnifyingGlassIcon
 } from "@heroicons/react/24/outline";
+// Fix imports if needed
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useAtom } from "jotai";

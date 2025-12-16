@@ -1068,7 +1068,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
   };
 
   // Pulsating Feed Logic: автообновление, если нет фильтров и мы на первой странице
+  // Pulsating Feed Logic: автообновление, если нет фильтров и мы на первой странице
   useEffect(() => {
+    // Stop if search is active (even if empty results)
+    if (searchTerm && searchTerm.length > 0) return;
+
     if (
       hasSearchQuery ||
       categoryFilter !== "all" ||
@@ -1078,7 +1082,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
       return;
 
     const interval = setInterval(() => {
-      if (window.scrollY < 200) {
+      // Only refresh if scroll is at top AND we don't have a search term
+      if (window.scrollY < 200 && !searchTerm) {
         console.log("🔄 Pulsating Feed: Refreshing...");
         setIsLive(true);
         fetchPage(0, { append: false }).then(() => {
@@ -1088,7 +1093,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [hasSearchQuery, categoryFilter, typeFilter, page]);
+  }, [hasSearchQuery, categoryFilter, typeFilter, page, searchTerm]);
 
   // первоначальная загрузка и обновление при изменении фильтров
 

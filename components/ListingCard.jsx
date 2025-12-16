@@ -279,7 +279,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
     e.preventDefault();
     e.stopPropagation();
 
-    if (!confirm("Удалить это объявление?")) return;
+    if (!confirm(t("confirm_delete") || "Удалить это объявление?")) return;
 
     try {
       const tg = window.Telegram?.WebApp;
