@@ -1,20 +1,28 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useLang } from '@/lib/i18n-client';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function BeforeAfterSlider({ beforeImage, afterImage }) {
   const { t } = useLang();
   const [zoomedImage, setZoomedImage] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Disable scroll when zoomed
   useEffect(() => {
-    if (zoomedImage) {
+    if (zoomedImage && typeof document !== 'undefined') {
       document.body.style.overflow = 'hidden';
-    } else {
+    } else if (typeof document !== 'undefined') {
       document.body.style.overflow = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => { 
+      if (typeof document !== 'undefined') document.body.style.overflow = ''; 
+    };
   }, [zoomedImage]);
 
   if (!beforeImage || !afterImage) return null;
@@ -61,44 +69,45 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
          </div>
       </div>
 
-      <AnimatePresence mode="wait">
-        {zoomedImage && (
+      <AnimatePresence>
+        {zoomedImage && mounted && createPortal(
           <motion.div
             key="zoom-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[5000] flex items-center justify-center bg-black p-4"
+            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black touch-none px-6"
             onClick={() => setZoomedImage(null)}
           >
             <motion.div
               key={zoomedImage}
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="relative w-full h-full flex items-center justify-center pointer-events-none"
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-full h-full flex flex-col items-center justify-center"
             >
+              <div className="absolute top-[8%] right-0">
+                 <button 
+                  className="text-white text-xs font-medium bg-white/20 px-5 py-2.5 rounded-full backdrop-blur-xl border border-white/30 active:scale-95 transition-transform"
+                  onClick={(e) => {
+                     e.stopPropagation();
+                     setZoomedImage(null);
+                  }}
+                >
+                  {t("close") || "Закрити"}
+                </button>
+              </div>
+
               <img
                 src={zoomedImage}
                 alt="Zoomed"
-                className="max-w-full max-h-[82dvh] object-contain pointer-events-auto rounded-md shadow-2xl"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setZoomedImage(null);
-                }}
+                className="w-full max-h-[75dvh] object-contain rounded-lg shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
               />
-              <button 
-                className="absolute top-8 right-2 text-white text-xs font-medium bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/20 active:bg-white/20 transition-colors pointer-events-auto"
-                onClick={(e) => {
-                   e.stopPropagation();
-                   setZoomedImage(null);
-                }}
-              >
-                {t("close") || "Закрити"}
-              </button>
             </motion.div>
-          </motion.div>
+          </motion.div>,
+          document.body
         )}
       </AnimatePresence>
     </div>
