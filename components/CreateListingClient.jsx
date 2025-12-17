@@ -501,9 +501,8 @@ export default function CreateListingClient({ onCreated, editId }) {
 
       // Add before_after_images processing
       let processedBeforeAfter = null;
-      const isServiceCategory = (categoryKey === 'business' || categoryKey === 'help_offer' || categoryKey === 'auto_service' || categoryKey === 'translations');
       
-      if ((listingType === 'service' || isServiceCategory) && beforeAfterImages.before && beforeAfterImages.after) {
+      if (listingType === 'service' && beforeAfterImages.before && beforeAfterImages.after) {
           // Upload logic for these specific files
           // We'll reuse the same storage bucket 'listing-images' but standard procedure.
           // Since they are single files, we can just upload them here.
@@ -514,7 +513,7 @@ export default function CreateListingClient({ onCreated, editId }) {
                  const uniqueFileName = `${listingId}_ba_${Math.random().toString(36).substring(2)}.${fileExt}`;
                  const { data, error } = await supabase.storage
                     .from('listing-images')
-                    .upload(`${user.id}/${uniqueFileName}`, imgObj.file);
+                    .upload(`listing-${editId || listingId}/${uniqueFileName}`, imgObj.file);
                  
                   if (error) throw error;
                   return data.path; 
@@ -1173,8 +1172,8 @@ export default function CreateListingClient({ onCreated, editId }) {
         )}
 
 
-        {/* До/После (Только для услуг или в категории услуг) */}
-        {(listingType === 'service' || categoryKey === 'business' || categoryKey === 'help_offer' || categoryKey === 'auto_service' || categoryKey === 'translations') && (
+        {/* До/После (Только для услуг) */}
+        {listingType === 'service' && (
             <BeforeAfterUploader value={beforeAfterImages} onChange={setBeforeAfterImages} />
         )}
 
