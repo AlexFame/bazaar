@@ -55,33 +55,34 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
          </div>
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {zoomedImage && (
           <motion.div
+            key="zoom-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4 touch-none"
             onClick={() => setZoomedImage(null)}
           >
             <motion.div
+              key={zoomedImage}
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center"
+              className="relative max-w-full max-h-full flex items-center justify-center"
+              onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={zoomedImage}
                 alt="Zoomed"
-                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+                className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+                onClick={() => setZoomedImage(null)}
               />
               <button 
-                className="absolute -top-12 right-0 text-white text-xs font-medium bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/20 active:bg-white/20 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setZoomedImage(null);
-                }}
+                className="absolute -top-12 right-0 md:-right-12 md:top-0 text-white text-xs font-medium bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/20 active:bg-white/20 transition-colors"
+                onClick={() => setZoomedImage(null)}
               >
                 {t("close") || "Закрити"}
               </button>
