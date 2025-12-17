@@ -6,16 +6,16 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { getTelegramUser, isTelegramEnv, checkTelegramAccountAge, getUserId } from "@/lib/telegram";
-import { geocodeAddress, getUserLocation, reverseGeocode } from "@/lib/geocoding";
 import BackButton from "@/components/BackButton";
 import ListingCard from "./ListingCard"; 
 import { CreateListingSkeleton } from "./SkeletonLoader";
-import { XMarkIcon } from "@heroicons/react/24/solid";
+import ImageUploader from "@/components/listing/ImageUploader";
+import LocationPicker from "@/components/listing/LocationPicker";
+import BeforeAfterUploader from "@/components/listing/BeforeAfterUploader"; // NEW
 
 import { checkContent, checkImage, hasEmoji, validateTitle, validateDescription, validatePrice } from "@/lib/moderation";
 import { calculateQuality } from "@/lib/quality"; // NEW
 
-import imageCompression from 'browser-image-compression';
 import { useHaptic } from "@/hooks/useHaptic";
 import { triggerConfetti } from "@/lib/confetti";
 import { toast } from "sonner";
@@ -53,11 +53,12 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [coordinates, setCoordinates] = useState(null);
   const [geocoding, setGeocoding] = useState(false);
   const [honeypot, setHoneypot] = useState(""); // Bot trap
-  const inTelegram = isTelegramEnv();
-  const closeTimeoutRef = useRef(null);
   const [listingUuid, setListingUuid] = useState("");
+  const [beforeAfterImages, setBeforeAfterImages] = useState({ before: null, after: null }); // NEW
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [lastSavedData, setLastSavedData] = useState(null);
+  const [mounted, setMounted] = useState(false); // NEW: Hydration fix
+  const [inTelegram, setInTelegram] = useState(false); // NEW: State instead of immediate check
 
   const { notificationOccurred, impactOccurred } = useHaptic();
   
@@ -74,6 +75,11 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [quality, setQuality] = useState({ score: 0, breakdown: [] });
   
   useEffect(() => {
+    setMounted(true);
+    setInTelegram(isTelegramEnv());
+  }, []);
+
+  useEffect(() => {
     const q = calculateQuality({
         title: title || "",
         description: description || "",
@@ -88,14 +94,12 @@ export default function CreateListingClient({ onCreated, editId }) {
   useEffect(() => {
     // Generate UUID if creating new
     if (!editId) {
-        // Wait, we should check localStorage first? 
-        // Logic moved to "Restore on mount" below to avoid overwriting UUID if restore happens.
-        // But we need an initial one.
+        // ...
     } else {
         setListingUuid(editId);
     }
     
-    // Helper to gen
+    // Helper to generate UUID
     window.generateNewUuid = () => {
          const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
             const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
@@ -118,7 +122,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         const tg = window.Telegram?.WebApp;
         const initData = tg?.initData;
 
-        // 1. Try Secure API (Priority for Telegram WebApp)
+        // 1. Try Secure API
         if (initData) {
             try {
                 const res = await fetch("/api/listings/get", {
@@ -130,8 +134,6 @@ export default function CreateListingClient({ onCreated, editId }) {
                     const json = await res.json();
                     if (json.listing) {
                         listingData = json.listing;
-                        // Map images from relation if available
-                        // .. handled in API sort, just mapped below
                     }
                 }
             } catch (e) {
@@ -139,71 +141,40 @@ export default function CreateListingClient({ onCreated, editId }) {
             }
         }
 
-        // 2. Fallback to Supabase Client (for Web/Dev)
+        // 2. Fallback to Supabase
         if (!listingData) {
-            const { data, error } = await supabase
+           const { data, error } = await supabase
             .from("listings")
-            .select("*, listing_images(*)")
+            .select("*")
             .eq("id", editId)
-            .single();
-
-            if (error) {
-                console.error("Error loading listing:", error);
-                alert("Ошибка загрузки объявления");
-                return;
-            }
-            listingData = data;
+            .maybeSingle();
+           if (data) listingData = data;
         }
 
         if (listingData) {
-          setTitle(listingData.title);
-          setDescription(listingData.description);
+          setTitle(listingData.title || "");
+          setDescription(listingData.description || "");
           setPrice(listingData.price?.toString() || "");
-          setCategoryKey(listingData.category_key || "kids");
-          setListingType(listingData.type || "buy");
-          setCondition(listingData.condition || "new");
-          setLocation(listingData.location_text || "");
-          if (listingData.latitude && listingData.longitude) {
-            setCoordinates({
-              lat: listingData.latitude,
-              lng: listingData.longitude,
-            });
-          }
+          setLocation(listingData.location || "");
           setContacts(listingData.contacts || "");
-          setParameters(listingData.parameters || {});
-          setIsBarter(listingData.parameters?.barter || false);
-
-          // Load images
-          if (listingData.listing_images && listingData.listing_images.length > 0) {
-            const loaded = listingData.listing_images
-              .sort((a,b) => a.position - b.position)
-              .map((img) => ({
-                id: img.id,
-                url: null, // Will be generated
-                path: img.file_path,
-                type: "existing",
+          setCategoryKey(listingData.category_key || "kids");
+          setListingType(listingData.type || "sell");
+          setParameters(listingData.filters || {});
+          setCondition(listingData.condition || "new");
+          if (listingData.before_after_images) {
+              setBeforeAfterImages(listingData.before_after_images);
+          }
+          
+          // Images...
+          const folder = `listing-${listingData.id}`;
+          const { data: files } = await supabase.storage.from("listing-images").list(folder);
+          if (files && files.length > 0) {
+              const mapped = files.map(f => ({
+                  type: 'existing',
+                  path: `${folder}/${f.name}`,
+                  url: supabase.storage.from('listing-images').getPublicUrl(`${folder}/${f.name}`).data.publicUrl
               }));
-            
-            // Generate public URLs
-            const resolved = loaded.map(img => {
-                const { data } = supabase.storage.from("listing-images").getPublicUrl(img.path);
-                return { ...img, url: data.publicUrl };
-            });
-            setImages(resolved);
-          } else if (listingData.image_path) {
-                // Fallback: if no relation images, use main_image_path (Legacy support)
-                let url = listingData.image_path;
-                // If it's a relative path (not starting with http), get public URL
-                if (!url.startsWith('http')) {
-                    const { data: publicData } = supabase.storage.from('listing-images').getPublicUrl(url);
-                    url = publicData.publicUrl;
-                }
-                setImages([{
-                    type: 'existing',
-                    id: 'legacy-main',
-                    url: url,
-                    path: listingData.image_path
-                }]);
+              setImages(mapped);
           }
         }
       } catch (err) {
@@ -216,69 +187,9 @@ export default function CreateListingClient({ onCreated, editId }) {
     }
 
     loadListing();
-    loadListing();
   }, [editId]);
 
-  // Draft Protection (Auto-Save to LocalStorage)
-  useEffect(() => {
-     if (editId) return; // Don't auto-save edits to storage, only new listings to prevent overwriting
-     
-     const draftKey = 'listing_draft_v1';
-     
-     // Restore on mount
-     const savedCallback = () => {
-         const saved = localStorage.getItem(draftKey);
-         if (saved) {
-             try {
-                 const parsed = JSON.parse(saved);
-                 if (confirm(t("restore_draft") || "Найдено незавершенное объявление. Восстановить?")) {
-                     setTitle(parsed.title || "");
-                     setDescription(parsed.description || "");
-                     setPrice(parsed.price || "");
-                     setLocation(parsed.location || "");
-                     setContacts(parsed.contacts || "");
-                     setCategoryKey(parsed.categoryKey || "kids");
-                     setListingType(parsed.listingType || "buy");
-                     setParameters(parsed.parameters || {});
-
-                     if (parsed.listingUuid) {
-                        setListingUuid(parsed.listingUuid);
-                     }
-                 } else {
-                     localStorage.removeItem(draftKey);
-                     // If declined, ensure we have a fresh UUID
-                     if (!editId) generateNewUuid();
-                 }
-             } catch (e) {
-                 console.error("Error restoring draft", e);
-             }
-         }
-     };
-     // Run restore only once on mount
-     // Using a ref to prevent double execution if strict mode
-     if (!window.restoredDraft) {
-        window.restoredDraft = true;
-        savedCallback();
-     }
-
-     // Auto-save interval
-     const interval = setInterval(() => {
-         const currentData = {
-             title, description, price, location, contacts, categoryKey, listingType, parameters,
-             timestamp: Date.now()
-         };
-         // Only save if there's *something*
-         if (title || description || price) {
-            localStorage.setItem(draftKey, JSON.stringify(currentData));
-         }
-     }, 2000);
-
-     return () => clearInterval(interval);
-  }, [editId, title, description, price, location, contacts, categoryKey, listingType, parameters]); // Dependencies needed for closure? 
-  // Ideally, use a ref or simple effect dependency on data change.
-  // Re-running interval on every keystroke is bad. better to save on unmount or debounce.
-  // Let's use debounced save or just save on change with a helper.
-
+  // Draft Protection is handled by the auto-save useEffect and saveCurrentDraft below.
   // Reusable Draft Saving Function
   const saveCurrentDraft = async (dataOverride = null) => {
       // Don't save if in edit mode (unless we want to specific draft logic for edits? but usually edits are live or strict)
@@ -368,185 +279,53 @@ export default function CreateListingClient({ onCreated, editId }) {
       router.back();
   };
 
+  // Restore draft on mount
   useEffect(() => {
-      if(editId) return;
-      // Restore logic
-      const draftKey = 'listing_draft_v1';
-      const saved = localStorage.getItem(draftKey);
-      if (saved) {
-          try {
-             const parsed = JSON.parse(saved);
-             // Simple basic validation
-             if (parsed.title || parsed.description) {
-                  // We don't want to alert every time if user visits 'create' often.
-                  // Maybe only if they didn't clear it.
-                  // But user wants "foolproof".
-                  // Let's silently restore populate initial state if empty? 
-                  // Or show a toast "Draft restored"?
-                  // User explicitly asked "if accidentally clicked main, let it fall into drafts".
-                  // This IMPLIES it should be saved and accessible.
-                  // Restoring automatically is good.
-                  
-                  // Restore if we haven't typed anything yet?
-                  if (!title && !description) {
-                       setTitle(parsed.title || "");
-                       setDescription(parsed.description || "");
-                       setPrice(parsed.price || "");
-                       setLocation(parsed.location || "");
-                       setContacts(parsed.contacts || "");
-                       setCategoryKey(parsed.categoryKey || "kids");
-                       setListingType(parsed.listingType || "buy");
-                       setParameters(parsed.parameters || {});
-                       toast(t("draft_auto_restored") || "Черновик восстановлен");
-                  }
-             }
-          } catch (e) {}
-      }
-  }, []); // Mount only
+    if (editId || !mounted) return;
+    const draftKey = 'listing_draft_v1';
+    const dismissedKey = 'listing_draft_v1_dismissed';
+    
+    const saved = localStorage.getItem(draftKey);
+    const dismissedAt = localStorage.getItem(dismissedKey);
 
-  const handleFileChange = async (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      await processFiles(e.target.files);
-    }
-  };
-
-  const handleDrop = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      await processFiles(e.dataTransfer.files);
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  async function processFiles(fileList) {
-    const incoming = Array.from(fileList || []);
-    if (!incoming.length) return;
-
-    const limit = 10;
-    const spaceLeft = Math.max(limit - images.length, 0);
-    if (spaceLeft <= 0) return;
-
-    const toAdd = incoming.slice(0, spaceLeft);
-
-    for (const file of toAdd) {
-      // Auto-Moderation for Images
-      const check = checkImage(file);
-      if (!check.safe) {
-        let msg = check.error; // fallback
-        if (check.errorKey) {
-             msg = t(check.errorKey);
-             if (check.params) {
-                  Object.entries(check.params).forEach(([k, v]) => {
-                      msg = msg.replace(`{${k}}`, v);
-                  });
-             }
-        }
-        alert(`${file.name}: ${msg}`);
-        continue;
-      }
-
+    if (saved) {
       try {
-        console.log(`Compressing ${file.name}...`);
-        const options = {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-          fileType: 'image/jpeg'
-        };
-        
-        const compressedFile = await imageCompression(file, options);
-        console.log(`Compressed ${file.name}: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
+        const parsed = JSON.parse(saved);
+        if (parsed.title || parsed.description) {
+           // If already dismissed this specific draft (by timestamp), skip
+           if (dismissedAt && parsed.timestamp && Number(dismissedAt) >= parsed.timestamp) {
+               return;
+           }
 
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setImages((prev) => [...prev, {
-              type: 'new',
-              url: event.target.result,
-              file: compressedFile
-          }]);
-        };
-        reader.readAsDataURL(compressedFile);
-
-      } catch (error) {
-        console.error("Image compression error:", error);
-        // Fallback to original
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setImages((prev) => [...prev, {
-              type: 'new',
-              url: event.target.result,
-              file: file
-          }]);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
-  }
-
-  function handleRemoveImage(index) {
-    setImages((prev) => prev.filter((_, i) => i !== index));
-  }
-
-
-
-  async function handleGeocode() {
-    if (!location.trim()) return;
-    setGeocoding(true);
-    try {
-      const coords = await geocodeAddress(location);
-      if (coords) {
-        setCoordinates(coords);
-      } else {
-        alert("Не удалось определить координаты. Попробуйте уточнить адрес.");
-      }
-    } catch (e) {
-      console.error("Geocoding error:", e);
-      alert("Ошибка при определении координат.");
-    } finally {
-      setGeocoding(false);
-    }
-  }
-
-  async function handleAutoLocation() {
-    setGeocoding(true);
-    try {
-      // 1. Get coordinates
-      const coords = await getUserLocation();
-      if (!coords) {
-        alert("Не удалось получить доступ к геолокации. Проверьте настройки браузера.");
-        return;
-      }
-
-      setCoordinates(coords);
-
-      // 2. Reverse geocode to get address text
-      const address = await reverseGeocode(coords.lat, coords.lng);
-      if (address) {
-        setLocation(address);
-      } else {
-        // If address is found, use it. If not, try to format it better or just use coords but maybe with a warning?
-        // Actually, let's try to be more persistent or just use what we have.
-        // The user wants "City name", so reverseGeocode is key.
-        if (address) {
-            setLocation(address);
-        } else {
-            // Fallback to coordinates if address lookup fails
-            setLocation(`${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`);
-            alert("Не удалось определить точный адрес. Пожалуйста, введите название города вручную.");
+           if (!title && !description) {
+                const message = t("restore_draft") || "Найдено незавершенное объявление. Восстановить?";
+                if (window.confirm(message)) {
+                    setTitle(parsed.title || "");
+                    setDescription(parsed.description || "");
+                    setPrice(parsed.price?.toString() || "");
+                    setLocation(parsed.location || "");
+                    setContacts(parsed.contacts || "");
+                    setCategoryKey(parsed.categoryKey || "kids");
+                    setListingType(parsed.listingType || "buy");
+                    setParameters(parsed.parameters || {});
+                    toast.success(t("draft_auto_restored") || "Черновик восстановлен");
+                } else {
+                    // Mark as dismissed for this specific draft timestamp
+                    localStorage.setItem(dismissedKey, parsed.timestamp || Date.now());
+                }
+           }
         }
+      } catch (e) {
+          console.error("Draft restoration error", e);
       }
-    } catch (e) {
-      console.error("Auto-location error:", e);
-      alert("Ошибка при определении местоположения.");
-    } finally {
-      setGeocoding(false);
     }
+  }, [mounted, editId, t]); // Run only once when mounted and editId is clear
+
+  if (!mounted) {
+    return <CreateListingSkeleton />;
   }
+
+  // Image & Location logic moved to sub-components
 
   async function handleSubmit(e, status = 'active') {
     if (e) e.preventDefault();
@@ -719,6 +498,45 @@ export default function CreateListingClient({ onCreated, editId }) {
       // 3. Call API
       const tg = window.Telegram?.WebApp;
       const initData = tg?.initData;
+
+      // Add before_after_images processing
+      let processedBeforeAfter = null;
+      if (listingType === 'service' && beforeAfterImages.before && beforeAfterImages.after) {
+          // Upload logic for these specific files
+          // We'll reuse the same storage bucket 'listing-images' but standard procedure.
+          // Since they are single files, we can just upload them here.
+          
+          const uploadSingle = async (imgObj) => {
+              if (imgObj.file) {
+                 const fileExt = imgObj.file.name.split('.').pop();
+                 const uniqueFileName = `${listingId}_ba_${Math.random().toString(36).substring(2)}.${fileExt}`;
+                 const { data, error } = await supabase.storage
+                    .from('listing-images')
+                    .upload(`${user.id}/${uniqueFileName}`, imgObj.file);
+                 
+                  if (error) throw error;
+                  return data.path; 
+              }
+              return imgObj.path; // If existing (from edit)
+          };
+
+          try {
+             // Handle 'before'
+             const beforePath = await uploadSingle(beforeAfterImages.before);
+             // Handle 'after'
+             const afterPath = await uploadSingle(beforeAfterImages.after);
+             
+             processedBeforeAfter = {
+                 before: beforePath,
+                 after: afterPath
+             };
+
+          } catch (e) {
+              console.error("Error uploading before/after:", e);
+              // Fail gracefully? Or alert?
+              // alert("Ошибка загрузки фото до/после");
+          }
+      }
 
       const payload = {
         title,
@@ -1281,35 +1099,11 @@ export default function CreateListingClient({ onCreated, editId }) {
 
 
         {/* локация */}
-        <div className="mb-3">
-          <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
-            {t("field_location_label")}
-          </div>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder={t("field_location_ph")}
-              className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm pr-10 placeholder-gray-500 dark:placeholder-gray-500"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
-            <button
-              type="button"
-              onClick={handleAutoLocation}
-              disabled={geocoding}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600 disabled:opacity-50"
-              title="Определить мое местоположение"
-            >
-              {geocoding ? (
-                <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                  <path fillRule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
+        <LocationPicker 
+            location={location} 
+            setLocation={setLocation} 
+            setCoordinates={setCoordinates} 
+        />
 
         {/* Контакты */}
         <div className="mb-6">
@@ -1376,58 +1170,16 @@ export default function CreateListingClient({ onCreated, editId }) {
         )}
 
 
+        {/* До/После (Только для услуг или в категории услуг) */}
+        {(listingType === 'service' || categoryKey === 'business') && (
+            <BeforeAfterUploader value={beforeAfterImages} onChange={setBeforeAfterImages} />
+        )}
+
         {/* Динамические поля категории */}
         {categoryFilters.map(renderDynamicField)}
 
         {/* зона фото – много фото */}
-        <div
-          className="w-full mt-2 border border-dashed border-gray-300 dark:border-white/20 rounded-2xl px-4 py-8 text-xs text-center cursor-pointer bg-transparent dark:bg-white/5 text-foreground dark:text-white"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-        >
-          <label className="flex flex-col items-center justify-center gap-2 cursor-pointer">
-            {images.length > 0 ? (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 w-full justify-items-center">
-                {images.map((img, idx) => (
-                  // Legacy Aspect Ratio Hack (padding-bottom 100%)
-                  <div key={idx} className="relative w-full" style={{ paddingBottom: '100%' }}>
-                    <img
-                      src={img.url}
-                      alt={`Предпросмотр ${idx + 1}`}
-                      className="absolute inset-0 w-full h-full rounded-xl object-cover border border-gray-100 dark:border-white/10"
-                    />
-                    <button
-                      type="button"
-                      className="absolute -top-1 -right-1 bg-black text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        handleRemoveImage(idx);
-                      }}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <>
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                  <div className="text-xs font-semibold dark:text-gray-200">{t("upload_photos_label") || "Загрузите фото"}</div>
-                  <div className="text-[10px] text-gray-500 dark:text-gray-400">{t("field_photos_ph") || "до 10 шт"}</div>
-                </div>
-              </>
-            )}
-
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </label>
-        </div>
+        <ImageUploader images={images} setImages={setImages} />
 
         <div className="flex gap-2 mt-3">
           <button

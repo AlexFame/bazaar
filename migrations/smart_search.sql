@@ -36,7 +36,7 @@ begin
   from public.listings
   where status = 'active'
     -- Apply Category Filter
-    and (filter_category is null or filter_category = 'all' or category = filter_category)
+    and (filter_category is null or filter_category = 'all' or category_key = filter_category)
     -- Apply Price Filter
     and (min_price is null or price >= min_price)
     and (max_price is null or price <= max_price)

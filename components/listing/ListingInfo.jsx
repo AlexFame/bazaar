@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { CATEGORY_DEFS } from "@/lib/categories";
 import { useLang } from "@/lib/i18n-client";
+import BeforeAfterSlider from "@/components/listing/BeforeAfterSlider";
+import { supabase } from "@/lib/supabaseClient";
 
 export default function ListingInfo({ listing, translated }) {
     const { lang } = useLang();
@@ -22,6 +24,17 @@ export default function ListingInfo({ listing, translated }) {
             }
         }
     }
+
+    // Resolve Before/After images
+    const getUrl = (path) => {
+        if (!path) return null;
+        if (path.startsWith('http')) return path;
+        const { data } = supabase.storage.from('listing-images').getPublicUrl(path);
+        return data?.publicUrl;
+    };
+
+    const beforeImg = listing.before_after_images?.before ? getUrl(listing.before_after_images.before) : null;
+    const afterImg = listing.before_after_images?.after ? getUrl(listing.before_after_images.after) : null;
 
     return (
         <div className="mb-4">
@@ -66,9 +79,14 @@ export default function ListingInfo({ listing, translated }) {
             
             {/* Description */}
             {listing.description && (
-                <p className="text-xs text-black/80 whitespace-pre-wrap mb-2">
+                <p className="text-xs text-black/80 whitespace-pre-wrap mb-4">
                   {translated.description || listing.description}
                 </p>
+            )}
+
+            {/* Before / After Slider */}
+            {beforeImg && afterImg && (
+                <BeforeAfterSlider beforeImage={beforeImg} afterImage={afterImg} />
             )}
 
             {/* Location */}
