@@ -95,6 +95,7 @@ export default function BottomNavigation() {
   const pathname = usePathname();
   const { t } = useLang();
   const [notifCount, setNotifCount] = useState(0);
+  const [msgCount, setMsgCount] = useState(0);
 
   useEffect(() => {
      let channel;
