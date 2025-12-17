@@ -55,6 +55,10 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [honeypot, setHoneypot] = useState(""); // Bot trap
   const inTelegram = isTelegramEnv();
   const closeTimeoutRef = useRef(null);
+  const [listingUuid, setListingUuid] = useState("");
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [lastSavedData, setLastSavedData] = useState(null);
+
   const { notificationOccurred, impactOccurred } = useHaptic();
   
 
@@ -82,6 +86,18 @@ export default function CreateListingClient({ onCreated, editId }) {
   }, [title, description, price, location, contacts, images]);
 
   useEffect(() => {
+    // Generate UUID if creating new
+    if (!editId) {
+        // Use crypto.randomUUID if available or fallback
+        const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+        setListingUuid(uuid);
+    } else {
+        setListingUuid(editId);
+    }
+
     if (!editId) return;
 
     async function loadListing() {
@@ -251,14 +267,55 @@ export default function CreateListingClient({ onCreated, editId }) {
   useEffect(() => {
       if (editId) return;
       const draftKey = 'listing_draft_v1';
+      
+      const saveToDb = async (data) => {
+          if (!listingUuid) return;
+          try {
+              setIsSavingDraft(true);
+              const { data: { user } } = await supabase.auth.getUser();
+              // If not logged in, we can't save to DB (RLS)
+              if (!user) return; // LocalStorage is the fallback
+
+              // Prepare minimal payload for draft
+              const payload = {
+                  id: listingUuid,
+                  created_by: user.id,
+                  title: data.title || "",
+                  description: data.description || "",
+                  price: data.price ? Number(data.price) : 0, // DB often requires number or null, let's use 0 safely or try null if allowed. Schema says numeric.
+                  category_key: data.categoryKey,
+                  type: data.listingType,
+                  location_text: data.location_text,
+                  status: 'draft',
+                  parameters: data.parameters || {},
+                  updated_at: new Date().toISOString()
+                  // contacts, lat, long can also be saved
+              };
+              
+              const { error } = await supabase.from('listings').upsert(payload);
+              if (error) console.error("Draft DB sync error", error);
+              else console.log("Draft synced to DB");
+          } catch(e) {
+              console.error("Draft sync failed", e);
+          } finally {
+              setIsSavingDraft(false);
+          }
+      };
+
       const handler = setTimeout(() => {
          if (title || description || price) {
             const currentData = { title, description, price, location, contacts, categoryKey, listingType, parameters };
+            // Local Storage
             localStorage.setItem(draftKey, JSON.stringify(currentData));
+            
+            // DB Sync
+            // Only if different from last saved? simpler to just upsert.
+            saveToDb(currentData);
          }
-      }, 1000);
+      }, 2000); // 2 seconds debounce
+
       return () => clearTimeout(handler);
-  }, [title, description, price, location, contacts, categoryKey, listingType, parameters, editId]);
+  }, [title, description, price, location, contacts, categoryKey, listingType, parameters, editId, listingUuid]);
 
   useEffect(() => {
       if(editId) return;
@@ -511,17 +568,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         // Profile check removed - relying on API authorization
         const userId = "server_will_resolve"; 
 
-        // Generate a UUID for the listing safely (fallback for old environments)
-        const generateUUID = () => {
-            if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-                return crypto.randomUUID();
-            }
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        };
-        const listingId = generateUUID();
+        const listingId = listingUuid || generateUUID();
 
       // 1. Upload images
       const uploadedPaths = [];
