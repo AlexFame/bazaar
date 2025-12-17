@@ -15,7 +15,6 @@ export default function BackButton({ className = "", onClick }) {
   const pathname = usePathname();
   const { lang } = useLang();
   const label = LABELS[lang] || LABELS.ru;
-  const { onClick } = props; // Accept onClick from props. Note: I need to update signature to accept properties
 
   const handleBack = () => {
     if (onClick) {
