@@ -1,6 +1,5 @@
 "use client";
-import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect } from 'react';
 import { useLang } from '@/lib/i18n-client';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -8,14 +7,20 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
   const { t } = useLang();
   const [zoomedImage, setZoomedImage] = useState(null);
 
+  // Disable scroll when zoomed
+  useEffect(() => {
+    if (zoomedImage) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [zoomedImage]);
+
   if (!beforeImage || !afterImage) return null;
 
   const handleZoom = (img) => {
-    if (zoomedImage) {
-      setZoomedImage(null);
-    } else {
-      setZoomedImage(img);
-    }
+    setZoomedImage(img);
   };
 
   return (
@@ -57,13 +62,13 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
       </div>
 
       <AnimatePresence mode="wait">
-        {zoomedImage && typeof document !== 'undefined' && createPortal(
+        {zoomedImage && (
           <motion.div
             key="zoom-overlay"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[2000] flex items-center justify-center bg-black touch-none p-4"
+            className="fixed inset-0 z-[5000] flex items-center justify-center bg-black p-4"
             onClick={() => setZoomedImage(null)}
           >
             <motion.div
@@ -84,7 +89,7 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
                 }}
               />
               <button 
-                className="absolute top-8 right-4 text-white text-xs font-medium bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/20 active:bg-white/20 transition-colors pointer-events-auto"
+                className="absolute top-8 right-2 text-white text-xs font-medium bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/20 active:bg-white/20 transition-colors pointer-events-auto"
                 onClick={(e) => {
                    e.stopPropagation();
                    setZoomedImage(null);
@@ -93,8 +98,7 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
                 {t("close") || "Закрити"}
               </button>
             </motion.div>
-          </motion.div>,
-          document.body
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
