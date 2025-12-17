@@ -288,29 +288,55 @@ export default function CreateListingClient({ onCreated, editId }) {
           if (!listingUuid) return;
           try {
               setIsSavingDraft(true);
-              const { data: { user } } = await supabase.auth.getUser();
-              // If not logged in, we can't save to DB (RLS)
-              if (!user) return; // LocalStorage is the fallback
-
-              // Prepare minimal payload for draft
+              
+              const tg = window.Telegram?.WebApp;
+              const initData = tg?.initData;
+              
               const payload = {
                   id: listingUuid,
-                  created_by: user.id,
                   title: data.title || "",
                   description: data.description || "",
-                  price: data.price ? Number(data.price) : 0, // DB often requires number or null, let's use 0 safely or try null if allowed. Schema says numeric.
+                  price: data.price ? Number(data.price) : 0, 
                   category_key: data.categoryKey,
                   type: data.listingType,
-                  location_text: data.location_text,
+                  location_text: data.location,
                   status: 'draft',
                   parameters: data.parameters || {},
-                  updated_at: new Date().toISOString()
-                  // contacts, lat, long can also be saved
+                  updated_at: new Date().toISOString(),
+                  // We also need to map existing images if we want them to persist in draft logic properly on server?
+                  // For now, let's just save the text fields. 
+                  // If we want to save images in draft, we need to pass them.
+                  // But `data` here comes from local state which has 'images'?
+                  // The `data` passed to saveToDb in setTimeout only has text fields (line 307). 
+                  // That's fine for now. Images won't be in the draft DB row until full save, 
+                  // but standard fields will be.
+                  // Actually, to make drafts useful we eventually need images, but sticking to text fix first.
               };
               
-              const { error } = await supabase.from('listings').upsert(payload);
-              if (error) console.error("Draft DB sync error", error);
-              else console.log("Draft synced to DB");
+              // 1. Telegram Environment (Server-Side Auth)
+              if (initData) {
+                  await fetch('/api/listings/save', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ ...payload, initData })
+                  });
+              } 
+              // 2. Web Environment (Client-Side Auth)
+              else {
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (!user) return; 
+
+                  const dbPayload = { 
+                      ...payload, 
+                      created_by: user.id,
+                      location_text: data.location // ensure mapping match
+                  };
+                  
+                  const { error } = await supabase.from('listings').upsert(dbPayload);
+                  if (error) console.error("Draft DB sync error", error);
+              }
+              
+              console.log("Draft synced");
           } catch(e) {
               console.error("Draft sync failed", e);
           } finally {
