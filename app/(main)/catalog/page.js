@@ -147,6 +147,7 @@ export default function CatalogPage() {
               const langMap = { 'ru': 'ru-RU', 'ua': 'uk-UA', 'en': 'en-US' };
               recognition.lang = langMap[lang] || 'ru-RU';
               recognition.continuous = false;
+              recognition.interimResults = true;
               
               recognition.onstart = () => setIsListening(true);
               recognition.onend = () => {
@@ -157,18 +158,28 @@ export default function CatalogPage() {
                   console.error("Voice error:", event.error);
                   if (event.error === 'not-allowed') {
                        alert("Разрешите доступ к микрофону!");
-                  } else if (event.error === 'no-speech') {
-                       alert("Ничего не слышно.");
-                  } else {
-                       alert("Ошибка: " + event.error);
                   }
                   setIsListening(false);
                   window.voiceRecognition = null;
               };
               
               recognition.onresult = (event) => {
-                  const transcript = event.results[0][0].transcript;
-                  setSearchTerm(transcript);
+                  let interimTranscript = '';
+                  let finalTranscript = '';
+
+                  for (let i = event.resultIndex; i < event.results.length; ++i) {
+                      if (event.results[i].isFinal) {
+                          finalTranscript += event.results[i][0].transcript;
+                      } else {
+                          interimTranscript += event.results[i][0].transcript;
+                      }
+                  }
+
+                  if (finalTranscript) {
+                       setSearchTerm(finalTranscript);
+                  } else if (interimTranscript) {
+                       setSearchTerm(interimTranscript);
+                  }
               };
               
               try {

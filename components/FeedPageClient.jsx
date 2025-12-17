@@ -1772,11 +1772,15 @@ export default function FeedPageClient({ forcedCategory = null }) {
                       const langMap = { 'ru': 'ru-RU', 'ua': 'uk-UA', 'en': 'en-US' };
                       recognition.lang = langMap[lang] || 'ru-RU';
                       recognition.continuous = false;
-                      recognition.interimResults = false;
+                      recognition.interimResults = true; // Enable real-time results
                       
                       recognition.onstart = () => {
                           console.log("Voice started");
                           setIsListening(true);
+                      };
+                      
+                      recognition.onaudiostart = () => {
+                          console.log("Audio detected");
                       };
 
                       recognition.onend = () => {
@@ -1787,13 +1791,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
                       recognition.onerror = (event) => {
                           console.error("Voice error:", event.error);
-                          // Show alert for debugging
                           if (event.error === 'not-allowed') {
                               alert("Разрешите доступ к микрофону в настройках браузера!");
                           } else if (event.error === 'no-speech') {
-                              alert("Не услышал. Побробуйте громче.");
+                              // alert("Не услышал. Попробуйте громче."); // Optional: silent fail on no speech to avoid annoying user
                           } else {
-                              alert("Ошибка голосового поиска: " + event.error);
+                              // alert("Ошибка: " + event.error);
                           }
                           
                           setIsListening(false);
@@ -1801,16 +1804,26 @@ export default function FeedPageClient({ forcedCategory = null }) {
                       };
 
                       recognition.onresult = (event) => {
-                          console.log("Voice result", event.results);
-                          const transcript = event.results[0][0].transcript;
-                          setSearchTerm(transcript);
-                          
-                          if (transcript) {
+                          let interimTranscript = '';
+                          let finalTranscript = '';
+
+                          for (let i = event.resultIndex; i < event.results.length; ++i) {
+                              if (event.results[i].isFinal) {
+                                  finalTranscript += event.results[i][0].transcript;
+                              } else {
+                                  interimTranscript += event.results[i][0].transcript;
+                              }
+                          }
+
+                          if (finalTranscript) {
+                              setSearchTerm(finalTranscript);
                               setIsSearchFocused(false);
                               setShowSearchHistory(false);
-                              const newHistory = addToSearchHistory(transcript);
+                              const newHistory = addToSearchHistory(finalTranscript);
                               setSearchHistory(newHistory);
-                              router.push(`/?q=${encodeURIComponent(transcript)}`);
+                              router.push(`/?q=${encodeURIComponent(finalTranscript)}`);
+                          } else if (interimTranscript) {
+                              setSearchTerm(interimTranscript);
                           }
                       };
                       
