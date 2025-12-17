@@ -54,7 +54,7 @@ export default function ListingComments({ listingId, ownerId }) {
     // Validate comment
     const validation = validateComment(newComment);
     if (!validation.valid) {
-      alert(validation.error);
+      alert(t(validation.errorKey) || validation.error);
       return;
     }
 
@@ -99,7 +99,8 @@ export default function ListingComments({ listingId, ownerId }) {
       loadComments();
     } catch (err) {
       console.error("Error posting comment:", err);
-      alert((t("send_comment_error") || "Не удалось отправить комментарий") + ": " + (err.message || "Неизвестная ошибка"));
+      // Ensure specific translation for send error or generic fallback
+      alert(t("send_comment_error") || "Не удалось отправить комментарий"); 
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +136,7 @@ export default function ListingComments({ listingId, ownerId }) {
 
     const validation = validateComment(editContent);
     if (!validation.valid) {
-      alert(validation.error);
+      alert(t(validation.errorKey) || validation.error);
       return;
     }
 

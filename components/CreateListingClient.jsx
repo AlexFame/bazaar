@@ -428,8 +428,17 @@ export default function CreateListingClient({ onCreated, editId }) {
       // Auto-Moderation for Images
       const check = checkImage(file);
       if (!check.safe) {
-          alert(`Ошибка загрузки файла ${file.name}: ${check.error}`);
-          continue;
+        let msg = check.error; // fallback
+        if (check.errorKey) {
+             msg = t(check.errorKey);
+             if (check.params) {
+                  Object.entries(check.params).forEach(([k, v]) => {
+                      msg = msg.replace(`{${k}}`, v);
+                  });
+             }
+        }
+        alert(`${file.name}: ${msg}`);
+        continue;
       }
 
       try {
@@ -547,7 +556,10 @@ export default function CreateListingClient({ onCreated, editId }) {
       }
 
       // Content moderation
-      if (!checkContent(title) || !checkContent(description)) {
+      const contentCheckTitle = checkContent(title);
+      const contentCheckDesc = checkContent(description);
+
+      if (!contentCheckTitle.safe || !contentCheckDesc.safe) {
         alert(t("alert_forbidden_content") || "Ваше объявление содержит запрещенные слова.");
         return;
       }
@@ -557,40 +569,50 @@ export default function CreateListingClient({ onCreated, editId }) {
         return;
       }
 
-      if (!validateTitle(title)) {
-          alert(t("alert_title_short") || "Заголовок слишком короткий (минимум 3 символа).");
+      const titleVal = validateTitle(title);
+      if (!titleVal.valid) {
+          alert(t(titleVal.errorKey));
           return;
       }
 
-      const priceValue = Number(price);
-      if (isNaN(priceValue) || priceValue < 0 || priceValue > 100000000) {
-          alert(t("alert_price_invalid") || "Цена указана некорректно.");
-          return;
-      }
-
-      for (const img of images) {
-          if (img.type === 'existing') continue;
-          if (!checkImage(img.file)) {
-              alert(`Файл ${img.file.name} слишком большой или имеет недопустимый формат.`);
-              return;
+      // Check price first as number
+      const priceValResult = validatePrice(price, listingType);
+      if (!priceValResult.valid) {
+          let msg = t(priceValResult.errorKey);
+          if (priceValResult.params) {
+              Object.entries(priceValResult.params).forEach(([k, v]) => {
+                  msg = msg.replace(`{${k}}`, v);
+              });
           }
-      }
-
-      if (!validateDescription(description)) {
-          alert(t("alert_desc_short") || "Описание слишком короткое (минимум 10 символов).");
+          alert(msg);
           return;
       }
 
-      if (!validatePrice(price)) {
-          alert("Цена указана некорректно.");
+      const descVal = validateDescription(description);
+      if (!descVal.valid) {
+          alert(t(descVal.errorKey));
           return;
       }
 
       // Image moderation
       for (const img of images) {
           if (img.type === 'existing') continue;
-          if (!checkImage(img.file)) {
-              alert(`Файл ${img.file.name} слишком большой или имеет недопустимый формат.`);
+          const imgCheck = checkImage(img.file);
+          if (!imgCheck.safe) {
+               // For image errors specifically, we might have params too if we update moderation.js later.
+               // For now, if checkImage returns errorKey, use it.
+               if (imgCheck.errorKey) {
+                   let msg = t(imgCheck.errorKey);
+                    if (imgCheck.params) {
+                        Object.entries(imgCheck.params).forEach(([k, v]) => {
+                            msg = msg.replace(`{${k}}`, v);
+                        });
+                    }
+                   alert(`${img.file.name}: ${msg}`);
+               } else {
+                   // Fallback for old return format
+                   alert(`Файл ${img.file.name}: ${imgCheck.error}`);
+               }
               return;
           }
       }

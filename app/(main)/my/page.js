@@ -25,6 +25,7 @@ import PremiumServicesModal from "@/components/PremiumServicesModal";
 import FadeIn from "@/components/FadeIn";
 import NotificationsModal from "@/components/NotificationsModal";
 import ReviewList from "@/components/ReviewList"; // Added import
+import { toast } from "sonner"; // Added notification
 
 const pageTranslations = {
   ru: {
@@ -52,7 +53,9 @@ const pageTranslations = {
     empty_archive: "Архив пуст.",
     empty_favorites: "Избранного пока нет.",
     saved_searches: "Подписки",
-    reviews_about_you: "Отзывы о вас"
+    saved_searches: "Подписки",
+    reviews_about_you: "Отзывы о вас",
+    listing_deleted: "Объявление удалено"
   },
   ua: {
     my: "Мій профіль", // Changed from "Мої оголошення"
@@ -80,7 +83,9 @@ const pageTranslations = {
     empty_archive: "Архів порожній.",
     empty_favorites: "Ви ще нічого не вподобали.",
     saved_searches: "Підписки",
-    reviews_about_you: "Відгуки про вас"
+    saved_searches: "Підписки",
+    reviews_about_you: "Відгуки про вас",
+    listing_deleted: "Оголошення видалено"
   },
   en: {
     my: "My Profile", // Changed from "My listings"
@@ -110,7 +115,9 @@ const pageTranslations = {
     empty_archive: "Archive is empty.",
     empty_favorites: "No favorites yet.",
     saved_searches: "Saved Searches",
-    reviews_about_you: "Reviews about you"
+    saved_searches: "Saved Searches",
+    reviews_about_you: "Reviews about you",
+    listing_deleted: "Listing deleted"
   },
 };
 
@@ -335,29 +342,13 @@ export default function MyPage() {
     }
   }, []);
 
-  const handleDelete = async (id) => {
-    if (!confirm(localStrings.confirm_delete)) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from("listings")
-        .delete()
-        .eq("id", id);
-
-      if (error) {
-        console.error("Error deleting listing:", error);
-        alert(localStrings.delete_error);
-        return;
-      }
-
-      // Remove from local state
-      setListings(prev => prev.filter(l => l.id !== id));
-    } catch (err) {
-      console.error("Error:", err);
-      alert(localStrings.delete_error);
-    }
+  const handleDelete = (id) => {
+    // ListingCard already handles the API deletion and confirmation.
+    // We just need to update the UI state.
+    
+    // Remove from local state
+    setListings(prev => prev.filter(l => l.id !== id));
+    toast.success(localStrings.listing_deleted || "Объявление удалено");
   };
 
   const handlePromote = (id) => {
