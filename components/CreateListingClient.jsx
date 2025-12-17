@@ -1079,7 +1079,14 @@ export default function CreateListingClient({ onCreated, editId }) {
               placeholder={t("field_price_ph")}
               className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm placeholder-gray-500 dark:placeholder-gray-500"
               value={price}
-              onChange={(e) => setPrice(e.target.value)}
+              onChange={(e) => {
+                  let val = e.target.value;
+                  // Strip leading zeroes (e.g. 043 -> 43), but allow single 0
+                  if (val.length > 1 && val.startsWith('0')) {
+                      val = val.replace(/^0+/, '');
+                  }
+                  setPrice(val);
+              }}
             />
           </div>
         )}

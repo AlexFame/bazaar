@@ -314,14 +314,20 @@ export default function ListingDetailClient({ id }) {
 
       if (!res.ok) {
         const errData = await res.json();
-        throw new Error(errData.error || "Delete failed");
+        throw new Error(errData.error || t("delete_error") || "Delete failed");
       }
 
-      // Перенаправляем на страницу "Мои объявления"
+      // Success
       router.push("/my");
     } catch (err) {
-      console.error("Ошибка:", err);
-      alert("Произошла ошибка при удалении");
+      // If we are already navigating or it's a "Delete failed" but the listing is gone,
+      // it might be a false positive. But usually if res.ok is true, we are good.
+      console.error("Delete Error:", err);
+      
+      // Check if it's a real error or just a navigation artifact
+      if (err.message !== "NEXT_REDIRECT") {
+          alert(t("delete_error") || "Произошла ошибка при удалении");
+      }
     }
   }
 

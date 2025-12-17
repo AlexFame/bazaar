@@ -42,14 +42,14 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
   return (
     <div className="w-full mb-6">
       <h3 className="text-sm font-semibold mb-3 dark:text-white">
-          {t("results_of_work") || "Результаты работы"}
+          {t("before_after_label") || "До / Після"}
       </h3>
       
       <div 
         ref={containerRef}
-        className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden cursor-ew-resize select-none touch-none"
+        className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden cursor-ew-resize select-none touch-none bg-gray-100 dark:bg-neutral-800"
         onMouseDown={startResizing}
-        onTouchStart={startResizing}
+        onPointerDown={startResizing}
         onMouseMove={onMouseMove}
         onTouchMove={onTouchMove}
       >
@@ -66,7 +66,7 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
         <img
           src={afterImage}
           alt="After"
-          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
         />
         
         {/* Label After */}
@@ -82,7 +82,7 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
             <img
             src={beforeImage}
             alt="Before"
-            className="absolute inset-0 w-full h-full object-cover max-w-none"
+            className="absolute inset-0 w-full h-full object-contain max-w-none"
             // max-w-none is critical so image doesn't squash, it just clips
             style={{ width: containerRef.current?.offsetWidth || '100%' }} 
             />
