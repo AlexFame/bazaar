@@ -69,33 +69,29 @@ function StatisticsListingItem({ listing, t, sortBy }) {
           <h3 className="font-semibold text-gray-900 dark:text-white truncate">{listing.title}</h3>
           
           {/* Detailed Stats Row */}
-          <div className="flex items-center gap-3 mt-2 text-xs flex-wrap">
-            <span className="text-gray-500 flex items-center gap-1" title={t.views}>
-              <EyeIcon className="w-3.5 h-3.5" /> {listing.views_count || 0}
+          <div className="grid grid-cols-2 gap-y-2 gap-x-4 mt-3 text-xs sm:grid-cols-4 items-center">
+            {/* 1. Views */}
+            <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1.5" title={t.views}>
+              <EyeIcon className="w-4 h-4" /> 
+              <span className="font-semibold">{listing.views_count || 0}</span>
             </span>
             
-            {(listing.favorites_count > 0 || sortBy === 'favorites') && (
-                <span className="text-red-500 flex items-center gap-1 font-medium" title={t.totalFavorites}>
-                  <HeartIconSolid className="w-3.5 h-3.5" /> {listing.favorites_count || 0}
+            {/* 2. Favorites (conditionally render, but keep slot) */}
+            {(listing.favorites_count > 0 || sortBy === 'favorites') ? (
+                <span className="text-red-500 flex items-center gap-1.5 font-medium" title={t.totalFavorites}>
+                  <HeartIconSolid className="w-4 h-4" /> {listing.favorites_count || 0}
                 </span>
-            )}
+            ) : <span />}
 
-            {listing.shares_count > 0 && (
-                <span className="text-indigo-500 flex items-center gap-1 font-medium" title={t.totalShares}>
-                  <ShareIcon className="w-3.5 h-3.5" /> {listing.shares_count}
-                </span>
-            )}
-
-            <span className="text-emerald-600 flex items-center gap-1 font-medium" title={t.avgConversion}>
-              <ChartBarIcon className="w-3.5 h-3.5" /> {listing.conversion_rate?.toFixed(1)}%
+             {/* 3. Impressions (CTR) - Changed Icon */}
+            <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1.5 font-medium" title="Impressions (CTR)">
+               <ChartBarIcon className="w-4 h-4" /> 
+               {listing.impressions_count || 0} ({listing.ctr?.toFixed(1)}%)
             </span>
 
-            <span className="text-gray-400 flex items-center gap-1" title="Impressions (CTR)">
-               👁️‍🗨️ {listing.impressions_count || 0} ({listing.ctr?.toFixed(1)}%)
-            </span>
-
-            <span className="text-gray-400 flex items-center gap-1 ml-auto">
-              <CalendarIcon className="w-3.5 h-3.5" /> {listing.days_active} {t.daysActive}
+            {/* 4. Days Active */}
+            <span className="text-gray-400 flex items-center gap-1.5 justify-self-end text-[10px]" title={t.daysActive}>
+              <CalendarIcon className="w-3.5 h-3.5" /> {listing.days_active} {t.daysActive?.toLowerCase()}
             </span>
           </div>
         </div>
