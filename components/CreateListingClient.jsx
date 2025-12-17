@@ -560,10 +560,10 @@ export default function CreateListingClient({ onCreated, editId }) {
             return acc;
         }, {}), 
         status: status,
-        id: editId || listingId,
         // Pass the full image list to be synced by the server
         images: finalImages,
-        main_image_path: finalImages.length > 0 ? finalImages[0].path : null
+        main_image_path: finalImages.length > 0 ? finalImages[0].path : null,
+        before_after_images: processedBeforeAfter
       };
       
       if (initData) {
@@ -1171,7 +1171,7 @@ export default function CreateListingClient({ onCreated, editId }) {
 
 
         {/* До/После (Только для услуг или в категории услуг) */}
-        {(listingType === 'service' || categoryKey === 'business') && (
+        {(listingType === 'service' || categoryKey === 'business' || categoryKey === 'help_offer' || categoryKey === 'auto_service' || categoryKey === 'translations') && (
             <BeforeAfterUploader value={beforeAfterImages} onChange={setBeforeAfterImages} />
         )}
 
