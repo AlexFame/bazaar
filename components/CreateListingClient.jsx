@@ -209,7 +209,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       } catch (err) {
         console.error("Unexpected error fetching listing:", err);
         // setErrorMsg("Произошла ошибка при загрузке объявления.");
-        alert("Произошла ошибка при загрузке объявления.");
+        alert(t("error_loading_listing"));
       } finally {
         setLoading(false);
       }

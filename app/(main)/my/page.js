@@ -319,7 +319,7 @@ export default function MyPage() {
       }
     } catch (e) {
       console.error("Error loading listings:", e);
-      alert(`Error loading data: ${e.message}`); // Show alert to user
+      alert(`${t("error_loading_data")}: ${e.message}`); // Show alert to user
       setListings([]);
     } finally {
       setLoading(false);
