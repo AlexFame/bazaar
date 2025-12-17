@@ -26,6 +26,13 @@ export default function AnalyticsPage() {
       today: "Сегодня",
       tipTitle: "Совет",
       tipText: "Чтобы получить больше просмотров, попробуйте обновить фотографии или добавить более подробное описание. Также вы можете воспользоваться услугами продвижения.",
+      accessDeniedTitle: "Ошибка доступа",
+      accessDeniedText: "Доступ запрещен. Вы не владелец этого объявления.",
+      loginRequired: "Пожалуйста, войдите в систему.",
+      listingNotFound: "Объявление не найдено.",
+      errorPrefix: "Ошибка загрузки данных: ",
+      unknownError: "Произошла неизвестная ошибка: ",
+      errorTitle: "Ошибка",
     },
     ua: {
       title: "Статистика",
@@ -39,6 +46,13 @@ export default function AnalyticsPage() {
       today: "Сьогодні",
       tipTitle: "Порада",
       tipText: "Щоб отримати більше переглядів, спробуйте оновити фотографії або додати більш детальний опис. Також ви можете скористатися послугами просування.",
+      accessDeniedTitle: "Доступ заборонено",
+      accessDeniedText: "Доступ заборонено. Ви не власник цього оголошення.",
+      loginRequired: "Будь ласка, увійдіть у систему.",
+      listingNotFound: "Оголошення не знайдено.",
+      errorPrefix: "Помилка завантаження даних: ",
+      unknownError: "Невідома помилка: ",
+      errorTitle: "Помилка",
     },
     en: {
       title: "Analytics",
@@ -52,6 +66,13 @@ export default function AnalyticsPage() {
       today: "Today",
       tipTitle: "Tip",
       tipText: "To get more views, try updating photos or adding a more detailed description. You can also use promotion services.",
+      accessDeniedTitle: "Access Denied",
+      accessDeniedText: "Access denied. You are not the owner of this listing.",
+      loginRequired: "Please log in.",
+      listingNotFound: "Listing not found.",
+      errorPrefix: "Error loading data: ",
+      unknownError: "Unknown error: ",
+      errorTitle: "Error",
     }
   };
 
@@ -92,23 +113,18 @@ export default function AnalyticsPage() {
 
         if (error) {
             console.error("RPC Error:", error);
-            // Fallback? Or just report error.
-            // If RPC is missing, error.code will be distinctive.
-            // But let's assume the user applies the migration.
-            
-            // If error is "Access denied", show it.
             if (error.message.includes("Access denied")) {
-                 setErrorMsg("Доступ запрещен. Вы не владелец этого объявления.");
+                 setErrorMsg(t.accessDeniedText);
             } else if (error.message.includes("Not authenticated")) {
-                 setErrorMsg("Пожалуйста, войдите в систему.");
+                 setErrorMsg(t.loginRequired);
             } else {
-                 setErrorMsg("Ошибка загрузки данных: " + error.message);
+                 setErrorMsg(t.errorPrefix + error.message);
             }
             return;
         }
 
         if (!data || data.length === 0) {
-             setErrorMsg("Объявление не найдено.");
+             setErrorMsg(t.listingNotFound);
              return;
         }
 
@@ -133,14 +149,14 @@ export default function AnalyticsPage() {
 
       } catch (error) {
         console.error("Error:", error);
-        setErrorMsg("Произошла неизвестная ошибка: " + error.message);
+        setErrorMsg(t.unknownError + error.message);
       } finally {
         setLoading(false);
       }
     }
 
     loadData();
-  }, [listingId, router]);
+  }, [listingId, router, t]);
 
   if (loading) {
     return (
@@ -153,7 +169,7 @@ export default function AnalyticsPage() {
   if (errorMsg) {
       return (
           <div className="min-h-screen bg-white dark:bg-black p-6 flex flex-col items-center justify-center text-center">
-              <h1 className="text-xl font-bold text-red-500 mb-2">Ошибка доступа</h1>
+              <h1 className="text-xl font-bold text-red-500 mb-2">{errorMsg === t.accessDeniedText ? t.accessDeniedTitle : t.errorTitle}</h1>
               <p className="text-gray-600 dark:text-gray-300 mb-4">{errorMsg}</p>
               <BackButton />
           </div>

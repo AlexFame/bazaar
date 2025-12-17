@@ -72,7 +72,9 @@ const NavItem = ({ href, label, IconOutline, IconSolid, isActive, id, badge }) =
             </motion.div>
         </div>
         {badge && (
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white dark:border-black pointer-events-none" />
+            <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 bg-red-500 rounded-full border-2 border-white dark:border-black flex items-center justify-center text-[9px] font-bold text-white z-20">
+              {badge === true ? "" : (badge > 99 ? "99+" : badge)}
+            </span>
         )}
       </motion.div>
       </div>
@@ -107,41 +109,44 @@ export default function BottomNavigation() {
         // Let's count unread messages.
         
         const fetchUnread = async () => {
-             const { count } = await supabase
+             // 1. Messages Count
+             const { count: msgs } = await supabase
                 .from('messages')
                 .select('id', { count: 'exact', head: true })
                 .eq('is_read', false)
-                .neq('sender_id', user.id); // Incoming messages
-             setNotifCount(count || 0);
+                .neq('sender_id', user.id); 
+             setMsgCount(msgs || 0);
+
+             // 2. Notifications Count (Offers, etc.)
+             const { count: notifs } = await supabase
+                .from('notifications')
+                .select('id', { count: 'exact', head: true })
+                .eq('is_read', false)
+                .eq('user_id', user.id);
+             setNotifCount(notifs || 0);
         };
         fetchUnread();
 
         // Subscribe to messages table
-        // We need to listen to INSERT (new msg) and UPDATE (read status changed)
-        // Since we can't filter by "neq sender_id" in realtime filter easily (supports simple eqs),
-        // we might get events for our own messages, but we can filter in callback.
-        // Also RLS might filter events for us.
-        channel = supabase
+        const channelMsgs = supabase
             .channel('realtime:bottom_nav_messages')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'messages'
-                    // We can't filter effectively by receiver here because messages don't have receiver_id (conversations do).
-                    // But RLS ensures we only receive events for OUR conversations.
-                },
-                () => {
-                    // Just refresh the count on any change in messages we see
-                    fetchUnread(); 
-                }
-            )
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchUnread)
             .subscribe();
+
+        // Subscribe to notifications table
+        const channelNotifs = supabase
+            .channel('realtime:bottom_nav_notifs')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, fetchUnread)
+            .subscribe();
+            
+        channel = { unsubscribe: () => { 
+            supabase.removeChannel(channelMsgs); 
+            supabase.removeChannel(channelNotifs); 
+        }};
      }
      init();
      return () => {
-         if (channel) supabase.removeChannel(channel);
+         if (channel && channel.unsubscribe) channel.unsubscribe();
      };
   }, []);
 
@@ -235,7 +240,8 @@ export default function BottomNavigation() {
             IconOutline={ChatBubbleOvalLeftIcon} 
             IconSolid={ChatBubbleOvalLeftIconSolid} 
             isActive={isActive("/messages")} 
-            badge={notifCount > 0}
+            isActive={isActive("/messages")} 
+            badge={msgCount > 0 ? msgCount : false}
             />
         </div>
 
@@ -248,6 +254,7 @@ export default function BottomNavigation() {
             IconOutline={UserIcon} 
             IconSolid={UserIconSolid} 
             isActive={isActive("/my")} 
+            badge={notifCount > 0 ? notifCount : false}
             />
         </div>
       </div>
