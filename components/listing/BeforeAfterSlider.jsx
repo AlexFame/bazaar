@@ -103,8 +103,11 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
                 <img
                   src={zoomedImage}
                   alt="Zoomed"
-                  className="w-full max-h-[75dvh] object-contain rounded-lg shadow-2xl"
-                  onClick={(e) => e.stopPropagation()}
+                  className="w-full max-h-[75dvh] object-contain rounded-lg shadow-2xl cursor-zoom-out"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setZoomedImage(null);
+                  }}
                 />
               </motion.div>
             </motion.div>
