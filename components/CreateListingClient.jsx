@@ -88,14 +88,24 @@ export default function CreateListingClient({ onCreated, editId }) {
   useEffect(() => {
     // Generate UUID if creating new
     if (!editId) {
-        // Use crypto.randomUUID if available or fallback
-        const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        // Wait, we should check localStorage first? 
+        // Logic moved to "Restore on mount" below to avoid overwriting UUID if restore happens.
+        // But we need an initial one.
+    } else {
+        setListingUuid(editId);
+    }
+    
+    // Helper to gen
+    window.generateNewUuid = () => {
+         const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
             const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
         });
         setListingUuid(uuid);
-    } else {
-        setListingUuid(editId);
+    };
+
+    if (!editId && !listingUuid) {
+        window.generateNewUuid();
     }
 
     if (!editId) return;
@@ -230,8 +240,14 @@ export default function CreateListingClient({ onCreated, editId }) {
                      setCategoryKey(parsed.categoryKey || "kids");
                      setListingType(parsed.listingType || "buy");
                      setParameters(parsed.parameters || {});
+
+                     if (parsed.listingUuid) {
+                        setListingUuid(parsed.listingUuid);
+                     }
                  } else {
                      localStorage.removeItem(draftKey);
+                     // If declined, ensure we have a fresh UUID
+                     if (!editId) generateNewUuid();
                  }
              } catch (e) {
                  console.error("Error restoring draft", e);
@@ -303,16 +319,16 @@ export default function CreateListingClient({ onCreated, editId }) {
       };
 
       const handler = setTimeout(() => {
-         if (title || description || price) {
-            const currentData = { title, description, price, location, contacts, categoryKey, listingType, parameters };
+         // Auto-save if there is ANY content or if it was already a draft
+         if (title || description || price || listingUuid) {
+            const currentData = { listingUuid, title, description, price, location, contacts, categoryKey, listingType, parameters };
             // Local Storage
             localStorage.setItem(draftKey, JSON.stringify(currentData));
             
             // DB Sync
-            // Only if different from last saved? simpler to just upsert.
             saveToDb(currentData);
          }
-      }, 2000); // 2 seconds debounce
+      }, 500); // 500ms debounce (faster)
 
       return () => clearTimeout(handler);
   }, [title, description, price, location, contacts, categoryKey, listingType, parameters, editId, listingUuid]);
