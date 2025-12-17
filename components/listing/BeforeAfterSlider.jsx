@@ -1,12 +1,21 @@
 "use client";
-
-import { useState, useRef, useEffect } from "react";
-import { useLang } from "@/lib/i18n-client";
+import React, { useState } from 'react';
+import { useLang } from '@/lib/i18n-client';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function BeforeAfterSlider({ beforeImage, afterImage }) {
   const { t } = useLang();
+  const [zoomedImage, setZoomedImage] = useState(null);
 
   if (!beforeImage || !afterImage) return null;
+
+  const handleZoom = (img) => {
+    if (zoomedImage) {
+      setZoomedImage(null);
+    } else {
+      setZoomedImage(img);
+    }
+  };
 
   return (
     <div className="w-full mb-6">
@@ -16,7 +25,10 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
       
       <div className="grid grid-cols-2 gap-2">
          {/* BEFORE */}
-         <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 dark:bg-neutral-800 border border-black/5 dark:border-white/5">
+         <div 
+           className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 dark:bg-neutral-800 border border-black/5 dark:border-white/5 cursor-zoom-in active:scale-[0.98] transition-transform"
+           onClick={() => handleZoom(beforeImage)}
+         >
             <img
               src={beforeImage}
               alt="Before"
@@ -28,7 +40,10 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
          </div>
 
          {/* AFTER */}
-         <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 dark:bg-neutral-800 border border-black/5 dark:border-white/5">
+         <div 
+           className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 dark:bg-neutral-800 border border-black/5 dark:border-white/5 cursor-zoom-in active:scale-[0.98] transition-transform"
+           onClick={() => handleZoom(afterImage)}
+         >
             <img
               src={afterImage}
               alt="After"
@@ -39,6 +54,41 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
             </div>
          </div>
       </div>
+
+      <AnimatePresence>
+        {zoomedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 p-4"
+            onClick={() => setZoomedImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-4xl max-h-[90vh] flex items-center justify-center"
+            >
+              <img
+                src={zoomedImage}
+                alt="Zoomed"
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              />
+              <button 
+                className="absolute -top-12 right-0 text-white text-xs font-medium bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/20 active:bg-white/20 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoomedImage(null);
+                }}
+              >
+                {t("close") || "Закрити"}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
