@@ -119,9 +119,22 @@ export default function CatalogPage() {
             placeholder={t("catalog_search_placeholder") || "Поиск категории..."}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full pl-10 pr-10 py-3 border border-gray-200 dark:border-white/10 rounded-xl leading-5 bg-gray-50 dark:bg-white/10 dark:text-white placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-black focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
+            className="block w-full pl-10 pr-20 py-3 border border-gray-200 dark:border-white/10 rounded-xl leading-5 bg-gray-50 dark:bg-white/10 dark:text-white placeholder-gray-500 focus:outline-none focus:bg-white dark:focus:bg-black focus:ring-2 focus:ring-black dark:focus:ring-white transition-all"
           />
           
+          {/* Clear Button (X) */}
+          {searchTerm && (
+             <button
+                 type="button"
+                 onClick={() => setSearchTerm("")}
+                 className="absolute right-10 inset-y-0 flex items-center pr-2 text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+             >
+                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                   <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" />
+                 </svg>
+             </button>
+          )}
+
           {/* Voice Search Button */}
           <button
             type="button"
@@ -143,6 +156,7 @@ export default function CatalogPage() {
 
               const recognition = new SpeechRecognition();
               window.voiceRecognition = recognition;
+              let silenceTimer = null;
               
               const langMap = { 'ru': 'ru-RU', 'ua': 'uk-UA', 'en': 'en-US' };
               recognition.lang = langMap[lang] || 'ru-RU';
@@ -153,6 +167,7 @@ export default function CatalogPage() {
               recognition.onend = () => {
                   setIsListening(false);
                   window.voiceRecognition = null;
+                  if (silenceTimer) clearTimeout(silenceTimer);
               };
               recognition.onerror = (event) => {
                   console.error("Voice error:", event.error);
@@ -161,9 +176,15 @@ export default function CatalogPage() {
                   }
                   setIsListening(false);
                   window.voiceRecognition = null;
+                  if (silenceTimer) clearTimeout(silenceTimer);
               };
               
               recognition.onresult = (event) => {
+                  if (silenceTimer) clearTimeout(silenceTimer);
+                  silenceTimer = setTimeout(() => {
+                      recognition.stop();
+                  }, 1500);
+
                   let interimTranscript = '';
                   let finalTranscript = '';
 

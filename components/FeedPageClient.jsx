@@ -1736,7 +1736,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                   ref={searchInputRef}
                   type="text"
                   placeholder={txt.searchPlaceholder}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-100 dark:bg-white/10 border-transparent border rounded-2xl text-sm focus:ring-2 focus:ring-rose-500/20 focus:shadow-md transition-all shadow-sm placeholder-gray-500 text-gray-900 dark:text-gray-100" 
+                  className="w-full pl-10 pr-20 py-2.5 bg-gray-100 dark:bg-white/10 border-transparent border rounded-2xl text-sm focus:ring-2 focus:ring-rose-500/20 focus:shadow-md transition-all shadow-sm placeholder-gray-500 text-gray-900 dark:text-gray-100" 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onFocus={() => {
@@ -1745,11 +1745,27 @@ export default function FeedPageClient({ forcedCategory = null }) {
                   }}
                   onKeyDown={handleSearchKeyDown}
                 />
+
+                {/* Clear Button (X) */}
+                {searchTerm && (
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setSearchTerm("");
+                            if (searchInputRef.current) searchInputRef.current.focus();
+                        }}
+                        className="absolute right-10 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+                            <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 10-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 101.06 1.06L12 13.06l1.72 1.72a.75.75 0 101.06-1.06L13.06 12l1.72-1.72a.75.75 0 10-1.06-1.06L12 10.94l-1.72-1.72z" clipRule="evenodd" />
+                        </svg>
+                    </button>
+                )}
                 
                 {/* Voice Search Button */}
                 <button
                     type="button"
-                    className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 transition-colors ${
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 transition-colors ${
                         isListening ? "text-red-500 animate-pulse" : "text-gray-400 hover:text-black"
                     }`}
                     onClick={() => {
@@ -1768,6 +1784,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
                       const recognition = new SpeechRecognition();
                       window.voiceRecognition = recognition;
+                      let silenceTimer = null;
                       
                       const langMap = { 'ru': 'ru-RU', 'ua': 'uk-UA', 'en': 'en-US' };
                       recognition.lang = langMap[lang] || 'ru-RU';
@@ -1787,6 +1804,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                           console.log("Voice ended");
                           setIsListening(false);
                           window.voiceRecognition = null;
+                          if (silenceTimer) clearTimeout(silenceTimer);
                       };
 
                       recognition.onerror = (event) => {
@@ -1801,9 +1819,17 @@ export default function FeedPageClient({ forcedCategory = null }) {
                           
                           setIsListening(false);
                           window.voiceRecognition = null;
+                          if (silenceTimer) clearTimeout(silenceTimer);
                       };
 
                       recognition.onresult = (event) => {
+                          // Reset silence timer on every result
+                          if (silenceTimer) clearTimeout(silenceTimer);
+                          silenceTimer = setTimeout(() => {
+                              console.log("Silence detected, stopping...");
+                              recognition.stop();
+                          }, 1500); // 1.5 seconds of silence -> Auto Stop
+
                           let interimTranscript = '';
                           let finalTranscript = '';
 
