@@ -1775,24 +1775,33 @@ export default function FeedPageClient({ forcedCategory = null }) {
                       recognition.interimResults = false;
                       
                       recognition.onstart = () => {
+                          console.log("Voice started");
                           setIsListening(true);
                       };
 
                       recognition.onend = () => {
+                          console.log("Voice ended");
                           setIsListening(false);
                           window.voiceRecognition = null;
                       };
 
                       recognition.onerror = (event) => {
-                          // Ignore 'no-speech' error to avoid spamming user
-                          if (event.error !== 'no-speech') {
-                              console.error("Voice error:", event.error);
+                          console.error("Voice error:", event.error);
+                          // Show alert for debugging
+                          if (event.error === 'not-allowed') {
+                              alert("Разрешите доступ к микрофону в настройках браузера!");
+                          } else if (event.error === 'no-speech') {
+                              alert("Не услышал. Побробуйте громче.");
+                          } else {
+                              alert("Ошибка голосового поиска: " + event.error);
                           }
+                          
                           setIsListening(false);
                           window.voiceRecognition = null;
                       };
 
                       recognition.onresult = (event) => {
+                          console.log("Voice result", event.results);
                           const transcript = event.results[0][0].transcript;
                           setSearchTerm(transcript);
                           
@@ -1809,6 +1818,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                         recognition.start();
                       } catch (e) {
                          console.error("Recognition start error", e);
+                         alert("Ошибка запуска микрофона: " + e.message);
                          setIsListening(false);
                       }
                     }}

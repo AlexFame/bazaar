@@ -154,8 +154,13 @@ export default function CatalogPage() {
                   window.voiceRecognition = null;
               };
               recognition.onerror = (event) => {
-                  if (event.error !== 'no-speech') {
-                    console.error("Voice error:", event.error);
+                  console.error("Voice error:", event.error);
+                  if (event.error === 'not-allowed') {
+                       alert("Разрешите доступ к микрофону!");
+                  } else if (event.error === 'no-speech') {
+                       alert("Ничего не слышно.");
+                  } else {
+                       alert("Ошибка: " + event.error);
                   }
                   setIsListening(false);
                   window.voiceRecognition = null;
@@ -168,7 +173,11 @@ export default function CatalogPage() {
               
               try {
                 recognition.start();
-              } catch(e) { console.error(e); setIsListening(false); }
+              } catch(e) { 
+                  console.error(e); 
+                  alert("Start error: " + e.message);
+                  setIsListening(false); 
+              }
             }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`w-5 h-5 ${isListening ? "scale-110" : ""}`}>
