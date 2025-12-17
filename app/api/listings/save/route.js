@@ -33,6 +33,13 @@ export async function POST(req) {
     const body = await req.json();
     const { initData, ...payload } = body;
     
+    console.log("SAVE API PAYLOAD:", {
+      id: payload.id,
+      title: payload.title,
+      imageCount: payload.images?.length,
+      ba: !!payload.before_after_images
+    });
+    
     if (!process.env.TG_BOT_TOKEN) return new Response(JSON.stringify({ error: 'Config error' }), { status: 500 });
 
     const authData = checkTelegramAuth(initData, process.env.TG_BOT_TOKEN);
@@ -106,11 +113,22 @@ export async function POST(req) {
         }
     }
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
+    return new Response(JSON.stringify({ success: true }), { 
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
 
   } catch (e) {
     console.error("Save API Error FULL:", e);
-    // Return the actual error message to the client
-    return new Response(JSON.stringify({ error: e.message || "Unknown server error", details: e }), { status: 500 });
+    // Return a clean JSON error even if 'e' is complex
+    const errorBody = JSON.stringify({ 
+      error: e.message || "Unknown server error", 
+      details: String(e) 
+    });
+    
+    return new Response(errorBody, { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

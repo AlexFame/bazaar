@@ -577,8 +577,17 @@ export default function CreateListingClient({ onCreated, editId }) {
            });
 
            if (!res.ok) {
-              const dat = await res.json();
-              throw new Error(dat.error || "Save failed");
+              let errorMsg = "Save failed";
+              try {
+                  const dat = await res.json();
+                  errorMsg = dat.error || errorMsg;
+              } catch (parseErr) {
+                  // If JSON parse fails, it's likely HTML error page
+                  const text = await res.text();
+                  console.error("Server returned non-JSON error:", text);
+                  errorMsg = `Server Error (${res.status}): ${text.substring(0, 100)}...`;
+              }
+              throw new Error(errorMsg);
            }
       } else {
            // Fallback: Supabase Client (Web/Dev)
