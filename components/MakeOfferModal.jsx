@@ -57,36 +57,34 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1 ml-1">
-                                {t("your_price") || "Ваша цена"} ({symbol})
-                            </label>
-                            <input 
-                                type="number"
-                                value={price}
-                                onChange={(e) => handlePriceChange(e.target.value)}
-                                placeholder={t("price_placeholder") || "Например: 50"}
-                                max={listingPrice}
-                                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-lg font-bold focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                                autoFocus
-                            />
-                            
-                            {/* Price Slider */}
-                            {listingPrice && (
-                                <div className="mt-4 px-1 touch-pan-y">
-                                    <input
-                                        type="range"
-                                        min={Math.floor(listingPrice * 0.5)}
-                                        max={listingPrice}
-                                        value={Number(price) || Math.floor(listingPrice * 0.5)}
-                                        onChange={(e) => setPrice(e.target.value)}
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
-                                    />
-                                    <div className="flex justify-between mt-1 text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                                        <span>Min: {Math.floor(listingPrice * 0.5)}{symbol}</span>
-                                        <span>Max: {listingPrice}{symbol}</span>
-                                    </div>
-                                </div>
-                            )}
+                            {t("your_price") || "Ваша цена"}
+                        </label>
+                        
+                        {/* Price Display */}
+                        <div className="text-center py-4 bg-gray-50 rounded-xl border border-gray-100 mb-4">
+                            <span className="text-4xl font-black text-black tracking-tight">{price}</span>
+                            <span className="text-2xl text-gray-400 font-medium ml-1">{symbol}</span>
                         </div>
+                        
+                        {/* Price Slider */}
+                        {listingPrice && (
+                            <div className="px-1 touch-pan-y">
+                                <input
+                                    type="range"
+                                    min={Math.floor(listingPrice * 0.5)}
+                                    max={listingPrice}
+                                    step={1}
+                                    value={Number(price) || Math.floor(listingPrice * 0.5)}
+                                    onChange={(e) => setPrice(e.target.value)}
+                                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
+                                />
+                                <div className="flex justify-between mt-2 text-[10px] uppercase font-bold text-gray-400 tracking-wider">
+                                    <span>Min: {Math.floor(listingPrice * 0.5)}{symbol}</span>
+                                    <span>Max: {listingPrice}{symbol}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                         <button 
                             type="submit"
