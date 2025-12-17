@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useLang } from '@/lib/i18n-client';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,7 +18,7 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
   };
 
   return (
-    <div className="w-full mb-6">
+    <div className="w-full mb-6 relative">
       <h3 className="text-sm font-semibold mb-3 dark:text-white">
           {t("before_after_label") || "До / Після"}
       </h3>
@@ -57,46 +56,43 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
       </div>
 
       <AnimatePresence mode="wait">
-        {zoomedImage && typeof document !== 'undefined' && (
-          createPortal(
+        {zoomedImage && (
+          <motion.div
+            key="zoom-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black touch-none p-4"
+            onClick={() => setZoomedImage(null)}
+          >
             <motion.div
-              key="zoom-overlay"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[1000] flex items-center justify-center bg-black touch-none p-4"
-              onClick={() => setZoomedImage(null)}
+              key={zoomedImage}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="relative w-full h-full flex items-center justify-center pointer-events-none"
             >
-              <motion.div
-                key={zoomedImage}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                className="relative w-full h-full flex items-center justify-center pointer-events-none"
+              <img
+                src={zoomedImage}
+                alt="Zoomed"
+                className="max-w-full max-h-full object-contain pointer-events-auto rounded-md shadow-2xl"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setZoomedImage(null);
+                }}
+              />
+              <button 
+                className="absolute top-4 right-4 md:top-8 md:right-8 text-white text-xs font-medium bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/20 active:bg-white/20 transition-colors pointer-events-auto"
+                onClick={(e) => {
+                   e.stopPropagation();
+                   setZoomedImage(null);
+                }}
               >
-                <img
-                  src={zoomedImage}
-                  alt="Zoomed"
-                  className="max-w-full max-h-full object-contain pointer-events-auto rounded-md shadow-2xl"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setZoomedImage(null);
-                  }}
-                />
-                <button 
-                  className="absolute top-4 right-4 md:top-8 md:right-8 text-white text-xs font-medium bg-white/10 px-4 py-2 rounded-full backdrop-blur-md border border-white/20 active:bg-white/20 transition-colors pointer-events-auto"
-                  onClick={(e) => {
-                     e.stopPropagation();
-                     setZoomedImage(null);
-                  }}
-                >
-                  {t("close") || "Закрити"}
-                </button>
-              </motion.div>
-            </motion.div>,
-            document.body
-          )
+                {t("close") || "Закрити"}
+              </button>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
