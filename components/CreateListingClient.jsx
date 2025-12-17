@@ -279,85 +279,94 @@ export default function CreateListingClient({ onCreated, editId }) {
   // Re-running interval on every keystroke is bad. better to save on unmount or debounce.
   // Let's use debounced save or just save on change with a helper.
 
-  // Better approach:
-  useEffect(() => {
+  // Reusable Draft Saving Function
+  const saveCurrentDraft = async (dataOverride = null) => {
+      // Don't save if in edit mode (unless we want to specific draft logic for edits? but usually edits are live or strict)
       if (editId) return;
-      const draftKey = 'listing_draft_v1';
-      
-      const saveToDb = async (data) => {
-          if (!listingUuid) return;
-          try {
-              setIsSavingDraft(true);
-              
-              const tg = window.Telegram?.WebApp;
-              const initData = tg?.initData;
-              
-              const payload = {
-                  id: listingUuid,
-                  title: data.title || "",
-                  description: data.description || "",
-                  price: data.price ? Number(data.price) : 0, 
-                  category_key: data.categoryKey,
-                  type: data.listingType,
-                  location_text: data.location,
-                  status: 'draft',
-                  parameters: data.parameters || {},
-                  updated_at: new Date().toISOString(),
-                  // We also need to map existing images if we want them to persist in draft logic properly on server?
-                  // For now, let's just save the text fields. 
-                  // If we want to save images in draft, we need to pass them.
-                  // But `data` here comes from local state which has 'images'?
-                  // The `data` passed to saveToDb in setTimeout only has text fields (line 307). 
-                  // That's fine for now. Images won't be in the draft DB row until full save, 
-                  // but standard fields will be.
-                  // Actually, to make drafts useful we eventually need images, but sticking to text fix first.
-              };
-              
-              // 1. Telegram Environment (Server-Side Auth)
-              if (initData) {
-                  await fetch('/api/listings/save', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ ...payload, initData })
-                  });
-              } 
-              // 2. Web Environment (Client-Side Auth)
-              else {
-                  const { data: { user } } = await supabase.auth.getUser();
-                  if (!user) return; 
 
+      const data = dataOverride || { title, description, price, location, contacts, categoryKey, listingType, parameters, listingUuid };
+      
+      if (!listingUuid && !data.listingUuid) return;
+      const uuidToUse = data.listingUuid || listingUuid;
+
+      try {
+          setIsSavingDraft(true);
+          
+          const tg = window.Telegram?.WebApp;
+          const initData = tg?.initData;
+          
+          // Use 'draft' status if not specified, but here we enforce 'draft'
+          const payload = {
+              id: uuidToUse,
+              title: data.title || "",
+              description: data.description || "",
+              price: data.price ? Number(data.price) : 0, 
+              category_key: data.categoryKey,
+              type: data.listingType,
+              location_text: data.location,
+              status: 'draft',
+              parameters: data.parameters || {},
+              updated_at: new Date().toISOString(),
+          };
+          
+          if (initData) {
+              await fetch('/api/listings/save', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ ...payload, initData })
+              });
+          } else {
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
                   const dbPayload = { 
                       ...payload, 
                       created_by: user.id,
-                      location_text: data.location // ensure mapping match
+                      location_text: data.location 
                   };
-                  
-                  const { error } = await supabase.from('listings').upsert(dbPayload);
-                  if (error) console.error("Draft DB sync error", error);
+                  await supabase.from('listings').upsert(dbPayload);
               }
-              
-              console.log("Draft synced");
-          } catch(e) {
-              console.error("Draft sync failed", e);
-          } finally {
-              setIsSavingDraft(false);
           }
-      };
+          console.log("Draft synced");
+      } catch(e) {
+          console.error("Draft sync failed", e);
+      } finally {
+          setIsSavingDraft(false);
+      }
+  };
 
-      const handler = setTimeout(() => {
-         // Auto-save if there is ANY content or if it was already a draft
-         if (title || description || price || listingUuid) {
-            const currentData = { listingUuid, title, description, price, location, contacts, categoryKey, listingType, parameters };
-            // Local Storage
-            localStorage.setItem(draftKey, JSON.stringify(currentData));
-            
-            // DB Sync
-            saveToDb(currentData);
+  useEffect(() => {
+    if (editId || loading) return; // Stop auto-save if editing or loading/saving
+    const draftKey = 'listing_draft_v1';
+    
+    // Define simple local saver for localStorage
+    const saveToLocalStorage = (data) => {
+         // Only save if we strictly have data and are not in a success/loading state
+         if (!loading && (data.title || data.description || data.price || data.listingUuid)) {
+             localStorage.setItem(draftKey, JSON.stringify(data));
          }
-      }, 500); // 500ms debounce (faster)
+    };
 
-      return () => clearTimeout(handler);
-  }, [title, description, price, location, contacts, categoryKey, listingType, parameters, editId, listingUuid]);
+    const handler = setTimeout(() => {
+         if (title || description || price || listingUuid) {
+            const currentData = { listingUuid, title, description, price, location, contacts, categoryKey, listingType, parameters, timestamp: Date.now() };
+            saveToLocalStorage(currentData);
+            saveCurrentDraft(currentData);
+         }
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [title, description, price, location, contacts, categoryKey, listingType, parameters, editId, listingUuid, loading]);
+
+  const handleBack = async () => {
+      // Trigger save immediately
+      if (!editId && (title || description || price)) { 
+           setLoading(true); // preventing auto-save race
+           await saveCurrentDraft();
+           localStorage.removeItem('listing_draft_v1'); // Clear draft so next "Create" is fresh
+           toast.success(t("draft_saved") || "Черновик сохранен");
+      }
+      router.back();
+  };
 
   useEffect(() => {
       if(editId) return;
@@ -1071,7 +1080,7 @@ export default function CreateListingClient({ onCreated, editId }) {
     <div className="min-h-screen bg-white dark:bg-black pb-24">
       <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 py-4 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-3">
-          <BackButton />
+          <BackButton onClick={handleBack} />
           <h1 className="text-2xl font-bold mb-4 dark:text-white text-center">{t(editId ? "create_title_edit" : "create_title")}</h1>
         </div>
       </div>
