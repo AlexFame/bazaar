@@ -20,7 +20,7 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
             <img
               src={beforeImage}
               alt="Before"
-              className="w-full h-full object-contain pointer-events-none"
+              className="w-full h-full object-cover pointer-events-none"
             />
             <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider backdrop-blur-sm">
                 {t("label_before") || "До"}
@@ -32,7 +32,7 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
             <img
               src={afterImage}
               alt="After"
-              className="w-full h-full object-contain pointer-events-none"
+              className="w-full h-full object-cover pointer-events-none"
             />
             <div className="absolute top-2 left-2 bg-green-600/80 text-white text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider backdrop-blur-sm">
                 {t("label_after") || "Після"}
