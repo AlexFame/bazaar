@@ -240,7 +240,6 @@ export default function BottomNavigation() {
             IconOutline={ChatBubbleOvalLeftIcon} 
             IconSolid={ChatBubbleOvalLeftIconSolid} 
             isActive={isActive("/messages")} 
-            isActive={isActive("/messages")} 
             badge={msgCount > 0 ? msgCount : false}
             />
         </div>
