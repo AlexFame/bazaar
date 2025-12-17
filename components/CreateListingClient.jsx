@@ -501,7 +501,9 @@ export default function CreateListingClient({ onCreated, editId }) {
 
       // Add before_after_images processing
       let processedBeforeAfter = null;
-      if (listingType === 'service' && beforeAfterImages.before && beforeAfterImages.after) {
+      const isServiceCategory = (categoryKey === 'business' || categoryKey === 'help_offer' || categoryKey === 'auto_service' || categoryKey === 'translations');
+      
+      if ((listingType === 'service' || isServiceCategory) && beforeAfterImages.before && beforeAfterImages.after) {
           // Upload logic for these specific files
           // We'll reuse the same storage bucket 'listing-images' but standard procedure.
           // Since they are single files, we can just upload them here.
@@ -560,6 +562,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             return acc;
         }, {}), 
         status: status,
+        id: editId || listingId,
         // Pass the full image list to be synced by the server
         images: finalImages,
         main_image_path: finalImages.length > 0 ? finalImages[0].path : null,
