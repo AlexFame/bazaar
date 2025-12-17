@@ -69,47 +69,49 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
          </div>
       </div>
 
-      <AnimatePresence>
-        {zoomedImage && mounted && createPortal(
-          <motion.div
-            key="zoom-overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99999] flex items-center justify-center bg-black touch-none px-6"
-            onClick={() => setZoomedImage(null)}
-          >
+      {mounted && createPortal(
+        <AnimatePresence>
+          {zoomedImage && (
             <motion.div
-              key={zoomedImage}
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="relative w-full h-full flex flex-col items-center justify-center"
+              key="zoom-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[99999] flex items-center justify-center bg-black touch-none px-6"
+              onClick={() => setZoomedImage(null)}
             >
-              <div className="absolute top-[8%] right-0">
-                 <button 
-                  className="text-white text-xs font-medium bg-white/20 px-5 py-2.5 rounded-full backdrop-blur-xl border border-white/30 active:scale-95 transition-transform"
-                  onClick={(e) => {
-                     e.stopPropagation();
-                     setZoomedImage(null);
-                  }}
-                >
-                  {t("close") || "Закрити"}
-                </button>
-              </div>
+              <motion.div
+                key={zoomedImage}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                className="relative w-full h-full flex flex-col items-center justify-center"
+              >
+                <div className="absolute top-[8%] right-0">
+                  <button 
+                    className="text-white text-xs font-medium bg-white/20 px-5 py-2.5 rounded-full backdrop-blur-xl border border-white/30 active:scale-95 transition-transform"
+                    onClick={(e) => {
+                       e.stopPropagation();
+                       setZoomedImage(null);
+                    }}
+                  >
+                    {t("close") || "Закрити"}
+                  </button>
+                </div>
 
-              <img
-                src={zoomedImage}
-                alt="Zoomed"
-                className="w-full max-h-[75dvh] object-contain rounded-lg shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-              />
+                <img
+                  src={zoomedImage}
+                  alt="Zoomed"
+                  className="w-full max-h-[75dvh] object-contain rounded-lg shadow-2xl"
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </motion.div>
             </motion.div>
-          </motion.div>,
-          document.body
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
