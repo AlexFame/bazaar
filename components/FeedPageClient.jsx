@@ -231,6 +231,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
     sortPriceAsc: t("sortPriceAsc") || "Дешевые",
     sortPriceDesc: t("sortPriceDesc") || "Дорогие",
     sortDistance: t("sortDistance") || "Ближайшие",
+    emptyCategory: t("empty_category") || "В этом разделе пока нет объявлений",
+    emptySearch: t("empty_search") || "Ничего не найдено",
+    tryOtherCategory: t("try_other_category") || "Попробуйте выбрать другую категорию",
+    tryChangeParams: t("search_helper_empty") || "Попробуйте изменить параметры поиска",
+    searchResults: t("search_results") || "Результаты поиска",
   };
 
   const searchParams = useSearchParams();
@@ -2624,13 +2629,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
               </div>
               <p className="text-lg font-medium text-gray-900">
                 {categoryFilter !== "all" || typeFilter !== "all" 
-                  ? "В этом разделе пока нет объявлений"
-                  : "Ничего не найдено"}
+                  ? txt.emptyCategory
+                  : txt.emptySearch}
               </p>
               <p className="text-sm mt-1 text-gray-500">
                 {categoryFilter !== "all" || typeFilter !== "all"
-                  ? "Попробуйте выбрать другую категорию"
-                  : (t("search_helper_empty") || "Попробуйте изменить параметры поиска")}
+                  ? txt.tryOtherCategory
+                  : txt.tryChangeParams}
               </p>
               
               {/* Subscribe Recommendation */}
