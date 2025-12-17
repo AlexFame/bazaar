@@ -192,8 +192,8 @@ export default function CreateListingClient({ onCreated, editId }) {
   // Draft Protection is handled by the auto-save useEffect and saveCurrentDraft below.
   // Reusable Draft Saving Function
   const saveCurrentDraft = async (dataOverride = null) => {
-      // Don't save if in edit mode (unless we want to specific draft logic for edits? but usually edits are live or strict)
-      if (editId) return;
+      // Don't save if in edit mode or if we just successfully published
+      if (editId || isSuccessScreen) return;
 
       const data = dataOverride || { title, description, price, location, contacts, categoryKey, listingType, parameters, listingUuid };
       
@@ -246,7 +246,7 @@ export default function CreateListingClient({ onCreated, editId }) {
   };
 
   useEffect(() => {
-    if (editId || loading) return; // Stop auto-save if editing or loading/saving
+    if (editId || loading || isSuccessScreen) return; // Stop auto-save if editing, loading/saving, or success screen
     const draftKey = 'listing_draft_v1';
     
     // Define simple local saver for localStorage
