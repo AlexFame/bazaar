@@ -161,6 +161,7 @@ export default function ListingDetailClient({ id }) {
 
         if (!listError && Array.isArray(files) && files.length > 0) {
           urls = files
+            .filter(file => !file.name.includes('_ba_')) // Filter out Before/After images
             .map((file) => {
               const path = `${folder}/${file.name}`;
               const { data } = supabase.storage
