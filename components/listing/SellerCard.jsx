@@ -226,44 +226,63 @@ export default function SellerCard({ listing, isOwner }) {
             {/* Buttons (Only for non-owners) */}
             {!isOwner && (
                  <div className="flex flex-col gap-2 mt-3">
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                         <button
                             onClick={handleWriteToSeller}
-                            className="flex-[1.5] px-3 py-2.5 text-xs font-bold rounded-xl bg-black text-white text-center hover:bg-gray-800 transition-colors"
+                            className="px-3 py-2.5 text-xs font-bold rounded-xl bg-black text-white text-center hover:bg-gray-800 transition-colors flex items-center justify-center gap-1.5"
                         >
-                            {t("write_msg")}
+                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
+                            <span>{t("write_msg")}</span>
                         </button>
                         
-                        {telegramLink && (
+                        {telegramLink ? (
                             <a
                                 href={telegramLink}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={() => trackAnalyticsEvent(listing.id, 'contact_click', { contact_type: 'telegram' })}
-                                className="flex-1 px-3 py-2.5 text-xs font-bold rounded-xl bg-[#0088cc] text-white text-center hover:bg-[#0077b5] transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                                className="px-3 py-2.5 text-xs font-bold rounded-xl bg-[#0088cc] text-white text-center hover:bg-[#0077b5] transition-colors flex items-center justify-center gap-1.5 shadow-sm"
                             >
                                 <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.74-3.35 3.7-1.58 4.46-1.85 4.96-1.86.11 0 .35.03.5.16.13.11.17.26.18.37 0 .07.01.21 0 .33z"/>
                                 </svg>
                                 <span>Telegram</span>
                             </a>
+                        ) : (
+                            <button
+                                onClick={() => setIsOfferModalOpen(true)}
+                                className="px-3 py-2.5 text-xs font-bold rounded-xl bg-white border border-gray-200 text-black text-center hover:bg-gray-50 transition-colors shadow-sm"
+                            >
+                                {t("make_offer") || (lang === 'en' ? 'Make offer' : 'Предложить цену')}
+                            </button>
                         )}
+                    </div>
 
+                    {/* Second Row: Offer button if Telegram exists (full width) */}
+                    {telegramLink && (
                         <button
                             onClick={() => setIsOfferModalOpen(true)}
-                            className="flex-1 px-3 py-2.5 text-xs font-bold rounded-xl bg-white border border-gray-200 text-black text-center hover:bg-gray-50 transition-colors shadow-sm"
+                            className="w-full px-3 py-2.5 text-xs font-bold rounded-xl bg-white border border-gray-200 text-black text-center hover:bg-gray-50 transition-colors shadow-sm flex items-center justify-center gap-1.5"
                         >
-                            {t("make_offer") || (lang === 'en' ? 'Make offer' : 'Предложить цену')}
+                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                            </svg>
+                            <span>{t("make_offer") || (lang === 'en' ? 'Make offer' : 'Предложить цену')}</span>
                         </button>
-                    </div>
+                    )}
                 
                     {phoneLink && (
                         <a
                         href={phoneLink}
                         onClick={() => trackAnalyticsEvent(listing.id, 'contact_click', { contact_type: 'phone' })}
-                        className="w-full px-3 py-2 text-xs font-semibold rounded-xl bg-gray-50 text-gray-600 text-center hover:bg-gray-100 transition-colors"
+                        className="w-full px-3 py-2 text-xs font-semibold rounded-xl bg-gray-50 text-gray-600 text-center hover:bg-gray-100 transition-colors flex items-center justify-center gap-1.5"
                         >
-                        {t("msg_call")}
+                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <span>{t("msg_call")}</span>
                         </a>
                     )}
                 </div>
