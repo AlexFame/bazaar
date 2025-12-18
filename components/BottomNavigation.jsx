@@ -186,7 +186,13 @@ export default function BottomNavigation() {
     return pathname.startsWith(path);
   };
 
-  if (isKeyboardOpen) return null;
+  // Hide on specific pages:
+  // 1. /create (Focus on form)
+  // 2. /messages/[id] (Chat room needs full height for keyboard)
+  const isChatConversation = pathname.startsWith("/messages/") && pathname !== "/messages";
+  const shouldHide = pathname.startsWith("/create") || isChatConversation || isKeyboardOpen;
+
+  if (shouldHide) return null;
 
   return (
     <div id="mobile-bottom-nav" className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-md border-t border-border pb-[env(safe-area-inset-bottom)] z-50 transition-colors duration-300">

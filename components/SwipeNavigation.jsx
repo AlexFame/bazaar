@@ -106,12 +106,12 @@ export default function SwipeNavigation() {
                setTimeout(() => {
                    router.back();
                }, 200);
-           } else {
-               // Snap back
-               container.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
-               container.style.transform = 'translateX(0px)';
-               container.style.opacity = '1';
-           }
+            } else {
+                // Snap back
+                container.style.transition = 'transform 0.2s ease-out, opacity 0.2s ease-out';
+                container.style.transform = '';
+                container.style.opacity = '1';
+            }
         }
       } catch (err) {
         console.error("Swipe end error:", err);
