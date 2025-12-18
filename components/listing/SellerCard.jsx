@@ -141,10 +141,14 @@ export default function SellerCard({ listing, isOwner }) {
     const rawContacts = String(listing.contacts || "");
     const parts = rawContacts.split(/[,;]+/).map((c) => c.trim()).filter(Boolean);
     let phoneLink = null;
+    let telegramLink = null;
+
     for (const part of parts) {
-        const { isPhone } = detectType(part);
+        const { isPhone, isTelegram } = detectType(part);
         const link = buildContactLink(part);
+        
         if (link && isPhone && !phoneLink) phoneLink = link;
+        if (link && isTelegram && !telegramLink) telegramLink = link;
     }
 
     return (
@@ -225,10 +229,25 @@ export default function SellerCard({ listing, isOwner }) {
                     <div className="flex gap-2">
                         <button
                             onClick={handleWriteToSeller}
-                            className="flex-1 px-3 py-2.5 text-xs font-bold rounded-xl bg-black text-white text-center hover:bg-gray-800 transition-colors"
+                            className="flex-[1.5] px-3 py-2.5 text-xs font-bold rounded-xl bg-black text-white text-center hover:bg-gray-800 transition-colors"
                         >
                             {t("write_msg")}
                         </button>
+                        
+                        {telegramLink && (
+                            <a
+                                href={telegramLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={() => trackAnalyticsEvent(listing.id, 'contact_click', { contact_type: 'telegram' })}
+                                className="flex-1 px-3 py-2.5 text-xs font-bold rounded-xl bg-[#0088cc] text-white text-center hover:bg-[#0077b5] transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+                            >
+                                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.11.02-1.93 1.23-5.46 3.62-.51.35-.98.52-1.4.51-.46-.01-1.35-.26-2.01-.48-.81-.27-1.45-.42-1.39-.88.03-.24.36-.49.99-.75 3.88-1.69 6.46-2.8 7.74-3.35 3.7-1.58 4.46-1.85 4.96-1.86.11 0 .35.03.5.16.13.11.17.26.18.37 0 .07.01.21 0 .33z"/>
+                                </svg>
+                                <span>Telegram</span>
+                            </a>
+                        )}
 
                         <button
                             onClick={() => setIsOfferModalOpen(true)}
