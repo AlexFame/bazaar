@@ -213,7 +213,7 @@ export default function AppShell({ children }) {
 
       // 3. Realtime subscription
       const channel = supabase
-          .channel('unread_messages_global')
+          .channel('realtime_updates_global')
           .on(
               'postgres_changes',
               {
@@ -229,8 +229,23 @@ export default function AppShell({ children }) {
                       const isChatOpen = window.location.pathname.includes(payload.new.conversation_id);
                       
                       if (!isChatOpen) {
-                          setToastMessage(`Новое сообщение: ${payload.new.content}`);
+                          setToastMessage(`✉️ ${payload.new.content}`);
                       }
+                  }
+              }
+          )
+          .on(
+              'postgres_changes',
+              {
+                  event: 'INSERT',
+                  schema: 'public',
+                  table: 'notifications',
+                  filter: `user_id=eq.${currentUser.id}`
+              },
+              (payload) => {
+                  // Show toast for new notifications
+                  if (payload.new.message) {
+                      setToastMessage(payload.new.message);
                   }
               }
           )
