@@ -192,13 +192,13 @@ export async function POST(request) {
       .from("payment_transactions")
       .insert({
         user_id: finalUserId, 
-        listing_id: listingId,
-        service_id: serviceId,
+        listing_id: listing.id,
+        service_id: service.id,
         amount_stars: service.price_stars,
         status: "pending",
         invoice_payload: JSON.stringify({
-          serviceId,
-          listingId,
+          serviceId: service.service_type, 
+          listingId: listing.id,
           userId: finalUserId,
         }),
       })
