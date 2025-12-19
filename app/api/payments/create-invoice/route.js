@@ -217,6 +217,13 @@ export async function POST(request) {
     const providerToken = process.env.TG_PAYMENT_PROVIDER_TOKEN;
     const isStars = !providerToken;
 
+    console.log("Invoice Config:", {
+      hasToken: !!providerToken,
+      tokenPrefix: providerToken ? providerToken.substring(0, 10) + "..." : "none",
+      currency: isStars ? "XTR" : "UAH",
+      isStars
+    });
+
     const payloadObj = {
       tid: transaction.id, // Short key for 'transactionId'
     };
@@ -235,6 +242,8 @@ export async function POST(request) {
         },
       ],
     };
+
+    console.log("Sending Invoice Data to Telegram:", JSON.stringify(invoiceData, null, 2));
 
     const response = await fetch(`${TELEGRAM_API}/createInvoiceLink`, {
       method: "POST",
@@ -257,7 +266,11 @@ export async function POST(request) {
       invoiceLink: result.result,
       transactionId: transaction.id,
       paymentMethod: providerToken ? 'card' : 'stars',
-      currency: isStars ? 'XTR' : 'UAH'
+      currency: isStars ? 'XTR' : 'UAH',
+      debug: {
+        hasToken: !!providerToken,
+        tokenPrefix: providerToken ? providerToken.substring(0, 5) : null
+      }
     });
   } catch (error) {
     console.error("Create invoice error:", error);

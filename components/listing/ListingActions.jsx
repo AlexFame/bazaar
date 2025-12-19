@@ -36,6 +36,7 @@ export default function ListingActions({ isOwner, listing, onEdit, onDelete, onP
                        });
                        const data = await response.json();
                        if (data.success && data.invoiceLink) {
+                           alert(`Debug: hasToken=${data.debug?.hasToken}, prefix=${data.debug?.tokenPrefix}\nMethod: ${data.paymentMethod}, Currency: ${data.currency}`);
                            window.Telegram.WebApp.openInvoice(data.invoiceLink, (status) => {
                                if (status === 'paid') alert("✅ Оплата успешна!");
                            });
