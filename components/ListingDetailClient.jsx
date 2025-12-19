@@ -454,6 +454,7 @@ export default function ListingDetailClient({ id }) {
               {/* ДЕЙСТВИЯ (ВЛАДЕЛЕЦ) */}
               <ListingActions 
                   isOwner={isOwner}
+                  listing={listing}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                   onPromote={() => setIsPremiumModalOpen(true)}
