@@ -40,7 +40,8 @@ export default function ListingActions({ isOwner, listing, onEdit, onDelete, onP
                                if (status === 'paid') alert("✅ Оплата успешна!");
                            });
                        } else {
-                           alert(data.error || "Ошибка создания счета");
+                           const details = data.details ? `\n\nTelegram Error: ${JSON.stringify(data.details)}` : '';
+                           alert(`${data.error || "Ошибка создания счета"}${details}`);
                        }
                    } catch (e) {
                        alert("Ошибка: " + e.message);

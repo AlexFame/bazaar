@@ -218,16 +218,13 @@ export async function POST(request) {
     const isStars = !providerToken;
 
     const payloadObj = {
-      transactionId: transaction.id,
-      listingId,
-      serviceId,
-      userId: finalUserId
+      tid: transaction.id, // Short key for 'transactionId'
     };
 
     const invoiceData = {
       title: service.name_ru,
       description: service.description_ru || `Продвижение объявления "${listing.title}"`,
-      payload: JSON.stringify(payloadObj), // Send JSON payload to match webhook expectations
+      payload: JSON.stringify(payloadObj), 
       provider_token: providerToken || "", // Empty for Stars
       currency: isStars ? "XTR" : "UAH",
       prices: [
