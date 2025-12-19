@@ -1,34 +1,76 @@
 "use client";
 
 import { useLang } from "@/lib/i18n-client";
+import { useState } from "react";
 
-export default function ListingActions({ isOwner, onEdit, onDelete, onPromote, onMarkReserved, onMarkSold }) {
+export default function ListingActions({ isOwner, listing, onEdit, onDelete, onPromote, onMarkReserved, onMarkSold }) {
     const { t } = useLang();
+    const [isPromoting, setIsPromoting] = useState(false);
 
     if (!isOwner) return null;
+
+    const handlePromoteClick = async () => {
+        if (!window.Telegram?.WebApp) {
+            // Fallback for browser testing
+            onPromote(); 
+            return;
+        }
+
+        try {
+            setIsPromoting(true);
+            
+            // 1. Get first active service (urgent_sticker or boost_1d for testing)
+            // In a real app, this would be a selection modal
+            const response = await fetch('/api/payments/create-invoice', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    serviceId: 'urgent_sticker', // This should be dynamic based on selection
+                    listingId: listing?.id,
+                    initData: window.Telegram.WebApp.initData
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.invoiceLink) {
+                // 2. Open Native Telegram Invoice
+                window.Telegram.WebApp.openInvoice(data.invoiceLink, (status) => {
+                    console.log("Payment status:", status);
+                    if (status === 'paid') {
+                        window.Telegram.WebApp.showPopup({
+                            title: 'Успешно',
+                            message: 'Оплата прошла успешно! Ваше объявление скоро будет обновлено.',
+                            buttons: [{ type: 'ok' }]
+                        });
+                    } else if (status === 'cancelled') {
+                        // User closed invoice
+                    } else {
+                        window.Telegram.WebApp.showAlert('Ошибка при оплате: ' + status);
+                    }
+                });
+            } else {
+                window.Telegram.WebApp.showAlert(data.error || 'Не удалось создать счет на оплату');
+            }
+        } catch (error) {
+            console.error("Promote error:", error);
+            window.Telegram.WebApp.showAlert('Произошла ошибка при инициализации оплаты');
+        } finally {
+            setIsPromoting(false);
+        }
+    };
 
     return (
         <div className="mb-4">
              {/* Promote button */}
             <div className="mt-3 pt-3 border-t border-gray-100">
             <button
-                onClick={onPromote}
-                className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                onClick={handlePromoteClick}
+                disabled={isPromoting}
+                className={`w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 ${isPromoting ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-                <span>🚀</span>
-                <span>{t("premium_services_title")}</span>
-            </button>
-
-            {/* Temporary Test Button for Stripe */}
-            <button
-                onClick={() => {
-                    // Using location.href to try and stay "inside" the current WebApp context
-                    window.location.href = "https://buy.stripe.com/test_5kQ3cueKcdOj0pS15d2cg00";
-                }}
-                className="mt-3 w-full py-3 px-4 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-lg"
-            >
-                <span>💳</span>
-                <span>Тестовая оплата Stripe (€5)</span>
+                <span>{isPromoting ? "⌛" : "🚀"}</span>
+                <span>{isPromoting ? "Обработка..." : t("premium_services_title")}</span>
             </button>
             </div>
             
@@ -66,3 +108,4 @@ export default function ListingActions({ isOwner, onEdit, onDelete, onPromote, o
         </div>
     );
 }
+housecleaning

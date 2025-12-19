@@ -98,7 +98,7 @@ export async function POST(request) {
     }
 
     // Get listing details
-    const { data: listing, error: listingError } = await supabase
+    const { data: listing, error: listingError = null } = await supabase
       .from("listings")
       .select("*")
       .eq("id", listingId)
@@ -174,11 +174,11 @@ export async function POST(request) {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY;
     
     if (!serviceRoleKey) {
-        console.error("SUPABASE_SERVICE_ROLE is not configured");
-        return NextResponse.json(
-            { error: "Server configuration error" },
-            { status: 500 }
-        );
+      console.error("SUPABASE_SERVICE_ROLE is not configured");
+      return NextResponse.json(
+          { error: "Server configuration error" },
+          { status: 500 }
+      );
     }
     
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
@@ -209,15 +209,27 @@ export async function POST(request) {
     }
 
     // Create invoice link via Telegram Bot API
+    const providerToken = process.env.TG_PAYMENT_PROVIDER_TOKEN;
+    const isStars = !providerToken;
+
+    const payloadObj = {
+      transactionId: transaction.id,
+      listingId,
+      serviceId,
+      userId: finalUserId
+    };
+
     const invoiceData = {
       title: service.name_ru,
       description: service.description_ru || `Продвижение объявления "${listing.title}"`,
-      payload: transaction.id, // Just the transaction ID (max 128 bytes)
-      currency: "XTR", // Telegram Stars
+      payload: JSON.stringify(payloadObj), // Send JSON payload to match webhook expectations
+      provider_token: providerToken || "", // Empty for Stars
+      currency: isStars ? "XTR" : "UAH",
       prices: [
         {
           label: service.name_ru,
-          amount: service.price_stars, // For XTR, amount is the number of stars directly
+          // For real currencies, amount is in smallest units (100 = 1 UAH)
+          amount: isStars ? service.price_stars : service.price_stars * 100,
         },
       ],
     };
@@ -251,3 +263,4 @@ export async function POST(request) {
     );
   }
 }
+housecleaning
