@@ -20,10 +20,11 @@ export default function ListingActions({ isOwner, listing, onEdit, onDelete, onP
 
             <button
                 onClick={() => {
+                   const url = 'https://buy.stripe.com/test_5kQ3cueKcdOj0pS15d2cg00';
                    if (window.Telegram?.WebApp) {
-                       window.Telegram.WebApp.openLink('https://buy.stripe.com/test_8wM4i8f9l4G49Xy6oo');
+                       window.Telegram.WebApp.openLink(url);
                    } else {
-                       window.open('https://buy.stripe.com/test_8wM4i8f9l4G49Xy6oo', '_blank');
+                       window.open(url, '_blank');
                    }
                 }}
                 className="w-full py-3 px-4 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
