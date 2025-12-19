@@ -252,9 +252,9 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                                         </div>
                                     ) : (
                                         <div className="flex items-center justify-center gap-1.5 h-full relative z-10">
-                                            <span className="text-[15px]">{service.price_stars} ₴</span>
-                                            <span className="text-[10px] px-1.5 py-0.5 bg-white/20 rounded-md font-bold uppercase tracking-wider">
-                                                Test Mode
+                                            <span className="text-[15px]">{service.price_stars} ⭐️</span>
+                                            <span className="text-[12px] text-white/90 font-medium">
+                                                (~€{(service.price_stars * 0.021).toFixed(2)})
                                             </span>
                                         </div>
                                     )}
@@ -270,9 +270,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
               {/* Footer Info */}
               <div className="p-3 bg-gray-50 dark:bg-[#1C1C1E] border-t border-gray-200 dark:border-white/5 text-center shrink-0 safe-area-bottom">
                 <p className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
-                    {lang === 'en' ? 'Support Apple Pay, Cards & Telegram Stars' : 
-                     lang === 'ua' ? 'Підтримка Apple Pay, карток та Telegram Stars' : 
-                     'Поддержка Apple Pay, карт и Telegram Stars'}
+                    Powered by <span className="font-semibold text-blue-500">Telegram Stars</span>
                 </p>
               </div>
             </motion.div>
@@ -282,3 +280,4 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
     </AnimatePresence>
   );
 }
+
