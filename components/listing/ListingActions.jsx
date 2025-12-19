@@ -20,15 +20,20 @@ export default function ListingActions({ isOwner, onEdit, onDelete, onPromote, o
             </button>
 
             {/* Temporary Test Button for Stripe */}
-            <a
-                href="https://buy.stripe.com/test_5kQ3cueKcdOj0pS15d2cg00"
-                target="_blank"
-                rel="noopener noreferrer"
+            <button
+                onClick={() => {
+                    const url = "https://buy.stripe.com/test_5kQ3cueKcdOj0pS15d2cg00";
+                    if (window.Telegram?.WebApp) {
+                        window.Telegram.WebApp.openLink(url);
+                    } else {
+                        window.open(url, '_blank');
+                    }
+                }}
                 className="mt-3 w-full py-3 px-4 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-lg"
             >
                 <span>💳</span>
                 <span>Тестовая оплата Stripe (€5)</span>
-            </a>
+            </button>
             </div>
             
             {/* Status Actions */}
