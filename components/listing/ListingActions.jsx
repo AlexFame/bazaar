@@ -29,7 +29,7 @@ export default function ListingActions({ isOwner, listing, onEdit, onDelete, onP
                 className="w-full py-3 px-4 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
             >
                 <span>💳</span>
-                <span>Тестовая оплата Stripe (€5)</span>
+                <span>Оплата</span>
             </button>
             </div>
             
