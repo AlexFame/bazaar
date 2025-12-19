@@ -22,7 +22,8 @@ export default function ListingActions({ isOwner, listing, onEdit, onDelete, onP
                 onClick={() => {
                    const url = 'https://buy.stripe.com/test_5kQ3cueKcdOj0pS15d2cg00';
                    if (window.Telegram?.WebApp) {
-                       window.Telegram.WebApp.openLink(url);
+                       // Navigate within the WebView to keep it inside Telegram
+                       window.location.href = url;
                    } else {
                        window.open(url, '_blank');
                    }
