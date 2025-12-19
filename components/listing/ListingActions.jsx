@@ -19,39 +19,17 @@ export default function ListingActions({ isOwner, listing, onEdit, onDelete, onP
             </button>
 
             <button
-                onClick={async () => {
-                   if (!window.Telegram?.WebApp) {
-                       alert("Native payments work only in Telegram WebApp");
-                       return;
-                   }
-                   try {
-                       const response = await fetch('/api/payments/create-invoice', {
-                           method: 'POST',
-                           headers: { 'Content-Type': 'application/json' },
-                           body: JSON.stringify({
-                               serviceId: 'urgent_sticker',
-                               listingId: listing.id,
-                               initData: window.Telegram.WebApp.initData
-                           })
-                       });
-                       const data = await response.json();
-                       if (data.success && data.invoiceLink) {
-                           alert(`Debug: hasToken=${data.debug?.hasToken}, prefix=${data.debug?.tokenPrefix}\nMethod: ${data.paymentMethod}, Currency: ${data.currency}`);
-                           window.Telegram.WebApp.openInvoice(data.invoiceLink, (status) => {
-                               if (status === 'paid') alert("✅ Оплата успешна!");
-                           });
-                       } else {
-                           const details = data.details ? `\n\nTelegram Error: ${JSON.stringify(data.details)}` : '';
-                           alert(`${data.error || "Ошибка создания счета"}${details}`);
-                       }
-                   } catch (e) {
-                       alert("Ошибка: " + e.message);
+                onClick={() => {
+                   if (window.Telegram?.WebApp) {
+                       window.Telegram.WebApp.openLink('https://buy.stripe.com/test_8wM4i8f9l4G49Xy6oo');
+                   } else {
+                       window.open('https://buy.stripe.com/test_8wM4i8f9l4G49Xy6oo', '_blank');
                    }
                 }}
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-sm font-bold rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
             >
                 <span>💳</span>
-                <span>Тест Portmone (Apple/Google Pay)</span>
+                <span>Тестовая оплата Stripe (€5)</span>
             </button>
             </div>
             
