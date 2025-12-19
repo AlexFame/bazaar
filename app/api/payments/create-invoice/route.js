@@ -259,6 +259,8 @@ export async function POST(request) {
       success: true,
       invoiceLink: result.result,
       transactionId: transaction.id,
+      paymentMethod: providerToken ? 'card' : 'stars',
+      currency: isStars ? 'XTR' : 'UAH'
     });
   } catch (error) {
     console.error("Create invoice error:", error);

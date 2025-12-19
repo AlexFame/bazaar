@@ -136,9 +136,6 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
     return colors[serviceType] || "from-gray-500 to-gray-700";
   };
 
-  // Determine if it should interact as a bottom sheet (mobile) or modal (desktop)
-  // We'll use CSS media queries in the class names for responsiveness
-
   return (
     <AnimatePresence>
       {isOpen && (
@@ -224,7 +221,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                                         <h3 className="text-[15px] font-bold text-gray-900 dark:text-white leading-tight">
                                             {getServiceName(service)}
                                         </h3>
-                                        {/* Duration Badge Moved Here */}
+                                        {/* Duration Badge */}
                                         {service.duration_days > 0 && (
                                             <span className="shrink-0 px-1.5 py-0.5 bg-gray-100 dark:bg-white/10 rounded-md text-[10px] font-semibold text-gray-500 dark:text-gray-400 border border-black/5 dark:border-white/5">
                                                 {service.duration_days} {
@@ -255,9 +252,9 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                                         </div>
                                     ) : (
                                         <div className="flex items-center justify-center gap-1.5 h-full relative z-10">
-                                            <span className="text-[15px]">{service.price_stars} ⭐️</span>
-                                            <span className="text-[12px] text-white/90 font-medium">
-                                                (~€{(service.price_stars * 0.021).toFixed(2)})
+                                            <span className="text-[15px]">{service.price_stars} ₴</span>
+                                            <span className="text-[10px] px-1.5 py-0.5 bg-white/20 rounded-md font-bold uppercase tracking-wider">
+                                                Test Mode
                                             </span>
                                         </div>
                                     )}
