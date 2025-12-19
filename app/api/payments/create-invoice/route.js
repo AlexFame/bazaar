@@ -82,13 +82,18 @@ export async function POST(request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get service details
-    const { data: service, error: serviceError } = await supabase
-      .from("premium_services")
-      .select("*")
-      .eq("id", serviceId)
-      .eq("is_active", true)
-      .single();
+    // Get service details (flexible search by ID or type)
+    let serviceQuery = supabase.from("premium_services").select("*").eq("is_active", true);
+    
+    // If it's a UUID, search by ID, otherwise by type
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(serviceId);
+    if (isUUID) {
+      serviceQuery = serviceQuery.eq("id", serviceId);
+    } else {
+      serviceQuery = serviceQuery.eq("service_type", serviceId);
+    }
+
+    const { data: service, error: serviceError } = await serviceQuery.single();
 
     if (serviceError || !service) {
       return NextResponse.json(
