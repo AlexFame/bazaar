@@ -46,7 +46,7 @@ export async function POST(request) {
           const { data: profile, error: profileError } = await supabaseAdmin
              .from('profiles')
              .select('id')
-             .eq('telegram_id', tgUser.id)
+             .eq('tg_user_id', tgUser.id)
              .single();
           
           if (profileError) {
@@ -57,7 +57,7 @@ export async function POST(request) {
              console.log("Found profile:", profile.id);
              user = { id: profile.id };
           } else {
-             console.log("Profile not found for telegram_id:", tgUser.id);
+             console.log("Profile not found for tg_user_id:", tgUser.id);
           }
        } else {
          console.error("Telegram initData validation failed");
