@@ -30,23 +30,42 @@ export async function POST(request) {
     }
 
     // Fallback to Telegram InitData
-    if (!user && initData && BOT_TOKEN) {
+    if (!user && initData) {
+       console.log("Attempting Telegram InitData Auth...");
+       
+       if (!BOT_TOKEN) {
+         console.error("TG_BOT_TOKEN is missing in environment variables!");
+       }
+
        const tgUser = validateTelegramWebAppData(initData, BOT_TOKEN);
+       
        if (tgUser) {
+          console.log("Telegram Validated User:", tgUser.id);
+          
           // Find user by telegram_id in profiles
-          const { data: profile } = await supabaseAdmin
+          const { data: profile, error: profileError } = await supabaseAdmin
              .from('profiles')
              .select('id')
              .eq('telegram_id', tgUser.id)
              .single();
           
-          if (profile) {
-             user = { id: profile.id };
+          if (profileError) {
+            console.error("Profile lookup error:", profileError);
           }
+
+          if (profile) {
+             console.log("Found profile:", profile.id);
+             user = { id: profile.id };
+          } else {
+             console.log("Profile not found for telegram_id:", tgUser.id);
+          }
+       } else {
+         console.error("Telegram initData validation failed");
        }
     }
 
     if (!user) {
+      console.log("Authorization failed. Headers:", !!authHeader, "InitData present:", !!initData);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
