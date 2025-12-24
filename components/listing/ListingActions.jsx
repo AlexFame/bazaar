@@ -9,31 +9,13 @@ export default function ListingActions({ isOwner, listing, onEdit, onDelete, onP
 
     return (
         <div className="mb-4">
-             <div className="mt-3 pt-3 border-t border-gray-100 flex flex-col gap-2">
             <button
                 onClick={onPromote}
-                className="w-full py-3 px-4 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-4 bg-[#007AFF] text-white text-[17px] font-semibold rounded-[14px] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
             >
-                <span>⭐️</span>
-                <span>Продвинуть (Telegram Stars)</span>
+                <span>🚀</span>
+                <span>{t("promote") || "Продвинуть"}</span>
             </button>
-
-            <button
-                onClick={() => {
-                   const url = 'https://buy.stripe.com/test_5kQ3cueKcdOj0pS15d2cg00';
-                   if (window.Telegram?.WebApp) {
-                       // Navigate within the WebView to keep it inside Telegram
-                       window.location.href = url;
-                   } else {
-                       window.open(url, '_blank');
-                   }
-                }}
-                className="w-full py-3 px-4 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-            >
-                <span>💳</span>
-                <span>Оплата</span>
-            </button>
-            </div>
             
             {/* Status Actions */}
             <div className="grid grid-cols-2 gap-2 mt-3">
