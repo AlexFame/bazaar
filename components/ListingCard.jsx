@@ -369,13 +369,12 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
         {/* Status Badges (Unified Design) */}
         {status === 'closed' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-black/80 backdrop-blur-md text-white text-[11px] font-bold rounded-lg shadow-sm border border-white/20 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/50"></span>
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-black/80 backdrop-blur-md text-white text-[11px] font-bold rounded-lg shadow-sm border border-white/20 flex items-center justify-center">
                 {lang === 'en' ? 'Sold' : 'Продано'}
             </div>
         )}
         {status === 'reserved' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-indigo-500 text-white text-[11px] font-bold rounded-lg shadow-sm border border-white/20 flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-indigo-500 text-white text-[11px] font-bold rounded-lg shadow-sm border border-white/20 flex items-center justify-center">
                 {t("status_reserved") || "Бронь"}
             </div>
         )}
@@ -389,14 +388,12 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
         {/* Micro-labels (New / Popular) - Only if active */}
         {status === 'active' && !isVip && isNew && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-cyan-500 text-white text-[11px] font-bold rounded-lg shadow-sm flex items-center gap-1.5">
-                <span>✨</span>
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-cyan-500 text-white text-[11px] font-bold rounded-lg shadow-sm flex items-center justify-center">
                 New
             </div>
         )}
         {status === 'active' && !isVip && !isNew && isPopular && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-lime-400 text-black text-[11px] font-bold rounded-lg shadow-sm flex items-center gap-1.5">
-                <span>🔥</span>
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-lime-400 text-black text-[11px] font-bold rounded-lg shadow-sm flex items-center justify-center">
                 Popular
             </div>
         )}
