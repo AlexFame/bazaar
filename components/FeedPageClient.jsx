@@ -688,7 +688,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
           "id, title, price, image_path, latitude, longitude, created_at, is_vip"
         )
         .not("latitude", "is", null)
+        .not("latitude", "is", null)
         .not("longitude", "is", null)
+        .in("status", ["active", "reserved"]) // Only show active and reserved on map
         // .not("longitude", "is", null) // Removed duplicate
         // .or("status.neq.closed,status.is.null") // Removed to restore listings
         .order("created_at", { ascending: false });
@@ -803,6 +805,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
         .from("listings")
         .select("*") // Removed profiles join to prevent errors/filtering
         // .select("*, profiles(is_verified, rating)")
+        .in("status", ["active", "reserved"]) // Only show active and reserved in feed
         .order("is_vip", { ascending: false });
         // Sorting
         if (sortFilter === 'date_desc') {
