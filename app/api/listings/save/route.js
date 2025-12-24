@@ -56,10 +56,19 @@ export async function POST(req) {
 
     // 2. Handle Operation
     // Strip 'images' and other non-DB fields
-    const { images: _img, id: _id, created_by: _cb, created_at: _ca, ...listingData } = payload;
+    let { images: _img, id: _id, created_by: _cb, created_at: _ca, ...listingData } = payload;
     
-    // Ensure 'main_image_path' is preserved if present
-    // It should be in payload from client
+    // Auto-fill required fields for Drafts to satisfy DB constraints
+    // Schema requires: title (3-120 chars), contacts (not null), type (not null - checked by default)
+    if (listingData.status === 'draft') {
+        if (!listingData.title || listingData.title.length < 3) {
+            listingData.title = (listingData.title || "Черновик") + (listingData.title ? "" : " " + new Date().toLocaleTimeString());
+            if (listingData.title.length < 3) listingData.title += "___"; // Ensure min length
+        }
+        if (!listingData.contacts) {
+            listingData.contacts = "draft_placeholder";
+        }
+    }
 
     if (payload.id) {
         // Check if listing exists
