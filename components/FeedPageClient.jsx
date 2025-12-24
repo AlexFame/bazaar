@@ -12,6 +12,7 @@ import Stories from "./Stories";
 import ListingCard from "./ListingCard";
 import { ListingCardSkeleton } from "./SkeletonLoader";
 import { CATEGORY_DEFS } from "@/lib/categories";
+import { useCityAutocomplete } from "@/hooks/useCityAutocomplete";
 import { useLang } from "@/lib/i18n-client";
 import { expandSearchTerm, detectCategory, SYNONYMS } from "@/lib/searchUtils";
 
@@ -400,6 +401,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [gettingLocation, setGettingLocation] = useState(false);
   const [withPhotoFilter, setWithPhotoFilter] = useState(searchParams.get("photo") || "all"); // all | yes | no
   const [dateFilter, setDateFilter] = useState(searchParams.get("date") || "all"); // all | today | used | like_new
+
+  // Autocomplete for location filter
+  const { suggestions: citySuggestions } = useCityAutocomplete(locationFilter, 2);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
 
   // Advanced Filters
   const [sortFilter, setSortFilter] = useState(searchParams.get("sort") || "date_desc"); // date_desc | date_asc | price_asc | price_desc | distance
@@ -2255,13 +2260,37 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     {/* Location */}
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-gray-900 dark:text-gray-100">{txt.locationPlaceholder}</label>
-                        <input
-                            type="text"
-                            placeholder={t("locationPlaceholder") || "City, district..."}
-                            className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900"
-                            value={locationFilter}
-                            onChange={(e) => setLocationFilter(e.target.value)}
-                        />
+                        <div className="relative">
+                            <input
+                                type="text"
+                                placeholder={t("locationPlaceholder") || "City, district..."}
+                                className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900"
+                                value={locationFilter}
+                                onChange={(e) => {
+                                    setLocationFilter(e.target.value);
+                                    setShowCitySuggestions(true);
+                                }}
+                                onFocus={() => setShowCitySuggestions(true)}
+                                onBlur={() => setTimeout(() => setShowCitySuggestions(false), 200)} // Delay to allow click
+                            />
+                            {showCitySuggestions && citySuggestions.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-lg z-50 overflow-hidden max-h-48 overflow-y-auto">
+                                    {citySuggestions.map((s, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => {
+                                                setLocationFilter(s.value);
+                                                setShowCitySuggestions(false);
+                                            }}
+                                            className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-white/10 border-b border-gray-100 dark:border-white/5 last:border-0"
+                                        >
+                                            {s.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                          {/* Radius */}
                          <div className="flex gap-2 overflow-x-auto no-scrollbar pt-2">
                             {[null, 5, 10, 30, 50, 100].map(r => (

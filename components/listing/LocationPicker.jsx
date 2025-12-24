@@ -1,15 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLang } from "@/lib/i18n-client";
 import { geocodeAddress, getUserLocation, reverseGeocode } from "@/lib/geocoding";
+import { useCityAutocomplete } from "@/hooks/useCityAutocomplete";
 
 export default function LocationPicker({ location, setLocation, setCoordinates }) {
   const { t } = useLang();
   const [geocoding, setGeocoding] = useState(false);
+  
+  // Autocomplete Logic
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const { suggestions, loading: suggestionsLoading } = useCityAutocomplete(location, 2);
+  const wrapperRef = useRef(null);
+
+  // Hide suggestions on click outside
+  useEffect(() => {
+      function handleClickOutside(event) {
+          if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+              setShowSuggestions(false);
+          }
+      }
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   async function handleAutoLocation() {
     setGeocoding(true);
+    // ... existing logic ...
     try {
       // 1. Get coordinates
       const coords = await getUserLocation();
@@ -25,13 +43,9 @@ export default function LocationPicker({ location, setLocation, setCoordinates }
       if (address) {
         setLocation(address);
       } else {
-        if (address) {
-            setLocation(address);
-        } else {
             // Fallback to coordinates if address lookup fails
             setLocation(`${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`);
             alert("Не удалось определить точный адрес. Пожалуйста, введите название города вручную.");
-        }
       }
     } catch (e) {
       console.error("Auto-location error:", e);
@@ -40,9 +54,17 @@ export default function LocationPicker({ location, setLocation, setCoordinates }
       setGeocoding(false);
     }
   }
+  
+  const handleSelectSuggestion = (s) => {
+      setLocation(s.value); // Set city name
+      if (setCoordinates) {
+          setCoordinates({ lat: parseFloat(s.lat), lng: parseFloat(s.lon) });
+      }
+      setShowSuggestions(false);
+  };
 
   return (
-    <div className="mb-3">
+    <div className="mb-3" ref={wrapperRef}>
       <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
         {t("field_location_label")}
       </div>
@@ -52,8 +74,29 @@ export default function LocationPicker({ location, setLocation, setCoordinates }
           placeholder={t("field_location_ph")}
           className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm pr-10 placeholder-gray-500 dark:placeholder-gray-500"
           value={location}
-          onChange={(e) => setLocation(e.target.value)}
+          onChange={(e) => {
+              setLocation(e.target.value);
+              setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
         />
+        
+        {/* Suggestions Dropdown */}
+        {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-lg z-50 overflow-hidden max-h-48 overflow-y-auto">
+                {suggestions.map((s, idx) => (
+                    <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectSuggestion(s)}
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-white/10 border-b border-gray-100 dark:border-white/5 last:border-0"
+                    >
+                        {s.label}
+                    </button>
+                ))}
+            </div>
+        )}
+        
         <button
           type="button"
           onClick={handleAutoLocation}
