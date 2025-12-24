@@ -39,38 +39,38 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   useEffect(() => {
     const initChat = async () => {
       console.log("ChatWindow: Initializing...");
-      const {
-        data: { user },
-        error: authError
-      } = await supabase.auth.getUser();
-      
-      console.log("ChatWindow User:", user?.id);
-      if (authError) console.error("ChatWindow Auth Error:", authError);
+      let currentUser = null;
 
-      if (!user) {
-        console.log("ChatWindow: No user, redirecting to login");
-        router.push("/login");
-        return;
-      }
-      let currentUser = user;
-
-      if (!currentUser) {
-          // Try Telegram
-          if (typeof window !== "undefined") {
-              const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-              if (tgUser?.id) {
-                  const { data: profile } = await supabase
-                      .from("profiles")
-                      .select("id, full_name, avatar_url")
-                      .eq("tg_user_id", tgUser.id)
-                      .single();
-                  
-                  if (profile) {
-                      currentUser = profile;
-                  }
+      // 1. Try Telegram WebApp First (Priority)
+      if (typeof window !== "undefined" && window.Telegram?.WebApp?.initDataUnsafe?.user) {
+          const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+          console.log("ChatWindow: Found TG user", tgUser.id);
+          if (tgUser?.id) {
+              const { data: profile } = await supabase
+                  .from("profiles")
+                  .select("id, full_name, avatar_url")
+                  .eq("tg_user_id", tgUser.id)
+                  .single();
+              
+              if (profile) {
+                  currentUser = profile;
               }
           }
       }
+
+      // 2. Fallback to Supabase Auth
+      if (!currentUser) {
+          const { data: { user }, error: authError } = await supabase.auth.getUser();
+          if (authError) console.error("ChatWindow Auth Error:", authError);
+          if (user) currentUser = user;
+      }
+
+      if (!currentUser) {
+        console.log("ChatWindow: No user, redirecting to login");
+        router.push("/login"); // Or handle strictly
+        return;
+      }
+      const user = currentUser; // Remap for existing code compatibility
 
       if (!currentUser) {
         // If still no user, we can't show chat
