@@ -55,9 +55,27 @@ export async function POST(req) {
       return NextResponse.json({ error: "Recipient has no Telegram ID" }, { status: 404 });
     }
 
-    console.log(`✅ [Notification API] Found TG ID: ${profile.tg_user_id}. Sending message...`);
+    console.log(`✅ [Notification API] Found TG ID: ${profile.tg_user_id}. Saving to DB and sending message...`);
 
-    // 2. Send Telegram message
+    // 2. Save to Database (So it appears in In-App Notifications)
+    const { error: dbError } = await supabase.from("notifications").insert({
+        user_id: recipientId,
+        type: "msg", // 'msg' type for general messages
+        title: listingTitle || "Новое сообщение",
+        message: message,
+        data: { listing_title: listingTitle },
+        is_read: false
+    });
+
+    if (dbError) {
+        console.error("❌ [Notification API] Error saving to DB:", dbError);
+        // We continue to send TG message even if DB fails, or should we? 
+        // Better to log and continue.
+    } else {
+        console.log("✅ [Notification API] Notification saved to DB");
+    }
+
+    // 3. Send Telegram message
     // Construct the message text (Plain text to avoid parsing errors)
     const text = `📩 Новое сообщение\n\n📌 ${listingTitle || "Объявление"}\n\n${message}`;
 

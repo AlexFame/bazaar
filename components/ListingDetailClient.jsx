@@ -365,38 +365,9 @@ export default function ListingDetailClient({ id }) {
       trackAnalyticsEvent(listing.id, 'share');
 
       try {
-          // Detect iOS (iPhone/iPad)
-          const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-          // 1. Try to share with image (Only on iOS where it works reliably)
-          // On Android and Desktop (Mac), file sharing often hides "Copy Link" or breaks the menu
-          if (isIOS && imageUrls && imageUrls.length > 0 && navigator.canShare) {
-             try {
-                 const response = await fetch(imageUrls[0]);
-                 const blob = await response.blob();
-                 const file = new File([blob], "listing.jpg", { type: blob.type });
-                 
-                 const shareDataWithImage = {
-                     files: [file],
-                     title: listing.title,
-                     text: `${listing.title} - ${listing.price} €${url}`
-                 };
-                 
-                 if (navigator.canShare(shareDataWithImage)) {
-                     await navigator.share(shareDataWithImage);
-                     return; // Success
-                 }
-             } catch (e) {
-                 // Ignore image share error, fall back to text share
-                 if (e.name !== 'AbortError') {
-                    console.warn("Failed to share image, falling back to text:", e);
-                 } else {
-                    return; // User cancelled
-                 }
-             }
-          }
-
-          // 2. Fallback: Share text only
+          // 1. Share text and URL (Most reliable)
+          // We removed image sharing because it often overrides text/url on many platforms (including iOS sometimes)
+          // resulting in only an image being pasted.
           if (navigator.share) {
               await navigator.share(shareData);
           } else {
