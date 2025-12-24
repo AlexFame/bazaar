@@ -378,6 +378,11 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                 {t("status_reserved") || "Бронь"}
             </div>
         )}
+        {status === 'draft' && (
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-gray-500 text-white text-[11px] font-bold rounded-lg shadow-sm border border-white/20 flex items-center justify-center">
+                Draft
+            </div>
+        )}
 
         {/* URGENT Badge (Red) - Highest Priority */}
         {status === 'active' && listing.is_urgent && (
