@@ -294,7 +294,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const abortControllerRef = useRef(null);
 
   // Restore scroll on mount
+  // Restore scroll on mount and scrub drafts
   useEffect(() => {
+    // 1. Scrub bad data (drafts) from memory immediately
+    if (listings.some(l => l.status === 'draft' || l.status === 'closed' || l.status === 'sold')) {
+        console.log("🧹 Scrubbing drafts/sold items from feed cache...");
+        setListings(prev => prev.filter(l => l.status === 'active' || l.status === 'reserved'));
+    }
+
     if (listings.length > 0 && scrollPos > 0) {
         window.scrollTo(0, scrollPos);
     }
