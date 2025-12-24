@@ -29,8 +29,8 @@ export default function RecentlyViewedScroll() {
         const { data: rawListings, error } = await supabase
           .from("listings")
           .select("*")
-          .in("id", ids);
-          // Removed .eq("status", "active")
+          .in("id", ids)
+          .in("status", ["active", "reserved"]); // Fix: Hide drafts/sold from history too
 
         if (error) throw error;
 

@@ -28,6 +28,7 @@ export default function PopularListingsScroll() {
             const { data: rawListings, error } = await supabase
               .from("listings")
               .select("*")
+              .in("status", ["active", "reserved"]) // Fix: Only active/reserved in popular/new
               .order("created_at", { ascending: false })
               .limit(12);
 

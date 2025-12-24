@@ -7,14 +7,12 @@ const supabase = createClient(
 );
 
 async function check() {
-  console.log("Checking listings...");
+  console.log("Searching for 'Наушники'...");
   
-  // Get latest 10 listings
   const { data, error } = await supabase
     .from('listings')
     .select('id, title, status, created_at, created_by')
-    .order('created_at', { ascending: false })
-    .limit(10);
+    .ilike('title', '%Наушники%');
     
   if (error) {
     console.error(error);
