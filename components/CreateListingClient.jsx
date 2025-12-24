@@ -221,11 +221,16 @@ export default function CreateListingClient({ onCreated, editId }) {
           };
           
           if (initData) {
-              await fetch('/api/listings/save', {
+              const res = await fetch('/api/listings/save', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ ...payload, initData })
               });
+              
+              if (!res.ok) {
+                  const errText = await res.text();
+                  throw new Error(`Server returned ${res.status}: ${errText}`);
+              }
           } else {
               const { data: { user } } = await supabase.auth.getUser();
               if (user) {
