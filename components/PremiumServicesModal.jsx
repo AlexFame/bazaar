@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
-import { getTG } from "@/lib/telegram";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
@@ -44,57 +43,37 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
-      // Get Telegram initData
-      const tg = getTG();
-      const initData = tg?.initData;
-
-      if (!token && !initData) {
+      if (!token) {
         alert(t("premium_login_alert") || "Пожалуйста, войдите в систему");
         setPurchasing(null);
         return;
       }
 
-      // Create invoice
-      const response = await fetch("/api/payments/create-invoice", {
+      // Create Stripe Session
+      const response = await fetch("/api/payments/create-session", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           serviceId: service.id,
           listingId,
-          initData, // Send initData for verification
         }),
       });
 
       const data = await response.json();
 
-      if (!data.success) {
-        console.error("Payment creation failed:", data);
-        alert(`${t("premium_error_create") || "Ошибка создания платежа: "}${data.error}\n${data.details?.description || JSON.stringify(data.details) || ""}`);
+      if (!data.success || !data.url) {
+        console.error("Payment session creation failed:", data);
+        alert(`${t("premium_error_create") || "Ошибка создания платежа: "}${data.error || "Unknown error"}`);
         setPurchasing(null);
         return;
       }
 
-      // Open Telegram payment
-      if (tg?.openInvoice) {
-        tg.openInvoice(data.invoiceLink, (status) => {
-          if (status === "paid") {
-            alert(t("payment_success") || "✅ Оплата успешна! Услуга активирована.");
-            onClose();
-          } else if (status === "cancelled") {
-            console.log("Payment cancelled");
-          } else if (status === "failed") {
-            alert(t("payment_failed") || "❌ Оплата не удалась. Попробуйте снова.");
-          }
-          setPurchasing(null);
-        });
-      } else {
-        // Fallback: open link directly
-        window.open(data.invoiceLink, "_blank");
-        setPurchasing(null);
-      }
+      // Redirect to Stripe
+      window.location.href = data.url;
+
     } catch (error) {
       console.error("Purchase error:", error);
       alert(t("premium_error_create") || "Ошибка при создании платежа");
@@ -252,10 +231,14 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                                         </div>
                                     ) : (
                                         <div className="flex items-center justify-center gap-1.5 h-full relative z-10">
-                                            <span className="text-[15px]">{service.price_stars} ⭐️</span>
-                                            <span className="text-[12px] text-white/90 font-medium">
-                                                (~€{(service.price_stars * 0.021).toFixed(2)})
+                                            <span className="text-[15px] font-bold">
+                                              €{(service.price / 100).toFixed(2)}
                                             </span>
+                                            {service.service_type === 'top_3d' && (
+                                              <span className="text-[11px] bg-white/20 px-1.5 py-0.5 rounded-md text-white/90 font-medium">
+                                                -17%
+                                              </span>
+                                            )}
                                         </div>
                                     )}
                                 </button>
@@ -270,7 +253,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
               {/* Footer Info */}
               <div className="p-3 bg-gray-50 dark:bg-[#1C1C1E] border-t border-gray-200 dark:border-white/5 text-center shrink-0 safe-area-bottom">
                 <p className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">
-                    Powered by <span className="font-semibold text-blue-500">Telegram Stars</span>
+                    Secured by <span className="font-semibold text-blue-500">Stripe</span>
                 </p>
               </div>
             </motion.div>
