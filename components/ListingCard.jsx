@@ -382,8 +382,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
         {/* URGENT Badge (Red Fire) - Highest Priority */}
         {status === 'active' && listing.is_urgent && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-red-600 text-white text-xs font-extrabold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5 animate-pulse">
-                <span>🔥</span>
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-red-600 text-white text-[11px] font-bold rounded-lg shadow-sm">
                 {t("urgent") || "URGENT"}
             </div>
         )}
