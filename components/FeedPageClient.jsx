@@ -2684,7 +2684,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           ) : viewMode === "map" ? (
             <div className="h-[75vh] w-full rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 relative z-0">
                  <MapComponent
-                    listings={mapListings}
+                    listings={mapListings.filter(l => l.status === 'active' || l.status === 'reserved')}
                     userLocation={userLocation}
                   />
             </div>
@@ -2692,7 +2692,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
             <>
               {/* Список объявлений */}
       <div className="grid grid-cols-2 gap-2">
-        {listings.map((listing) => (
+        {listings
+            .filter(l => l.status === 'active' || l.status === 'reserved')
+            .map((listing) => (
           <div key={listing.id} id={`listing-${listing.id}`} data-id={listing.id}>
              <ListingCard listing={listing} />
           </div>
