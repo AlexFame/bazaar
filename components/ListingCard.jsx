@@ -362,25 +362,25 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
       >
         {/* VIP Badge - Unified Design */}
         {isVip && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#FF385C] text-white text-xs font-extrabold rounded-xl shadow-airbnb flex items-center justify-center border border-white/20">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-purple-600 text-white text-[11px] font-bold rounded-lg shadow-sm flex items-center justify-center border border-white/10">
                 <span className="tracking-wide">VIP</span>
             </div>
         )}
 
         {/* Status Badges (Unified Design) */}
         {status === 'closed' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-black/80 backdrop-blur-md text-white text-xs font-bold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-black/80 backdrop-blur-md text-white text-[11px] font-bold rounded-lg shadow-sm border border-white/20 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/50"></span>
                 {lang === 'en' ? 'Sold' : 'Продано'}
             </div>
         )}
         {status === 'reserved' && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-indigo-500 text-white text-xs font-extrabold rounded-xl shadow-lg border border-white/20 flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-indigo-500 text-white text-[11px] font-bold rounded-lg shadow-sm border border-white/20 flex items-center gap-1.5">
                 {t("status_reserved") || "Бронь"}
             </div>
         )}
 
-        {/* URGENT Badge (Red Fire) - Highest Priority */}
+        {/* URGENT Badge (Red) - Highest Priority */}
         {status === 'active' && listing.is_urgent && (
             <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-red-600 text-white text-[11px] font-bold rounded-lg shadow-sm">
                 {t("urgent") || "URGENT"}
@@ -389,13 +389,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
         {/* Micro-labels (New / Popular) - Only if active */}
         {status === 'active' && !isVip && isNew && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#FF385C] text-white text-xs font-bold rounded-xl shadow-airbnb flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-cyan-500 text-white text-[11px] font-bold rounded-lg shadow-sm flex items-center gap-1.5">
                 <span>✨</span>
                 New
             </div>
         )}
         {status === 'active' && !isVip && !isNew && isPopular && (
-            <div className="absolute top-3 left-3 z-10 px-3 py-1.5 bg-[#FF385C] text-white text-xs font-bold rounded-xl shadow-airbnb flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-lime-400 text-black text-[11px] font-bold rounded-lg shadow-sm flex items-center gap-1.5">
                 <span>🔥</span>
                 Popular
             </div>
