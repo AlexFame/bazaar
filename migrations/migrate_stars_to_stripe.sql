@@ -7,10 +7,22 @@ ADD COLUMN IF NOT EXISTS price INTEGER, -- Price in cents (e.g., 199 = €1.99)
 ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'eur',
 ADD COLUMN IF NOT EXISTS stripe_price_id TEXT;
 
--- 2. Clear existing services to re-seed nicely (optional, but cleaner for this major shift)
-TRUNCATE TABLE premium_services;
+-- 2. Update payment_transactions table to store real money data
+ALTER TABLE payment_transactions
+ADD COLUMN IF NOT EXISTS amount INTEGER, -- in cents
+ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'eur',
+ADD COLUMN IF NOT EXISTS provider TEXT DEFAULT 'telegram_stars', -- or 'stripe'
+ADD COLUMN IF NOT EXISTS stripe_session_id TEXT;
 
--- 3. Insert new services with psychological pricing
+-- 3. Archive and Rename old services to free up the 'service_type' unique constraint
+-- We append '_archived' to the service_type so we can reuse the clean names (e.g. 'urgent_sticker')
+UPDATE premium_services 
+SET 
+  is_active = false,
+  service_type = service_type || '_archived_' || floor(extract(epoch from now()))
+WHERE is_active = true OR service_type IN ('urgent_sticker', 'top_1d', 'top_3d', 'top_7d', 'top_30d');
+
+-- 4. Insert new services with psychological pricing
 INSERT INTO premium_services (service_type, name_ru, name_ua, name_en, description_ru, description_ua, description_en, price, currency, duration_days, features, is_active) VALUES
 (
   'urgent_sticker',
