@@ -15,14 +15,15 @@ export async function POST(request) {
 
     // 1. Auth check
     let user = null;
-    const authHeader = request.headers.get('Authorization');
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY;
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+    
+    // Initialize public client for everyone (needed for fetching services/listings later)
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader || '' } },
+    });
 
     if (authHeader) {
-      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-        global: { headers: { Authorization: authHeader || '' } },
-      });
       const { data: { user: supabaseUser }, error: authError } = await supabase.auth.getUser();
       if (!authError && supabaseUser) {
         user = supabaseUser;
