@@ -193,11 +193,11 @@ export default function CreateListingClient({ onCreated, editId }) {
   // Reusable Draft Saving Function
   const saveCurrentDraft = async (dataOverride = null) => {
       // Don't save if in edit mode or if we just successfully published
-      if (editId || isSuccessScreen) return;
+      if (editId || isSuccessScreen) return true; // Treat as success to proceed
 
       const data = dataOverride || { title, description, price, location, contacts, categoryKey, listingType, parameters, listingUuid };
       
-      if (!listingUuid && !data.listingUuid) return;
+      if (!listingUuid && !data.listingUuid) return false;
       const uuidToUse = data.listingUuid || listingUuid;
 
       try {
@@ -206,7 +206,6 @@ export default function CreateListingClient({ onCreated, editId }) {
           const tg = window.Telegram?.WebApp;
           const initData = tg?.initData;
           
-          // Use 'draft' status if not specified, but here we enforce 'draft'
           const payload = {
               id: uuidToUse,
               title: data.title || "",
@@ -239,24 +238,30 @@ export default function CreateListingClient({ onCreated, editId }) {
                       created_by: user.id,
                       location_text: data.location 
                   };
-                  await supabase.from('listings').upsert(dbPayload);
+                  const { error } = await supabase.from('listings').upsert(dbPayload);
+                  if (error) throw error;
+              } else {
+                  console.warn("No user for draft save");
+                  // If no user, we can't save to DB. 
+                  // Return false so we don't clear local storage.
+                  return false;
               }
           }
           console.log("Draft synced");
+          return true;
       } catch(e) {
           console.error("Draft sync failed", e);
+          return false;
       } finally {
           setIsSavingDraft(false);
       }
   };
 
   useEffect(() => {
-    if (editId || loading || isSuccessScreen) return; // Stop auto-save if editing, loading/saving, or success screen
+    if (editId || loading || isSuccessScreen) return; 
     const draftKey = 'listing_draft_v1';
     
-    // Define simple local saver for localStorage
     const saveToLocalStorage = (data) => {
-         // Only save if we strictly have data and are not in a success/loading state
          if (!loading && (data.title || data.description || data.price || data.listingUuid)) {
              localStorage.setItem(draftKey, JSON.stringify(data));
          }
@@ -274,14 +279,29 @@ export default function CreateListingClient({ onCreated, editId }) {
   }, [title, description, price, location, contacts, categoryKey, listingType, parameters, editId, listingUuid, loading]);
 
   const handleBack = async () => {
-      // Trigger save immediately
       if (!editId && (title || description || price)) { 
-           setLoading(true); // preventing auto-save race
-           await saveCurrentDraft();
-           localStorage.removeItem('listing_draft_v1'); // Clear draft so next "Create" is fresh
-           toast.success(t("draft_saved") || "Черновик сохранен");
+           setLoading(true);
+           const success = await saveCurrentDraft();
+           
+           if (success) {
+               localStorage.removeItem('listing_draft_v1'); 
+               toast.success(t("draft_saved") || "Черновик сохранен");
+               router.back();
+           } else {
+               // Failed to save. Do NOT clear local storage.
+               // Ask user if they want to exit anyway? or Just exit and rely on LocalStorage?
+               // Better: Rely on LocalStorage. The next time they open "Create", restore it.
+               // But 'router.back()' might leave them thinking it's saved.
+               // Alert them.
+               if (window.confirm(t("draft_save_error_exit") || "Не удалось сохранить черновик в облако. Он останется на этом устройстве. Выйти?")) {
+                   router.back();
+               } else {
+                   setLoading(false);
+               }
+           }
+      } else {
+          router.back();
       }
-      router.back();
   };
 
   // Restore draft on mount
