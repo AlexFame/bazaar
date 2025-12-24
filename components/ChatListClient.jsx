@@ -64,22 +64,25 @@ export default function ChatListClient() {
 
   useEffect(() => {
     const fetchUserAndChats = async () => {
-      // Try Supabase Auth first
-      let { data: { user } } = await supabase.auth.getUser();
+      let user = null;
 
-      // If no Supabase user, try Telegram
-      if (!user) {
-          if (typeof window !== "undefined") {
-              const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-              if (tgUser?.id) {
-                  const { data: profile } = await supabase
-                      .from("profiles")
-                      .select("id, full_name, avatar_url")
-                      .eq("tg_user_id", tgUser.id)
-                      .single();
-                  if (profile) user = profile;
-              }
+      // 1. Try Telegram WebApp First (Priority)
+      if (typeof window !== "undefined" && window.Telegram?.WebApp?.initDataUnsafe?.user) {
+          const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+          if (tgUser?.id) {
+              const { data: profile } = await supabase
+                  .from("profiles")
+                  .select("id, full_name, avatar_url")
+                  .eq("tg_user_id", tgUser.id)
+                  .single();
+              if (profile) user = profile;
           }
+      }
+
+      // 2. Fallback to Supabase Auth
+      if (!user) {
+          const { data: { user: authUser } } = await supabase.auth.getUser();
+          if (authUser) user = authUser;
       }
 
       if (!user) {
