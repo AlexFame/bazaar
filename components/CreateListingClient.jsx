@@ -94,7 +94,11 @@ export default function CreateListingClient({ onCreated, editId }) {
   useEffect(() => {
     // Generate UUID if creating new
     if (!editId) {
-        // ...
+        const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+        setListingUuid(uuid);
     } else {
         setListingUuid(editId);
     }
