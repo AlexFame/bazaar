@@ -4,7 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 // import Link from "next/link"; // Moved to subcomponents
 // import Image from "next/image"; // Moved to subcomponents
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import confetti from "canvas-confetti";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { getTelegramUser } from "@/lib/telegram";
@@ -48,6 +49,24 @@ export default function ListingDetailClient({ id }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [profileId, setProfileId] = useState(null);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const searchParams = useSearchParams();
+
+  // Payment Success Handler
+  useEffect(() => {
+    if (searchParams.get('payment') === 'success') {
+      setShowSuccessModal(true);
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#22c55e', '#3b82f6', '#f59e0b'] // Green, Blue, Amber
+      });
+      // Clean URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [searchParams]);
 
   // Load favorite status
   useEffect(() => {
@@ -560,6 +579,40 @@ export default function ListingDetailClient({ id }) {
       isOpen={isPremiumModalOpen}
       onClose={() => setIsPremiumModalOpen(false)}
     />
+
+    {/* Payment Success Modal */}
+    {showSuccessModal && createPortal(
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+        <div className="bg-white dark:bg-neutral-800 w-[90%] max-w-sm rounded-3xl p-6 text-center shadow-2xl animate-in zoom-in-95 duration-300 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-green-400 to-emerald-600"></div>
+            
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600 dark:text-green-400">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-8 h-8">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+            </div>
+
+            <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
+                {lang === 'ru' ? 'Успешно!' : lang === 'ua' ? 'Успішно!' : 'Success!'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm leading-relaxed">
+                {lang === 'ru' 
+                  ? 'Ваша услуга активирована. Обновите страницу, если статус не изменился сразу.' 
+                  : lang === 'ua'
+                    ? 'Ваша послуга активована. Оновіть сторінку, якщо статус не змінився відразу.'
+                    : 'Your service has been activated. Refresh the page if status isn\'t updated immediately.'}
+            </p>
+
+            <button 
+                onClick={() => setShowSuccessModal(false)}
+                className="w-full py-3 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-sm hover:scale-[1.02] active:scale-95 transition-all shadow-lg"
+            >
+                {lang === 'ru' ? 'Отлично' : lang === 'ua' ? 'Чудово' : 'Great'}
+            </button>
+        </div>
+      </div>,
+      document.body
+    )}
     </>
   );
 }

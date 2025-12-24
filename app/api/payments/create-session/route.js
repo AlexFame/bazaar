@@ -141,8 +141,8 @@ export async function POST(request) {
         },
       ],
       mode: "payment",
-      success_url: `${SITE_URL}/listings/${listing.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE_URL}/listings/${listing.id}?payment=cancelled`,
+      success_url: `${SITE_URL}/listing/${listing.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${SITE_URL}/listing/${listing.id}?payment=cancelled`,
       metadata: {
         transactionId: transaction.id,
         listingId: listing.id,
