@@ -39,81 +39,112 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   useEffect(() => {
     const initChat = async () => {
       console.log("ChatWindow: Initializing...");
-      const {
-        data: { user },
-        error: authError
-      } = await supabase.auth.getUser();
       
-      console.log("ChatWindow User:", user?.id);
+      // Use API Strategy if Telegram InitData available
+      if (typeof window !== "undefined" && window.Telegram?.WebApp?.initData) {
+          try {
+              // 1. Fetch Details via API (Bypassing RLS)
+              const res = await fetch('/api/conversations/detail', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ 
+                      conversationId: conversationId === 'new' ? undefined : conversationId, 
+                      initData: window.Telegram.WebApp.initData 
+                  })
+              });
+              
+              if (res.ok) {
+                  const data = await res.json();
+                  
+                  if (data.currentUser) setUser(data.currentUser);
+                  
+                  if (data.conversation) {
+                      const conv = data.conversation;
+                      setListing(conv.listing);
+                      
+                      const myId = data.currentUser?.id;
+                      if (myId) {
+                          const other = conv.buyer_id === myId ? conv.seller : conv.buyer;
+                          setOtherUser(other);
+                      }
+                  }
+                  
+                  if (data.messages) setMessages(data.messages);
+                  setShowInput(true); // Always confirm IO
+                  setLoading(false);
+                  
+                  // Subscribe to Realtime (Best Effort)
+                  const channel = supabase
+                    .channel(`chat:${conversationId}`)
+                    .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` }, (payload) => {
+                        if (payload.eventType === "INSERT") {
+                            setMessages((prev) => {
+                                if (prev.some(m => m.id === payload.new.id)) return prev;
+                                return [...prev, payload.new];
+                            });
+                             // Mark read logic omitted for realtime purely, let API handle it on load
+                        } else if (payload.eventType === "UPDATE") {
+                            setMessages((prev) => prev.map(m => m.id === payload.new.id ? payload.new : m));
+                        }
+                    })
+                    .on("broadcast", { event: "typing" }, (payload) => {
+                        // Optimistically assume sender_id check
+                        if (payload.payload.sender_id && payload.payload.sender_id !== data.currentUser?.id) {
+                            setOtherUserTyping(true);
+                            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                            typingTimeoutRef.current = setTimeout(() => setOtherUserTyping(false), 3000);
+                        }
+                    })
+                    .subscribe();
+                    
+                  setChannel(channel);
+                  return;
+              }
+              
+              if (conversationId === 'new') {
+                   // Fall through to manual setup
+              }
+
+          } catch (e) {
+              console.error("API Detail fetch failed", e);
+          }
+      }
+
+      // Fallback to legacy RLS
+      const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
       if (authError) console.error("ChatWindow Auth Error:", authError);
 
-      let currentUser = user;
+      let currentUser = authUser;
 
       if (!currentUser) {
-          // Try Telegram
           if (typeof window !== "undefined") {
               const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
               if (tgUser?.id) {
-                  const { data: profile } = await supabase
-                      .from("profiles")
-                      .select("id, full_name, avatar_url")
-                      .eq("tg_user_id", tgUser.id)
-                      .single();
-                  
-                  if (profile) {
-                      currentUser = profile;
-                  }
+                  const { data: profile } = await supabase.from("profiles").select("id, full_name, avatar_url").eq("tg_user_id", tgUser.id).single();
+                  if (profile) currentUser = profile;
               }
           }
       }
 
       if (!currentUser) {
         console.log("ChatWindow: No user, redirecting to login");
-        router.push("/login"); // Or handle strictly
-        return;
-      }
-      // const user = currentUser; // Handled below by setState
-
-      if (!currentUser) {
-        // If still no user, we can't show chat
+        router.push("/login");
         return;
       }
       setUser(currentUser);
 
-      // Handle new chat (no conversation yet)
       if (conversationId === "new" && listingId && sellerId) {
         console.log("ChatWindow: New chat mode", { listingId, sellerId });
-        
-        // Fetch listing details
-        const { data: listingData } = await supabase
-          .from("listings")
-          .select("id, title, price, image_path")
-          .eq("id", listingId)
-          .single();
-        
-        if (listingData) {
-          setListing(listingData);
-        }
-        
-        // Fetch seller profile
-        const { data: sellerProfile } = await supabase
-          .from("profiles")
-          .select("id, full_name, avatar_url")
-          .eq("id", sellerId)
-          .single();
-        
-        if (sellerProfile) {
-          setOtherUser(sellerProfile);
-        }
-        
-        // No messages yet
+        const { data: listingData } = await supabase.from("listings").select("id, title, price, image_path").eq("id", listingId).single();
+        if (listingData) setListing(listingData);
+        const { data: sellerProfile } = await supabase.from("profiles").select("id, full_name, avatar_url").eq("id", sellerId).single();
+        if (sellerProfile) setOtherUser(sellerProfile);
         setMessages([]);
         setLoading(false);
         setShowInput(true);
         return;
       }
 
-      // Fetch conversation details (existing conversation)
       const { data: conv, error: convError } = await supabase
         .from("conversations")
         .select(`
@@ -131,7 +162,6 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
         return;
       }
 
-      // Check if profiles are loaded
       if (!conv.buyer || !conv.seller) {
         console.error("Missing profile data:", { buyer: conv.buyer, seller: conv.seller });
         setError(t("chat_error_load") || "Не удалось загрузить данные собеседника");
@@ -139,71 +169,43 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
         return;
       }
 
-      const other = conv.buyer_id === user.id ? conv.seller : conv.buyer;
+      const other = conv.buyer_id === currentUser.id ? conv.seller : conv.buyer;
       setOtherUser(other);
       setListing(conv.listing);
 
-      // Fetch messages
-      const { data: msgs, error: msgsError } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
+      const { data: msgs, error: msgsError } = await supabase.from("messages").select("*").eq("conversation_id", conversationId).order("created_at", { ascending: true });
 
       if (msgsError) {
         console.error("Error fetching messages:", msgsError);
       } else {
         setMessages(msgs || []);
-        
-        // Mark unread as read
-        const unreadIds = msgs
-            ?.filter(m => !m.is_read && m.sender_id !== user.id)
-            .map(m => m.id);
-        
+        const unreadIds = msgs?.filter(m => !m.is_read && m.sender_id !== currentUser.id).map(m => m.id);
         if (unreadIds?.length > 0) {
-            await supabase
-                .from('messages')
-                .update({ is_read: true })
-                .in('id', unreadIds);
+            await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
         }
       }
       setLoading(false);
+      setShowInput(true);
 
-      // Subscribe to Realtime (Messages + Typing)
-      const channel = supabase
-        .channel(`chat:${conversationId}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "*",
-            schema: "public",
-            table: "messages",
-            filter: `conversation_id=eq.${conversationId}`,
-          },
-          (payload) => {
+      const channel = supabase.channel(`chat:${conversationId}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` }, (payload) => {
             if (payload.eventType === "INSERT") {
                 setMessages((prev) => {
-                  const exists = prev.some(m => m.id === payload.new.id);
-                  if (exists) return prev;
+                  if (prev.some(m => m.id === payload.new.id)) return prev;
                   return [...prev, payload.new];
                 });
-                
-                if (payload.new.sender_id !== user.id) {
+                if (payload.new.sender_id !== currentUser.id) {
                     supabase.from('messages').update({ is_read: true }).eq('id', payload.new.id).then();
                 }
             } else if (payload.eventType === "UPDATE") {
                 setMessages((prev) => prev.map(m => m.id === payload.new.id ? payload.new : m));
             }
-          }
-        )
+        })
         .on("broadcast", { event: "typing" }, (payload) => {
-           if (payload.payload.sender_id !== user.id) {
+           if (payload.payload.sender_id !== currentUser.id) {
                setOtherUserTyping(true);
-               // Clear typing after 3 seconds
                if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-               typingTimeoutRef.current = setTimeout(() => {
-                   setOtherUserTyping(false);
-               }, 3000);
+               typingTimeoutRef.current = setTimeout(() => setOtherUserTyping(false), 3000);
            }
         })
         .subscribe();
@@ -211,8 +213,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
       setChannel(channel);
 
       return () => {
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        supabase.removeChannel(channel);
+         supabase.removeChannel(channel);
       };
     };
 
@@ -222,8 +223,6 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   // Typing logic
   const handleTyping = () => {
     if (!channel) return;
-    
-    // Throttle sending typing events
     const now = Date.now();
     if (now - lastTypingTimeRef.current > 2000) {
         channel.send({
@@ -237,114 +236,99 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
   const handleSend = async (e) => {
     e.preventDefault();
-    
-    // Prevent duplicate sends
     if (isSending || !newMessage.trim() || !user) return;
-    
-    setIsSending(true); // Lock sending
-
+    setIsSending(true);
     const content = newMessage.trim();
     setNewMessage("");
-    setShowInput(false); // Hide input after sending
-    
-    try {
-      let actualConversationId = conversationId;
-      
-      // Create conversation if this is a new chat
-      if (conversationId === "new" && listingId && sellerId) {
-        console.log("Creating conversation for first message...");
-        
-        const { data: newConv, error: convError } = await supabase
-          .from("conversations")
-          .insert({
-            listing_id: listingId,
-            buyer_id: user.id,
-            seller_id: sellerId
-          })
-          .select()
-          .single();
-        
-        if (convError) {
-          console.error("Error creating conversation:", convError);
-          alert((t("chat_error_create") || "Не удалось создать чат: ") + convError.message);
-          setIsSending(false);
-          return;
-        }
-        
-        actualConversationId = newConv.id;
-        console.log("Created conversation:", actualConversationId);
-        
-        // Update URL to use actual conversation ID
-        router.replace(`/messages/${actualConversationId}`);
-      }
-    
-      // Optimistic UI: Add message immediately
-      const optimisticMessage = {
-        id: `temp-${Date.now()}`,
-        conversation_id: actualConversationId,
-        sender_id: user.id,
-        content: content,
-        created_at: new Date().toISOString(),
-        is_optimistic: true,
-        is_read: false
-      };
-      
-      setMessages(prev => [...prev, optimisticMessage]);
-      scrollToBottom();
+    setShowInput(false);
 
-      // Send to server
-      const { data, error } = await supabase
-        .from("messages")
-        .insert({
+    try {
+        let actualConversationId = conversationId;
+        const isTelegram = typeof window !== "undefined" && window.Telegram?.WebApp?.initData;
+
+        // Create Conversation
+        if (conversationId === "new" && listingId && sellerId) {
+            if (isTelegram) {
+                const res = await fetch('/api/conversations/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        initData: window.Telegram.WebApp.initData,
+                        listingId, 
+                        sellerId 
+                    })
+                });
+                if (!res.ok) throw new Error('Failed to create chat');
+                const newConv = await res.json();
+                actualConversationId = newConv.id;
+                router.replace(`/messages/${actualConversationId}`);
+            } else {
+                 // Fallback RLS
+                 const { data: newConv, error: convError } = await supabase
+                  .from("conversations")
+                  .insert({ listing_id: listingId, buyer_id: user.id, seller_id: sellerId })
+                  .select().single();
+                 if (convError) throw convError;
+                 actualConversationId = newConv.id;
+                 router.replace(`/messages/${actualConversationId}`);
+            }
+        }
+
+       // Optimistic UI
+       const optimisticMessage = {
+          id: `temp-${Date.now()}`,
           conversation_id: actualConversationId,
           sender_id: user.id,
           content: content,
-        })
-        .select()
-        .single();
+          created_at: new Date().toISOString(),
+          is_optimistic: true,
+          is_read: false
+       };
+       setMessages(prev => [...prev, optimisticMessage]);
+       scrollToBottom();
 
-      if (error) {
-        throw error;
-      }
+       // Send Message
+       if (isTelegram) {
+           const res = await fetch('/api/conversations/send', {
+               method: 'POST',
+               headers: {'Content-Type': 'application/json'},
+               body: JSON.stringify({
+                   initData: window.Telegram.WebApp.initData,
+                   conversationId: actualConversationId,
+                   content
+               })
+           });
+           if (!res.ok) throw new Error('Failed to send message');
+           const data = await res.json();
+           setMessages(prev => prev.map(m => m.id === optimisticMessage.id ? data : m));
+       } else {
+           const { data, error } = await supabase.from("messages").insert({
+              conversation_id: actualConversationId, sender_id: user.id, content
+           }).select().single();
+           if (error) throw error;
+           setMessages(prev => prev.map(m => m.id === optimisticMessage.id ? data : m));
+       }
 
-      // Replace optimistic message with real one
-      setMessages(prev => 
-        prev.map(m => m.id === optimisticMessage.id ? data : m)
-      );
-
-      // Send Push Notification via Telegram (Fire and forget)
-      if (otherUser?.id) {
-        console.log(`🔔 [ChatWindow] Sending Telegram notification to ${otherUser.id}`);
-        fetch("/api/notifications/telegram", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            recipientId: otherUser.id,
-            message: `💬 Новое сообщение: ${content}`,
-            url: `https://t.me/bazaarua_bot/app?startapp=chat_${conversationId}`
-          }),
-        })
-        .then(async res => {
-            if (!res.ok) {
-                const text = await res.text();
-                console.error(`❌ [ChatWindow] Notification failed: ${res.status}`, text);
-            } else {
-                console.log("✅ [ChatWindow] Notification sent");
-            }
-        })
-        .catch(err => console.error("Failed to send push:", err));
-      } else {
-        console.warn("⚠️ [ChatWindow] No otherUser.id, cannot send notification");
-      }
+       // Send Push
+       if (otherUser?.id) {
+           fetch("/api/notifications/telegram", {
+             method: "POST",
+             headers: { "Content-Type": "application/json" },
+             body: JSON.stringify({
+               recipientId: otherUser.id,
+               message: `💬 Новое сообщение: ${content}`,
+               url: `https://t.me/bazaarua_bot/app?startapp=chat_${conversationId}`
+             }),
+           }).catch(console.error);
+       }
 
     } catch (error) {
-      console.error("Error sending message:", error);
-      alert(t("chat_error_send") || "Ошибка отправки сообщения");
-      // Remove optimistic message on error
-      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id));
-      setNewMessage(content); // Restore text
+       console.error("Error sending message:", error);
+       alert(t("chat_error_send") || "Ошибка отправки сообщения");
+       setMessages(prev => prev.filter(m => m.id !== `temp-${Date.now()}`));
+       setNewMessage(content);
     } finally {
-      setIsSending(false); // Unlock
+       setIsSending(false);
     }
   };
 
@@ -357,97 +341,52 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
   const getImageUrl = (path) => {
     if (!path) return null;
-    
     try {
         let cleanPath = path;
-        
-        // Handle arrays (sometimes Supabase stores as JSON array)
         if (Array.isArray(cleanPath)) {
             cleanPath = cleanPath[0];
         } else if (typeof cleanPath === 'string' && cleanPath.startsWith('[')) {
              try {
                  const parsed = JSON.parse(cleanPath);
                  if (Array.isArray(parsed)) cleanPath = parsed[0];
-             } catch (e) { /* ignore */ }
+             } catch (e) { }
         }
-
         if (!cleanPath || typeof cleanPath !== 'string') return null;
-        
         const trimmed = cleanPath.trim();
-        
-        // Filter out placeholders
-        if (trimmed.length < 5 || 
-            trimmed.toLowerCase().includes('фото') || 
-            trimmed.toLowerCase().includes('photo')) {
-            return null;
-        }
-
-        // Check if path looks like a full URL
-        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-            return trimmed;
-        } 
-        
-        // Safe Supabase call
-        const { data } = supabase.storage
-            .from("listing-images")
-            .getPublicUrl(trimmed);
-            
+        if (trimmed.length < 5 || trimmed.toLowerCase().includes('фото') || trimmed.toLowerCase().includes('photo')) return null;
+        if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
+        const { data } = supabase.storage.from("listing-images").getPublicUrl(trimmed);
         return data?.publicUrl;
     } catch (error) {
-        console.error("Error generating chat image url:", error);
         return null;
     }
   };
 
-  // Pre-calculate image URL to avoid re-calculating on render
   const listingImageUrl = listing ? getImageUrl(listing.image_path) : null;
 
-  if (loading) {
-    return <ChatDetailSkeleton />;
-  }
+  if (loading) return <ChatDetailSkeleton />;
 
   return (
-    <div 
-      className="flex flex-col h-[100dvh] w-full max-w-[520px] mx-auto bg-white dark:bg-background" 
-      style={{ 
-        touchAction: 'pan-y',
-        overflowX: 'hidden',
-        position: 'relative',
-        width: '100%',
-        maxWidth: '520px'
-      }}
-    >
-      {/* Header (Fixed) */}
+    <div className="flex flex-col h-[100dvh] w-full max-w-[520px] mx-auto bg-white dark:bg-background" style={{ touchAction: 'pan-y', overflowX: 'hidden', position: 'relative', width: '100%', maxWidth: '520px' }}>
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+20px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black w-full max-w-[520px] mx-auto transition-all duration-200">
         <div className="flex items-center gap-3 flex-1 min-w-0">
             <BackButton />
-            
             {otherUser && (
             <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-white/10">
                 {otherUser.avatar_url ? (
                     <img src={otherUser.avatar_url} alt={otherUser.full_name} className="w-full h-full object-cover" />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-xs">
-                    {(otherUser.full_name || "U")[0].toUpperCase()}
-                    </div>
+                    <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-xs">{(otherUser.full_name || "U")[0].toUpperCase()}</div>
                 )}
                 </div>
                 <div className="flex-col justify-center flex-1 min-w-0 flex">
-                <div className="font-bold text-sm truncate text-black dark:text-white leading-tight">
-                    {otherUser.full_name || t("chat_partner") || "Собеседник"}
-                </div>
-                {listing && (
-                    <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate leading-tight mt-0.5">
-                    {listing.title} · {listing.price} {listing.currency || '€'}
-                    </div>
-                )}
+                <div className="font-bold text-sm truncate text-black dark:text-white leading-tight">{otherUser.full_name || t("chat_partner") || "Собеседник"}</div>
+                {listing && <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate leading-tight mt-0.5">{listing.title} · {listing.price} {listing.currency || '€'}</div>}
                 </div>
             </Link>
             )}
         </div>
-
-        {/* Listing Image (Link to listing) */}
         {listing && listingImageUrl && (
             <a href={`/listing/${listing.id}`} className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-800 overflow-hidden flex-shrink-0 block border border-gray-100 dark:border-white/10 relative">
                 <img src={listingImageUrl} alt={listing.title} className="w-full h-full object-cover" />
@@ -463,51 +402,23 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           </div>
       )}
 
-      {/* Messages Area */}
-      <div 
-        className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-4 w-full pt-[calc(env(safe-area-inset-top)+90px)]"
-      >
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-4 w-full pt-[calc(env(safe-area-inset-top)+90px)]">
         <AnimatePresence initial={false} mode="popLayout">
         {messages.map((msg, index) => {
           const isMe = msg.sender_id === user?.id;
           const showDate = index === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[index - 1].created_at).toDateString();
-          
           return (
-            <motion.div 
-                key={msg.id} 
-                layout // Animate layout changes smoothly
-                initial={{ opacity: 0, scale: 0.9, y: 10 }} // Subtler entry
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className="flex flex-col w-full"
-            >
-                {/* ... existing message bubble code ... */}
+            <motion.div key={msg.id} layout initial={{ opacity: 0, scale: 0.9, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: "spring", stiffness: 400, damping: 25 }} className="flex flex-col w-full">
                 {showDate && (
-                    <div className="flex justify-center my-4">
-                        <span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full">
-                            {new Date(msg.created_at).toLocaleDateString([], { day: 'numeric', month: 'long' })}
-                        </span>
-                    </div>
+                    <div className="flex justify-center my-4"><span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full">{new Date(msg.created_at).toLocaleDateString([], { day: 'numeric', month: 'long' })}</span></div>
                 )}
-                <div
-                  className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2 w-full`}
-                >
-                  <div
-                    className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm relative group ${
-                      isMe
-                        ? "bg-black dark:bg-white text-white dark:text-black rounded-br-none"
-                        : "bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-bl-none"
-                    }`}
-                  >
+                <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2 w-full`}>
+                  <div className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm relative group ${isMe ? "bg-black dark:bg-white text-white dark:text-black rounded-br-none" : "bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-bl-none"}`}>
                     <p className="whitespace-pre-wrap break-words min-w-[20px]">{msg.content || <span className="italic opacity-50">{t("chat_empty_msg") || "Пустое сообщение"}</span>}</p>
                     <div className={`text-[9px] mt-1 flex items-center justify-end gap-1 ${isMe ? "text-white/60 dark:text-black/60" : "text-black/40 dark:text-white/40"}`}>
                         <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                        {isMe && msg.is_read && (
-                            <span className="ml-1 font-medium">{t("chat_read") || "Прочитано"}</span>
-                        )}
-                        {isMe && !msg.is_read && (
-                             <span>✓</span>
-                        )}
+                        {isMe && msg.is_read && <span className="ml-1 font-medium">{t("chat_read") || "Прочитано"}</span>}
+                        {isMe && !msg.is_read && <span>✓</span>}
                     </div>
                   </div>
                 </div>
@@ -518,40 +429,11 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
         <div ref={messagesEndRef} /> 
       </div>
 
-      {/* Input Area */}
       <div className="flex-shrink-0 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] sticky bottom-0 z-10 w-full max-w-[520px] mx-auto">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend(e);
-          }}
-          className="flex items-end gap-2 w-full"
-        >
-          <textarea
-            ref={textareaRef}
-            value={newMessage}
-            onChange={(e) => {
-                setNewMessage(e.target.value);
-                handleTyping();
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder={t("chat_placeholder") || "Написать сообщение..."}
-            className="flex-1 bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-2xl px-4 py-3 text-sm resize-none max-h-32 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white min-w-0 w-full"
-            rows={1}
-            style={{ minHeight: "44px" }}
-          />
-          <button
-            type="submit"
-            disabled={!newMessage.trim() || isSending}
-            className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95"
-          >
-            {isSending ? (
-              <div className="w-5 h-5 border-2 border-white dark:border-black border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-0.5">
-                <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-              </svg>
-            )}
+        <form onSubmit={(e) => { e.preventDefault(); handleSend(e); }} className="flex items-end gap-2 w-full">
+          <textarea ref={textareaRef} value={newMessage} onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }} onKeyDown={handleKeyDown} placeholder={t("chat_placeholder") || "Написать сообщение..."} className="flex-1 bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-2xl px-4 py-3 text-sm resize-none max-h-32 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white min-w-0 w-full" rows={1} style={{ minHeight: "44px" }} />
+          <button type="submit" disabled={!newMessage.trim() || isSending} className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95">
+            {isSending ? <div className="w-5 h-5 border-2 border-white dark:border-black border-t-transparent rounded-full animate-spin" /> : <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-0.5"><path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" /></svg>}
           </button>
         </form>
       </div>

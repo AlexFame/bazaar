@@ -64,6 +64,57 @@ export default function ChatListClient() {
 
   useEffect(() => {
     const fetchUserAndChats = async () => {
+      setLoading(true);
+      
+      // Attempt API strategy if in Telegram
+      if (typeof window !== "undefined" && window.Telegram?.WebApp?.initData) {
+          try {
+              const res = await fetch('/api/conversations', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ initData: window.Telegram.WebApp.initData })
+              });
+              
+              if (res.ok) {
+                  const data = await res.json();
+                  // We need to fetch user profile too to set 'user' state correctly for filtering
+                  // The API doesn't return the "current user profile" in the list response directly?
+                  // Wait, we need 'user' for activeConversations filtering (ID check).
+                  // I should probably fetch profile separately or return it from API.
+                  
+                  // Fallback: Get profile from Supabase using correct ID... 
+                  // actually API ensures we are valid.
+                  // Let's rely on the profile resolution we had before or just fetch it here.
+                  
+                  // Better: let's get profile via supabase simply to populate 'user' state.
+                  // OR enhance API to return currentUser.
+                  // Let's assume the previous logic for 'user' finding works for identifying WHO we are,
+                  // allowing us to filter.
+                  
+                  // Let's do the fetch logic I wrote, but OVERRIDE the conversations fetch.
+                  
+                  // 1. Resolve User (Same as before)
+                   const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
+                   let resolvedUser = null;
+                   if (tgUser?.id) {
+                        const { data: profile } = await supabase.from("profiles").select("*").eq("tg_user_id", tgUser.id).single();
+                        if (profile) resolvedUser = profile;
+                   }
+                   
+                   if (resolvedUser) {
+                       setUser(resolvedUser);
+                       setConversations(data.conversations || []);
+                       setUnreadCounts(data.unreadCounts || {});
+                       setLoading(false);
+                       return;
+                   }
+              }
+          } catch (e) {
+              console.error("API Fetch failed, falling back to Supabase", e);
+          }
+      }
+
+      // Fallback to legacy RLS (if API failed or not in Telegram)
       // Try Supabase Auth first
       let { data: { user } } = await supabase.auth.getUser();
 
@@ -89,7 +140,7 @@ export default function ChatListClient() {
       
       setUser(user);
 
-      // Fetch ALL conversations
+      // Fetch ALL conversations via RLS
       const { data, error } = await supabase
         .from("conversations")
         .select(`
