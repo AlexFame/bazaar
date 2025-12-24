@@ -15,6 +15,8 @@ export async function POST(request) {
 
     // 1. Auth check
     let user = null;
+    const authHeader = request.headers.get('Authorization');
+    
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY;
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
     
