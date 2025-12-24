@@ -219,108 +219,108 @@ export default function MyPage() {
 
     setLoading(true);
     let tgUserId = getUserId();
+    // Fallback to Supabase Auth if no Telegram ID logic remains same for getting ID for local state,
+    // but for fetching we now prefer API.
     
-    // Fallback to Supabase Auth if no Telegram ID
-    if (!tgUserId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        tgUserId = user.id; // This is a UUID, not a number.
-      }
-    }
-
-    setUserId(tgUserId);
-    
-    if (!tgUserId) {
-      setLoading(false);
-      setListings([]);
-      return;
-    }
+    // We need initData for API
+    const tg = typeof window !== 'undefined' ? window.Telegram?.WebApp : null;
+    const initData = tg?.initData;
 
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, is_admin")
-        .eq("tg_user_id", Number(tgUserId))
-        .single();
-
-      if (profileError || !profileData) {
-        setListings([]);
-        setLoading(false);
-        return;
-      }
-
-      setIsAdmin(profileData.is_admin || false);
-
-      let data, error;
-
-        if (activeTab === 'favorites') {
-        // Fetch favorites
-        const { data: favoritesData, error: favoritesError } = await supabase
-          .from("favorites")
-          .select("listing_id, listings(*, profiles:created_by(*))")
-          .eq("profile_id", profileData.id)
-          .order("created_at", { ascending: false });
-
-        if (favoritesError) {
-          error = favoritesError;
-        } else {
-          // Extract listings from favorites relation
-          data = favoritesData
-            .map(f => f.listings)
-            .filter(l => l !== null); // Filter out any nulls if listing was deleted
-        }
-      } else if (activeTab === 'reviews') {
-          // Fetch Reviews
-          const { data: reviewsData, error: reviewsError } = await supabase
-              .from("reviews")
-              .select("*, reviewer:profiles!reviewer_id(full_name, tg_username, avatar_url)")
-              .eq("target_id", profileData.id)
-              .order("created_at", { ascending: false });
+      // Handles favorites & reviews separately as they might need different logic,
+      // BUT for "active", "archive", "draft", we use the new API to bypass RLS.
+      
+      if (activeTab === 'favorites') {
+          // Favorites fetch logic (Client side is fine usually, but check RLS)
+          // RLS for favorites usually allows "select own".
+          // RLS for listings in favorites: "select active". User might not see closed favorites?
+          // For now keep favorites logic as is, or move to API too?
+          // Let's keep existing favorites logic for now, fix drafts first.
           
-          if (reviewsError) error = reviewsError;
-          else {
-              // Store reviews in a separate state or reuse 'listings' state?
-              // 'listings' expects listing objects. 'reviews' are different.
-              // Let's create a separate state for reviews to avoid confusion, OR use 'listings' as generic 'data' holder.
-              // Using generic holder is risky for rendering.
-              // Better: setReviews(reviewsData)
-              setReviews(reviewsData || []);
+          let uid = tgUserId;
+          if (!uid) {
+             const { data: { user } } = await supabase.auth.getUser();
+             uid = user?.id; // If getting by profile, we need profile id logic again.
+             // Existing code handled this via profile lookup.
+             // Let's just fix the "My Listings" part first.
           }
-      } else {
-        // Fetch own listings
-        let query = supabase
-          .from("listings")
-          .select("*, profiles:created_by(*)")
-          .eq("created_by", profileData.id)
-          .order("created_at", { ascending: false });
+          
+          // Re-implementing profile fetch for Favorites/Reviews as they don't use the new API yet
+          // (Or we could extend the API).
+          // Let's minimize changes and valid RLS usage. 
+          // Favorites usually point to ACTIVE listings, so RLS is OK.
+          
+            const { data: profileData } = await supabase
+                .from("profiles")
+                .select("id, is_admin")
+                .eq("tg_user_id", Number(tgUserId))
+                .single();
+            
+            if (profileData) {
+                setIsAdmin(profileData.is_admin);
+                
+                 if (activeTab === 'favorites') {
+                    const { data: favoritesData } = await supabase
+                      .from("favorites")
+                      .select("listing_id, listings(*, profiles:created_by(*))")
+                      .eq("profile_id", profileData.id)
+                      .order("created_at", { ascending: false });
 
-        if (activeTab === 'active') {
-            query = query.in('status', ['active', 'reserved']);
-        } else if (activeTab === 'archive') {
-            query = query.in('status', ['closed', 'sold', 'archived']);
-        } else {
-            query = query.eq('status', activeTab);
-        }
-        
-        const result = await query;
-        data = result.data;
-        error = result.error;
+                     const favs = (favoritesData || []).map(f => f.listings).filter(Boolean);
+                     setListings(favs);
+                 } else if (activeTab === 'reviews') {
+                     const { data: reviewsData } = await supabase
+                        .from("reviews")
+                        .select("*, reviewer:profiles!reviewer_id(full_name, tg_username, avatar_url)")
+                        .eq("target_id", profileData.id)
+                        .order("created_at", { ascending: false });
+                     setReviews(reviewsData || []);
+                 }
+            }
+            setLoading(false);
+            return;
       }
 
-      if (error) {
-        console.error("Error loading listings/reviews:", error);
-        // Temporary debugging alert
-        // alert(`Error: ${error.message || JSON.stringify(error)}`); 
-        // Better: set error state to show in UI
-        setListings([]);
-        // If it was reviews error, distinct handling?
+      // FOR OWN LISTINGS (Active, Archive, Draft)
+      if (initData) {
+          const res = await fetch('/api/listings/my', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ initData, tab: activeTab })
+          });
+          
+          if (!res.ok) throw new Error("Failed to fetch listings");
+          
+          const data = await res.json();
+          setListings(data.items || []);
+          if (data.isAdmin !== undefined) setIsAdmin(data.isAdmin);
+          
       } else {
-        setListings(data || []);
+          // Fallback for non-TG env (Dev/Browser without initData)
+          // Still use Supabase direct, assuming Dev has RLS disabled or is logged in via Auth
+           const { data: { user } } = await supabase.auth.getUser();
+           if (user) {
+               let query = supabase
+                  .from("listings")
+                  .select("*, profiles:created_by(*)")
+                  .eq("created_by", user.id)
+                  .order("created_at", { ascending: false });
+
+                if (activeTab === 'active') query = query.in('status', ['active', 'reserved']);
+                else if (activeTab === 'archive') query = query.in('status', ['closed', 'sold', 'archived']);
+                else query = query.eq('status', activeTab);
+                
+                const { data } = await query;
+                setListings(data || []);
+           } else {
+               // Only if absolutely no auth
+               setListings([]);
+           }
       }
+
     } catch (e) {
       console.error("Error loading listings:", e);
-      alert(`${t("error_loading_data")}: ${e.message}`); // Show alert to user
-      setListings([]);
+      // setListings([]);
     } finally {
       setLoading(false);
     }
