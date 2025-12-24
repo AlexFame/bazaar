@@ -56,17 +56,13 @@ export async function POST(req) {
 
     // 2. Handle Operation
     
-    // Server-Side Validation Import (Dynamically or duplicate to avoid Edge Runtime issues if any, but lib should be fine)
-    // We need to import the functions. I'll assume they are importable.
-    // If not, I will inline simple checks or try to import.
-    // NOTE: 'import' in a function is async validation or required at top.
-    
     // Let's add imports at the top of the file via a separate edit?
     // No, I can't easily add top-level imports in the middle of a function replace.
     // I will verify if I can edit the top of the file first.
     // For now, I will implement a robust inline check reusing the Regexes, to be 100% safe against import errors.
     
     const URL_REGEX = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:com|ru|net|org|io|me|xyz|ua)[^\s]*)/i;
+    const GIBBERISH_REGEX = /[bcdfghjklmnpqrstvwxzбвгджзйклмнпрстфхцчшщ]{5,}/i;
     
     let { images: _img, id: _id, created_by: _cb, created_at: _ca, ...listingData } = payload;
     
@@ -82,14 +78,22 @@ export async function POST(req) {
     } else {
         // STRICT VALIDATION FOR ACTIVE LISTINGS
         
+        // 0. Image Check (Must have at least one image)
+        // Check payload.images array
+        if (!payload.images || !Array.isArray(payload.images) || payload.images.length === 0) {
+             return new Response(JSON.stringify({ error: 'At least one photo is required' }), { status: 400 });
+        }
+
         // 1. Title
         const title = listingData.title || "";
         if (title.length < 3) return new Response(JSON.stringify({ error: 'Title too short' }), { status: 400 });
         if (URL_REGEX.test(title)) return new Response(JSON.stringify({ error: 'Links in title forbidden' }), { status: 400 });
-        
+        if (GIBBERISH_REGEX.test(title)) return new Response(JSON.stringify({ error: 'Title looks like gibberish' }), { status: 400 });
+
         // 2. Description
         const desc = listingData.description || "";
         if (URL_REGEX.test(desc)) return new Response(JSON.stringify({ error: 'Links in description forbidden' }), { status: 400 });
+        if (GIBBERISH_REGEX.test(desc)) return new Response(JSON.stringify({ error: 'Description looks like gibberish' }), { status: 400 });
         
         // 3. Price
         if (listingData.price < 0 || listingData.price > 10000000) return new Response(JSON.stringify({ error: 'Invalid price' }), { status: 400 });
