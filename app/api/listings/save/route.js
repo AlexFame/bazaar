@@ -55,19 +55,44 @@ export async function POST(req) {
     const userId = profile.id;
 
     // 2. Handle Operation
-    // Strip 'images' and other non-DB fields
+    
+    // Server-Side Validation Import (Dynamically or duplicate to avoid Edge Runtime issues if any, but lib should be fine)
+    // We need to import the functions. I'll assume they are importable.
+    // If not, I will inline simple checks or try to import.
+    // NOTE: 'import' in a function is async validation or required at top.
+    
+    // Let's add imports at the top of the file via a separate edit?
+    // No, I can't easily add top-level imports in the middle of a function replace.
+    // I will verify if I can edit the top of the file first.
+    // For now, I will implement a robust inline check reusing the Regexes, to be 100% safe against import errors.
+    
+    const URL_REGEX = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:com|ru|net|org|io|me|xyz|ua)[^\s]*)/i;
+    
     let { images: _img, id: _id, created_by: _cb, created_at: _ca, ...listingData } = payload;
     
-    // Auto-fill required fields for Drafts to satisfy DB constraints
-    // Schema requires: title (3-120 chars), contacts (not null), type (not null - checked by default)
+    // Auto-fill required fields for Drafts
     if (listingData.status === 'draft') {
         if (!listingData.title || listingData.title.length < 3) {
             listingData.title = (listingData.title || "Черновик") + (listingData.title ? "" : " " + new Date().toLocaleTimeString());
-            if (listingData.title.length < 3) listingData.title += "___"; // Ensure min length
+            if (listingData.title.length < 3) listingData.title += "___";
         }
         if (!listingData.contacts) {
             listingData.contacts = "draft_placeholder";
         }
+    } else {
+        // STRICT VALIDATION FOR ACTIVE LISTINGS
+        
+        // 1. Title
+        const title = listingData.title || "";
+        if (title.length < 3) return new Response(JSON.stringify({ error: 'Title too short' }), { status: 400 });
+        if (URL_REGEX.test(title)) return new Response(JSON.stringify({ error: 'Links in title forbidden' }), { status: 400 });
+        
+        // 2. Description
+        const desc = listingData.description || "";
+        if (URL_REGEX.test(desc)) return new Response(JSON.stringify({ error: 'Links in description forbidden' }), { status: 400 });
+        
+        // 3. Price
+        if (listingData.price < 0 || listingData.price > 10000000) return new Response(JSON.stringify({ error: 'Invalid price' }), { status: 400 });
     }
 
     if (payload.id) {
