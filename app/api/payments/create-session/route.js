@@ -2,22 +2,51 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { stripe } from "@/lib/stripe";
 
+import { validateTelegramWebAppData } from "@/lib/telegram-auth";
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const BOT_TOKEN = process.env.TG_BOT_TOKEN;
 
 export async function POST(request) {
   try {
-    const { serviceId, listingId } = await request.json();
+    const { serviceId, listingId, initData } = await request.json();
 
     // 1. Auth check
+    let user = null;
     const authHeader = request.headers.get('Authorization');
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader || '' } },
-    });
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    if (authHeader) {
+      const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: { headers: { Authorization: authHeader || '' } },
+      });
+      const { data: { user: supabaseUser }, error: authError } = await supabase.auth.getUser();
+      if (!authError && supabaseUser) {
+        user = supabaseUser;
+      }
+    }
+
+    // Fallback to Telegram InitData
+    if (!user && initData && BOT_TOKEN) {
+       const tgUser = validateTelegramWebAppData(initData, BOT_TOKEN);
+       if (tgUser) {
+          // Find user by telegram_id in profiles
+          const { data: profile } = await supabaseAdmin
+             .from('profiles')
+             .select('id')
+             .eq('telegram_id', tgUser.id)
+             .single();
+          
+          if (profile) {
+             user = { id: profile.id };
+          }
+       }
+    }
+
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -45,8 +74,6 @@ export async function POST(request) {
     }
 
     // 4. Create Transaction Record (Pending)
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: transaction, error: txError } = await supabaseAdmin
       .from("payment_transactions")

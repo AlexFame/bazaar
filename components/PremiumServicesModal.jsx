@@ -41,8 +41,11 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
+      
+      const tg = window.Telegram?.WebApp;
+      const initData = tg?.initData;
 
-      if (!token) {
+      if (!token && !initData) {
         alert(t("premium_login_alert") || "Please log in");
         setPurchasing(null);
         return;
@@ -52,11 +55,12 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          ...(token ? { "Authorization": `Bearer ${token}` } : {})
         },
         body: JSON.stringify({
           serviceId: service.id,
           listingId,
+          initData: !token ? initData : undefined
         }),
       });
 

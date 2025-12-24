@@ -13,7 +13,6 @@ export default function ListingActions({ isOwner, listing, onEdit, onDelete, onP
                 onClick={onPromote}
                 className="w-full py-3.5 px-4 bg-[#007AFF] text-white text-[17px] font-semibold rounded-[14px] active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm"
             >
-                <span>🚀</span>
                 <span>{t("promote") || "Продвинуть"}</span>
             </button>
             
