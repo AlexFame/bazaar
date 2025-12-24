@@ -122,6 +122,9 @@ export async function POST(request) {
       return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
     }
 
+    // Determine base URL dynamically or from env
+    const origin = request.headers.get('origin') || SITE_URL;
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
@@ -141,8 +144,8 @@ export async function POST(request) {
         },
       ],
       mode: "payment",
-      success_url: `${SITE_URL}/listing/${listing.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${SITE_URL}/listing/${listing.id}?payment=cancelled`,
+      success_url: `${origin}/listing/${listing.id}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/listing/${listing.id}?payment=cancelled`,
       metadata: {
         transactionId: transaction.id,
         listingId: listing.id,
