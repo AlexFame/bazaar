@@ -1,10 +1,12 @@
-import { supabase } from "@/lib/supabaseClient";
+import { supaAdmin } from "@/lib/supabaseAdmin"; // Use Admin client for server-side fetching
 import ListingDetailClient from "@/components/ListingDetailClient";
+import { supabase } from "@/lib/supabaseClient"; // Keep for client component if needed, or remove if unused in server part
 
 export async function generateMetadata({ params }) {
   const { id } = params;
+  const admin = supaAdmin();
   
-  const { data: listing } = await supabase
+  const { data: listing } = await admin
     .from("listings")
     .select("title, description, price, main_image_path, listing_images(file_path)")
     .eq("id", id)
@@ -20,14 +22,13 @@ export async function generateMetadata({ params }) {
   
   // 1. Try main_image_path
   if (listing.main_image_path) {
-      const { data } = supabase.storage.from("listing-images").getPublicUrl(listing.main_image_path);
+      const { data } = admin.storage.from("listing-images").getPublicUrl(listing.main_image_path);
       imageUrl = data?.publicUrl;
   } 
   // 2. Fallback to first image in listing_images
   else if (listing.listing_images && listing.listing_images.length > 0) {
-      // Sort or pick first (assuming API returns in order or we pick any)
       const path = listing.listing_images[0].file_path;
-      const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
+      const { data } = admin.storage.from("listing-images").getPublicUrl(path);
       imageUrl = data?.publicUrl;
   }
 
@@ -52,17 +53,10 @@ export async function generateMetadata({ params }) {
   };
 }
 
-
-
-// Let's rewrite this function to fetch data and pass it to a Schema component or render script directly
-// Re-using the fetch from generateMetadata is tricky without deduping request (Next.js does this automatically for fetch(), but supabase client might not).
-
-// Better approach:
-// We will modify this file to fetch the listing data strictly for the JSON-LD script.
-// The Client Component will still do its thing (hydration).
-
 async function getListing(id) {
-    const { data } = await supabase
+    // Also use admin for JSON-LD to be consistent
+    const admin = supaAdmin();
+    const { data } = await admin
     .from("listings")
     .select("title, description, price, main_image_path, listing_images(file_path)")
     .eq("id", id)
@@ -75,10 +69,11 @@ export default async function ListingPage({ params }) {
 
   let jsonLd = null;
   if (listing) {
+      const admin = supaAdmin();
       const imageUrl = listing.main_image_path 
-        ? supabase.storage.from("listing-images").getPublicUrl(listing.main_image_path).data.publicUrl
+        ? admin.storage.from("listing-images").getPublicUrl(listing.main_image_path).data.publicUrl
         : (listing.listing_images?.[0]?.file_path 
-            ? supabase.storage.from("listing-images").getPublicUrl(listing.listing_images[0].file_path).data.publicUrl
+            ? admin.storage.from("listing-images").getPublicUrl(listing.listing_images[0].file_path).data.publicUrl
             : null);
 
       jsonLd = {
@@ -89,7 +84,7 @@ export default async function ListingPage({ params }) {
         "description": listing.description,
         "offers": {
           "@type": "Offer",
-          "priceCurrency": "EUR", // Defaulting to EUR as per metadata
+          "priceCurrency": "EUR", 
           "price": listing.price
         }
       };
