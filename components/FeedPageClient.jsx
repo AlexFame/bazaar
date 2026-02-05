@@ -78,6 +78,8 @@ const PriceSlider = ({
   min,
   max,
   onChange,
+  onFocus,
+  onBlur,
   minLimit = 0,
   maxLimit = 100000,
 }) => {
@@ -171,6 +173,8 @@ const PriceSlider = ({
               setLocalMin(val);
             }}
             className="w-20 border rounded px-1 py-0.5 text-xs"
+            onFocus={onFocus}
+            onBlur={onBlur}
           />
         </div>
         <div className="flex flex-col items-end">
@@ -183,6 +187,8 @@ const PriceSlider = ({
               setLocalMax(val);
             }}
             className="w-20 border rounded px-1 py-0.5 text-xs text-right"
+            onFocus={onFocus}
+            onBlur={onBlur}
           />
         </div>
       </div>
@@ -417,6 +423,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showFiltersModal, setShowFiltersModal] = useState(false); // New Modal State
+  const [isFilterInputFocused, setIsFilterInputFocused] = useState(false); // Hide footer on focus
   // Helper for initial category state
   const getInitialCategory = () => {
     const urlCat = searchParams.get("category");
@@ -2470,6 +2477,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                                 [subKey]: e.target.value
                                             });
                                         }}
+                                        onFocus={() => setIsFilterInputFocused(true)}
+                                        onBlur={() => setTimeout(() => setIsFilterInputFocused(false), 200)}
                                         className="w-full border border-gray-200 dark:border-white/20 rounded-xl px-4 py-3 text-sm bg-gray-50 dark:bg-neutral-900 appearance-none outline-none"
                                     >
                                         <option value="">{t("allSubcategories") || "All subcategories"}</option>
@@ -2500,8 +2509,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                     setLocationFilter(e.target.value);
                                     setShowCitySuggestions(true);
                                 }}
-                                onFocus={() => setShowCitySuggestions(true)}
-                                onBlur={() => setTimeout(() => setShowCitySuggestions(false), 200)} // Delay to allow click
+                                onFocus={() => {
+                                    setShowCitySuggestions(true);
+                                    setIsFilterInputFocused(true);
+                                }}
+                                onBlur={() => setTimeout(() => {
+                                    setShowCitySuggestions(false);
+                                    setIsFilterInputFocused(false);
+                                }, 200)}
                             />
                             {showCitySuggestions && citySuggestions.length > 0 && (
                                 <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-lg z-50 overflow-hidden max-h-48 overflow-y-auto">
@@ -2584,10 +2599,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                             setRadiusFilter(val);
                                         }}
                                         onFocus={(e) => {
+                                            setIsFilterInputFocused(true);
                                             setTimeout(() => {
                                                 e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                             }, 500);
                                         }}
+                                        onBlur={() => setTimeout(() => setIsFilterInputFocused(false), 200)}
                                         className="w-14 px-2 py-1 text-xs text-center border border-gray-200 dark:border-white/20 rounded-lg bg-gray-50 dark:bg-neutral-900"
                                     />
                                     <span className="text-xs text-gray-400">{t("km_label") || "km"}</span>
@@ -2625,6 +2642,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                 setMinPrice(min);
                                 setMaxPrice(max);
                             }}
+                            onFocus={() => setIsFilterInputFocused(true)}
+                            onBlur={() => setTimeout(() => setIsFilterInputFocused(false), 200)}
                             minLimit={0}
                             maxLimit={5000}
                          />
@@ -2782,7 +2801,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
            {/* Modal Footer */}
            <div 
-                className="shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative"
+                className={`shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative transition-transform duration-200 ${isFilterInputFocused ? 'translate-y-full opacity-0 absolute bottom-0 w-full pointer-events-none' : 'translate-y-0 opacity-100'}`}
                 style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
            >
                <button 
