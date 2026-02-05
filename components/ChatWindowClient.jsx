@@ -367,8 +367,8 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   if (loading) return <ChatDetailSkeleton />;
 
   return (
-    <div className="flex flex-col h-[100dvh] w-full max-w-[520px] mx-auto bg-white dark:bg-background overflow-hidden" style={{ touchAction: 'pan-y', position: 'relative', width: '100%', maxWidth: '520px' }}>
-      <div className="flex-shrink-0 w-full flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black z-50 transition-all duration-200">
+    <div className="flex flex-col min-h-screen w-full max-w-[520px] mx-auto bg-white dark:bg-background relative">
+      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black w-full transition-all duration-200">
         <div className="flex items-center gap-3 flex-1 min-w-0">
             <BackButton />
             {otherUser && (
@@ -402,7 +402,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           </div>
       )}
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-4 w-full min-h-0">
+      <div className="flex-1 w-full p-3 space-y-1 pb-32 min-h-0">
         <AnimatePresence initial={false} mode="popLayout">
         {messages.map((msg, index) => {
           const isMe = msg.sender_id === user?.id;
@@ -429,7 +429,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
         <div ref={messagesEndRef} /> 
       </div>
 
-      <div className="flex-shrink-0 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] w-full max-w-[520px] mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] w-full max-w-[520px] mx-auto">
         <form onSubmit={(e) => { e.preventDefault(); handleSend(e); }} className="flex items-end gap-2 w-full">
           <textarea ref={textareaRef} value={newMessage} onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }} onKeyDown={handleKeyDown} placeholder={t("chat_placeholder") || "Написать сообщение..."} className="flex-1 bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-2xl px-4 py-3 text-sm resize-none max-h-32 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white min-w-0 w-full" rows={1} style={{ minHeight: "44px" }} />
           <button type="submit" disabled={!newMessage.trim() || isSending} className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95">
