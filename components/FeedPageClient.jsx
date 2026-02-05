@@ -423,7 +423,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showFiltersModal, setShowFiltersModal] = useState(false); // New Modal State
-  const [isFilterInputFocused, setIsFilterInputFocused] = useState(false); // Hide footer on focus
   // Helper for initial category state
   const getInitialCategory = () => {
     const urlCat = searchParams.get("category");
@@ -2509,14 +2508,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                     setLocationFilter(e.target.value);
                                     setShowCitySuggestions(true);
                                 }}
-                                onFocus={() => {
-                                    setShowCitySuggestions(true);
-                                    setIsFilterInputFocused(true);
-                                }}
-                                onBlur={() => setTimeout(() => {
-                                    setShowCitySuggestions(false);
-                                    setIsFilterInputFocused(false);
-                                }, 200)}
+                                onFocus={() => setShowCitySuggestions(true)}
+                                onBlur={() => setTimeout(() => setShowCitySuggestions(false), 200)} // Delay to allow click
                             />
                             {showCitySuggestions && citySuggestions.length > 0 && (
                                 <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-white/10 rounded-xl shadow-lg z-50 overflow-hidden max-h-48 overflow-y-auto">
@@ -2598,13 +2591,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                             const val = e.target.value === "" ? null : Math.min(50, Math.max(0, Number(e.target.value)));
                                             setRadiusFilter(val);
                                         }}
-                                        onFocus={(e) => {
-                                            setIsFilterInputFocused(true);
-                                            setTimeout(() => {
-                                                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                            }, 500);
-                                        }}
-                                        onBlur={() => setTimeout(() => setIsFilterInputFocused(false), 200)}
                                         className="w-14 px-2 py-1 text-xs text-center border border-gray-200 dark:border-white/20 rounded-lg bg-gray-50 dark:bg-neutral-900"
                                     />
                                     <span className="text-xs text-gray-400">{t("km_label") || "km"}</span>
@@ -2642,8 +2628,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                 setMinPrice(min);
                                 setMaxPrice(max);
                             }}
-                            onFocus={() => setIsFilterInputFocused(true)}
-                            onBlur={() => setTimeout(() => setIsFilterInputFocused(false), 200)}
                             minLimit={0}
                             maxLimit={5000}
                          />
@@ -2801,60 +2785,52 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
            {/* Modal Footer */}
            {/* Modal Footer */}
-           <AnimatePresence>
-               {!isFilterInputFocused && (
-                   <motion.div
-                        initial={{ y: "100%", opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: "100%", opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative"
-                        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
-                   >
-                       <button 
-                          onClick={handleResetFilters}
-                          className="flex-1 py-3.5 bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-xl font-bold text-sm"
-                       >
-                          {t("reset") || "Reset"}
-                       </button>
-                       <button 
-                          onClick={() => {
-                              const currentCat = forcedCategory || 'all';
-                              // If category changed, navigate to new category page
-                              if (categoryFilter !== currentCat) {
-                                  const params = new URLSearchParams();
-                                  if (minPrice) params.set('min_price', minPrice);
-                                  if (maxPrice) params.set('max_price', maxPrice);
-                                  if (typeFilter !== 'all') params.set('type', typeFilter);
-                                  if (conditionFilter !== 'all') params.set('condition', conditionFilter);
-                                  if (withPhotoFilter === 'yes') params.set('has_photo', 'true');
-                                  if (deliveryFilter === 'delivery') params.set('delivery', 'true');
-                                  if (sortFilter !== 'date_desc') params.set('sort', sortFilter);
+           <div 
+                className="shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative"
+                style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+           >
+               <button 
+                  onClick={handleResetFilters}
+                  className="flex-1 py-3.5 bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-xl font-bold text-sm"
+               >
+                  {t("reset") || "Reset"}
+               </button>
+               <button 
+                  onClick={() => {
+                      const currentCat = forcedCategory || 'all';
+                      // If category changed, navigate to new category page
+                      if (categoryFilter !== currentCat) {
+                          const params = new URLSearchParams();
+                          if (minPrice) params.set('min_price', minPrice);
+                          if (maxPrice) params.set('max_price', maxPrice);
+                          if (typeFilter !== 'all') params.set('type', typeFilter);
+                          if (conditionFilter !== 'all') params.set('condition', conditionFilter);
+                          if (withPhotoFilter === 'yes') params.set('has_photo', 'true');
+                          if (deliveryFilter === 'delivery') params.set('delivery', 'true');
+                          if (sortFilter !== 'date_desc') params.set('sort', sortFilter);
 
-                                  // Dynamic params
-                                  Object.entries(dynamicFilters).forEach(([k, v]) => {
-                                     if (v) params.set(`dyn_${k}`, v);
-                                  });
+                          // Dynamic params
+                          Object.entries(dynamicFilters).forEach(([k, v]) => {
+                             if (v) params.set(`dyn_${k}`, v);
+                          });
 
-                                  // Search term?
-                                  if (searchTerm) params.set('q', searchTerm);
-                                  
-                                  // Handle 'all' category -> /category/all
-                                  const targetPath = `/category/${categoryFilter}`;
-                                  router.push(`${targetPath}?${params.toString()}`);
-                                  return;
-                              }
+                          // Search term?
+                          if (searchTerm) params.set('q', searchTerm);
+                          
+                          // Handle 'all' category -> /category/all
+                          const targetPath = `/category/${categoryFilter}`;
+                          router.push(`${targetPath}?${params.toString()}`);
+                          return;
+                      }
 
-                              handleRefresh();
-                              setShowFiltersModal(false);
-                          }}
-                          className="flex-[2] py-3.5 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-sm shadow-lg"
-                       >
-                          {t("show_listings") || "Show results"}
-                       </button>
-                   </motion.div>
-               )}
-           </AnimatePresence>
+                      handleRefresh();
+                      setShowFiltersModal(false);
+                  }}
+                  className="flex-[2] py-3.5 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-sm shadow-lg"
+               >
+                  {t("show_listings") || "Show results"}
+               </button>
+           </div>
         </div>
       )}
 
