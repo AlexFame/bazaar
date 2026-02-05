@@ -5,6 +5,37 @@ import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Helper Component for Actions
+function ActionConfirmButton({ icon, label, confirmLabel, onConfirm, className }) {
+    const [confirming, setConfirming] = useState(false);
+    
+    useEffect(() => {
+        if (confirming) {
+            const t = setTimeout(() => setConfirming(false), 3000);
+            return () => clearTimeout(t);
+        }
+    }, [confirming]);
+
+    return (
+        <button
+            onClick={() => {
+                if (confirming) {
+                    onConfirm();
+                    setConfirming(false);
+                } else {
+                    setConfirming(true);
+                }
+            }}
+            className={`flex flex-col items-center justify-center p-3 rounded-xl gap-2 transition-all ${className} ${confirming ? 'ring-2 ring-offset-2 ring-red-500 scale-95' : ''}`}
+        >
+            <span className="text-2xl">{icon}</span>
+            <span className="text-sm font-semibold">
+                {confirming ? confirmLabel : label}
+            </span>
+        </button>
+    );
+}
+
 export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
   const { t, lang } = useLang();
   const [services, setServices] = useState([]);
@@ -145,7 +176,57 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
               </div>
 
               {/* Content */}
+              {/* Content */}
               <div className="overflow-y-auto flex-1 p-4 space-y-3 bg-[#F2F2F7] dark:bg-black">
+                
+                {/* Manual Actions (MVP) */}
+                <div className="bg-white dark:bg-[#1C1C1E] rounded-[20px] p-4 mb-3">
+                   <h3 className="text-md font-bold mb-3 dark:text-white">🚀 Быстрые действия</h3>
+                   <div className="grid grid-cols-2 gap-3">
+                       <ActionConfirmButton 
+                          icon="⬆️" 
+                          label="Поднять" 
+                          confirmLabel="Точно?"
+                          onConfirm={async () => {
+                                  const tg = window.Telegram?.WebApp;
+                                  const res = await fetch('/api/listings/bump', {
+                                      method: 'POST',
+                                      body: JSON.stringify({ initData: tg?.initData, listingId })
+                                  });
+                                  if (res.ok) {
+                                      alert("Успешно поднято!");
+                                      onClose();
+                                      window.location.reload(); 
+                                  } else {
+                                      alert("Ошибка");
+                                  }
+                          }}
+                          className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100"
+                       />
+
+                       <ActionConfirmButton 
+                          icon="📌" 
+                          label="Закрепить" 
+                          confirmLabel="VIP 7дн?"
+                          onConfirm={async () => {
+                                  const tg = window.Telegram?.WebApp;
+                                  const res = await fetch('/api/listings/pin', {
+                                      method: 'POST',
+                                      body: JSON.stringify({ initData: tg?.initData, listingId, durationDays: 7 })
+                                  });
+                                  if (res.ok) {
+                                      alert("Успешно закреплено!");
+                                      onClose();
+                                      window.location.reload();
+                                  } else {
+                                      alert("Ошибка");
+                                  }
+                          }}
+                          className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100"
+                       />
+                   </div>
+                </div>
+
                 {loading ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-3">
                     <div className="w-6 h-6 border-2 border-[#007AFF] border-t-transparent rounded-full animate-spin"></div>

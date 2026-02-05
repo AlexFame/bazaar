@@ -66,6 +66,10 @@ export async function POST(req) {
     
     let { images: _img, id: _id, created_by: _cb, created_at: _ca, ...listingData } = payload;
     
+    // Check if this is a "status only" update (e.g. marking as sold)
+    // If we have 'status' but NO title and NO images in payload (and it's an update), skip strict checks.
+    const isStatusOnlyUpdate = payload.id && listingData.status && !listingData.title && (!payload.images || payload.images.length === 0);
+
     // Auto-fill required fields for Drafts
     if (listingData.status === 'draft') {
         if (!listingData.title || listingData.title.length < 3) {
@@ -75,20 +79,22 @@ export async function POST(req) {
         if (!listingData.contacts) {
             listingData.contacts = "draft_placeholder";
         }
-    } else {
-        // STRICT VALIDATION FOR ACTIVE LISTINGS
+    } else if (!isStatusOnlyUpdate) {
+        // STRICT VALIDATION FOR ACTIVE LISTINGS (skipped for status-only updates)
         
         // 0. Image Check (Must have at least one image)
         // Check payload.images array
         if (!payload.images || !Array.isArray(payload.images) || payload.images.length === 0) {
-             return new Response(JSON.stringify({ error: 'At least one photo is required' }), { status: 400 });
+             // Use a key that the client can translate, or fallback to English if client doesn't translate keys
+             // Client Logic: if (error.startsWith('validation_')) t(error)
+             return new Response(JSON.stringify({ error: 'validation_images_required' }), { status: 400 });
         }
 
         // 1. Title
         const title = listingData.title || "";
         if (title.length < 3) return new Response(JSON.stringify({ error: 'Title too short' }), { status: 400 });
         if (URL_REGEX.test(title)) return new Response(JSON.stringify({ error: 'Links in title forbidden' }), { status: 400 });
-        if (GIBBERISH_REGEX.test(title)) return new Response(JSON.stringify({ error: 'Title looks like gibberish' }), { status: 400 });
+        if (GIBBERISH_REGEX.test(title)) return new Response(JSON.stringify({ error: 'validation_title_gibberish' }), { status: 400 });
 
         // 2. Description
         const desc = listingData.description || "";
@@ -115,13 +121,13 @@ export async function POST(req) {
         } else {
              // INSERT New (with specific ID)
              // Manually add created_by and id
-             const insertData = { ...listingData, created_by: userId, id: payload.id };
+             const insertData = { ...listingData, created_by: userId, id: payload.id, bumped_at: new Date().toISOString() };
              const { error } = await supa.from('listings').insert(insertData);
              if (error) throw error;
         }
     } else {
         // INSERT (no ID provided)
-        const insertData = { ...listingData, created_by: userId };
+        const insertData = { ...listingData, created_by: userId, bumped_at: new Date().toISOString() };
         const { error } = await supa.from('listings').insert(insertData);
         if (error) throw error;
     }

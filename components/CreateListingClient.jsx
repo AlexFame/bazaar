@@ -59,6 +59,7 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [lastSavedData, setLastSavedData] = useState(null);
   const [mounted, setMounted] = useState(false); // NEW: Hydration fix
   const [inTelegram, setInTelegram] = useState(false); // NEW: State instead of immediate check
+  const [allowChat, setAllowChat] = useState(true); // NEW: Chat toggle
 
   const { notificationOccurred, impactOccurred } = useHaptic();
   
@@ -377,7 +378,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       const contentCheckDesc = checkContent(description);
 
       if (!contentCheckTitle.safe || !contentCheckDesc.safe) {
-        alert(t("alert_forbidden_content") || "Ваше объявление содержит запрещенные слова.");
+        alert(t("alert_forbidden_content") || "Ваше объявление содержит запрещенный контент или бессмыслицу.");
         return;
       }
 
@@ -579,6 +580,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         latitude: coordinates?.lat || null,
         longitude: coordinates?.lng || null,
         contacts: contacts || "",
+        allow_chat: allowChat, // NEW
         parameters: Object.entries(parameters).reduce((acc, [key, val]) => {
             // Find definition
             const def = currentCategory?.filters?.find(f => f.key === key);
@@ -609,7 +611,12 @@ export default function CreateListingClient({ onCreated, editId }) {
               let errorMsg = "Save failed";
               try {
                   const dat = await res.json();
-                  errorMsg = dat.error || errorMsg;
+                  // Try to translate the error key if it looks like one
+                  if (dat.error && dat.error.startsWith('validation_')) {
+                      errorMsg = t(dat.error);
+                  } else {
+                      errorMsg = dat.error || errorMsg;
+                  }
               } catch (parseErr) {
                   // If JSON parse fails, it's likely HTML error page
                   const text = await res.text();
@@ -1181,6 +1188,26 @@ export default function CreateListingClient({ onCreated, editId }) {
                 {t("username_label_use") || "Использовать мой юзернейм"}
                 </button>
             )}
+          </div>
+          
+          {/* Allow Chat Toggle */}
+          <div className="mt-4 flex items-center justify-between bg-gray-50 border border-black/5 dark:bg-white/5 dark:border-white/10 p-3 rounded-xl">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                  {t("allow_chat") || "Разрешить чат в приложении"}
+              </span>
+              <button
+                  type="button"
+                  onClick={() => setAllowChat(!allowChat)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                    allowChat ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-600'
+                  }`}
+              >
+                  <span
+                    className={`${
+                      allowChat ? 'translate-x-6' : 'translate-x-1'
+                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                  />
+              </button>
           </div>
         </div>
 

@@ -8,7 +8,7 @@ export async function generateMetadata({ params }) {
   
   const { data: listing } = await admin
     .from("listings")
-    .select("title, description, price, main_image_path, listing_images(file_path)")
+    .select("title, description, price, main_image_path, listing_images(file_path), allow_chat, contacts")
     .eq("id", id)
     .single();
 
@@ -58,7 +58,7 @@ async function getListing(id) {
     const admin = supaAdmin();
     const { data } = await admin
     .from("listings")
-    .select("title, description, price, main_image_path, listing_images(file_path)")
+    .select("title, description, price, main_image_path, listing_images(file_path), allow_chat, contacts, created_by, profiles(*)")
     .eq("id", id)
     .single();
     return data;

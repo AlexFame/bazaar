@@ -311,11 +311,20 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
     }
   };
 
-  const handleStatusChange = async (e, newStatus) => {
-    e.preventDefault();
-    e.stopPropagation();
+  // State for status confirmation
+  const [confirmStatus, setConfirmStatus] = useState(null); // 'sold' | 'reserved' | null
+
+  const handleStatusChange = async (newStatus) => {
+    // If trying to set sold/reserved, require confirmation step
+    if ((newStatus === 'closed' || newStatus === 'reserved') && confirmStatus !== newStatus) {
+        setConfirmStatus(newStatus);
+        // Auto-reset after 3 seconds if not clicked
+        setTimeout(() => setConfirmStatus(null), 3000);
+        return;
+    }
 
     try {
+      setLoading(true);
       const tg = window.Telegram?.WebApp;
       const initData = tg?.initData;
       
@@ -327,24 +336,68 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
       const res = await fetch('/api/listings/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-              id: listing.id, 
+          body: JSON.stringify({
+              id: listing.id,
               status: newStatus,
-              initData 
+              initData
           })
       });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || 'Failed to update status');
+        let msg = errData.error || 'Failed to update status';
+        if (msg.startsWith('validation_')) {
+            msg = t(msg);
+        }
+        throw new Error(msg);
       }
 
-      setStatus(newStatus); // Optimistic update
-      if (onStatusChange) onStatusChange();
-    } catch (error) {
-      console.error("Error updating status:", error);
-      alert(`Ошибка обновления статуса: ${error.message}`);
+      setStatus(newStatus);
+      setConfirmStatus(null); // Reset confirmation
+      // Assuming 'toast' is available, e.g., from react-hot-toast
+      // toast.success(t('status_updated') || 'Статус обновлен');
+      
+      if (onUpdate) onUpdate({ ...listing, status: newStatus });
+      
+    } catch (err) {
+      console.error("Status update error:", err);
+      // toast.error(err.message || "Ошибка обновления статуса");
+      alert(`Ошибка обновления статуса: ${err.message}`); // Fallback if toast not available
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Helper to render Status Buttons
+  const renderStatusButtons = () => {
+       if (status !== 'active') return null;
+       
+       return (
+           <div className="flex gap-2 mt-3">
+               <button
+                  onClick={(e) => { e.stopPropagation(); handleStatusChange('reserved'); }}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${
+                      confirmStatus === 'reserved' 
+                      ? "bg-yellow-500 text-white animate-pulse" 
+                      : "bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300"
+                  }`}
+                  disabled={isLoading}
+               >
+                  {confirmStatus === 'reserved' ? (t("yes") || "Да") + "?" : t("mark_reserved")}
+               </button>
+               <button
+                  onClick={(e) => { e.stopPropagation(); handleStatusChange('closed'); }}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${
+                      confirmStatus === 'closed' 
+                      ? "bg-red-600 text-white animate-pulse" 
+                      : "bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-gray-300"
+                  }`}
+                  disabled={isLoading}
+               >
+                  {confirmStatus === 'closed' ? (t("yes") || "Да") + "?" : t("mark_sold")}
+               </button>
+           </div>
+       );
   };
 
   const isVip = listing.is_vip || false;

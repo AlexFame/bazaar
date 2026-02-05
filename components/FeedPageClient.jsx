@@ -191,38 +191,38 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const txt = {
     searchPlaceholder: t("searchPlaceholder"),
     locationPlaceholder: t("locationPlaceholder"),
-    priceFrom: t("priceFrom"),
-    priceTo: t("priceTo"),
+    priceFrom: t("from_label") || "От",
+    priceTo: t("to_label") || "До",
     allCategories: t("allCategories"),
-    typeAny: t("typeAny"),
-    typeBuy: t("typeBuy"),
-    typeSell: t("typeSell"),
-    typeServices: t("typeServices"),
-    typeFree: t("typeFree"),
-    typeExchange: t("typeExchange"),
-    dateAll: t("dateAll"),
-    dateToday: t("dateToday"),
-    date3d: t("date3d"),
-    date7d: t("date7d"),
-    date30d: t("date30d"),
+    typeAny: t("typeAny") || "Любой",
+    typeBuy: t("typeBuy") || "Купить",
+    typeSell: t("typeSell") || "Продать",
+    typeServices: t("typeServices") || "Услуги",
+    typeFree: t("typeFree") || "Даром",
+    typeExchange: t("typeExchange") || "Обмен",
+    dateAll: t("dateAll") || "За все время",
+    dateToday: t("dateToday") || "За сегодня",
+    date3d: t("date3d") || "За 3 дня",
+    date7d: t("date7d") || "За неделю",
+    date30d: t("date30d") || "За месяц",
     popularQueriesLabel: t("popularQueriesLabel"),
     loading: t("loading"),
     empty: t("empty"),
     loadMore: t("loadMore"),
     loadingMore: t("loadingMore"),
-    conditionAny: t("conditionAny"),
-    conditionNew: t("conditionNew"),
-    conditionUsed: t("conditionUsed"),
-    conditionLikeNew: t("conditionLikeNew"),
-    barter: t("barter"),
-    withPhoto: t("withPhoto"),
-    yes: t("yes"),
-    no: t("no"),
-    filters: t("filters"),
-    category: t("category"),
-    price: t("price"),
-    condition: t("condition"),
-    type: t("type"),
+    conditionAny: t("conditionAny") || "Любое",
+    conditionNew: t("conditionNew") || "Новое",
+    conditionUsed: t("conditionUsed") || "Б/у",
+    conditionLikeNew: t("conditionLikeNew") || "Как новое",
+    barter: t("barter") || "Обмен",
+    withPhoto: t("withPhoto") || "С фото",
+    yes: t("yes") || "Да",
+    no: t("no") || "Нет",
+    filters: t("filters") || "Фильтры",
+    category: t("category") || "Категория",
+    price: t("price") || "Цена",
+    condition: t("condition") || "Состояние",
+    type: t("type") || "Тип",
     more: t("more"),
     foundInCategory: t("foundInCategory"),
     foundInCategory: t("foundInCategory"),
@@ -705,7 +705,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
         .in("status", ["active", "reserved"]) // Only show active and reserved on map
         // .not("longitude", "is", null) // Removed duplicate
         // .or("status.neq.closed,status.is.null") // Removed to restore listings
-        .order("created_at", { ascending: false });
+        .order("is_vip", { ascending: false })
+        .order("bumped_at", { ascending: false, nullsFirst: false });
 
       // Apply same filters as main list
       const term = (searchTerm || "").trim();
@@ -812,42 +813,94 @@ export default function FeedPageClient({ forcedCategory = null }) {
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
-      // 1. Fetch listings (raw, without joins to avoid FK errors)
+      // 0. Server-side Pre-Filter (Location & Search Sorting)
+      // CASE A: Radius Filter is Active -> Strict Cutoff
+      let locationIds = null;
+      let preserveOrder = false;
+      
+      if (userLocation && radiusFilter) {
+          try {
+             // ... existing radius logic ...
+             const { data: locData, error: locError } = await supabase.rpc('get_listings_within_radius', {
+                 lat: userLocation.lat,
+                 lon: userLocation.lng,
+                 radius_km: Number(radiusFilter)
+             });
+             if (!locError && locData) locationIds = locData.map(x => x.id);
+          } catch(e) { console.error(e); }
+      } 
+      // CASE B: No Radius, but User Has Location + Search Term -> Auto-Sort by Distance
+      else if (userLocation && (searchTerm || "").trim().length > 0 && !sortFilter) {
+          // If user didn't pick a sort, and is searching -> Show nearest matches first
+          try {
+             const { data: sortedIds, error: sortErr } = await supabase.rpc('get_search_listings_sorted_by_distance', {
+                 lat: userLocation.lat,
+                 lon: userLocation.lng,
+                 search_query: (searchTerm || "").trim(),
+                 max_limit: 100 // Fetch top 100 nearest matches
+             });
+
+             if (!sortErr && sortedIds) {
+                 locationIds = sortedIds.map(x => x.id);
+                 preserveOrder = true; // We want to keep this distance order
+             }
+          } catch(e) { console.error(e); }
+      }
+
+      if (locationIds !== null && locationIds.length === 0) {
+           setListings([]);
+           setHasMore(false);
+           setLoading(false);
+           if (append) setLoadingMore(false);
+           return;
+      }
+
+      // 1. Fetch listings
       let query = supabase
         .from("listings")
-        .select("*") // Removed profiles join to prevent errors/filtering
-        // .select("*, profiles(is_verified, rating)")
-        .in("status", ["active", "reserved"]) // Only show active and reserved in feed
-        .order("is_vip", { ascending: false });
+        .select("*")
+        .in("status", ["active", "reserved"]);
+        
         // Sorting
-        if (sortFilter === 'date_desc') {
-            query = query.order("created_at", { ascending: false });
-        } else if (sortFilter === 'date_asc') {
-            query = query.order("created_at", { ascending: true });
-        } else if (sortFilter === 'price_asc') {
-            query = query.order("price", { ascending: true });
-        } else if (sortFilter === 'price_desc') {
-             query = query.order("price", { ascending: false });
-        } else {
-             // Default
-             query = query.order("created_at", { ascending: false });
+        // If we want to preserve distance order (from RPC), we don't apply DB sort here
+        if (!preserveOrder) {
+             query = query.order("is_vip", { ascending: false });
+             
+            if (sortFilter === 'date_desc') {
+                query = query.order("bumped_at", { ascending: false, nullsFirst: false });
+            } else if (sortFilter === 'date_asc') {
+                query = query.order("created_at", { ascending: true });
+            } else if (sortFilter === 'price_asc') {
+                query = query.order("price", { ascending: true });
+            } else if (sortFilter === 'price_desc') {
+                 query = query.order("price", { ascending: false });
+            } else {
+                 query = query.order("bumped_at", { ascending: false, nullsFirst: false });
+            }
+        }
+
+        // Apply Location IDs filter
+        if (locationIds !== null) {
+            query = query.in('id', locationIds);
         }
         
-        // Paging
-        query = query.range(from, to);
+        // Paging (Only valid if not re-sorting fully, but mostly okay)
+        if (!preserveOrder) {
+             query = query.range(from, to);
+        }
 
       const term = (searchTerm || "").trim();
-      if (term) {
-        // Advanced "Smart" Search: Split into words, expand each, and AND the groups
-        // Example: "iphone 15" -> (title ILIKE %iphone% OR title ILIKE %айфон%) AND (title ILIKE %15%)
+      // Only apply text filters if we are NOT using the pre-sorted optimized IDs (which already filtered by text)
+      // Actually, we must apply text filter again to be safe? 
+      // No, if `preserveOrder` is true, strict text matching was done in RPC.
+      // If `preserveOrder` is false, we apply standard logic.
+      if (term && !preserveOrder) {
+        // ... standard text filter (words loop) ...
         const words = term.split(/\s+/).filter(w => w.length > 0);
-        
         words.forEach(word => {
-            const variants = expandSearchTerm(word); // Returns [word, ...synonyms]
+            const variants = expandSearchTerm(word); 
             if (variants.length > 0) {
-                const orCondition = variants
-                    .map(v => `title.ilike.%${v}%`)
-                    .join(",");
+                const orCondition = variants.map(v => `title.ilike.%${v}%`).join(",");
                 query = query.or(orCondition);
             }
         });
@@ -1009,55 +1062,55 @@ export default function FeedPageClient({ forcedCategory = null }) {
           .select("id, tg_username, full_name, avatar_url") // Use correct columns
           .in("id", userIds);
 
-        // Merge data
+      // Merge data (profiles, images...)
         chunk = chunk.map((listing) => {
-          const listingImages = imagesData
+           // ... mapping logic ...
+           // (Preserving existing mapping code)
+           const listingImages = imagesData
             ? imagesData
                 .filter((img) => img.listing_id === listing.id)
-                .map((img) => ({ image_path: img.file_path })) // Map file_path -> image_path
+                .map((img) => ({ image_path: img.file_path }))
             : [];
-
-          const profile = profilesData
+           const profile = profilesData
             ? profilesData.find((p) => p.id === listing.created_by)
             : null;
-
-          // Map profile fields to expected format
-          const mappedProfile = profile
-            ? {
-                is_verified: false, // Default to false as column missing
+           const mappedProfile = profile ? {
+                is_verified: false,
                 username: profile.tg_username,
                 first_name: profile.full_name ? profile.full_name.split(" ")[0] : "",
                 last_name: profile.full_name ? profile.full_name.split(" ").slice(1).join(" ") : "",
                 avatar_url: profile.avatar_url,
-              }
-            : null;
-
-          return {
+              } : null;
+           return {
             ...listing,
             main_image_path: listing.main_image_path || listingImages[0]?.image_path || null,
             listing_images: listingImages,
             profiles: mappedProfile,
-          };
+           };
         });
+
+      // 3. Restore Order (if we fetched via pre-sorted IDs)
+      if (preserveOrder && locationIds) {
+          // Create a map for O(1) lookup of index
+          const orderMap = new Map(locationIds.map((id, index) => [id, index]));
+          chunk.sort((a, b) => {
+              const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 9999;
+              const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 9999;
+              return idxA - idxB;
+          });
+      }
       }
 
-      // Client-side distance filtering
+      // Client-side distance filtering (REMOVED - now server-side)
+      /* 
       if (userLocation && radiusFilter && chunk.length > 0) {
         chunk = chunk.filter((listing) => {
-          if (!listing.latitude || !listing.longitude) {
-            return false;
-          }
-
-          const distance = calculateDistance(
-            userLocation.lat,
-            userLocation.lng,
-            listing.latitude,
-            listing.longitude
-          );
-
+          if (!listing.latitude || !listing.longitude) return false;
+          const distance = calculateDistance(userLocation.lat, userLocation.lng, listing.latitude, listing.longitude);
           return distance <= radiusFilter;
         });
       }
+      */
 
       if (append) {
         setListings((prev) => {
@@ -1153,7 +1206,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
     const detectedCat = detectCategory(expandedQuery); // Using expanded query for detection
 
     // Reset filters for new search
-    setFilters({}); 
+    setDynamicFilters({}); 
     setListings([]); 
     setPage(0); 
     setHasMore(true);
@@ -1201,50 +1254,137 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
 
   const FilterDropdown = ({ label, active, children, id, align = "left" }) => (
-    <div className="relative inline-block text-left mr-2 mb-2">
+    <>
       <button
         type="button"
-        onClick={() =>
-          setOpenDropdown(openDropdown === id ? null : id)
-        }
-        className={`inline-flex justify-between items-center w-full rounded-lg border px-3 py-2 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none ${
-          active ? "border-black ring-1 ring-black" : "border-gray-300"
+        onClick={() => setOpenDropdown(openDropdown === id ? null : id)}
+        className={`whitespace-nowrap inline-flex items-center px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+          active || openDropdown === id
+            ? "bg-black text-white border-black" 
+            : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200"
         }`}
       >
         {label}
         <svg
-          className="-mr-1 ml-2 h-4 w-4"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          aria-hidden="true"
+          className={`ml-1.5 h-3 w-3 transition-transform ${openDropdown === id ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
         >
-          <path
-            fillRule="evenodd"
-            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
-      {openDropdown === id && (
-        <div
-          className={`absolute mt-2 w-64 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 p-3 ${
-            align === "right"
-              ? "right-0 origin-top-right"
-              : "left-0 origin-top-left"
-          }`}
-        >
-          {children}
-        </div>
-      )}
-    </div>
+      {/* Dropdown Overlay (Fixed to escape overflow clipping) */}
+      <AnimatePresence>
+        {openDropdown === id && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm"
+                onClick={() => setOpenDropdown(null)}
+            />
+            {/* Content - Positioned near the button? No, let's make it a centered bottom-sheet or popover for mobile feel */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="fixed z-[70] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 p-4 min-w-[300px] max-w-[90vw]"
+                style={{
+                     left: '50%',
+                     top: '50%',
+                     transform: 'translate(-50%, -50%)', // Centered approach for simplicity and mobile-friendliness
+                     marginTop: '-10vh'
+                }}
+            >
+                <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-lg">{label}</h3>
+                    <button onClick={() => setOpenDropdown(null)} className="p-1 bg-gray-100 rounded-full">
+                        <XMarkIcon className="w-5 h-5" />
+                    </button>
+                </div>
+                {children}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 
   // Рендер компактных фильтров
   const renderCompactFilters = () => {
     return (
-      <div className="flex flex-wrap items-center mb-4" ref={dropdownRef}>
+      <div className="flex gap-2 items-center" ref={dropdownRef}>
+                {/* Радиус поиска (Перемещен наверх для видимости) */}
+        <FilterDropdown
+          id="radius"
+          label={radiusFilter ? `📍 ${radiusFilter} км` : "📍 Радиус"}
+          active={!!radiusFilter}
+          align="right"
+        >
+          <div className="flex flex-col">
+            {!userLocation && (
+              <button
+                onClick={handleGetLocation}
+                disabled={gettingLocation}
+                className="mb-2 px-3 py-2 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700 disabled:bg-gray-400"
+              >
+                {gettingLocation
+                  ? "Определяю..."
+                  : "📍 Определить мое местоположение"}
+              </button>
+            )}
+            {userLocation && (
+              <>
+                <button
+                  className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${
+                    !radiusFilter
+                      ? "bg-gray-100 font-bold"
+                      : "hover:bg-gray-50"
+                  }`}
+                  onClick={() => {
+                    setRadiusFilter(null);
+                    setOpenDropdown(null);
+                  }}
+                >
+                  Вся страна
+                </button>
+                {[1, 5, 10, 25, 50].map((km) => (
+                  <button
+                    key={km}
+                    className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${
+                      radiusFilter === km
+                        ? "bg-gray-100 font-bold"
+                        : "hover:bg-gray-50"
+                    }`}
+                    onClick={() => {
+                      setRadiusFilter(km);
+                      setOpenDropdown(null);
+                    }}
+                  >
+                    {km} км
+                  </button>
+                ))}
+                <button
+                  onClick={() => {
+                    clearUserLocation();
+                    setUserLocation(null);
+                    setRadiusFilter(null);
+                    setOpenDropdown(null);
+                  }}
+                  className="mt-2 px-2 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-md"
+                >
+                  ✕ Очистить геолокацию
+                </button>
+              </>
+            )}
+          </div>
+        </FilterDropdown>
+
         {/* Цена (Слайдер) */}
         <FilterDropdown
           id="price"
@@ -1592,71 +1732,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
           {txt.barter}
         </button>
 
-        {/* Радиус поиска */}
-        <FilterDropdown
-          id="radius"
-          label={radiusFilter ? `📍 ${radiusFilter} км` : "📍 Радиус"}
-          active={!!radiusFilter}
-          align="right"
-        >
-          <div className="flex flex-col">
-            {!userLocation && (
-              <button
-                onClick={handleGetLocation}
-                disabled={gettingLocation}
-                className="mb-2 px-3 py-2 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700 disabled:bg-gray-400"
-              >
-                {gettingLocation
-                  ? "Определяю..."
-                  : "📍 Определить мое местоположение"}
-              </button>
-            )}
-            {userLocation && (
-              <>
-                <button
-                  className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${
-                    !radiusFilter
-                      ? "bg-gray-100 font-bold"
-                      : "hover:bg-gray-50"
-                  }`}
-                  onClick={() => {
-                    setRadiusFilter(null);
-                    setOpenDropdown(null);
-                  }}
-                >
-                  Вся страна
-                </button>
-                {[1, 5, 10, 25, 50].map((km) => (
-                  <button
-                    key={km}
-                    className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${
-                      radiusFilter === km
-                        ? "bg-gray-100 font-bold"
-                        : "hover:bg-gray-50"
-                    }`}
-                    onClick={() => {
-                      setRadiusFilter(km);
-                      setOpenDropdown(null);
-                    }}
-                  >
-                    {km} км
-                  </button>
-                ))}
-                <button
-                  onClick={() => {
-                    clearUserLocation();
-                    setUserLocation(null);
-                    setRadiusFilter(null);
-                    setOpenDropdown(null);
-                  }}
-                  className="mt-2 px-2 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-md"
-                >
-                  ✕ Очистить геолокацию
-                </button>
-              </>
-            )}
-          </div>
-        </FilterDropdown>
 
         <div className="flex gap-2 ml-auto">
           <button
@@ -1934,7 +2009,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
       </header>
 
       {/* Stories / Categories Scroll (Naturally scrolling with content) */}
-      {/* Stories / Categories Scroll (Naturally scrolling with content) */}
       {!isSearchFocused && !hasSearchQuery && (
         <Stories 
             categoryFilter={categoryFilter} 
@@ -1947,10 +2021,54 @@ export default function FeedPageClient({ forcedCategory = null }) {
             {/* Smart Search Suggestions - Static Overlay */}
             {isSearchFocused && (searchTerm.length >= 2 && searchSuggestions.length > 0) && (
               <div 
-                className="fixed inset-0 pt-[80px] bg-white dark:bg-neutral-900 z-[100] overflow-y-auto pb-20"
+                className="fixed inset-0 pt-[110px] bg-white dark:bg-neutral-900 z-[100] overflow-y-auto pb-20"
                 style={{ top: '0', height: '100dvh' }}
               >
                 <div className="max-w-[520px] mx-auto">
+                    {/* Radius / Location Quick Filter in Search Overlay */}
+                    <div className="px-4 py-3 border-b border-gray-50 dark:border-white/10 bg-white dark:bg-neutral-900 shadow-sm mb-2">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Область поиска</span>
+                            {userLocation && (
+                                <button 
+                                    onClick={() => { setRadiusFilter(null); setUserLocation(null); }}
+                                    className="text-[10px] text-red-500 hover:text-red-600"
+                                >
+                                    Сбросить
+                                </button>
+                            )}
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                           {!userLocation ? (
+                               <button
+                                    onClick={(e) => { e.preventDefault(); handleGetLocation(); }}
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-medium whitespace-nowrap"
+                               >
+                                    <span className="text-lg">📍</span> 
+                                    {gettingLocation ? "Определяю..." : "Рядом со мной"}
+                               </button>
+                           ) : (
+                               <>
+                                   <button
+                                        onClick={() => setRadiusFilter(null)}
+                                        className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap border ${!radiusFilter ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}
+                                   >
+                                       Вся страна
+                                   </button>
+                                   {[5, 10, 30, 50].map(km => (
+                                       <button
+                                            key={km}
+                                            onClick={() => setRadiusFilter(km)}
+                                            className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap border ${radiusFilter === km ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}
+                                       >
+                                           +{km} км
+                                       </button>
+                                   ))}
+                               </>
+                           )}
+                        </div>
+                    </div>
+
                     <div className="px-3 py-2 border-b border-gray-50 dark:border-white/10">
                     <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                         Предложения
@@ -2000,7 +2118,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
             {/* Search History Dropdown - Static Overlay */}
             {isSearchFocused && (searchTerm.length < 2 || searchSuggestions.length === 0) && (
               <div
-                className="fixed inset-0 pt-[80px] bg-white dark:bg-black z-[100] overflow-y-auto pb-20"
+                className="fixed inset-0 pt-[110px] bg-white dark:bg-black z-[100] overflow-y-auto pb-20"
                 style={{ top: '0', height: '100dvh' }}
                 onClick={(e) => {
                    // If clicking the empty background (not content), close search
@@ -2008,6 +2126,50 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 }}
               >
                  <div className="max-w-[520px] mx-auto min-h-full" onClick={(e) => e.stopPropagation()}>
+                    
+                    {/* Radius / Location Quick Filter in Search History Overlay */}
+                    <div className="px-4 py-3 border-b border-gray-50 dark:border-white/10 bg-white dark:bg-black shadow-sm mb-2">
+                        <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Область поиска</span>
+                            {userLocation && (
+                                <button 
+                                    onClick={() => { setRadiusFilter(null); setUserLocation(null); }}
+                                    className="text-[10px] text-red-500 hover:text-red-600"
+                                >
+                                    Сбросить
+                                </button>
+                            )}
+                        </div>
+                        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+                           {!userLocation ? (
+                               <button
+                                    onClick={(e) => { e.preventDefault(); handleGetLocation(); }}
+                                    className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-medium whitespace-nowrap"
+                               >
+                                    <span className="text-lg">📍</span> 
+                                    {gettingLocation ? "Определяю..." : "Рядом со мной"}
+                               </button>
+                           ) : (
+                               <>
+                                   <button
+                                        onClick={() => setRadiusFilter(null)}
+                                        className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap border ${!radiusFilter ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600 dark:text-gray-400 dark:border-zinc-800'}`}
+                                   >
+                                       Вся страна
+                                   </button>
+                                   {[5, 10, 30, 50].map(km => (
+                                       <button
+                                            key={km}
+                                            onClick={() => setRadiusFilter(km)}
+                                            className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap border ${radiusFilter === km ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600 dark:text-gray-400 dark:border-zinc-800'}`}
+                                       >
+                                           +{km} км
+                                       </button>
+                                   ))}
+                               </>
+                           )}
+                        </div>
+                    </div>
                     {searchHistory.length > 0 && (
                         <>
                             <div className="flex justify-between items-center px-3 py-2 border-b border-gray-50 dark:border-white/10">
@@ -2089,11 +2251,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
       <div className="max-w-[520px] mx-auto">
         {/* Persistent Filter Bar - Visible only in categories or search or on All Listings page */ }
         {/* Persistent Filter Bar - Visible only in categories or search or on All Listings page */ }
-        {!isSearchFocused && (categoryFilter !== "all" || hasSearchQuery || forcedCategory === "all" || showFiltersModal) && (
+        {/* Persistent Filter Bar */}
+        {/* Visible if searching, or if any filters active, or if category selected */}
             <div className="px-3 mt-3">
-                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-
-                     {/* All Filters Button */}
+                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 items-center">
+                     {/* Filters Button */}
                      <button
                         onClick={() => setShowFiltersModal(true)}
                         className={`flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-xl text-sm font-semibold whitespace-nowrap border border-transparent ${
@@ -2107,6 +2269,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                          )}
                      </button>
                      
+                     {/* Horizontal Filters (Radius, Price, etc) */}
+                     {renderCompactFilters()}
                  </div>
                  
                  {/* Active Filters Summary (Chips) */}
@@ -2154,7 +2318,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                      </div>
                  )}
             </div>
-        )}
+
 
       {/* RENDER MODAL (INLINED) */}
       {showFiltersModal && (
@@ -2299,21 +2463,28 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             )}
                         </div>
                          {/* Radius */}
-                         <div className="flex gap-2 overflow-x-auto no-scrollbar pt-2">
-                            {[null, 5, 10, 30, 50, 100].map(r => (
-                                <button
-                                    key={r}
-                                    onClick={() => setRadiusFilter(r)}
-                                    className={`px-3 py-1.5 rounded-full text-xs font-medium border whitespace-nowrap ${
-                                        radiusFilter === r 
-                                        ? "bg-black text-white border-black" 
-                                        : "border-gray-200 dark:border-white/20 text-gray-600 dark:text-gray-400"
-                                    }`}
-                                >
-
-                                    {r === null ? (t("whole_country") || "Whole country") : `+${r} km`}
-                                </button>
-                            ))}
+                         <div className="px-2 pt-4 pb-2">
+                            <div className="flex justify-between items-center mb-4">
+                                <span className="text-sm font-medium text-gray-900 dark:text-white">
+                                    {radiusFilter ? `+${radiusFilter} ${t("km_label") || "km"}` : (t("whole_country") || "Whole country")}
+                                </span>
+                            </div>
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="5"
+                                value={radiusFilter || 0}
+                                onChange={(e) => {
+                                    const val = Number(e.target.value);
+                                    setRadiusFilter(val === 0 ? null : val);
+                                }}
+                                className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black dark:accent-white"
+                            />
+                            <div className="flex justify-between mt-2">
+                                <span className="text-xs text-gray-400">0</span>
+                                <span className="text-xs text-gray-400">100 {t("km_label") || "km"}</span>
+                            </div>
                          </div>
                     </div>
 
@@ -2612,12 +2783,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
         <div className="px-4 mt-8 mb-4 flex justify-between items-center">
           <h2 className="text-lg font-bold text-gray-900 tracking-tight">
             {hasSearchQuery
-              ? t("search_results") || "Результаты"
+              ? t("search_results") || "Результаты (TEST)"
               : categoryFilter !== "all"
               ? (CATEGORY_DEFS.find(c => c.key === categoryFilter)?.[lang] || CATEGORY_DEFS.find(c => c.key === categoryFilter)?.ru || t("category") || "Категория")
               : typeFilter !== "all"
-              ? (t("listings_header") || "Объявления")
-              : (t("listings_header") || "Объявления")}
+              ? (t("listings_header") || "Объявления (TEST)")
+              : (t("listings_header") || "Объявления (TEST)")}
           </h2>
 
           {/* View Mode Toggle & Counter */}
