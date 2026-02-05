@@ -198,6 +198,79 @@ const PriceSlider = ({
   );
 };
 
+// Standalone FilterDropdown component to prevent re-renders
+const FilterDropdown = ({ label, active, children, id, openDropdown, setOpenDropdown }) => {
+  // Portal mounting logic
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+      setMounted(true);
+      return () => setMounted(false);
+  }, []);
+
+  const dropdownContent = (
+    <AnimatePresence>
+      {openDropdown === id && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-sm"
+              onClick={() => setOpenDropdown(null)}
+          />
+          {/* Content - Fixed Centered Modal */}
+          <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10, x: "-50%" }}
+              animate={{ opacity: 1, scale: 1, y: 0, x: "-50%" }}
+              exit={{ opacity: 0, scale: 0.95, y: 10, x: "-50%" }}
+              transition={{ type: "spring", bounce: 0.2, duration: 0.3 }}
+              className="fixed z-[9999] left-1/2 top-1/2 -translate-y-1/2 bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 p-4 min-w-[300px] max-w-[90vw] w-auto max-h-[85vh] overflow-y-auto"
+              style={{
+                   marginTop: '-5vh' // Slight offset upwards for visual balance
+              }}
+          >
+              <div className="flex justify-between items-center mb-3 sticky top-0 bg-white dark:bg-neutral-900 z-10 py-1">
+                  <h3 className="font-bold text-lg">{label}</h3>
+                  <button onClick={() => setOpenDropdown(null)} className="p-1 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
+                      <XMarkIcon className="w-5 h-5" />
+                  </button>
+              </div>
+              {children}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+      <>
+      <button
+          type="button"
+          onClick={() => setOpenDropdown(openDropdown === id ? null : id)}
+          className={`whitespace-nowrap inline-flex items-center px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+          active || openDropdown === id
+              ? "bg-black text-white border-black" 
+              : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200"
+          }`}
+      >
+          {label}
+          <svg
+          className={`ml-1.5 h-3 w-3 transition-transform ${openDropdown === id ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+          >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+      </button>
+
+      {mounted ? createPortal(dropdownContent, document.body) : null}
+      </>
+  );
+};
+
 export default function FeedPageClient({ forcedCategory = null }) {
   const { lang, t } = useLang();
   const router = useRouter();
@@ -1292,77 +1365,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
 
 
-  const FilterDropdown = ({ label, active, children, id, align = "left" }) => {
-    // Portal mounting logic
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => {
-        setMounted(true);
-        return () => setMounted(false);
-    }, []);
 
-    const dropdownContent = (
-      <AnimatePresence>
-        {openDropdown === id && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-sm"
-                onClick={() => setOpenDropdown(null)}
-            />
-            {/* Content - Fixed Centered Modal */}
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10, x: "-50%" }}
-                animate={{ opacity: 1, scale: 1, y: 0, x: "-50%" }}
-                exit={{ opacity: 0, scale: 0.95, y: 10, x: "-50%" }}
-                transition={{ type: "spring", bounce: 0.2, duration: 0.3 }}
-                className="fixed z-[9999] left-1/2 top-1/2 -translate-y-1/2 bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 p-4 min-w-[300px] max-w-[90vw] w-auto max-h-[85vh] overflow-y-auto"
-                style={{
-                     marginTop: '-5vh' // Slight offset upwards for visual balance
-                }}
-            >
-                <div className="flex justify-between items-center mb-3 sticky top-0 bg-white dark:bg-neutral-900 z-10 py-1">
-                    <h3 className="font-bold text-lg">{label}</h3>
-                    <button onClick={() => setOpenDropdown(null)} className="p-1 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
-                        <XMarkIcon className="w-5 h-5" />
-                    </button>
-                </div>
-                {children}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    );
-
-    return (
-        <>
-        <button
-            type="button"
-            onClick={() => setOpenDropdown(openDropdown === id ? null : id)}
-            className={`whitespace-nowrap inline-flex items-center px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-            active || openDropdown === id
-                ? "bg-black text-white border-black" 
-                : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200"
-            }`}
-        >
-            {label}
-            <svg
-            className={`ml-1.5 h-3 w-3 transition-transform ${openDropdown === id ? "rotate-180" : ""}`}
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2.5}
-            >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-        </button>
-
-        {mounted ? createPortal(dropdownContent, document.body) : null}
-        </>
-    );
-  };
 
   // Рендер компактных фильтров
   const renderCompactFilters = () => {
@@ -1374,6 +1377,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
           label={radiusFilter ? `📍 ${radiusFilter} ${t("km_label") || "km"}` : `📍 ${t("radius") || "Radius"}`}
           active={!!radiusFilter}
           align="right"
+          openDropdown={openDropdown}
+          setOpenDropdown={setOpenDropdown}
         >
           <div className="flex flex-col w-full">
             {!userLocation && (
@@ -1449,6 +1454,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
               : ""
           }`}
           active={!!minPrice || !!maxPrice}
+          openDropdown={openDropdown}
+          setOpenDropdown={setOpenDropdown}
         >
           <PriceSlider
             min={minPrice}
