@@ -86,21 +86,36 @@ const PriceSlider = ({
   const [localMin, setLocalMin] = useState(minVal);
   const [localMax, setLocalMax] = useState(maxVal);
 
+  // Sync local state with props only when they differ significantly to avoid loops
   useEffect(() => {
-    setLocalMin(min === "" ? minLimit : Number(min));
-    setLocalMax(max === "" ? maxLimit : Number(max));
-  }, [min, max, minLimit, maxLimit]);
+    const propMin = min === "" ? minLimit : Number(min);
+    const propMax = max === "" ? maxLimit : Number(max);
+    
+    if (propMin !== localMin) setLocalMin(propMin);
+    if (propMax !== localMax) setLocalMax(propMax);
+  }, [min, max]); // Only sync when props change
+
+  // Debounce onChange to parent
+  useEffect(() => {
+        const timer = setTimeout(() => {
+            if (localMin !== (min === "" ? minLimit : Number(min)) || 
+                localMax !== (max === "" ? maxLimit : Number(max))) {
+                onChange(localMin, localMax);
+            }
+        }, 500); // 500ms debounce
+        return () => clearTimeout(timer);
+  }, [localMin, localMax]);
 
   const handleMinChange = (e) => {
     const value = Math.min(Number(e.target.value), localMax - 100);
     setLocalMin(value);
-    onChange(value, localMax);
+    // Remove direct onChange call
   };
 
   const handleMaxChange = (e) => {
     const value = Math.max(Number(e.target.value), localMin + 100);
     setLocalMax(value);
-    onChange(localMin, value);
+    // Remove direct onChange call
   };
 
   const minPercent = ((localMin - minLimit) / (maxLimit - minLimit)) * 100;
@@ -154,7 +169,6 @@ const PriceSlider = ({
             onChange={(e) => {
               const val = Number(e.target.value);
               setLocalMin(val);
-              onChange(val, localMax);
             }}
             className="w-20 border rounded px-1 py-0.5 text-xs"
           />
@@ -167,7 +181,6 @@ const PriceSlider = ({
             onChange={(e) => {
               const val = Number(e.target.value);
               setLocalMax(val);
-              onChange(localMin, val);
             }}
             className="w-20 border rounded px-1 py-0.5 text-xs text-right"
           />
@@ -1365,6 +1378,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
           <div className="flex flex-col w-full">
             {!userLocation && (
               <button
+                type="button"
                 onClick={handleGetLocation}
                 disabled={gettingLocation}
                 className="mb-2 px-3 py-2 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700 disabled:bg-gray-400 w-full text-center whitespace-normal"
@@ -1377,6 +1391,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
             {userLocation && (
               <>
                 <button
+                  type="button"
                   className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${
                     !radiusFilter
                       ? "bg-gray-100 font-bold"
@@ -1392,6 +1407,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 {[1, 5, 10, 25, 50].map((km) => (
                   <button
                     key={km}
+                    type="button"
                     className={`block w-full text-left px-2 py-1.5 text-xs rounded-md ${
                       radiusFilter === km
                         ? "bg-gray-100 font-bold"
@@ -1406,6 +1422,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                   </button>
                 ))}
                 <button
+                  type="button"
                   onClick={() => {
                     clearUserLocation();
                     setUserLocation(null);
