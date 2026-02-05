@@ -2381,7 +2381,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
       {/* RENDER MODAL (INLINED) */}
       {showFiltersModal && (
-        <div className="fixed inset-0 z-40 bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom-10 duration-200 h-[100vh]">
+        <div className="fixed inset-0 z-40 bg-white dark:bg-black flex flex-col animate-in slide-in-from-bottom-10 duration-200 h-[100dvh]">
            {/* Modal Header */}
            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-white/10">
                <h2 className="text-lg font-bold">{t("filters") || "Filters"}</h2>
@@ -2582,6 +2582,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                         onChange={(e) => {
                                             const val = e.target.value === "" ? null : Math.min(50, Math.max(0, Number(e.target.value)));
                                             setRadiusFilter(val);
+                                        }}
+                                        onFocus={(e) => {
+                                            setTimeout(() => {
+                                                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            }, 500);
                                         }}
                                         className="w-14 px-2 py-1 text-xs text-center border border-gray-200 dark:border-white/20 rounded-lg bg-gray-50 dark:bg-neutral-900"
                                     />
