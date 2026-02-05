@@ -417,6 +417,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showFiltersModal, setShowFiltersModal] = useState(false); // New Modal State
+  const [isFilterInputFocused, setIsFilterInputFocused] = useState(false); // Hide footer on input focus
   // Helper for initial category state
   const getInitialCategory = () => {
     const urlCat = searchParams.get("category");
@@ -2584,10 +2585,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                             setRadiusFilter(val);
                                         }}
                                         onFocus={(e) => {
+                                            setIsFilterInputFocused(true);
                                             setTimeout(() => {
                                                 e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                             }, 300);
                                         }}
+                                        onBlur={() => setIsFilterInputFocused(false)}
                                         className="w-14 px-2 py-1 text-xs text-center border border-gray-200 dark:border-white/20 rounded-lg bg-gray-50 dark:bg-neutral-900"
                                     />
                                     <span className="text-xs text-gray-400">{t("km_label") || "km"}</span>
@@ -2780,7 +2783,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 </div>
            </div>
 
-           {/* Modal Footer (Static) */}
+           {/* Modal Footer (Static) - Hidden when input is focused */}
+           {!isFilterInputFocused && (
            <div 
                 className="shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative"
                 style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
@@ -2827,6 +2831,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                   {t("show_listings") || "Show results"}
                </button>
            </div>
+           )}
         </div>
       )}
 
