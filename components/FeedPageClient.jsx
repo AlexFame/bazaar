@@ -2569,9 +2569,24 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                     background: `linear-gradient(to right, #000 ${((radiusFilter || 0) / 50) * 100}%, #e5e7eb ${((radiusFilter || 0) / 50) * 100}%)`
                                 }}
                             />
-                            <div className="flex justify-between mt-2">
+                            <div className="flex justify-between items-center mt-2">
                                 <span className="text-xs text-gray-400">{t("whole_country") || "Whole country"}</span>
-                                <span className="text-xs text-gray-400">50 {t("km_label") || "km"}</span>
+                                <div className="flex items-center gap-1">
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="50"
+                                        step="0.1"
+                                        value={radiusFilter || ""}
+                                        placeholder="0"
+                                        onChange={(e) => {
+                                            const val = e.target.value === "" ? null : Math.min(50, Math.max(0, Number(e.target.value)));
+                                            setRadiusFilter(val);
+                                        }}
+                                        className="w-14 px-2 py-1 text-xs text-center border border-gray-200 dark:border-white/20 rounded-lg bg-gray-50 dark:bg-neutral-900"
+                                    />
+                                    <span className="text-xs text-gray-400">{t("km_label") || "km"}</span>
+                                </div>
                             </div>
                          </div>
                     </div>
