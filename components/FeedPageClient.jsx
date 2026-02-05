@@ -2800,52 +2800,61 @@ export default function FeedPageClient({ forcedCategory = null }) {
            </div>
 
            {/* Modal Footer */}
-           <div 
-                className={`shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative transition-transform duration-200 ${isFilterInputFocused ? 'translate-y-full opacity-0 absolute bottom-0 w-full pointer-events-none' : 'translate-y-0 opacity-100'}`}
-                style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
-           >
-               <button 
-                  onClick={handleResetFilters}
-                  className="flex-1 py-3.5 bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-xl font-bold text-sm"
-               >
-                  {t("reset") || "Reset"}
-               </button>
-               <button 
-                  onClick={() => {
-                      const currentCat = forcedCategory || 'all';
-                      // If category changed, navigate to new category page
-                      if (categoryFilter !== currentCat) {
-                          const params = new URLSearchParams();
-                          if (minPrice) params.set('min_price', minPrice);
-                          if (maxPrice) params.set('max_price', maxPrice);
-                          if (typeFilter !== 'all') params.set('type', typeFilter);
-                          if (conditionFilter !== 'all') params.set('condition', conditionFilter);
-                          if (withPhotoFilter === 'yes') params.set('has_photo', 'true');
-                          if (deliveryFilter === 'delivery') params.set('delivery', 'true');
-                          if (sortFilter !== 'date_desc') params.set('sort', sortFilter);
+           {/* Modal Footer */}
+           <AnimatePresence>
+               {!isFilterInputFocused && (
+                   <motion.div
+                        initial={{ y: "100%", opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: "100%", opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative"
+                        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
+                   >
+                       <button 
+                          onClick={handleResetFilters}
+                          className="flex-1 py-3.5 bg-gray-100 dark:bg-white/10 text-black dark:text-white rounded-xl font-bold text-sm"
+                       >
+                          {t("reset") || "Reset"}
+                       </button>
+                       <button 
+                          onClick={() => {
+                              const currentCat = forcedCategory || 'all';
+                              // If category changed, navigate to new category page
+                              if (categoryFilter !== currentCat) {
+                                  const params = new URLSearchParams();
+                                  if (minPrice) params.set('min_price', minPrice);
+                                  if (maxPrice) params.set('max_price', maxPrice);
+                                  if (typeFilter !== 'all') params.set('type', typeFilter);
+                                  if (conditionFilter !== 'all') params.set('condition', conditionFilter);
+                                  if (withPhotoFilter === 'yes') params.set('has_photo', 'true');
+                                  if (deliveryFilter === 'delivery') params.set('delivery', 'true');
+                                  if (sortFilter !== 'date_desc') params.set('sort', sortFilter);
 
-                          // Dynamic params
-                          Object.entries(dynamicFilters).forEach(([k, v]) => {
-                             if (v) params.set(`dyn_${k}`, v);
-                          });
+                                  // Dynamic params
+                                  Object.entries(dynamicFilters).forEach(([k, v]) => {
+                                     if (v) params.set(`dyn_${k}`, v);
+                                  });
 
-                          // Search term?
-                          if (searchTerm) params.set('q', searchTerm);
-                          
-                          // Handle 'all' category -> /category/all
-                          const targetPath = `/category/${categoryFilter}`;
-                          router.push(`${targetPath}?${params.toString()}`);
-                          return;
-                      }
+                                  // Search term?
+                                  if (searchTerm) params.set('q', searchTerm);
+                                  
+                                  // Handle 'all' category -> /category/all
+                                  const targetPath = `/category/${categoryFilter}`;
+                                  router.push(`${targetPath}?${params.toString()}`);
+                                  return;
+                              }
 
-                      handleRefresh();
-                      setShowFiltersModal(false);
-                  }}
-                  className="flex-[2] py-3.5 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-sm shadow-lg"
-               >
-                  {t("show_listings") || "Show results"}
-               </button>
-           </div>
+                              handleRefresh();
+                              setShowFiltersModal(false);
+                          }}
+                          className="flex-[2] py-3.5 bg-black dark:bg-white text-white dark:text-black rounded-xl font-bold text-sm shadow-lg"
+                       >
+                          {t("show_listings") || "Show results"}
+                       </button>
+                   </motion.div>
+               )}
+           </AnimatePresence>
         </div>
       )}
 
