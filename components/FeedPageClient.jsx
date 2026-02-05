@@ -764,7 +764,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
       if (location) {
         setUserLocation(location);
         saveUserLocation(location.lat, location.lng);
-        toast.success(t("location_found") || "Location found!");
         console.log("✅ Геолокация получена:", location);
       } else {
         console.warn("⚠️ Location returned null");
