@@ -2583,6 +2583,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                             const val = e.target.value === "" ? null : Math.min(50, Math.max(0, Number(e.target.value)));
                                             setRadiusFilter(val);
                                         }}
+                                        onFocus={(e) => {
+                                            setTimeout(() => {
+                                                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            }, 300);
+                                        }}
                                         className="w-14 px-2 py-1 text-xs text-center border border-gray-200 dark:border-white/20 rounded-lg bg-gray-50 dark:bg-neutral-900"
                                     />
                                     <span className="text-xs text-gray-400">{t("km_label") || "km"}</span>
