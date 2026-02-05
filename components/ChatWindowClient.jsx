@@ -368,7 +368,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
   return (
     <div className="flex flex-col h-[100dvh] w-full max-w-[520px] mx-auto bg-white dark:bg-background" style={{ touchAction: 'pan-y', overflowX: 'hidden', position: 'relative', width: '100%', maxWidth: '520px' }}>
-      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+20px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black w-full max-w-[520px] mx-auto transition-all duration-200">
+      <div className="flex-shrink-0 w-full flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black z-50 transition-all duration-200">
         <div className="flex items-center gap-3 flex-1 min-w-0">
             <BackButton />
             {otherUser && (
@@ -402,7 +402,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           </div>
       )}
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-24 w-full pt-[calc(env(safe-area-inset-top)+90px)]">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-1 pb-4 w-full">
         <AnimatePresence initial={false} mode="popLayout">
         {messages.map((msg, index) => {
           const isMe = msg.sender_id === user?.id;
