@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
 import { useAtom } from "jotai"; // Added Jotai
 import { feedListingsAtom, feedFiltersAtom, feedMetaAtom, feedScrollAtom } from "@/lib/store"; // Added atoms
 import { toast } from "sonner";
@@ -1253,30 +1254,15 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
 
 
-  const FilterDropdown = ({ label, active, children, id, align = "left" }) => (
-    <>
-      <button
-        type="button"
-        onClick={() => setOpenDropdown(openDropdown === id ? null : id)}
-        className={`whitespace-nowrap inline-flex items-center px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-          active || openDropdown === id
-            ? "bg-black text-white border-black" 
-            : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200"
-        }`}
-      >
-        {label}
-        <svg
-          className={`ml-1.5 h-3 w-3 transition-transform ${openDropdown === id ? "rotate-180" : ""}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2.5}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
+  const FilterDropdown = ({ label, active, children, id, align = "left" }) => {
+    // Portal mounting logic
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+        return () => setMounted(false);
+    }, []);
 
-      {/* Dropdown Overlay (Fixed to escape overflow clipping) */}
+    const dropdownContent = (
       <AnimatePresence>
         {openDropdown === id && (
           <>
@@ -1285,25 +1271,23 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[60] bg-black/20 backdrop-blur-sm"
+                className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-sm"
                 onClick={() => setOpenDropdown(null)}
             />
-            {/* Content - Positioned near the button? No, let's make it a centered bottom-sheet or popover for mobile feel */}
+            {/* Content - Fixed Centered Modal */}
             <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="fixed z-[70] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 p-4 min-w-[300px] max-w-[90vw]"
+                initial={{ opacity: 0, scale: 0.95, y: 10, x: "-50%" }}
+                animate={{ opacity: 1, scale: 1, y: 0, x: "-50%" }}
+                exit={{ opacity: 0, scale: 0.95, y: 10, x: "-50%" }}
+                transition={{ type: "spring", bounce: 0.2, duration: 0.3 }}
+                className="fixed z-[9999] left-1/2 top-1/2 -translate-y-1/2 bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-white/10 p-4 min-w-[300px] max-w-[90vw] w-auto max-h-[85vh] overflow-y-auto"
                 style={{
-                     left: '50%',
-                     top: '50%',
-                     transform: 'translate(-50%, -50%)', // Centered approach for simplicity and mobile-friendliness
-                     marginTop: '-10vh'
+                     marginTop: '-5vh' // Slight offset upwards for visual balance
                 }}
             >
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center mb-3 sticky top-0 bg-white dark:bg-neutral-900 z-10 py-1">
                     <h3 className="font-bold text-lg">{label}</h3>
-                    <button onClick={() => setOpenDropdown(null)} className="p-1 bg-gray-100 rounded-full">
+                    <button onClick={() => setOpenDropdown(null)} className="p-1 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors">
                         <XMarkIcon className="w-5 h-5" />
                     </button>
                 </div>
@@ -1312,8 +1296,35 @@ export default function FeedPageClient({ forcedCategory = null }) {
           </>
         )}
       </AnimatePresence>
-    </>
-  );
+    );
+
+    return (
+        <>
+        <button
+            type="button"
+            onClick={() => setOpenDropdown(openDropdown === id ? null : id)}
+            className={`whitespace-nowrap inline-flex items-center px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+            active || openDropdown === id
+                ? "bg-black text-white border-black" 
+                : "bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-200"
+            }`}
+        >
+            {label}
+            <svg
+            className={`ml-1.5 h-3 w-3 transition-transform ${openDropdown === id ? "rotate-180" : ""}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+        </button>
+
+        {mounted ? createPortal(dropdownContent, document.body) : null}
+        </>
+    );
+  };
 
   // Рендер компактных фильтров
   const renderCompactFilters = () => {
@@ -1322,20 +1333,20 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 {/* Радиус поиска (Перемещен наверх для видимости) */}
         <FilterDropdown
           id="radius"
-          label={radiusFilter ? `📍 ${radiusFilter} км` : "📍 Радиус"}
+          label={radiusFilter ? `📍 ${radiusFilter} ${t("km_label") || "km"}` : `📍 ${t("radius") || "Radius"}`}
           active={!!radiusFilter}
           align="right"
         >
-          <div className="flex flex-col">
+          <div className="flex flex-col w-full">
             {!userLocation && (
               <button
                 onClick={handleGetLocation}
                 disabled={gettingLocation}
-                className="mb-2 px-3 py-2 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700 disabled:bg-gray-400"
+                className="mb-2 px-3 py-2 bg-blue-600 text-white rounded-md text-xs hover:bg-blue-700 disabled:bg-gray-400 w-full text-center whitespace-normal"
               >
                 {gettingLocation
-                  ? "Определяю..."
-                  : "📍 Определить мое местоположение"}
+                  ? (t("determining") || "Determining...")
+                  : `📍 ${t("determine_location") || "Determine my location"}`}
               </button>
             )}
             {userLocation && (
@@ -1351,7 +1362,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     setOpenDropdown(null);
                   }}
                 >
-                  Вся страна
+                  {t("whole_country") || "Whole country"}
                 </button>
                 {[1, 5, 10, 25, 50].map((km) => (
                   <button
@@ -1366,7 +1377,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                       setOpenDropdown(null);
                     }}
                   >
-                    {km} км
+                    {km} {t("km_label") || "km"}
                   </button>
                 ))}
                 <button
@@ -1376,9 +1387,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     setRadiusFilter(null);
                     setOpenDropdown(null);
                   }}
-                  className="mt-2 px-2 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-md"
+                  className="mt-2 px-2 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-md w-full text-left"
                 >
-                  ✕ Очистить геолокацию
+                  ✕ {t("clear_location") || "Clear location"}
                 </button>
               </>
             )}
