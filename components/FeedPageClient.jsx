@@ -417,7 +417,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [showFiltersModal, setShowFiltersModal] = useState(false); // New Modal State
-  const [isFilterInputFocused, setIsFilterInputFocused] = useState(false); // Hide footer on input focus
   // Helper for initial category state
   const getInitialCategory = () => {
     const urlCat = searchParams.get("category");
@@ -2584,8 +2583,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                             const val = e.target.value === "" ? null : Math.min(50, Math.max(0, Number(e.target.value)));
                                             setRadiusFilter(val);
                                         }}
-                                        onFocus={() => setIsFilterInputFocused(true)}
-                                        onBlur={() => setTimeout(() => setIsFilterInputFocused(false), 100)}
                                         className="w-14 px-2 py-1 text-xs text-center border border-gray-200 dark:border-white/20 rounded-lg bg-gray-50 dark:bg-neutral-900"
                                     />
                                     <span className="text-xs text-gray-400">{t("km_label") || "km"}</span>
@@ -2778,9 +2775,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 </div>
            </div>
 
-           {/* Modal Footer - Slides down when input is focused */}
+           {/* Modal Footer */}
            <div 
-                className={`shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative transition-all duration-300 ease-out ${isFilterInputFocused ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}
+                className="shrink-0 p-4 bg-white dark:bg-neutral-900 border-t border-gray-100 dark:border-white/10 flex gap-3 z-20 relative"
                 style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' }}
            >
                <button 
