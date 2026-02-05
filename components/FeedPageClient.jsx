@@ -2328,8 +2328,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
                          )}
                      </button>
                      
-                     {/* Horizontal Filters (Radius, Price, etc) */}
-                     {renderCompactFilters()}
+                     {/* Horizontal Filters (Radius, Price, etc) - REMOVED per user request */}
+                     {/* {renderCompactFilters()} */}
                  </div>
                  
                  {/* Active Filters Summary (Chips) */}
@@ -2525,8 +2525,30 @@ export default function FeedPageClient({ forcedCategory = null }) {
                          <div className="px-2 pt-4 pb-2">
                             <div className="flex justify-between items-center mb-4">
                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                    {radiusFilter ? `+${radiusFilter} ${t("km_label") || "km"}` : (t("whole_country") || "Whole country")}
+                                {radiusFilter ? `+${radiusFilter} ${t("km_label") || "km"}` : (t("whole_country") || "Whole country")}
                                 </span>
+                                {!userLocation && (
+                                    <button
+                                        type="button" 
+                                        onClick={handleGetLocation}
+                                        disabled={gettingLocation}
+                                        className="text-xs text-blue-600 font-medium px-2 py-1 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                                    >
+                                        {gettingLocation ? (t("determining") || "Determining...") : `📍 ${t("determine_location") || "Determine location"}`}
+                                    </button>
+                                )}
+                                {userLocation && (
+                                     <button
+                                        type="button" 
+                                        onClick={() => {
+                                            setUserLocation(null);
+                                            setRadiusFilter(null);
+                                        }}
+                                        className="text-xs text-red-500 font-medium px-2 py-1 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                                    >
+                                        {t("clear_location") || "Reset"}
+                                    </button>
+                                )}
                             </div>
                             <input
                                 type="range"
