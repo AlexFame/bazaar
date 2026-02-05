@@ -2525,7 +2525,11 @@ export default function FeedPageClient({ forcedCategory = null }) {
                          <div className="px-2 pt-4 pb-2">
                             <div className="flex justify-between items-center mb-4">
                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                {radiusFilter ? `+${radiusFilter} ${t("km_label") || "km"}` : (t("whole_country") || "Whole country")}
+                                {radiusFilter 
+                                    ? (radiusFilter < 1 
+                                        ? `+${Math.round(radiusFilter * 1000)} ${t("m_label") || "m"}` 
+                                        : `+${radiusFilter} ${t("km_label") || "km"}`)
+                                    : (t("whole_country") || "Whole country")}
                                 </span>
                                 {!userLocation && (
                                     <button
@@ -2553,18 +2557,21 @@ export default function FeedPageClient({ forcedCategory = null }) {
                             <input
                                 type="range"
                                 min="0"
-                                max="100"
-                                step="5"
+                                max="50"
+                                step="0.1"
                                 value={radiusFilter || 0}
                                 onChange={(e) => {
                                     const val = Number(e.target.value);
                                     setRadiusFilter(val === 0 ? null : val);
                                 }}
-                                className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black dark:accent-white"
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black dark:accent-white"
+                                style={{
+                                    background: `linear-gradient(to right, #000 ${((radiusFilter || 0) / 50) * 100}%, #e5e7eb ${((radiusFilter || 0) / 50) * 100}%)`
+                                }}
                             />
                             <div className="flex justify-between mt-2">
-                                <span className="text-xs text-gray-400">0</span>
-                                <span className="text-xs text-gray-400">100 {t("km_label") || "km"}</span>
+                                <span className="text-xs text-gray-400">{t("whole_country") || "Whole country"}</span>
+                                <span className="text-xs text-gray-400">50 {t("km_label") || "km"}</span>
                             </div>
                          </div>
                     </div>
