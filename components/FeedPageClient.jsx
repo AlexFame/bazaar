@@ -663,20 +663,45 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
   // Handler for getting user location
   async function handleGetLocation() {
+    console.log("📍 Starting location detection...");
     setGettingLocation(true);
     try {
+      if (!navigator.geolocation) {
+         alert("Геолокация не поддерживается вашим браузером");
+         return;
+      }
+
+      console.log("📍 Calling getUserLocation...");
       const location = await getUserLocation();
+      console.log("📍 getUserLocation result:", location);
+
       if (location) {
         setUserLocation(location);
         saveUserLocation(location.lat, location.lng);
+        toast.success(t("location_found") || "Location found!");
         console.log("✅ Геолокация получена:", location);
       } else {
-        console.warn(
-          "⚠️ Не удалось получить геолокацию (пользователь отказал в разрешении или браузер не поддерживает)"
-        );
+        console.warn("⚠️ Location returned null");
+        // Check permissions state if possible
+        if (navigator.permissions) {
+             try {
+                const result = await navigator.permissions.query({ name: "geolocation" });
+                console.log("📍 Permissions state:", result.state);
+                if (result.state === 'denied') {
+                    alert("Доступ к геолокации запрещен. Пожалуйста, разрешите доступ в настройках браузера или устройства.");
+                } else {
+                    alert("Не удалось определить местоположение. Проверьте настройки GPS.");
+                }
+             } catch (e) {
+                 alert("Не удалось определить местоположение.");
+             }
+        } else {
+             alert("Не удалось определить местоположение (возможно, отклонено пользователем).");
+        }
       }
     } catch (error) {
       console.error("❌ Ошибка получения геолокации:", error);
+      alert(`Ошибка: ${error.message || "Неизвестная ошибка"}`);
     } finally {
       setGettingLocation(false);
     }
