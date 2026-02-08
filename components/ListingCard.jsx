@@ -431,6 +431,11 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                 {t("status_reserved") || "Бронь"}
             </div>
         )}
+        {status === 'draft' && (
+            <div className="absolute top-3 left-3 z-10 px-3 py-1 bg-gray-500/80 backdrop-blur-md text-white text-[11px] font-bold rounded-lg shadow-sm border border-white/20 flex items-center justify-center">
+                {t("status_draft") || "ЧЕРНОВИК"}
+            </div>
+        )}
 
 
         {/* URGENT Badge (Red) - Highest Priority */}
@@ -578,6 +583,19 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                 </button>
             )}
 
+
+            {status === 'draft' && (
+                <button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleStatusChange('active');
+                    }}
+                    className="w-full py-1.5 px-3 bg-green-600 text-white text-[11px] font-bold rounded-lg shadow-sm hover:bg-green-700 transition-all mb-2"
+                >
+                  🚀 {t("publish") || "Опубликовать"}
+                </button>
+            )}
 
             {/* Status Actions */}
             {status === 'active' && (

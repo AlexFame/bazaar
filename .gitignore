@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 Archive.zip
+
+# parser state
+scripts/parser_state.json

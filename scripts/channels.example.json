@@ -1,0 +1,15 @@
+[
+  {
+    "username": "@durov",
+    "limit": 5
+  },
+  {
+    "username": "@rent_kyiv",
+    "limit": 10
+  },
+  {
+    "username": "@some_forum_group",
+    "limit": 20,
+    "topic_id": 123456
+  }
+]
