@@ -177,7 +177,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
 
               {/* Content */}
               {/* Content */}
-              <div className="overflow-y-auto flex-1 p-4 space-y-3 bg-[#F2F2F7] dark:bg-black">
+              <div className="overflow-y-auto flex-1 p-4 pb-8 space-y-3 bg-[#F2F2F7] dark:bg-black">
                 
                 {/* Manual Actions (MVP) */}
                 <div className="bg-white dark:bg-[#1C1C1E] rounded-[20px] p-4 mb-3">
@@ -295,7 +295,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
               </div>
 
               {/* Secure Footer */}
-              <div className="p-4 bg-gray-50 dark:bg-[#1C1C1E] text-center shrink-0">
+              <div className="p-4 pb-10 bg-gray-50 dark:bg-[#1C1C1E] text-center shrink-0">
                 <div className="flex items-center justify-center gap-1.5 opacity-60 grayscale hover:grayscale-0 transition-all">
                     <svg className="w-3 h-3 text-[#635BFF]" viewBox="0 0 32 32" fill="currentColor">
                         <path d="M27.5 16c0-6.35-5.15-11.5-11.5-11.5S4.5 9.65 4.5 16 9.65 27.5 16 27.5 27.5 22.35 27.5 16z" />
