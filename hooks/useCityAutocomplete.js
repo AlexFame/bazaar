@@ -37,7 +37,16 @@ export function useCityAutocomplete(query, minLength = 2) {
         
         const data = await res.json();
         
-        const mapped = data.map(item => {
+        const mapped = data.filter(item => {
+            // Filter out Russia
+            const countryCode = item.address?.country_code?.toLowerCase();
+            const country = item.address?.country?.toLowerCase();
+            
+            if (countryCode === 'ru') return false;
+            if (country && (country.includes('russia') || country.includes('россия'))) return false;
+            
+            return true;
+        }).map(item => {
             const city = item.address?.city || item.address?.town || item.address?.village || item.name;
             const country = item.address?.country;
             // distinct name
