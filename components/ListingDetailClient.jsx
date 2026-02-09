@@ -463,6 +463,20 @@ export default function ListingDetailClient({ id }) {
                           router.push('/my?tab=archived');
                       }
                   }}
+                  onPublish={async () => {
+                      const { error } = await supabase.from('listings').update({ status: 'active' }).eq('id', listing.id);
+                      if (!error) {
+                          setListing(prev => ({ ...prev, status: 'active' }));
+                          confetti({
+                            particleCount: 150,
+                            spread: 70,
+                            origin: { y: 0.6 },
+                            colors: ['#22c55e', '#3b82f6', '#f59e0b']
+                          });
+                      } else {
+                          alert("Ошибка публикации: " + error.message);
+                      }
+                  }}
               />
 
               {/* OFFERS (OWNER) */}

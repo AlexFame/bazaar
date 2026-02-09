@@ -169,6 +169,7 @@ async function processChannel(client, state, target) {
                     status: 'draft',
                     location: 'Telegram Import', // Changed from location_text
                     contacts: parsed.contacts,
+                    allow_chat: false, // Disable internal chat for parsed items
                     created_by: PARSER_USER_ID, 
                     created_at: new Date(message.date * 1000).toISOString(),
                     main_image_path: imagePaths.length > 0 ? imagePaths[0].path : null
