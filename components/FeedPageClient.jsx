@@ -976,7 +976,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
       let query = supabase
         .from("listings")
         .select("*")
-        .in("status", ["active", "reserved"]);
+        .in("status", ["active", "reserved"])
+        // Exclude Russia
+        .not("location_text", "ilike", "%Russia%")
+        .not("location_text", "ilike", "%Россия%");
         
         // Sorting
         // If we want to preserve distance order (from RPC), we don't apply DB sort here
