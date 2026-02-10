@@ -7,6 +7,9 @@ export function useCityAutocomplete(query, minLength = 2) {
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   
+  // Europe + UA + key partners
+  const EUROPE_CODES = "ua,de,pl,cz,fr,it,es,nl,be,at,ch,gb,ie,dk,se,no,fi,pt,gr,hu,ro,bg,hr,si,sk,ee,lv,lt,md,me,rs,ba,mk,al";
+  
   // Debounce ref
   const timeoutRef = useRef(null);
 
@@ -27,10 +30,13 @@ export function useCityAutocomplete(query, minLength = 2) {
     timeoutRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        // Limited to 5 results, prioritizing Europe/DACH if possible, but general search is fine
+        // Limited to 5 results, prioritized by Europe country codes
         // accept-language ensures we get German/Russian/English names
         const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5&accept-language=ru,de,en`
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}` +
+            `&format=json&addressdetails=1&limit=5` +
+            `&accept-language=ru,de,en` +
+            `&countrycodes=${EUROPE_CODES}`
         );
         
         if (!res.ok) throw new Error("Nominatim fetch failed");
