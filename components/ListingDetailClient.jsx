@@ -160,7 +160,7 @@ export default function ListingDetailClient({ id }) {
       try {
         const { data: listingData, error: listingError } = await supabase
           .from("listings")
-          .select("*, profiles:created_by(*)")
+          .select("*, profiles:created_by(*), listing_images(file_path, position)")
           .eq("id", id)
           .single();
 
@@ -171,41 +171,55 @@ export default function ListingDetailClient({ id }) {
 
         setListing(listingData);
 
-        const folder = `listing-${listingData.id}`;
+        // 1. Try DB images first (preferred)
         let urls = [];
+        if (listingData.listing_images && listingData.listing_images.length > 0) {
+            // Sort by position
+            const sorted = listingData.listing_images.sort((a, b) => (a.position || 0) - (b.position || 0));
+            urls = sorted.map(img => {
+                const { data } = supabase.storage.from('listing-images').getPublicUrl(img.file_path);
+                return data?.publicUrl;
+            }).filter(Boolean);
+        } else {
+            // 2. Fallback to bucket listing (legacy)
+            const folder = `listing-${listingData.id}`;
+            const { data: files, error: listError } = await supabase.storage
+            .from("listing-images")
+            .list(folder);
 
-        const { data: files, error: listError } = await supabase.storage
-          .from("listing-images")
-          .list(folder);
-
-        if (!listError && Array.isArray(files) && files.length > 0) {
-          urls = files
-            .filter(file => !file.name.includes('_ba_')) // Filter out Before/After images
-            .map((file) => {
-              const path = `${folder}/${file.name}`;
-              const { data } = supabase.storage
-                .from("listing-images")
-                .getPublicUrl(path);
-              return data?.publicUrl;
-            })
-            .filter(Boolean);
-        } else if (listingData.image_path) {
-          try {
-            // Filter out placeholder text like "Фото 1", "Фото 2", etc
-            const imagePath = String(listingData.image_path).trim();
-            const isPlaceholder = imagePath.toLowerCase().includes('фото') || 
-                                 imagePath.toLowerCase().includes('photo') ||
-                                 imagePath.length < 5;
-            
-            if (!isPlaceholder) {
-              const { data } = supabase.storage
-                .from("listing-images")
-                .getPublicUrl(imagePath);
-              if (data?.publicUrl) urls = [data.publicUrl];
+            if (!listError && Array.isArray(files) && files.length > 0) {
+            urls = files
+                .filter(file => !file.name.includes('_ba_'))
+                .map((file) => {
+                const path = `${folder}/${file.name}`;
+                const { data } = supabase.storage
+                    .from("listing-images")
+                    .getPublicUrl(path);
+                return data?.publicUrl;
+                })
+                .filter(Boolean);
+            } else if (listingData.main_image_path) {
+                // 3. Fallback to main_image_path (if no listing_images rows but main path exists)
+                const { data } = supabase.storage.from("listing-images").getPublicUrl(listingData.main_image_path);
+                if (data?.publicUrl) urls = [data.publicUrl];
+            } else if (listingData.image_path) {
+                // 4. Legacy single image path
+                try {
+                    const imagePath = String(listingData.image_path).trim();
+                    const isPlaceholder = imagePath.toLowerCase().includes('фото') || 
+                                        imagePath.toLowerCase().includes('photo') ||
+                                        imagePath.length < 5;
+                    
+                    if (!isPlaceholder) {
+                    const { data } = supabase.storage
+                        .from("listing-images")
+                        .getPublicUrl(imagePath);
+                    if (data?.publicUrl) urls = [data.publicUrl];
+                    }
+                } catch (e) {
+                    console.error("Error processing image path:", e);
+                }
             }
-          } catch (e) {
-            console.error("Error processing image path:", e);
-          }
         }
 
         setImageUrls(urls);
