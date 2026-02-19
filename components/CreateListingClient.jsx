@@ -170,16 +170,32 @@ export default function CreateListingClient({ onCreated, editId }) {
               setBeforeAfterImages(listingData.before_after_images);
           }
           
-          // Images...
-          const folder = `listing-${listingData.id}`;
-          const { data: files } = await supabase.storage.from("listing-images").list(folder);
-          if (files && files.length > 0) {
-              const mapped = files.map(f => ({
+          // Images: Try listing_images DB table first (works for parsed & regular listings)
+          const { data: dbImages } = await supabase
+              .from('listing_images')
+              .select('file_path, position')
+              .eq('listing_id', listingData.id)
+              .order('position', { ascending: true });
+          
+          if (dbImages && dbImages.length > 0) {
+              const mapped = dbImages.map(img => ({
                   type: 'existing',
-                  path: `${folder}/${f.name}`,
-                  url: supabase.storage.from('listing-images').getPublicUrl(`${folder}/${f.name}`).data.publicUrl
+                  path: img.file_path,
+                  url: supabase.storage.from('listing-images').getPublicUrl(img.file_path).data.publicUrl
               }));
               setImages(mapped);
+          } else {
+              // Fallback: list storage folder (legacy listings without DB image records)
+              const folder = `listing-${listingData.id}`;
+              const { data: files } = await supabase.storage.from("listing-images").list(folder);
+              if (files && files.length > 0) {
+                  const mapped = files.map(f => ({
+                      type: 'existing',
+                      path: `${folder}/${f.name}`,
+                      url: supabase.storage.from('listing-images').getPublicUrl(`${folder}/${f.name}`).data.publicUrl
+                  }));
+                  setImages(mapped);
+              }
           }
         }
       } catch (err) {
