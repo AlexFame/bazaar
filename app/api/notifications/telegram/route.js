@@ -1,10 +1,35 @@
 import { NextResponse } from "next/server";
 import { sendNotification } from "@/lib/bot";
 import { supaAdmin } from "@/lib/supabaseAdmin";
+import crypto from "crypto";
+
+function checkTelegramAuth(initData, botToken) {
+  if (!initData) return null;
+  const url = new URLSearchParams(initData);
+  const hash = url.get('hash');
+  url.delete('hash');
+  const params = [...url.entries()].sort(([a],[b]) => a.localeCompare(b));
+  const dataCheckString = params.map(([k,v]) => `${k}=${v}`).join('\n');
+  const secret = crypto.createHmac('sha256', 'WebAppData').update(botToken.trim()).digest();
+  const check = crypto.createHmac('sha256', secret).update(dataCheckString).digest('hex');
+  if (check !== hash) return null;
+  const obj = Object.fromEntries(url.entries());
+  if (obj.user) { try { obj.user = JSON.parse(obj.user); } catch (e) {} }
+  return obj;
+}
 
 export async function POST(request) {
   try {
-    const { recipientId, message, type = "general", data } = await request.json();
+    const { recipientId, message, type = "general", data, initData } = await request.json();
+
+    // AUTH CHECK
+    if (!initData || !process.env.TG_BOT_TOKEN) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const authData = checkTelegramAuth(initData, process.env.TG_BOT_TOKEN);
+    if (!authData?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     if (!recipientId || !message) {
       return NextResponse.json(

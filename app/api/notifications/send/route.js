@@ -1,5 +1,21 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import crypto from "crypto";
+
+function checkTelegramAuth(initData, botToken) {
+  if (!initData) return null;
+  const url = new URLSearchParams(initData);
+  const hash = url.get('hash');
+  url.delete('hash');
+  const params = [...url.entries()].sort(([a],[b]) => a.localeCompare(b));
+  const dataCheckString = params.map(([k,v]) => `${k}=${v}`).join('\n');
+  const secret = crypto.createHmac('sha256', 'WebAppData').update(botToken.trim()).digest();
+  const check = crypto.createHmac('sha256', secret).update(dataCheckString).digest('hex');
+  if (check !== hash) return null;
+  const obj = Object.fromEntries(url.entries());
+  if (obj.user) { try { obj.user = JSON.parse(obj.user); } catch (e) {} }
+  return obj;
+}
 
 export async function POST(req) {
   console.log("🔔 [Notification API] Request received");
@@ -25,7 +41,16 @@ export async function POST(req) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { recipientId, message, listingTitle } = await req.json();
+    const { recipientId, message, listingTitle, initData } = await req.json();
+
+    // AUTH CHECK
+    if (!initData) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const authData = checkTelegramAuth(initData, TG_BOT_TOKEN);
+    if (!authData?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     if (!recipientId || !message) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });

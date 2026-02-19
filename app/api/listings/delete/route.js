@@ -33,7 +33,7 @@ export async function POST(req) {
     const body = await req.json();
     const { id, initData } = body;
     
-    if (!id || !initData) return new Response(JSON.stringify({ error: 'Missing parameters' }), { status: 400 });
+    if (!id || !initData) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
 
     if (!process.env.TG_BOT_TOKEN) return new Response(JSON.stringify({ error: 'Config error' }), { status: 500 });
 
