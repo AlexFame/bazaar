@@ -1034,7 +1034,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-[#F2F3F7] dark:bg-white/5 rounded-2xl p-3 border border-transparent dark:border-white/10">
+      <form onSubmit={handleSubmit} noValidate className="bg-[#F2F3F7] dark:bg-white/5 rounded-2xl p-3 border border-transparent dark:border-white/10">
         {/* Honeypot field - hidden from users, bots will fill it */}
         <input
           type="text"
@@ -1311,8 +1311,9 @@ export default function CreateListingClient({ onCreated, editId }) {
             {loading ? "Сохраняем..." : lang === "ua" ? "До чернетки" : "В черновик"}
           </button>
           <button
-            type="submit"
+            type="button"
             disabled={loading}
+            onClick={(e) => handleSubmit(e, 'active')}
             className="flex-1 bg-black text-white text-sm rounded-full py-2 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
           >
             {loading ? t("btn_publish") + "..." : t("btn_publish")}
