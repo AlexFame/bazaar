@@ -977,9 +977,8 @@ export default function FeedPageClient({ forcedCategory = null }) {
         .from("listings")
         .select("*")
         .in("status", ["active", "reserved"])
-        // Exclude Russia
-        .not("location_text", "ilike", "%Russia%")
-        .not("location_text", "ilike", "%Россия%");
+        // Exclude Russia (but allow NULL location_text through)
+        .or("location_text.is.null,and(location_text.not.ilike.%Russia%,location_text.not.ilike.%Россия%)");
         
         // Sorting
         // If we want to preserve distance order (from RPC), we don't apply DB sort here

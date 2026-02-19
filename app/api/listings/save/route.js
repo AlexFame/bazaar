@@ -126,7 +126,9 @@ export async function POST(req) {
                  // We need to fetch current status to be sure.
                  const { data: current } = await supa.from('listings').select('status').eq('id', payload.id).single();
                  if (current && current.status === 'draft') {
-                     listingData.created_at = new Date().toISOString();
+                     const now = new Date().toISOString();
+                     listingData.created_at = now;
+                     listingData.bumped_at = now;
                  }
              }
              
