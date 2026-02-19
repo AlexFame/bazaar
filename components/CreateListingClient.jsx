@@ -95,23 +95,23 @@ export default function CreateListingClient({ onCreated, editId }) {
 
   useEffect(() => {
     // Generate UUID if creating new
-    if (!editId) {
-        const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    // Helper to generate UUID
+    const generateUUID = () => {
+        return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
             const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
             return v.toString(16);
         });
-        setListingUuid(uuid);
+    };
+
+    if (!editId) {
+        setListingUuid(generateUUID());
     } else {
         setListingUuid(editId);
     }
     
-    // Helper to generate UUID
+    // Helper to generate UUID - exposed to window for debugging or manual reset
     window.generateNewUuid = () => {
-         const uuid = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-            const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-        setListingUuid(uuid);
+        setListingUuid(generateUUID());
     };
 
     if (!editId && !listingUuid) {
@@ -487,6 +487,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         if (!tgUserId) {
           toast.error("Ошибка авторизации. Попробуйте перезагрузить страницу.");
           setLoading(false);
+          notificationOccurred('error');
           return;
         }
 
@@ -494,6 +495,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         const userId = "server_will_resolve"; 
 
         const listingId = listingUuid || generateUUID();
+        if (!listingUuid) setListingUuid(listingId);
 
       // 1. Upload images
       const uploadedPaths = [];
