@@ -1,5 +1,6 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
+import { sanitizeTitle, sanitizeContent } from '@/lib/security';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -60,6 +61,12 @@ export async function POST(req) {
     const GIBBERISH_REGEX = /[bcdfghjklmnpqrstvwxzбвгджзйклмнпрстфхцчшщ]{5,}/i;
     
     let { images: _img, id: _id, created_by: _cb, created_at: _ca, ...listingData } = payload;
+    
+    // Sanitize user inputs (XSS prevention)
+    if (listingData.title) listingData.title = sanitizeTitle(listingData.title);
+    if (listingData.description) listingData.description = sanitizeContent(listingData.description);
+    if (listingData.contacts) listingData.contacts = sanitizeContent(listingData.contacts);
+    if (listingData.location_text) listingData.location_text = sanitizeContent(listingData.location_text);
     
     // Check if this is a "status only" update (e.g. marking as sold)
     const isStatusOnlyUpdate = payload.id && listingData.status && !listingData.title && (!payload.images || payload.images.length === 0);

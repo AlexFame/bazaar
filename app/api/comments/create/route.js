@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { sanitizeContent } from '@/lib/security';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
@@ -52,13 +53,19 @@ export async function POST(req) {
         }
         userId = profile.id;
 
-        // 3. Insert Comment
+        // 3. Sanitize input (XSS prevention)
+        const cleanContent = sanitizeContent(content);
+        if (!cleanContent || cleanContent.length < 1) {
+            return new Response(JSON.stringify({ error: "Comment cannot be empty" }), { status: 400 });
+        }
+
+        // 4. Insert Comment
         const { data, error } = await supaAdmin
             .from('listing_comments')
             .insert({
                 listing_id: listingId,
                 user_id: userId,
-                content: content
+                content: cleanContent
             })
             .select() // Return inserted data
             .single();
