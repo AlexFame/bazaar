@@ -60,6 +60,7 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [mounted, setMounted] = useState(false); // NEW: Hydration fix
   const [inTelegram, setInTelegram] = useState(false); // NEW: State instead of immediate check
   const [allowChat, setAllowChat] = useState(true); // NEW: Chat toggle
+  const [fieldErrors, setFieldErrors] = useState({}); // Inline validation errors
 
   const { notificationOccurred, impactOccurred } = useHaptic();
   
@@ -389,10 +390,17 @@ export default function CreateListingClient({ onCreated, editId }) {
         return;
       }
 
-      // Basic validation
-      if (!title.trim() || !price.trim()) {
-        console.warn("Blocked: empty title or price");
-        alert(t("alert_fill_required") || "Заполните обязательные поля (Заголовок, Цена)");
+      // Collect inline validation errors
+      const errors = {};
+
+      if (!title.trim()) errors.title = t("validation_title_empty") || "Заполните заголовок";
+      if (!price.trim()) errors.price = t("validation_price_invalid") || "Укажите цену";
+      if (!description.trim()) errors.description = t("validation_desc_empty") || "Добавьте описание";
+
+      // If basic fields missing — show inline errors and stop
+      if (Object.keys(errors).length > 0) {
+        console.warn("Blocked: missing fields", errors);
+        setFieldErrors(errors);
         return;
       }
 
@@ -400,7 +408,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       const contentCheckTitle = checkContent(title);
       if (!contentCheckTitle.safe) {
         console.warn("Blocked by title content check:", contentCheckTitle.flagged);
-        alert(t("alert_forbidden_content") || "Заголовок содержит запрещенный контент.");
+        setFieldErrors({ title: t("alert_forbidden_content") || "Заголовок содержит запрещённый контент" });
         return;
       }
       
@@ -412,18 +420,18 @@ export default function CreateListingClient({ onCreated, editId }) {
 
       if (hasEmoji(title)) {
         console.warn("Blocked: emoji in title");
-        alert(t("alert_no_emoji") || "В заголовке нельзя использовать эмодзи.");
+        setFieldErrors({ title: t("alert_no_emoji") || "В заголовке нельзя использовать эмодзи" });
         return;
       }
 
       const titleVal = validateTitle(title);
       if (!titleVal.valid) {
           console.warn("Blocked by title validation:", titleVal.errorKey);
-          alert(t(titleVal.errorKey));
+          setFieldErrors({ title: t(titleVal.errorKey) || "Проверьте заголовок" });
           return;
       }
 
-      // Check price first as number
+      // Check price
       const priceValResult = validatePrice(price, listingType);
       if (!priceValResult.valid) {
           console.warn("Blocked by price validation:", priceValResult.errorKey);
@@ -433,16 +441,19 @@ export default function CreateListingClient({ onCreated, editId }) {
                   msg = msg.replace(`{${k}}`, v);
               });
           }
-          alert(msg);
+          setFieldErrors({ price: msg || "Проверьте цену" });
           return;
       }
 
       const descVal = validateDescription(description);
       if (!descVal.valid) {
           console.warn("Blocked by description validation:", descVal.errorKey);
-          alert(t(descVal.errorKey));
+          setFieldErrors({ description: t(descVal.errorKey) || "Проверьте описание" });
           return;
       }
+
+      // All validation passed — clear errors
+      setFieldErrors({});
 
       // Image moderation
       for (const img of images) {
@@ -1124,10 +1135,11 @@ export default function CreateListingClient({ onCreated, editId }) {
           <input
             type="text"
             placeholder={t("field_title_ph")}
-            className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm placeholder-gray-500 dark:placeholder-gray-500"
+            className={`w-full border ${fieldErrors.title ? 'border-red-500' : 'border-black dark:border-white/20'} bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm placeholder-gray-500 dark:placeholder-gray-500`}
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => { setTitle(e.target.value); setFieldErrors(prev => ({...prev, title: null})); }}
           />
+          {fieldErrors.title && <div className="text-red-500 text-[11px] mt-1 font-medium">{fieldErrors.title}</div>}
         </div>
 
         {/* описание */}
@@ -1138,10 +1150,11 @@ export default function CreateListingClient({ onCreated, editId }) {
           <textarea
             rows={4}
             placeholder={t("field_desc_ph")}
-            className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm resize-none placeholder-gray-500 dark:placeholder-gray-500"
+            className={`w-full border ${fieldErrors.description ? 'border-red-500' : 'border-black dark:border-white/20'} bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm resize-none placeholder-gray-500 dark:placeholder-gray-500`}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => { setDescription(e.target.value); setFieldErrors(prev => ({...prev, description: null})); }}
           />
+          {fieldErrors.description && <div className="text-red-500 text-[11px] mt-1 font-medium">{fieldErrors.description}</div>}
         </div>
 
         {/* цена (Скрываем для типа 'free' и категории 'help_offer' и 'free') */}
@@ -1154,17 +1167,18 @@ export default function CreateListingClient({ onCreated, editId }) {
               type="number"
               min="0"
               placeholder={t("field_price_ph")}
-              className="w-full border border-black dark:border-white/20 bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm placeholder-gray-500 dark:placeholder-gray-500"
+              className={`w-full border ${fieldErrors.price ? 'border-red-500' : 'border-black dark:border-white/20'} bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm placeholder-gray-500 dark:placeholder-gray-500`}
               value={price}
               onChange={(e) => {
                   let val = e.target.value;
-                  // Strip leading zeroes (e.g. 043 -> 43), but allow single 0
                   if (val.length > 1 && val.startsWith('0')) {
                       val = val.replace(/^0+/, '');
                   }
                   setPrice(val);
+                  setFieldErrors(prev => ({...prev, price: null}));
               }}
             />
+            {fieldErrors.price && <div className="text-red-500 text-[11px] mt-1 font-medium">{fieldErrors.price}</div>}
           </div>
         )}
 
