@@ -22,7 +22,8 @@ export async function GET(req) {
 
   let query = supa
     .from("listings")
-    .select("id,title,price,location,type,created_at,photos")
+    .select("id,title,price,location,type,created_at,image_path,status")
+    .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(50);
 
