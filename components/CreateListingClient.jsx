@@ -386,7 +386,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       const accountAgeCheck = checkTelegramAccountAge();
       if (!accountAgeCheck.allowed) {
         console.warn("Blocked by account age check:", accountAgeCheck.reason);
-        alert(accountAgeCheck.reason || "Ваш аккаунт Telegram слишком новый.");
+        toast.error(accountAgeCheck.reason || "Ваш аккаунт Telegram слишком новый.");
         return;
       }
 
@@ -469,10 +469,10 @@ export default function CreateListingClient({ onCreated, editId }) {
                             msg = msg.replace(`{${k}}`, v);
                         });
                     }
-                   alert(`${img.file.name}: ${msg}`);
+                   toast.error(`${img.file.name}: ${msg}`);
                } else {
                    // Fallback for old return format
-                   alert(`Файл ${img.file.name}: ${imgCheck.error}`);
+                   toast.error(`Файл ${img.file.name}: ${imgCheck.error}`);
                }
               return;
           }
@@ -485,7 +485,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         const tgUserId = getUserId();
 
         if (!tgUserId) {
-          alert("Ошибка авторизации. Попробуйте перезагрузить страницу.");
+          toast.error("Ошибка авторизации. Попробуйте перезагрузить страницу.");
           setLoading(false);
           return;
         }
@@ -608,7 +608,7 @@ export default function CreateListingClient({ onCreated, editId }) {
           } catch (e) {
               console.error("Error uploading before/after:", e);
               // Fail gracefully? Or alert?
-              // alert("Ошибка загрузки фото до/после");
+              // toast.error("Ошибка загрузки фото до/после");
           }
       }
 
@@ -743,7 +743,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       } 
     } catch (err) {
       console.error("Error creating listing:", err);
-      alert("Ошибка при создании объявления: " + err.message);
+    toast.error("Ошибка: " + err.message);
     } finally {
       setLoading(false);
     }
