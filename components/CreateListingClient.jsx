@@ -68,7 +68,11 @@ export default function CreateListingClient({ onCreated, editId }) {
   const priceRef = useRef(null);
   const descRef = useRef(null);
 
-  const { notificationOccurred, impactOccurred } = useHaptic();
+  const haptic = useHaptic();
+  
+  // Safe wrappers — these MUST NOT crash, otherwise the whole publish flow dies
+  const notificationOccurred = (...args) => { try { haptic?.notificationOccurred?.(...args); } catch(e) { console.warn('Haptic error:', e); } };
+  const impactOccurred = (...args) => { try { haptic?.impactOccurred?.(...args); } catch(e) { console.warn('Haptic error:', e); } };
   
 
   const [isSuccessScreen, setIsSuccessScreen] = useState(false); // Success state
