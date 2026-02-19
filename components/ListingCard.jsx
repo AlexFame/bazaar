@@ -102,6 +102,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   const [profileId, setProfileId] = useState(null);
   const [translatedTitle, setTranslatedTitle] = useState("");
   const [status, setStatus] = useState(listing.status); // Local status state
+  const [isLoading, setIsLoading] = useState(false); // Loading state for status changes
   const { impactOccurred } = useHaptic();
 
   useEffect(() => {
@@ -324,7 +325,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
     }
 
     try {
-      setLoading(true);
+      setIsLoading(true);
       const tg = window.Telegram?.WebApp;
       const initData = tg?.initData;
       
@@ -364,7 +365,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
       // toast.error(err.message || "Ошибка обновления статуса");
       alert(`Ошибка обновления статуса: ${err.message}`); // Fallback if toast not available
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -601,13 +602,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             {status === 'active' && (
                 <div className="flex gap-2">
                     <button
-                        onClick={(e) => handleStatusChange(e, 'reserved')}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleStatusChange('reserved'); }}
                         className="flex-1 py-1.5 px-3 bg-indigo-50 text-indigo-700 text-[11px] font-medium rounded-lg hover:bg-indigo-100 transition-colors"
                     >
                         Бронь
                     </button>
                     <button
-                        onClick={(e) => handleStatusChange(e, 'closed')}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleStatusChange('closed'); }}
                         className="flex-1 py-1.5 px-3 bg-gray-100 text-gray-700 text-[11px] font-medium rounded-lg hover:bg-gray-200 transition-colors"
                     >
                         Продано
@@ -618,13 +619,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
             {status === 'reserved' && (
                 <div className="flex gap-2">
                     <button
-                        onClick={(e) => handleStatusChange(e, 'active')}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleStatusChange('active'); }}
                         className="flex-1 py-1.5 px-3 bg-green-50 text-green-700 text-[11px] font-medium rounded-lg hover:bg-green-100 transition-colors"
                     >
                         Вернуть
                     </button>
                     <button
-                        onClick={(e) => handleStatusChange(e, 'closed')}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleStatusChange('closed'); }}
                         className="flex-1 py-1.5 px-3 bg-gray-100 text-gray-700 text-[11px] font-medium rounded-lg hover:bg-gray-200 transition-colors"
                     >
                         Продано
@@ -634,7 +635,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
             {status === 'closed' && (
                 <button
-                    onClick={(e) => handleStatusChange(e, 'active')}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleStatusChange('active'); }}
                     className="w-full py-1.5 px-3 bg-green-50 text-green-700 text-[11px] font-medium rounded-lg hover:bg-green-100 transition-colors"
                 >
                   {t("activate_again") || "Активировать снова"}
