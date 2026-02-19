@@ -425,7 +425,10 @@ export default function CreateListingClient({ onCreated, editId }) {
       const contentCheckTitle = checkContent(title);
       if (!contentCheckTitle.safe) {
         console.warn("Blocked by title content check:", contentCheckTitle.flagged);
-        setFieldErrors({ title: t("alert_forbidden_content") || "Заголовок содержит запрещённый контент" });
+        const errMsg = t("alert_forbidden_content") || "Заголовок содержит запрещённый контент";
+        setFieldErrors({ title: errMsg });
+        toast.error(errMsg);
+        titleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
       
@@ -437,7 +440,10 @@ export default function CreateListingClient({ onCreated, editId }) {
 
       if (hasEmoji(title)) {
         console.warn("Blocked: emoji in title");
-        setFieldErrors({ title: t("alert_no_emoji") || "В заголовке нельзя использовать эмодзи" });
+        const errMsg = t("alert_no_emoji") || "В заголовке нельзя использовать эмодзи";
+        setFieldErrors({ title: errMsg });
+        toast.error(errMsg);
+        titleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
@@ -461,7 +467,10 @@ export default function CreateListingClient({ onCreated, editId }) {
                   msg = msg.replace(`{${k}}`, v);
               });
           }
-          setFieldErrors({ price: msg || "Проверьте цену" });
+          const errMsg = msg || "Проверьте цену";
+          setFieldErrors({ price: errMsg });
+          toast.error(errMsg);
+          priceRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           return;
       }
 
@@ -497,6 +506,7 @@ export default function CreateListingClient({ onCreated, editId }) {
                    // Fallback for old return format
                    toast.error(`Файл ${img.file.name}: ${imgCheck.error}`);
                }
+              impactOccurred('warning');
               return;
           }
       }
@@ -1191,6 +1201,7 @@ export default function CreateListingClient({ onCreated, editId }) {
               {t("field_price_label")}
             </div>
             <input
+              ref={priceRef}
               type="number"
               min="0"
               placeholder={t("field_price_ph")}
