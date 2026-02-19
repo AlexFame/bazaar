@@ -48,26 +48,20 @@ export async function POST(req) {
     const tgUserId = Number(authData.user.id);
     const supa = supaAdmin();
 
-    // 1. Get Profile ID
-    const { data: profile } = await supa.from('profiles').select('id').eq('tg_user_id', tgUserId).single();
+    // 1. Get Profile ID and Admin Status
+    const { data: profile } = await supa.from('profiles').select('id, is_admin').eq('tg_user_id', tgUserId).single();
     if (!profile) return new Response(JSON.stringify({ error: 'Profile not found' }), { status: 404 });
 
     const userId = profile.id;
+    const isAdmin = profile.is_admin || false;
 
     // 2. Handle Operation
-    
-    // Let's add imports at the top of the file via a separate edit?
-    // No, I can't easily add top-level imports in the middle of a function replace.
-    // I will verify if I can edit the top of the file first.
-    // For now, I will implement a robust inline check reusing the Regexes, to be 100% safe against import errors.
-    
     const URL_REGEX = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:com|ru|net|org|io|me|xyz|ua)[^\s]*)/i;
     const GIBBERISH_REGEX = /[bcdfghjklmnpqrstvwxzбвгджзйклмнпрстфхцчшщ]{5,}/i;
     
     let { images: _img, id: _id, created_by: _cb, created_at: _ca, ...listingData } = payload;
     
     // Check if this is a "status only" update (e.g. marking as sold)
-    // If we have 'status' but NO title and NO images in payload (and it's an update), skip strict checks.
     const isStatusOnlyUpdate = payload.id && listingData.status && !listingData.title && (!payload.images || payload.images.length === 0);
 
     // Auto-fill required fields for Drafts
@@ -80,28 +74,20 @@ export async function POST(req) {
             listingData.contacts = "draft_placeholder";
         }
     } else if (!isStatusOnlyUpdate) {
-        // STRICT VALIDATION FOR ACTIVE LISTINGS (skipped for status-only updates)
-        
-        // 0. Image Check (Must have at least one image)
-        // Check payload.images array
+        // STRICT VALIDATION FOR ACTIVE LISTINGS
         if (!payload.images || !Array.isArray(payload.images) || payload.images.length === 0) {
-             // Use a key that the client can translate, or fallback to English if client doesn't translate keys
-             // Client Logic: if (error.startsWith('validation_')) t(error)
              return new Response(JSON.stringify({ error: 'validation_images_required' }), { status: 400 });
         }
 
-        // 1. Title
         const title = listingData.title || "";
         if (title.length < 3) return new Response(JSON.stringify({ error: 'Title too short' }), { status: 400 });
         if (URL_REGEX.test(title)) return new Response(JSON.stringify({ error: 'Links in title forbidden' }), { status: 400 });
         if (GIBBERISH_REGEX.test(title)) return new Response(JSON.stringify({ error: 'validation_title_gibberish' }), { status: 400 });
 
-        // 2. Description
         const desc = listingData.description || "";
         if (URL_REGEX.test(desc)) return new Response(JSON.stringify({ error: 'Links in description forbidden' }), { status: 400 });
         if (GIBBERISH_REGEX.test(desc)) return new Response(JSON.stringify({ error: 'Description looks like gibberish' }), { status: 400 });
         
-        // 3. Price
         if (listingData.price < 0 || listingData.price > 10000000) return new Response(JSON.stringify({ error: 'Invalid price' }), { status: 400 });
     }
 
@@ -111,8 +97,9 @@ export async function POST(req) {
         
         if (existing) {
              // UPDATE Existing
-             if (existing.created_by !== userId) {
-                 // Check admin? assume no admin edit for now unless requested
+             // BYPASS for Admins (useful for parsed listings)
+             if (existing.created_by !== userId && !isAdmin) {
+                 console.warn("Ownership mismatch for non-admin:", { userId, owner: existing.created_by });
                  return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
              }
 

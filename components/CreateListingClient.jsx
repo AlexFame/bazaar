@@ -61,6 +61,12 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [inTelegram, setInTelegram] = useState(false); // NEW: State instead of immediate check
   const [allowChat, setAllowChat] = useState(true); // NEW: Chat toggle
   const [fieldErrors, setFieldErrors] = useState({}); // Inline validation errors
+  
+  // Refs for scrolling to errors
+  const formRef = useRef(null);
+  const titleRef = useRef(null);
+  const priceRef = useRef(null);
+  const descRef = useRef(null);
 
   const { notificationOccurred, impactOccurred } = useHaptic();
   
@@ -93,19 +99,19 @@ export default function CreateListingClient({ onCreated, editId }) {
     setQuality(q);
   }, [title, description, price, location, contacts, images]);
 
+  // Helper to generate UUID
+  const generateUUID = () => {
+      return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+          return v.toString(16);
+      });
+  };
+
   useEffect(() => {
     // Generate UUID if creating new
-    // Helper to generate UUID
-    const generateUUID = () => {
-        return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-            const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    };
-
-    if (!editId) {
+    if (!editId && !listingUuid) {
         setListingUuid(generateUUID());
-    } else {
+    } else if (editId) {
         setListingUuid(editId);
     }
     
@@ -401,6 +407,17 @@ export default function CreateListingClient({ onCreated, editId }) {
       if (Object.keys(errors).length > 0) {
         console.warn("Blocked: missing fields", errors);
         setFieldErrors(errors);
+        
+        // Better visibility: toast + scroll
+        toast.error(t("alert_fill_required") || "Заполните обязательные поля");
+        impactOccurred('warning');
+        
+        // Scroll to first error
+        const firstErrorKey = Object.keys(errors)[0];
+        const refs = { title: titleRef, price: priceRef, description: descRef };
+        if (refs[firstErrorKey]?.current) {
+            refs[firstErrorKey].current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         return;
       }
 
@@ -427,7 +444,10 @@ export default function CreateListingClient({ onCreated, editId }) {
       const titleVal = validateTitle(title);
       if (!titleVal.valid) {
           console.warn("Blocked by title validation:", titleVal.errorKey);
-          setFieldErrors({ title: t(titleVal.errorKey) || "Проверьте заголовок" });
+          const errMsg = t(titleVal.errorKey) || "Проверьте заголовок";
+          setFieldErrors({ title: errMsg });
+          toast.error(errMsg);
+          titleRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           return;
       }
 
@@ -448,7 +468,10 @@ export default function CreateListingClient({ onCreated, editId }) {
       const descVal = validateDescription(description);
       if (!descVal.valid) {
           console.warn("Blocked by description validation:", descVal.errorKey);
-          setFieldErrors({ description: t(descVal.errorKey) || "Проверьте описание" });
+          const errMsg = t(descVal.errorKey) || "Проверьте описание";
+          setFieldErrors({ description: errMsg });
+          toast.error(errMsg);
+          descRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
           return;
       }
 
@@ -1135,6 +1158,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             {t("field_title_label")}
           </div>
           <input
+            ref={titleRef}
             type="text"
             placeholder={t("field_title_ph")}
             className={`w-full border ${fieldErrors.title ? 'border-red-500' : 'border-black dark:border-white/20'} bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm placeholder-gray-500 dark:placeholder-gray-500`}
@@ -1150,6 +1174,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             {t("field_desc_label")}
           </div>
           <textarea
+            ref={descRef}
             rows={4}
             placeholder={t("field_desc_ph")}
             className={`w-full border ${fieldErrors.description ? 'border-red-500' : 'border-black dark:border-white/20'} bg-white dark:bg-neutral-900 text-foreground dark:text-white rounded-xl px-3 py-2 text-sm resize-none placeholder-gray-500 dark:placeholder-gray-500`}
