@@ -375,7 +375,7 @@ export default function CreateListingClient({ onCreated, editId }) {
 
   async function handleSubmit(e, status = 'active') {
     if (e) e.preventDefault();
-    console.log("handleSubmit called with status:", status);
+    console.log("handleSubmit called with status:", status, "loading:", loading);
     
     if (loading) {
         console.warn("handleSubmit blocked: loading is true");
@@ -384,32 +384,41 @@ export default function CreateListingClient({ onCreated, editId }) {
 
       const accountAgeCheck = checkTelegramAccountAge();
       if (!accountAgeCheck.allowed) {
+        console.warn("Blocked by account age check:", accountAgeCheck.reason);
         alert(accountAgeCheck.reason || "Ваш аккаунт Telegram слишком новый.");
         return;
       }
 
       // Basic validation
       if (!title.trim() || !price.trim()) {
+        console.warn("Blocked: empty title or price");
         alert(t("alert_fill_required") || "Заполните обязательные поля (Заголовок, Цена)");
         return;
       }
 
-      // Content moderation
+      // Content moderation (title only - strict)
       const contentCheckTitle = checkContent(title);
-      const contentCheckDesc = checkContent(description);
-
-      if (!contentCheckTitle.safe || !contentCheckDesc.safe) {
-        alert(t("alert_forbidden_content") || "Ваше объявление содержит запрещенный контент или бессмыслицу.");
+      if (!contentCheckTitle.safe) {
+        console.warn("Blocked by title content check:", contentCheckTitle.flagged);
+        alert(t("alert_forbidden_content") || "Заголовок содержит запрещенный контент.");
         return;
+      }
+      
+      // Content moderation (description - warn only, don't block)
+      const contentCheckDesc = checkContent(description);
+      if (!contentCheckDesc.safe) {
+        console.warn("Description content check flagged (non-blocking):", contentCheckDesc.flagged);
       }
 
       if (hasEmoji(title)) {
+        console.warn("Blocked: emoji in title");
         alert(t("alert_no_emoji") || "В заголовке нельзя использовать эмодзи.");
         return;
       }
 
       const titleVal = validateTitle(title);
       if (!titleVal.valid) {
+          console.warn("Blocked by title validation:", titleVal.errorKey);
           alert(t(titleVal.errorKey));
           return;
       }
@@ -417,6 +426,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       // Check price first as number
       const priceValResult = validatePrice(price, listingType);
       if (!priceValResult.valid) {
+          console.warn("Blocked by price validation:", priceValResult.errorKey);
           let msg = t(priceValResult.errorKey);
           if (priceValResult.params) {
               Object.entries(priceValResult.params).forEach(([k, v]) => {
@@ -429,6 +439,7 @@ export default function CreateListingClient({ onCreated, editId }) {
 
       const descVal = validateDescription(description);
       if (!descVal.valid) {
+          console.warn("Blocked by description validation:", descVal.errorKey);
           alert(t(descVal.errorKey));
           return;
       }
