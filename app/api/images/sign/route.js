@@ -28,8 +28,14 @@ export async function POST(req) {
   const supa = supaAdmin();
   const { listingId, fileName } = await req.json();
   
-  // Optional: Verify that 'uid' is the owner of 'listingId' if it's an edit
-  // But for new listings (listingId might be temp or not created yet), we just ensure auth.
+  // Validate file extension (security: prevent non-image uploads)
+  const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'avif'];
+  const ext = (fileName || '').split('.').pop()?.toLowerCase();
+  if (!ext || !allowedExtensions.includes(ext)) {
+    return new Response(JSON.stringify({ error: `File type not allowed. Allowed: ${allowedExtensions.join(', ')}` }), {
+      status: 400,
+    });
+  }
   
   const key = `${listingId}/${crypto.randomUUID()}-${fileName}`;
   const { data, error } = await supa.storage

@@ -8,6 +8,16 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(request) {
   try {
+    // Validate webhook authenticity via secret token
+    // Set this via Telegram Bot API setWebhook with secret_token parameter
+    const secretToken = request.headers.get('x-telegram-bot-api-secret-token');
+    const expectedToken = process.env.TG_WEBHOOK_SECRET;
+    
+    if (expectedToken && secretToken !== expectedToken) {
+      console.error('Telegram webhook: invalid secret token');
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const body = await request.json();
     
     // Handle pre_checkout_query (always approve)

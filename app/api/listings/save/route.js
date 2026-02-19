@@ -60,7 +60,10 @@ export async function POST(req) {
     const URL_REGEX = /(https?:\/\/[^\s]+|www\.[^\s]+|[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:com|ru|net|org|io|me|xyz|ua)[^\s]*)/i;
     const GIBBERISH_REGEX = /[bcdfghjklmnpqrstvwxzбвгджзйклмнпрстфхцчшщ]{5,}/i;
     
-    let { images: _img, id: _id, created_by: _cb, created_at: _ca, ...listingData } = payload;
+    let { images: _img, id: _id, created_by: _cb, created_at: _ca, 
+          is_vip: _vip, is_urgent: _urg, vip_until: _vu,
+          views_count: _vc, contacts_count: _cc,
+          ...listingData } = payload;
     
     // Sanitize user inputs (XSS prevention)
     if (listingData.title) listingData.title = sanitizeTitle(listingData.title);

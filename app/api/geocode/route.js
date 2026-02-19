@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
+import { createRateLimiter } from '@/lib/security';
 
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
+const isAllowed = createRateLimiter(30, 60 * 1000); // 30 req/min per IP
 
 export async function GET(req) {
+  // Rate limiting
+  const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+  if (!isAllowed(ip)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+  }
+
   const { searchParams } = new URL(req.url);
   const q = searchParams.get('q');
   const lat = searchParams.get('lat');
