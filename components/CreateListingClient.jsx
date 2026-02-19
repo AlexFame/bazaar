@@ -359,7 +359,12 @@ export default function CreateListingClient({ onCreated, editId }) {
 
   async function handleSubmit(e, status = 'active') {
     if (e) e.preventDefault();
-    if (loading) return;
+    console.log("handleSubmit called with status:", status);
+    
+    if (loading) {
+        console.warn("handleSubmit blocked: loading is true");
+        return;
+    }
 
       const accountAgeCheck = checkTelegramAccountAge();
       if (!accountAgeCheck.allowed) {

@@ -171,16 +171,17 @@ export default function ListingDetailClient({ id }) {
 
         setListing(listingData);
 
-        // 1. Try DB images first (preferred)
-        let urls = [];
-        if (listingData.listing_images && listingData.listing_images.length > 0) {
-            // Sort by position
-            const sorted = listingData.listing_images.sort((a, b) => (a.position || 0) - (b.position || 0));
-            urls = sorted.map(img => {
-                const { data } = supabase.storage.from('listing-images').getPublicUrl(img.file_path);
-                return data?.publicUrl;
-            }).filter(Boolean);
-        } else {
+            // 1. Try DB images first (preferred)
+            let urls = [];
+            if (listingData.listing_images && listingData.listing_images.length > 0) {
+                // Sort by position
+                const sorted = listingData.listing_images.sort((a, b) => (a.position || 0) - (b.position || 0));
+                urls = sorted.map(img => {
+                    if (!img.file_path) return null;
+                    const { data } = supabase.storage.from('listing-images').getPublicUrl(img.file_path);
+                    return data?.publicUrl;
+                }).filter(Boolean);
+            } else {
             // 2. Fallback to bucket listing (legacy)
             const folder = `listing-${listingData.id}`;
             const { data: files, error: listError } = await supabase.storage
@@ -198,7 +199,6 @@ export default function ListingDetailClient({ id }) {
                 return data?.publicUrl;
                 })
                 .filter(Boolean);
-            } else if (listingData.main_image_path) {
                 // 3. Fallback to main_image_path (if no listing_images rows but main path exists)
                 const { data } = supabase.storage.from("listing-images").getPublicUrl(listingData.main_image_path);
                 if (data?.publicUrl) urls = [data.publicUrl];
@@ -221,6 +221,8 @@ export default function ListingDetailClient({ id }) {
                 }
             }
         }
+        
+        console.log("🖼 Loaded images for", id, ":", urls);
 
         setImageUrls(urls);
         // setCurrentIndex(0);
