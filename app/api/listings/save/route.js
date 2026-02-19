@@ -115,6 +115,20 @@ export async function POST(req) {
                  // Check admin? assume no admin edit for now unless requested
                  return new Response(JSON.stringify({ error: 'Forbidden' }), { status: 403 });
              }
+
+             // If publishing a draft (or any unknown status -> active), update created_at to now so it bumps to top
+             if (listingData.status === 'active') {
+                 // check previous status? we don't have it loaded here fully, but if we are "saving" as active...
+                 // better: only if it WAS a draft? 
+                 // Simple logic: if we are setting status='active', update created_at too? 
+                 // NO, editing an active listing shouldn't bump it.
+                 // We only want to bump if it was a draft.
+                 // We need to fetch current status to be sure.
+                 const { data: current } = await supa.from('listings').select('status').eq('id', payload.id).single();
+                 if (current && current.status === 'draft') {
+                     listingData.created_at = new Date().toISOString();
+                 }
+             }
              
              const { error } = await supa.from('listings').update(listingData).eq('id', payload.id);
              if (error) throw error;

@@ -357,7 +357,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
       // Assuming 'toast' is available, e.g., from react-hot-toast
       // toast.success(t('status_updated') || 'Статус обновлен');
       
-      if (onUpdate) onUpdate({ ...listing, status: newStatus });
+      if (onStatusChange) onStatusChange({ ...listing, status: newStatus });
       
     } catch (err) {
       console.error("Status update error:", err);
