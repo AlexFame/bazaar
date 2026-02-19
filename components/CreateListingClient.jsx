@@ -55,6 +55,7 @@ export default function CreateListingClient({ onCreated, editId }) {
   const [honeypot, setHoneypot] = useState(""); // Bot trap
   const [listingUuid, setListingUuid] = useState("");
   const [beforeAfterImages, setBeforeAfterImages] = useState({ before: null, after: null }); // NEW
+  const closeTimeoutRef = useRef(null); // For dropdown close delay
   const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [lastSavedData, setLastSavedData] = useState(null);
   const [mounted, setMounted] = useState(false); // NEW: Hydration fix
