@@ -172,12 +172,13 @@ export default function CreateListingClient({ onCreated, editId }) {
           setTitle(listingData.title || "");
           setDescription(listingData.description || "");
           setPrice(listingData.price?.toString() || "");
-          setLocation(listingData.location || "");
+          setLocation(listingData.location_text || "");
           setContacts(listingData.contacts || "");
           setCategoryKey(listingData.category_key || "kids");
           setListingType(listingData.type || "sell");
           setParameters(listingData.filters || {});
           setCondition(listingData.condition || "new");
+          setAllowChat(listingData.allow_chat !== false); // Load chat preference
           if (listingData.before_after_images) {
               setBeforeAfterImages(listingData.before_after_images);
           }
