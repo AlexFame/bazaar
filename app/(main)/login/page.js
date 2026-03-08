@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getTG } from "@/lib/telegram";
-import { supabase } from "@/lib/supabaseClient";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,39 +33,16 @@ export default function LoginPage() {
         throw new Error(data.error || "Ошибка авторизации. Попробуйте позже.");
       }
 
-      // Set Supabase session
-      if (data.token) {
-          console.log("Setting session with token:", data.token.substring(0, 10) + "...");
-          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-              access_token: data.token,
-              refresh_token: data.token, 
-          });
-          
-          if (sessionError) {
-              console.error("Supabase session error:", sessionError);
-              // Suppress specific error about deleted user, as the backend should now handle restoration on next try
-              if (!sessionError.message.includes("User from sub claim in JWT does not exist")) {
-                  alert("Ошибка сохранения сессии: " + sessionError.message);
-              } else {
-                  // Optional: Force reload or just log
-                  console.warn("Session mismatch detected. Backend should fix on next attempt.");
-              }
-          } else {
-              console.log("Session set successfully:", sessionData);
-              
-              // Verify immediately
-              const { data: { user: verifyUser }, error: verifyError } = await supabase.auth.getUser();
-              console.log("Immediate User Check:", verifyUser?.id);
-              if (verifyError) console.error("Immediate Verify Error:", verifyError);
-              
-              if (!verifyUser) {
-                  alert("Сессия не сохранилась! Проверьте консоль.");
-                  return; // Don't redirect if failed
-              }
-          }
+      // Cookie is set automatically by the server (HttpOnly).
+      // Verify that we're authenticated by calling /api/auth/me
+      const meRes = await fetch("/api/auth/me");
+      const meData = await meRes.json();
+
+      if (!meData.user) {
+        throw new Error("Сессия не сохранилась. Попробуйте снова.");
       }
 
-      // Success
+      // Success — go back
       router.back();
     } catch (err) {
       console.error("Login error:", err);

@@ -1,23 +1,9 @@
 import crypto from "crypto";
-import jwt from "jsonwebtoken";
 import { supaAdmin } from "@/lib/supabaseAdmin";
-
-function uidFromCookie(headers) {
-  const cookie = headers.get("cookie") || "";
-  const m = cookie.match(/app_session=([^;]+)/);
-  if (!m) return null;
-  try {
-    // Verify token and extract 'sub' (user ID)
-    const payload = jwt.verify(m[1], process.env.JWT_SECRET);
-    return payload.sub || null;
-  } catch (e) {
-    console.error("JWT Verify Error:", e.message);
-    return null;
-  }
-}
+import { getUserIdFromCookie } from "@/lib/auth";
 
 export async function POST(req) {
-  const uid = uidFromCookie(req.headers);
+  const uid = getUserIdFromCookie(req.headers);
   
   if (!uid) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {

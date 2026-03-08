@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { supabase } from "@/lib/supabaseClient";
+import { supaAdmin } from "@/lib/supabaseAdmin";
+import { getUserIdFromCookie } from "@/lib/auth";
 
 export async function POST(request) {
   try {
@@ -20,11 +21,13 @@ export async function POST(request) {
       );
     }
 
-    // Get current user
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
+    // Get current user from cookie
+    const userId = getUserIdFromCookie(request.headers);
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const supabase = supaAdmin();
 
     // Get listing details
     const { data: listing, error: listingError } = await supabase
@@ -58,7 +61,7 @@ export async function POST(request) {
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/listing/${listingId}`,
       metadata: {
         listingId,
-        buyerId: user.id,
+        buyerId: userId,
         sellerId: listing.created_by,
       },
     });
@@ -68,7 +71,7 @@ export async function POST(request) {
       .from("payments")
       .insert({
         listing_id: listingId,
-        buyer_id: user.id,
+        buyer_id: userId,
         seller_id: listing.created_by,
         amount,
         currency: "EUR",

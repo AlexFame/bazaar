@@ -36,18 +36,18 @@ export default function AppShell({ children }) {
   // чтобы не дергать /api/auth/tg/verify по 100 раз
   const authOnceRef = useRef(false);
 
-  // Track current user
+  // Track current user via server-side cookie session
   useEffect(() => {
       const getUser = async () => {
-          const { data: { user } } = await supabase.auth.getUser();
-          setCurrentUser(user);
+          try {
+              const res = await fetch('/api/auth/me');
+              const data = await res.json();
+              setCurrentUser(data.user || null);
+          } catch {
+              setCurrentUser(null);
+          }
       };
       getUser();
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-          setCurrentUser(session?.user || null);
-      });
-      return () => subscription.unsubscribe();
   }, []);
 
   // Update last_seen on activity
@@ -163,16 +163,16 @@ export default function AppShell({ children }) {
             tg?.expand?.();
           } catch (e) {}
 
-          // После успешной авторизации (или попытки) грузим кол-во непрочитанных
-          // Но нужно знать ID пользователя. 
-          // Проще запросить через supabase.auth.getUser() если сессия есть
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
+          // After auth, fetch user from server cookie session
+          const meRes = await fetch('/api/auth/me');
+          const meData = await meRes.json();
+          if (meData.user) {
+              setCurrentUser(meData.user);
               const { count } = await supabase
                   .from('messages')
                   .select('*', { count: 'exact', head: true })
                   .eq('is_read', false)
-                  .neq('sender_id', user.id);
+                  .neq('sender_id', meData.user.id);
               
               if (count !== null) setUnreadCount(count);
           }
