@@ -1,6 +1,8 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
 import { sanitizeTitle, sanitizeContent } from '@/lib/security';
+import { withRateLimit } from '@/lib/ratelimit';
+import { sendNotification } from '@/lib/bot';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -29,7 +31,7 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(req) {
+async function saveHandler(req) {
   try {
     const body = await req.json();
     const { initData, ...payload } = body;
@@ -101,9 +103,11 @@ export async function POST(req) {
         if (listingData.price < 0 || listingData.price > 10000000) return new Response(JSON.stringify({ error: 'Invalid price' }), { status: 400 });
     }
 
+    let isNewPublish = false;
+
     if (payload.id) {
         // Check if listing exists
-        const { data: existing } = await supa.from('listings').select('created_by').eq('id', payload.id).maybeSingle();
+        const { data: existing } = await supa.from('listings').select('created_by, status').eq('id', payload.id).maybeSingle();
         
         if (existing) {
              // UPDATE Existing
@@ -114,19 +118,11 @@ export async function POST(req) {
              }
 
              // If publishing a draft (or any unknown status -> active), update created_at to now so it bumps to top
-             if (listingData.status === 'active') {
-                 // check previous status? we don't have it loaded here fully, but if we are "saving" as active...
-                 // better: only if it WAS a draft? 
-                 // Simple logic: if we are setting status='active', update created_at too? 
-                 // NO, editing an active listing shouldn't bump it.
-                 // We only want to bump if it was a draft.
-                 // We need to fetch current status to be sure.
-                 const { data: current } = await supa.from('listings').select('status').eq('id', payload.id).single();
-                 if (current && current.status === 'draft') {
-                     const now = new Date().toISOString();
-                     listingData.created_at = now;
-                     listingData.bumped_at = now;
-                 }
+             if (listingData.status === 'active' && existing.status === 'draft') {
+                 const now = new Date().toISOString();
+                 listingData.created_at = now;
+                 listingData.bumped_at = now;
+                 isNewPublish = true;
              }
              
              const { error } = await supa.from('listings').update(listingData).eq('id', payload.id);
@@ -137,12 +133,15 @@ export async function POST(req) {
              const insertData = { ...listingData, created_by: userId, id: payload.id, bumped_at: new Date().toISOString() };
              const { error } = await supa.from('listings').insert(insertData);
              if (error) throw error;
+             if (listingData.status === 'active') isNewPublish = true;
         }
     } else {
         // INSERT (no ID provided)
         const insertData = { ...listingData, created_by: userId, bumped_at: new Date().toISOString() };
-        const { error } = await supa.from('listings').insert(insertData);
+        const { data, error } = await supa.from('listings').insert(insertData).select('id').single();
         if (error) throw error;
+        payload.id = data.id;
+        if (listingData.status === 'active') isNewPublish = true;
     }
 
     // 3. Handle Images (Sync)
@@ -170,6 +169,46 @@ export async function POST(req) {
         }
     }
 
+    // 4. Notify Subscribers if newly published
+    if (isNewPublish) {
+       (async () => {
+           try {
+               const { data: subs } = await supa.from('user_subscriptions')
+                   .select('subscriber:subscriber_id(id, tg_user_id, notification_preferences)')
+                   .eq('target_user_id', userId);
+                   
+               if (subs && subs.length > 0) {
+                   const { data: sellerProfile } = await supa.from('profiles').select('full_name, tg_username').eq('id', userId).single();
+                   const sellerName = sellerProfile?.full_name || sellerProfile?.tg_username || 'Продавец';
+                   
+                   for (const sub of subs) {
+                       const { subscriber } = sub;
+                       if (!subscriber || !subscriber.tg_user_id) continue;
+                       
+                       // check notification prefs (default true)
+                       const notifyPref = subscriber.notification_preferences?.['subscription'] ?? true;
+                       if (!notifyPref) continue;
+                       
+                       const msg = `🔔 ${sellerName} выложил(а) новое объявление: "${listingData.title || title}"!`;
+                       
+                       await supa.from('notifications').insert({
+                           user_id: subscriber.id,
+                           type: 'subscription',
+                           message: msg,
+                           data: { listing_id: payload.id },
+                           title: 'notification_new_subscription_post',
+                           is_read: false
+                       });
+                       
+                       await sendNotification(subscriber.tg_user_id, msg);
+                   }
+               }
+           } catch (err) {
+               console.error("Error notifying subscribers:", err);
+           }
+       })();
+    }
+
     return new Response(JSON.stringify({ success: true }), { 
       status: 200,
       headers: { 'Content-Type': 'application/json' }
@@ -189,3 +228,5 @@ export async function POST(req) {
     });
   }
 }
+
+export const POST = withRateLimit(saveHandler, { limit: 10, window: '30 s' });

@@ -1,19 +1,14 @@
 
 import { NextResponse } from "next/server";
-import { createRateLimiter } from "@/lib/security";
+import { withRateLimit } from '@/lib/ratelimit';
+import { translateSchema, validateBody } from '@/lib/validation';
 
-// 20 requests per minute per IP
-const isAllowed = createRateLimiter(20, 60 * 1000);
-
-export async function POST(request) {
+async function translateHandler(request) {
   try {
-    // Rate limiting
-    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
-    if (!isAllowed(ip)) {
-      return NextResponse.json({ error: "Too many requests" }, { status: 429 });
-    }
-
-    const { text, targetLang } = await request.json();
+    const body = await request.json();
+    const v = validateBody(translateSchema, body);
+    if (!v.ok) return v.error;
+    const { text, targetLang } = v.data;
 
     if (!text) {
       return NextResponse.json({ text: "" });
@@ -54,3 +49,5 @@ export async function POST(request) {
     return NextResponse.json({ text: "" }, { status: 500 });
   }
 }
+
+export const POST = withRateLimit(translateHandler, { limit: 20, window: '1 m' });

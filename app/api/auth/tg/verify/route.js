@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import { supaAdmin } from '@/lib/supabaseAdmin';
+import { withRateLimit } from '@/lib/ratelimit';
+import { authVerifySchema, validateBody } from '@/lib/validation';
 
 function checkTelegramAuth(initData, botToken) {
   const url = new URLSearchParams(initData);
@@ -37,9 +39,12 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(req) {
+async function verifyHandler(req) {
   try {
-    const { initData } = await req.json();
+    const body = await req.json();
+    const v = validateBody(authVerifySchema, body);
+    if (!v.ok) return v.error;
+    const { initData } = v.data;
     
     if (!process.env.JWT_SECRET) {
         console.error("JWT_SECRET is MISSING!");
@@ -161,3 +166,5 @@ export async function POST(req) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 }
+
+export const POST = withRateLimit(verifyHandler, { limit: 10, window: '1 m' });

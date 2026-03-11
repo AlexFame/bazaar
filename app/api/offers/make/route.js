@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+import { withRateLimit } from '@/lib/ratelimit';
+import { offerMakeSchema, validateBody } from '@/lib/validation';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE;
@@ -7,9 +9,12 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE;
 // Init server-side Supabase client with admin rights
 const supa = createClient(supabaseUrl, supabaseServiceKey);
 
-export async function POST(req) {
+async function offerHandler(req) {
   try {
-    const { listing_id, price, initData } = await req.json();
+    const body = await req.json();
+    const v = validateBody(offerMakeSchema, body);
+    if (!v.ok) return v.error;
+    const { listing_id, price, initData } = v.data;
 
     if (!initData) {
       return new Response(JSON.stringify({ error: 'Missing initData' }), { status: 401 });
@@ -140,3 +145,5 @@ export async function POST(req) {
     return new Response(JSON.stringify({ error: err.message }), { status: 500 });
   }
 }
+
+export const POST = withRateLimit(offerHandler, { limit: 10, window: '30 s' });

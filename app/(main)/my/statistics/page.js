@@ -16,6 +16,7 @@ import {
   PhoneIcon
 } from "@heroicons/react/24/outline";
 import { HeartIcon as HeartIconSolid } from "@heroicons/react/24/solid";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 function StatisticsListingItem({ listing, t, sortBy }) {
   const [imageError, setImageError] = useState(false);
@@ -180,6 +181,7 @@ export default function ProfileStatisticsPage() {
     totalListings: 0
   });
   const [listings, setListings] = useState([]);
+  const [chartData, setChartData] = useState([]);
   const [sortBy, setSortBy] = useState("date"); // 'date' | 'favorites'
 
   useEffect(() => {
@@ -228,6 +230,17 @@ export default function ProfileStatisticsPage() {
           console.error("Error loading listings:", listingsError);
           setLoading(false);
           return;
+        }
+
+        // Fetch chart data
+        try {
+          const chartRes = await fetch(`/api/analytics/chart?userId=${userId}&days=7`);
+          if (chartRes.ok) {
+            const cData = await chartRes.json();
+            setChartData(cData);
+          }
+        } catch (ce) {
+          console.error("Error fetching chart data:", ce);
         }
 
         // Calculate aggregated stats
@@ -472,6 +485,38 @@ export default function ProfileStatisticsPage() {
             </div>
           </div>
         </div>
+
+        {/* Analytics Chart */}
+        {chartData.length > 0 && (
+          <div className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-3xl p-4 sm:p-6 mb-6 shadow-sm">
+            <h2 className="text-lg font-bold mb-4 dark:text-white">Динамика за 7 дней</h2>
+            <div className="w-full h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorContacts" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+                  <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} dy={10} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6b7280' }} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    itemStyle={{ fontSize: '14px', fontWeight: 500 }}
+                  />
+                  <Area type="monotone" name="Просмотры" dataKey="views" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+                  <Area type="monotone" name="Контакты" dataKey="contacts" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorContacts)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
 
         {/* Secondary Stats Row */}
         <div className="grid grid-cols-2 gap-4 mb-6">

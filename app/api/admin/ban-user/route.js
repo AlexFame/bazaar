@@ -1,6 +1,8 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import { banUser, unbanUser } from '@/lib/bot';
 import crypto from 'crypto';
+import { withRateLimit } from '@/lib/ratelimit';
+import { adminBanSchema, validateBody } from '@/lib/validation';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -22,9 +24,12 @@ function checkTelegramAuth(initData, botToken) {
  * POST /api/admin/ban-user
  * Body: { userId: string, reason: string, action: 'ban' | 'unban', initData: string }
  */
-export async function POST(req) {
+async function banUserHandler(req) {
   try {
-    const { userId, reason, action, initData } = await req.json();
+    const body = await req.json();
+    const v = validateBody(adminBanSchema, body);
+    if (!v.ok) return v.error;
+    const { userId, reason, action, initData } = v.data;
     
     // AUTH CHECK
     if (!initData || !process.env.TG_BOT_TOKEN) {
@@ -120,3 +125,5 @@ export async function POST(req) {
     );
   }
 }
+
+export const POST = withRateLimit(banUserHandler, { limit: 5, window: '1 m' });

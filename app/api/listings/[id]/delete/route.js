@@ -1,5 +1,7 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
+import { withRateLimit } from '@/lib/ratelimit';
+import { listingDeleteByIdSchema, validateBody } from '@/lib/validation';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -31,10 +33,13 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(req, { params }) {
+async function deleteByIdHandler(req, { params }) {
   try {
     const { id } = params;
-    const { initData } = await req.json();
+    const body = await req.json();
+    const v = validateBody(listingDeleteByIdSchema, body);
+    if (!v.ok) return v.error;
+    const { initData } = v.data;
 
     if (!process.env.TG_BOT_TOKEN) {
         return new Response(JSON.stringify({ error: 'Server config error' }), { status: 500 });
@@ -93,3 +98,5 @@ export async function POST(req, { params }) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 }
+
+export const POST = withRateLimit(deleteByIdHandler, { limit: 10, window: '30 s' });

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
+import { withRateLimit } from '@/lib/ratelimit';
+import { notificationSendSchema, validateBody } from '@/lib/validation';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -17,7 +19,7 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(req) {
+async function notificationSendHandler(req) {
   console.log("🔔 [Notification API] Request received");
   try {
     // Initialize Supabase Admin client inside handler
@@ -41,7 +43,10 @@ export async function POST(req) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { recipientId, message, listingTitle, initData } = await req.json();
+    const body = await req.json();
+    const v = validateBody(notificationSendSchema, body);
+    if (!v.ok) return v.error;
+    const { recipientId, message, listingTitle, initData } = v.data;
 
     // AUTH CHECK
     if (!initData) {
@@ -137,3 +142,5 @@ export async function POST(req) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+export const POST = withRateLimit(notificationSendHandler, { limit: 10, window: '1 m' });

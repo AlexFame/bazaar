@@ -2,8 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 import { getUserId } from '@/lib/userId';
 import { supabase } from '@/lib/supabaseClient'; // Client for checking auth if needed, but we use server auth usually
 import { supaAdmin } from '@/lib/supabaseAdmin';
+import { withRateLimit } from '@/lib/ratelimit';
 
-export async function POST(req) {
+async function savedSearchHandler(req) {
   try {
     const { query, initData, tgUserId, ...filters } = await req.json();
     
@@ -68,6 +69,8 @@ export async function POST(req) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 }
+
+export const POST = withRateLimit(savedSearchHandler, { limit: 10, window: '30 s' });
 
 export async function GET(req) {
      // Use URL params ?user_id=... (Secured by RLS if using client, but here we are server)

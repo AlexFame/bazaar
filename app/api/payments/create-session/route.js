@@ -3,15 +3,20 @@ import { createClient } from "@supabase/supabase-js";
 import { stripe } from "@/lib/stripe";
 
 import { validateTelegramWebAppData } from "@/lib/telegram-auth";
+import { withRateLimit } from '@/lib/ratelimit';
+import { paymentSessionSchema, validateBody } from '@/lib/validation';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 const BOT_TOKEN = process.env.TG_BOT_TOKEN;
 
-export async function POST(request) {
+async function sessionHandler(request) {
   try {
-    const { serviceId, listingId, initData } = await request.json();
+    const body = await request.json();
+    const v = validateBody(paymentSessionSchema, body);
+    if (!v.ok) return v.error;
+    const { serviceId, listingId, initData } = v.data;
 
     // 1. Auth check
     let user = null;
@@ -171,3 +176,5 @@ export async function POST(request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+export const POST = withRateLimit(sessionHandler, { limit: 5, window: '1 m' });

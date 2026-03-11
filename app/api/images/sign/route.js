@@ -1,8 +1,10 @@
 import crypto from "crypto";
 import { supaAdmin } from "@/lib/supabaseAdmin";
 import { getUserIdFromCookie } from "@/lib/auth";
+import { withRateLimit } from '@/lib/ratelimit';
+import { imageSignSchema, validateBody } from '@/lib/validation';
 
-export async function POST(req) {
+async function imageSignHandler(req) {
   const uid = getUserIdFromCookie(req.headers);
   
   if (!uid) {
@@ -12,7 +14,10 @@ export async function POST(req) {
   }
 
   const supa = supaAdmin();
-  const { listingId, fileName } = await req.json();
+  const body = await req.json();
+  const v = validateBody(imageSignSchema, body);
+  if (!v.ok) return v.error;
+  const { listingId, fileName } = v.data;
   
   // Validate file extension (security: prevent non-image uploads)
   const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'avif'];
@@ -38,3 +43,5 @@ export async function POST(req) {
     { status: 200 }
   );
 }
+
+export const POST = withRateLimit(imageSignHandler, { limit: 10, window: '30 s' });

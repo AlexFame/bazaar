@@ -1,5 +1,7 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
+import { withRateLimit } from '@/lib/ratelimit';
+import { listingDeleteSchema, validateBody } from '@/lib/validation';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -28,10 +30,12 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(req) {
+async function deleteHandler(req) {
   try {
     const body = await req.json();
-    const { id, initData } = body;
+    const v = validateBody(listingDeleteSchema, body);
+    if (!v.ok) return v.error;
+    const { id, initData } = v.data;
     
     if (!id || !initData) return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
 
@@ -82,3 +86,5 @@ export async function POST(req) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 }
+
+export const POST = withRateLimit(deleteHandler, { limit: 10, window: '30 s' });

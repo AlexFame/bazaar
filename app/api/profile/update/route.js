@@ -1,5 +1,7 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
+import { withRateLimit } from '@/lib/ratelimit';
+import { profileUpdateSchema, validateBody } from '@/lib/validation';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -28,10 +30,12 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(req) {
+async function profileUpdateHandler(req) {
   try {
     const body = await req.json();
-    const { initData, ...updates } = body;
+    const v = validateBody(profileUpdateSchema, body);
+    if (!v.ok) return v.error;
+    const { initData, ...updates } = v.data;
 
     // 1. Validate Auth
     if (!process.env.TG_BOT_TOKEN) return new Response(JSON.stringify({ error: 'Config error' }), { status: 500 });
@@ -78,3 +82,5 @@ export async function POST(req) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 }
+
+export const POST = withRateLimit(profileUpdateHandler, { limit: 10, window: '30 s' });

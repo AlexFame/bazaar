@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { withRateLimit } from '@/lib/ratelimit';
+import { analyticsTrackSchema, validateBody } from '@/lib/validation';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-export async function POST(request) {
+async function trackHandler(request) {
   try {
-    const { listingId, eventType, eventData } = await request.json();
+    const body = await request.json();
+    const v = validateBody(analyticsTrackSchema, body);
+    if (!v.ok) return v.error;
+    const { listingId, eventType, eventData } = v.data;
 
     // Validate input
     if (!listingId || !eventType) {
@@ -95,3 +100,5 @@ export async function POST(request) {
     );
   }
 }
+
+export const POST = withRateLimit(trackHandler, { limit: 30, window: '30 s' });

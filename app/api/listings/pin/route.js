@@ -1,5 +1,7 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
+import { withRateLimit } from '@/lib/ratelimit';
+import { listingPinSchema, validateBody } from '@/lib/validation';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -16,9 +18,12 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(req) {
+async function pinHandler(req) {
   try {
-    const { initData, listingId, durationDays = 7 } = await req.json();
+    const body = await req.json();
+    const v = validateBody(listingPinSchema, body);
+    if (!v.ok) return v.error;
+    const { initData, listingId, durationDays } = v.data;
     
     if (!process.env.TG_BOT_TOKEN) return new Response(JSON.stringify({ error: 'Config error' }), { status: 500 });
     const authData = checkTelegramAuth(initData, process.env.TG_BOT_TOKEN);
@@ -53,3 +58,5 @@ export async function POST(req) {
     return new Response(JSON.stringify({ error: e.message }), { status: 500 });
   }
 }
+
+export const POST = withRateLimit(pinHandler, { limit: 10, window: '30 s' });

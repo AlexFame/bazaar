@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import { sanitizeContent } from '@/lib/security';
+import { withRateLimit } from '@/lib/ratelimit';
+import { commentCreateSchema, validateBody } from '@/lib/validation';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
@@ -29,10 +31,12 @@ function checkTelegramAuth(initData) {
     return JSON.parse(userStr);
 }
 
-export async function POST(req) {
+async function commentHandler(req) {
     try {
         const body = await req.json();
-        const { initData, listingId, content } = body;
+        const v = validateBody(commentCreateSchema, body);
+        if (!v.ok) return v.error;
+        const { initData, listingId, content } = v.data;
 
         // 1. Auth Check
         let userId = null;
@@ -87,3 +91,5 @@ export async function POST(req) {
         return new Response(JSON.stringify({ error: e.message || "Server error" }), { status: 500 });
     }
 }
+
+export const POST = withRateLimit(commentHandler, { limit: 10, window: '30 s' });

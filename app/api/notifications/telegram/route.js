@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { sendNotification } from "@/lib/bot";
 import { supaAdmin } from "@/lib/supabaseAdmin";
 import crypto from "crypto";
+import { withRateLimit } from '@/lib/ratelimit';
+import { notificationTelegramSchema, validateBody } from '@/lib/validation';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -18,9 +20,12 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(request) {
+async function notificationTelegramHandler(request) {
   try {
-    const { recipientId, message, type = "general", data, initData } = await request.json();
+    const body = await request.json();
+    const v = validateBody(notificationTelegramSchema, body);
+    if (!v.ok) return v.error;
+    const { recipientId, message, type, data, initData } = v.data;
 
     // AUTH CHECK
     if (!initData || !process.env.TG_BOT_TOKEN) {
@@ -103,3 +108,5 @@ export async function POST(request) {
     );
   }
 }
+
+export const POST = withRateLimit(notificationTelegramHandler, { limit: 10, window: '1 m' });

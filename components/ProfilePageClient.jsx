@@ -24,6 +24,9 @@ export default function ProfilePageClient({ profileId }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("listings"); // 'listings' | 'reviews'
 
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
@@ -47,18 +50,16 @@ export default function ProfilePageClient({ profileId }) {
       
       setListings(listingsData || []);
 
-      // 3. Reviews (Try to fetch if table exists)
+      // 3. Reviews
       try {
-          const { data: reviewsData, error: reviewsError } = await supabase
-              .from("reviews")
-              .select("*, reviewer:profiles!reviewer_id(full_name, tg_username, avatar_url)")
-              .eq("target_id", profileId)
-              .order("created_at", { ascending: false });
-          
-          if (reviewsError) {
-              console.warn("Error fetching reviews (table might be missing):", reviewsError);
-          } else if (reviewsData) {
-              setReviews(reviewsData);
+          const res = await fetch(`/api/reviews?targetUserId=${profileId}`);
+          if (res.ok) {
+              const reviewsData = await res.json();
+              if (Array.isArray(reviewsData)) {
+                  setReviews(reviewsData);
+              }
+          } else {
+              console.warn("Error fetching reviews:", await res.text());
           }
       } catch (e) {
           console.log("Reviews fetch exception:", e);
@@ -83,6 +84,20 @@ export default function ProfilePageClient({ profileId }) {
      checkUser();
   }, []);
 
+  // Fetch subscription status once we have currentUserProfile
+  useEffect(() => {
+    if (currentUserProfile && profileId && currentUserProfile.id !== profileId) {
+      fetch(`/api/subscriptions?targetUserId=${profileId}&subscriberId=${currentUserProfile.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && typeof data.subscribed === 'boolean') {
+            setIsSubscribed(data.subscribed);
+          }
+        })
+        .catch(err => console.error("Error fetching subscription status:", err));
+    }
+  }, [currentUserProfile, profileId]);
+
   useEffect(() => {
     loadData();
   }, [profileId]);
@@ -92,6 +107,42 @@ export default function ProfilePageClient({ profileId }) {
          router.replace("/my?tab=active");
      }
   }, [currentUserProfile, profileId, router]);
+
+  const handleToggleSubscription = async () => {
+    if (typeof window === 'undefined' || !window.Telegram?.WebApp?.initData) {
+      alert(t("login_required") || "Пожалуйста, войдите через Telegram.");
+      return;
+    }
+    
+    setLoadingSubscription(true);
+    try {
+      // Optimistic update
+      setIsSubscribed(!isSubscribed);
+
+      const res = await fetch('/api/subscriptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          initData: window.Telegram.WebApp.initData,
+          targetUserId: profileId
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to toggle subscription');
+      }
+
+      setIsSubscribed(data.subscribed);
+    } catch (e) {
+      console.error("Subscription err:", e);
+      alert(e.message);
+      // Revert initial update on error
+      setIsSubscribed(isSubscribed);
+    } finally {
+      setLoadingSubscription(false);
+    }
+  };
 
   if (loading) {
       return (
@@ -166,8 +217,23 @@ export default function ProfilePageClient({ profileId }) {
                 )}
             </div>
 
+            {/* Subscribe Button */}
+            {(!currentUserProfile || currentUserProfile.id !== profileId) && (
+              <button
+                onClick={handleToggleSubscription}
+                disabled={loadingSubscription}
+                className={`mt-2 mb-4 px-6 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  isSubscribed 
+                    ? "bg-gray-100 text-gray-800 border border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-100" 
+                    : "bg-black text-white hover:bg-gray-800"
+                }`}
+              >
+                {isSubscribed ? (t("unsubscribe") || "Отписаться") : (t("subscribe") || "Подписаться")}
+              </button>
+            )}
+
             {/* Rating & Stats */}
-            <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+            <div className={`flex items-center gap-4 text-sm text-gray-500 mb-4 ${(!currentUserProfile || currentUserProfile.id !== profileId) ? 'mt-1' : 'mt-4'}`}>
                 <div className="flex items-center gap-1">
                     <span>⭐️</span>
                     <span className="font-semibold text-black">{avgRating || (t("no_reviews") || "Нет отзывов")}</span>

@@ -2,10 +2,15 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import { supaAdmin } from "@/lib/supabaseAdmin";
 import { getUserIdFromCookie } from "@/lib/auth";
+import { withRateLimit } from '@/lib/ratelimit';
+import { paymentCheckoutSchema, validateBody } from '@/lib/validation';
 
-export async function POST(request) {
+async function checkoutHandler(request) {
   try {
-    const { listingId, amount } = await request.json();
+    const body = await request.json();
+    const v = validateBody(paymentCheckoutSchema, body);
+    if (!v.ok) return v.error;
+    const { listingId, amount } = v.data;
 
     if (!listingId || !amount) {
       return NextResponse.json(
@@ -92,3 +97,5 @@ export async function POST(request) {
     );
   }
 }
+
+export const POST = withRateLimit(checkoutHandler, { limit: 5, window: '1 m' });

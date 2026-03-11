@@ -51,17 +51,24 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
         }
       }
 
-      // Insert review
-      const { error } = await supabase.from("reviews").insert({
-        reviewer_id: reviewerProfile.id,
-        target_id: targetUserId,
-        rating,
-        comment: comment.trim() || null,
+      // Insert review via secure API
+      const response = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          initData: window.Telegram?.WebApp?.initData,
+          targetUserId,
+          rating,
+          comment: comment.trim() || undefined,
+        })
       });
 
-      if (error) throw error;
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit review');
+      }
       
-      // Notify the target user (seller)
+      // Notify the target user (seller) via Telegram bot
       try {
           const message = `⭐ ${t("notification_new_review") || "Новый отзыв"}! ${rating}/5: "${comment.trim() ||"..."}"`;
           await fetch("/api/notifications/telegram", {
@@ -85,7 +92,7 @@ export default function ReviewForm({ targetUserId, onReviewSubmitted }) {
       if (onReviewSubmitted) onReviewSubmitted();
     } catch (err) {
       console.error("Error submitting review:", err);
-      alert(t("review_error") || "Ошибка при добавлении отзыва.");
+      alert(err.message || t("review_error") || "Ошибка при добавлении отзыва.");
     } finally {
       setSubmitting(false);
     }

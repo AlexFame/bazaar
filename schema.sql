@@ -106,3 +106,48 @@ exception when duplicate_object then null; end $$;
 do $$ begin
   create policy notifications_update_own on public.notifications for update using (user_id = auth.uid());
 exception when duplicate_object then null; end $$;
+
+
+-- ==========================================
+-- NEW FEATURES: REVIEWS AND SUBSCRIPTIONS
+-- ==========================================
+
+-- 6. Reviews
+create table if not exists public.reviews (
+  id uuid primary key default gen_random_uuid(),
+  target_user_id uuid not null references public.profiles(id) on delete cascade,
+  reviewer_id uuid not null references public.profiles(id) on delete cascade,
+  listing_id uuid references public.listings(id) on delete set null,
+  rating int not null check (rating between 1 and 5),
+  comment text,
+  created_at timestamptz default now()
+);
+
+-- Ensure user can only review another user once (or once per listing if we change requirements, but let's do once per target user globally for now to prevent spam)
+create unique index if not exists reviews_reviewer_target_idx on public.reviews(reviewer_id, target_user_id);
+create index if not exists reviews_target_user_id_idx on public.reviews(target_user_id);
+
+alter table public.reviews enable row level security;
+
+do $$ begin
+  create policy reviews_read_all on public.reviews for select using (true);
+exception when duplicate_object then null; end $$;
+
+-- 7. User Subscriptions (Followers)
+create table if not exists public.user_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  target_user_id uuid not null references public.profiles(id) on delete cascade,
+  subscriber_id uuid not null references public.profiles(id) on delete cascade,
+  created_at timestamptz default now()
+);
+
+-- Ensure a user can only follow someone once
+create unique index if not exists user_subscriptions_unique_idx on public.user_subscriptions(subscriber_id, target_user_id);
+create index if not exists user_subscriptions_target_user_idx on public.user_subscriptions(target_user_id);
+create index if not exists user_subscriptions_subscriber_idx on public.user_subscriptions(subscriber_id);
+
+alter table public.user_subscriptions enable row level security;
+
+do $$ begin
+  create policy subscriptions_read_all on public.user_subscriptions for select using (true);
+exception when duplicate_object then null; end $$;

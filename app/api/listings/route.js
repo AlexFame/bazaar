@@ -1,6 +1,7 @@
 // app/api/listings/route.js
 import { z } from "zod";
 import { supaAdmin } from "@/lib/supabaseAdmin";
+import { withRateLimit } from '@/lib/ratelimit';
 
 // Схема валидации объявления
 const schema = z.object({
@@ -45,7 +46,7 @@ export async function GET(req) {
 
 // POST /api/listings
 // Авторизацию сейчас не трогаем - просто создаём объявление
-export async function POST(req) {
+async function listingPostHandler(req) {
   const supa = supaAdmin();
   const body = await req.json();
 
@@ -78,3 +79,5 @@ export async function POST(req) {
 
   return new Response(JSON.stringify({ id: data.id }), { status: 200 });
 }
+
+export const POST = withRateLimit(listingPostHandler, { limit: 10, window: '30 s' });
