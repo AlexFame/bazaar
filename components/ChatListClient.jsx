@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
+import { UserService } from "@/lib/services/UserService";
 import BackButton from "./BackButton";
 import { useLang } from "@/lib/i18n-client";
 import { ChatListSkeleton } from "./SkeletonLoader";
@@ -97,7 +98,7 @@ export default function ChatListClient() {
                    const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
                    let resolvedUser = null;
                    if (tgUser?.id) {
-                        const { data: profile } = await supabase.from("profiles").select("*").eq("tg_user_id", tgUser.id).single();
+                        const profile = await UserService.getByTgId(tgUser.id);
                         if (profile) resolvedUser = profile;
                    }
                    
@@ -123,11 +124,7 @@ export default function ChatListClient() {
           if (typeof window !== "undefined") {
               const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
               if (tgUser?.id) {
-                  const { data: profile } = await supabase
-                      .from("profiles")
-                      .select("id, full_name, avatar_url")
-                      .eq("tg_user_id", tgUser.id)
-                      .single();
+                  const profile = await UserService.getByTgId(tgUser.id);
                   if (profile) user = profile;
               }
           }
@@ -148,14 +145,15 @@ export default function ChatListClient() {
           updated_at,
           buyer_id,
           seller_id,
-          listing:listings(id, title, image_path, price),
+          listing:listings(id, title, main_image_path, price),
           buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
           seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url),
           deleted_by_buyer,
           deleted_by_seller
         `)
-        .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
-        .order("updated_at", { ascending: false });
+        .or(`and(buyer_id.eq.${user.id},deleted_by_buyer.eq.false),and(seller_id.eq.${user.id},deleted_by_seller.eq.false)`)
+        .order("updated_at", { ascending: false })
+        .limit(50);
 
       if (error) {
         console.error("Error fetching chats:", error);
@@ -405,12 +403,11 @@ function ChatItem({ conv, user, unreadCounts, onDelete, getImageUrl }) {
               {/* Large Avatar */}
               <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
                 {other.avatar_url ? (
-                  <img src={other.avatar_url} alt={other.full_name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl font-bold bg-gray-100 dark:bg-gray-800">
+                  <img src={other.avatar_url.startsWith('http') ? other.avatar_url : (supabase.storage.from('avatars').getPublicUrl(other.avatar_url).data?.publicUrl || other.avatar_url)} alt={other.full_name} className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                ) : null}
+                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl font-bold bg-gray-100 dark:bg-gray-800" style={{ display: other.avatar_url ? 'none' : 'flex' }}>
                     {other.full_name?.[0]?.toUpperCase() || "?"}
-                  </div>
-                )}
+                </div>
               </div>
 
               <div className="flex-1 min-w-0 pt-0.5">
@@ -444,9 +441,9 @@ function ChatItem({ conv, user, unreadCounts, onDelete, getImageUrl }) {
                 </div>
               </div>
               
-              {listing?.image_path && (
+              {listing?.main_image_path && (
                 <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0 ml-1 border border-gray-200">
-                    <img src={getImageUrl(listing.image_path)} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(listing.main_image_path)} className="w-full h-full object-cover" />
                 </div>
               )}
             </Link>

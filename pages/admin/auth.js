@@ -1,8 +1,6 @@
-"use client";
-
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -35,7 +33,7 @@ export default function AdminLogin() {
         throw new Error("Access denied. You are not an administrator.");
       }
 
-      router.push("/admin-panel");
+      router.push("/admin");
     } catch (err) {
       setError(err.message);
       setLoading(false);

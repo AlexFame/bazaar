@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { UserService } from "@/lib/services/UserService";
 import BackButton from "@/components/BackButton";
 import Link from "next/link";
 import { useLang } from "@/lib/i18n-client";
@@ -120,7 +121,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           if (typeof window !== "undefined") {
               const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
               if (tgUser?.id) {
-                  const { data: profile } = await supabase.from("profiles").select("id, full_name, avatar_url").eq("tg_user_id", tgUser.id).single();
+                  const profile = await UserService.getByTgId(tgUser.id);
                   if (profile) currentUser = profile;
               }
           }
@@ -135,9 +136,9 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
       if (conversationId === "new" && listingId && sellerId) {
         console.log("ChatWindow: New chat mode", { listingId, sellerId });
-        const { data: listingData } = await supabase.from("listings").select("id, title, price, image_path").eq("id", listingId).single();
+        const { data: listingData } = await supabase.from("listings").select("id, title, price, main_image_path").eq("id", listingId).single();
         if (listingData) setListing(listingData);
-        const { data: sellerProfile } = await supabase.from("profiles").select("id, full_name, avatar_url").eq("id", sellerId).single();
+        const sellerProfile = await UserService.getById(sellerId);
         if (sellerProfile) setOtherUser(sellerProfile);
         setMessages([]);
         setLoading(false);
@@ -149,7 +150,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
         .from("conversations")
         .select(`
           *,
-          listing:listings(id, title, price, image_path),
+          listing:listings(id, title, price, main_image_path),
           buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
           seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url)
         `)
@@ -362,23 +363,24 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
     }
   };
 
-  const listingImageUrl = listing ? getImageUrl(listing.image_path) : null;
+  const listingImageUrl = listing ? getImageUrl(listing.main_image_path) : null;
 
   if (loading) return <ChatDetailSkeleton />;
 
   return (
     <div className="flex flex-col min-h-screen w-full max-w-[520px] mx-auto bg-white dark:bg-background relative">
-      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black w-full transition-all duration-200">
+      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white/90 dark:bg-black/90 backdrop-blur-md w-full transition-all duration-200">
         <div className="flex items-center gap-3 flex-1 min-w-0">
             <BackButton />
             {otherUser && (
             <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-white/10">
+                <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-white/10 relative">
                 {otherUser.avatar_url ? (
-                    <img src={otherUser.avatar_url} alt={otherUser.full_name} className="w-full h-full object-cover" />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-xs">{(otherUser.full_name || "U")[0].toUpperCase()}</div>
-                )}
+                    <img src={otherUser.avatar_url.startsWith('http') ? otherUser.avatar_url : (supabase.storage.from('avatars').getPublicUrl(otherUser.avatar_url).data?.publicUrl || otherUser.avatar_url)} alt={otherUser.full_name} className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                ) : null}
+                <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-xs bg-gray-100 dark:bg-gray-800" style={{ display: otherUser.avatar_url ? 'none' : 'flex' }}>
+                    {(otherUser.full_name || "U")[0].toUpperCase()}
+                </div>
                 </div>
                 <div className="flex-col justify-center flex-1 min-w-0 flex">
                 <div className="font-bold text-sm truncate text-black dark:text-white leading-tight">{otherUser.full_name || t("chat_partner") || "Собеседник"}</div>

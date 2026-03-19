@@ -1,9 +1,8 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -14,28 +13,32 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    let query = supabase
-      .from('profiles')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) return;
 
-    if (search) {
-      query = query.or(`full_name.ilike.%${search}%,tg_username.ilike.%${search}%`);
+        const url = new URL(window.location.origin + '/api/admin/users');
+        url.searchParams.set('page', page);
+        if (search) url.searchParams.set('search', search);
+
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setUsers(data.users || []);
+    } catch (error) {
+        console.error(error);
+    } finally {
+        setLoading(false);
     }
-
-    const { data, error } = await query;
-    if (error) console.error(error);
-    else setUsers(data || []);
-    
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchUsers();
   }, [page, search]);
 
-  // Debounce search
   useEffect(() => {
      const timer = setTimeout(() => {
          setPage(0);
@@ -45,7 +48,7 @@ export default function AdminUsers() {
   }, [search]);
 
   return (
-    <div>
+    <AdminLayout>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold dark:text-white">Users Management</h1>
         <div className="relative">
@@ -132,13 +135,12 @@ export default function AdminUsers() {
          </button>
          <button 
             onClick={() => setPage(p => p + 1)}
-            // Simplistic next pagination (if less than page size, assume end)
             disabled={users.length < PAGE_SIZE}
             className="px-4 py-2 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-white/10 rounded-lg text-sm disabled:opacity-50"
          >
              Next
          </button>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

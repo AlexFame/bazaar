@@ -23,13 +23,17 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
     };
 
     const handlePriceChange = (val) => {
-        // Clamp value: Allow typing, but if it exceeds max, cap it (or just let user type but validate on blur? 
-        // User asked "you cannot go higher than price". So strict clamping is better.)
+        // Clamp value: Allow typing, but if it exceeds max, cap it
+        if (val === '') {
+            setPrice('');
+            return;
+        }
         let numVal = Number(val);
         if (listingPrice && numVal > listingPrice) {
             numVal = listingPrice;
         }
-        setPrice(String(numVal));
+        // Allow removing the leading zero to type new numbers properly
+        setPrice(numVal === 0 ? val : String(numVal));
     };
 
     return (
@@ -60,22 +64,28 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
                             {t("your_price") || "Ваша цена"}
                         </label>
                         
-                        {/* Price Display */}
-                        <div className="text-center py-4 bg-gray-50 rounded-xl border border-gray-100 mb-4">
-                            <span className="text-4xl font-black text-black tracking-tight">{price}</span>
-                            <span className="text-2xl text-gray-400 font-medium ml-1">{symbol}</span>
+                        {/* Price Input Display */}
+                        <div className="text-center py-4 bg-gray-50 rounded-xl border border-gray-100 mb-4 flex items-center justify-center relative">
+                            <input
+                                type="number"
+                                value={price}
+                                onChange={(e) => handlePriceChange(e.target.value)}
+                                className="w-full bg-transparent text-center text-4xl font-black text-black tracking-tight outline-none"
+                                placeholder="0"
+                            />
+                            <span className="text-2xl text-gray-400 font-medium absolute right-6">{symbol}</span>
                         </div>
                         
                         {/* Price Slider */}
                         {listingPrice && (
-                            <div className="px-1 touch-pan-y">
+                            <div className="px-1 touch-none" onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
                                 <input
                                     type="range"
                                     min={Math.floor(listingPrice * 0.5)}
                                     max={listingPrice}
                                     step={1}
                                     value={Number(price) || Math.floor(listingPrice * 0.5)}
-                                    onChange={(e) => setPrice(e.target.value)}
+                                    onChange={(e) => handlePriceChange(e.target.value)}
                                     className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
                                 />
                                 <div className="flex justify-between mt-2 text-[10px] uppercase font-bold text-gray-400 tracking-wider">

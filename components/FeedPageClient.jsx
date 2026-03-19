@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
  // Added animation lib
 import { supabase } from "@/lib/supabaseClient";
+import { ListingService } from "@/lib/services/ListingService";
 import Stories from "./Stories";
 import ListingCard from "./ListingCard";
 import { ListingCardSkeleton } from "./SkeletonLoader";
@@ -435,24 +436,26 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
   const [categoryFilter, setCategoryFilter] = useState(getInitialCategory());
 
-  // Construct current filter object to compare with cache
+  // Construct current filter object to compare with cache.
+  // CRITICAL FIX: we only track applied state (like the URL or applied dropdowns) to trigger feed reloading.
+  // We do NOT track `searchTerm` directly, as that is live typing state. We track `urlQuery` (the confirmed search).
   const currentFilters = {
-      searchTerm,
+      searchTerm: urlQuery, // Only fetch on confirmed search from URL!
       locationFilter,
       categoryFilter,
       minPrice, 
       maxPrice,
-      type: searchParams.get("type") || "all",
-      condition: searchParams.get("condition") || "all",
-      barter: searchParams.get("barter") || "all", 
-      photo: searchParams.get("photo") || "all",
-      date: searchParams.get("date") || "all",
-      radius: searchParams.get("radius") || null,
-      dynamic: Object.fromEntries([...searchParams.entries()].filter(([k]) => k.startsWith("dyn_"))),
-      sort: searchParams.get("sort") || "date_desc",
-      photoCount: searchParams.get("photo_count") || "any",
-      sellerStatus: searchParams.get("seller_status") || "any",
-      delivery: searchParams.get("delivery") || "all"
+      type: typeFilter,
+      condition: conditionFilter,
+      barter: barterFilter, 
+      photo: withPhotoFilter,
+      date: dateFilter,
+      radius: radiusFilter,
+      dynamic: dynamicFilters,
+      sort: sortFilter,
+      photoCount: photoCountFilter,
+      sellerStatus: sellerStatusFilter,
+      delivery: deliveryFilter
   };
 
   // Check if we should use cache
@@ -558,65 +561,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
       setLoadingSuggestions(true);
       try {
-        // Generate search variants with transliteration
-        const generateSearchVariants = (text) => {
-          const variants = [text.toLowerCase()];
-          
-          // Latin to Cyrillic transliteration map (common tech words only)
-          const translations = {
-            'iphone': 'айфон', 'айфон': 'iphone',
-            'ipad': 'айпад', 'айпад': 'ipad',
-            'macbook': 'макбук', 'макбук': 'macbook',
-            'apple': 'эппл', 'эппл': 'apple',
-            'samsung': 'самсунг', 'самсунг': 'samsung',
-            'xiaomi': 'сяоми', 'сяоми': 'xiaomi',
-            'huawei': 'хуавей', 'хуавей': 'huawei',
-            'lenovo': 'леново', 'леново': 'lenovo',
-            'asus': 'асус', 'асус': 'asus',
-            'acer': 'эйсер', 'эйсер': 'acer',
-            'dell': 'делл', 'делл': 'dell',
-            'sony': 'сони', 'сони': 'sony'
-          };
-          
-          const lowerText = text.toLowerCase();
-          
-          // Check if the search term matches any dictionary word
-          if (translations[lowerText]) {
-            variants.push(translations[lowerText]);
-          }
-          
-          // Check if search term contains any dictionary word
-          for (const [key, value] of Object.entries(translations)) {
-            if (lowerText.includes(key) && key !== lowerText) {
-              variants.push(lowerText.replace(key, value));
-            }
-          }
-          
-          return [...new Set(variants)]; // Remove duplicates
-        };
-        
-        const searchVariants = generateSearchVariants(term);
-        
-        // Use textSearch for better results - search across all variants
-        let allData = [];
-        
-        for (const variant of searchVariants) {
-          const { data, error } = await supabase
-            .from("listings")
-            .select("id, title, category_key, price, main_image_path")
-            .ilike('title', `%${variant}%`)
-            .eq("status", "active")
-            .limit(10);
-          
-          if (!error && data) {
-            allData = [...allData, ...data];
-          }
-        }
-        
-        // Remove duplicates by ID
-        const uniqueData = Array.from(
-          new Map(allData.map(item => [item.id, item])).values()
-        ).slice(0, 10);
+        const uniqueData = await ListingService.getSuggestions(term, lang);
 
         if (uniqueData.length > 0) {
           // Group by title and get category
@@ -811,88 +756,10 @@ export default function FeedPageClient({ forcedCategory = null }) {
   async function fetchMapListings() {
     setLoading(true);
     try {
-      let query = supabase
-        .from("listings")
-        .select(
-          "id, title, price, image_path, latitude, longitude, created_at, is_vip"
-        )
-        .not("latitude", "is", null)
-        .not("latitude", "is", null)
-        .not("longitude", "is", null)
-        .in("status", ["active", "reserved"]) // Only show active and reserved on map
-        // .not("longitude", "is", null) // Removed duplicate
-        // .or("status.neq.closed,status.is.null") // Removed to restore listings
-        .order("is_vip", { ascending: false })
-        .order("bumped_at", { ascending: false, nullsFirst: false });
-
-      // Apply same filters as main list
-      const term = (searchTerm || "").trim();
-      if (term) {
-        const allTerms = expandSearchTerm(term);
-        if (allTerms.length > 0) {
-          const orConditions = allTerms
-            .map(
-              (t) =>
-                `title.ilike.%${t}%`
-            )
-            .join(",");
-          query = query.or(orConditions);
-        }
-      }
-
-      if (locationFilter.trim())
-        query = query.ilike(
-          "location_text",
-          `%${locationFilter.trim()}%`
-        );
-      if (categoryFilter !== "all")
-        query = query.eq("category_key", categoryFilter);
-      if (typeFilter !== "all") query = query.eq("type", typeFilter);
-      if (minPrice) query = query.gte("price", Number(minPrice));
-      if (maxPrice) query = query.lte("price", Number(maxPrice));
-      if (conditionFilter !== "all")
-        query = query.eq("condition", conditionFilter);
-      if (withPhotoFilter === "yes")
-        query = query.not("main_image_path", "is", null);
-      if (withPhotoFilter === "no")
-        query = query.is("main_image_path", null);
-
-      // Date filter
-      if (dateFilter !== "all") {
-        const now = new Date();
-        let fromDate = null;
-        if (dateFilter === "today")
-          fromDate = new Date(new Date().setHours(0, 0, 0, 0));
-        else if (dateFilter === "3d")
-          fromDate = new Date(now.getTime() - 3 * 86400000);
-        else if (dateFilter === "7d")
-          fromDate = new Date(now.getTime() - 7 * 86400000);
-        else if (dateFilter === "30d")
-          fromDate = new Date(now.getTime() - 30 * 86400000);
-
-        if (fromDate)
-          query = query.gte("created_at", fromDate.toISOString());
-      }
-
-      // Dynamic filters
-      if (categoryFilter !== "all" && Object.keys(dynamicFilters).length > 0) {
-        const activeFilters = Object.entries(dynamicFilters).reduce(
-          (acc, [k, v]) => {
-            if (v !== "" && v !== false) acc[k] = v;
-            return acc;
-          },
-          {}
-        );
-        if (Object.keys(activeFilters).length > 0)
-          query = query.contains("parameters", activeFilters);
-      }
-
-      if (barterFilter === "yes")
-        query = query.contains("parameters", { barter: true });
-
-      const { data, error } = await query;
-      if (error) throw error;
-
+      const data = await ListingService.search({
+          ...currentFilters,
+          viewMode: "map"
+      });
       setMapListings(data || []);
       setMapLoaded(true); // Mark as loaded
     } catch (err) {
@@ -903,337 +770,29 @@ export default function FeedPageClient({ forcedCategory = null }) {
   }
 
   async function fetchPage(pageIndex, { append = false } = {}) {
-    // If in map mode, мы берём данные для карты
     if (viewMode === "map") {
       return fetchMapListings();
     }
 
-    const from = pageIndex * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
-
-    if (!append) {
-      setLoading(true);
-    } else {
-      setLoadingMore(true);
-    }
+    if (!append) setLoading(true);
+    else setLoadingMore(true);
 
     try {
-      // Cancel previous request if exists using AbortController (optional, if Supabase supports it or we just ignore result)
-      // Since Supabase JS client doesn't fully support AbortSignal in v2 for all methods, 
-      // we will use a ref ID tracking pattern or just standard cleanup logic.
-      // But actually, we can just track the current request ID.
-      
-      // Let's use a simple "ignore stale result" pattern via a ref, but `abort` is better for network.
-      if (abortControllerRef.current) {
-          abortControllerRef.current.abort();
-      }
+      if (abortControllerRef.current) abortControllerRef.current.abort();
       const controller = new AbortController();
       abortControllerRef.current = controller;
 
-      // 0. Server-side Pre-Filter (Location & Search Sorting)
-      // CASE A: Radius Filter is Active -> Strict Cutoff
-      let locationIds = null;
-      let preserveOrder = false;
-      
-      if (userLocation && radiusFilter) {
-          try {
-             // ... existing radius logic ...
-             const { data: locData, error: locError } = await supabase.rpc('get_listings_within_radius', {
-                 lat: userLocation.lat,
-                 lon: userLocation.lng,
-                 radius_km: Number(radiusFilter)
-             });
-             if (!locError && locData) locationIds = locData.map(x => x.id);
-          } catch(e) { console.error(e); }
-      } 
-      // CASE B: No Radius, but User Has Location + Search Term -> Auto-Sort by Distance
-      else if (userLocation && (searchTerm || "").trim().length > 0 && !sortFilter) {
-          // If user didn't pick a sort, and is searching -> Show nearest matches first
-          try {
-             const { data: sortedIds, error: sortErr } = await supabase.rpc('get_search_listings_sorted_by_distance', {
-                 lat: userLocation.lat,
-                 lon: userLocation.lng,
-                 search_query: (searchTerm || "").trim(),
-                 max_limit: 100 // Fetch top 100 nearest matches
-             });
-
-             if (!sortErr && sortedIds) {
-                 locationIds = sortedIds.map(x => x.id);
-                 preserveOrder = true; // We want to keep this distance order
-             }
-          } catch(e) { console.error(e); }
-      }
-
-      if (locationIds !== null && locationIds.length === 0) {
-           setListings([]);
-           setHasMore(false);
-           setLoading(false);
-           if (append) setLoadingMore(false);
-           return;
-      }
-
-      // 1. Fetch listings
-      let query = supabase
-        .from("listings")
-        .select("*")
-        .in("status", ["active", "reserved"])
-        // Exclude Russia (but allow NULL location_text through)
-        .or("location_text.is.null,and(location_text.not.ilike.%Russia%,location_text.not.ilike.%Россия%)");
-        
-        // Sorting
-        // If we want to preserve distance order (from RPC), we don't apply DB sort here
-        if (!preserveOrder) {
-             query = query.order("is_vip", { ascending: false });
-             
-            if (sortFilter === 'date_desc') {
-                query = query.order("bumped_at", { ascending: false, nullsFirst: false });
-            } else if (sortFilter === 'date_asc') {
-                query = query.order("created_at", { ascending: true });
-            } else if (sortFilter === 'price_asc') {
-                query = query.order("price", { ascending: true });
-            } else if (sortFilter === 'price_desc') {
-                 query = query.order("price", { ascending: false });
-            } else {
-                 query = query.order("bumped_at", { ascending: false, nullsFirst: false });
-            }
-        }
-
-        // Apply Location IDs filter
-        if (locationIds !== null) {
-            query = query.in('id', locationIds);
-        }
-        
-        // Paging (Only valid if not re-sorting fully, but mostly okay)
-        if (!preserveOrder) {
-             query = query.range(from, to);
-        }
-
-      const term = (searchTerm || "").trim();
-      // Only apply text filters if we are NOT using the pre-sorted optimized IDs (which already filtered by text)
-      // Actually, we must apply text filter again to be safe? 
-      // No, if `preserveOrder` is true, strict text matching was done in RPC.
-      // If `preserveOrder` is false, we apply standard logic.
-      if (term && !preserveOrder) {
-        // ... standard text filter (words loop) ...
-        const words = term.split(/\s+/).filter(w => w.length > 0);
-        words.forEach(word => {
-            const variants = expandSearchTerm(word); 
-            if (variants.length > 0) {
-                const orCondition = variants.map(v => `title.ilike.%${v}%`).join(",");
-                query = query.or(orCondition);
-            }
-        });
-      }
-
-      if (locationFilter.trim()) {
-        query = query.ilike(
-          "location_text",
-          `%${locationFilter.trim()}%`
-        );
-      }
-
-      if (categoryFilter !== "all") {
-        query = query.eq("category_key", categoryFilter);
-      }
-
-      // Тип объявления
-      if (typeFilter !== "all") {
-        query = query.eq("type", typeFilter);
-      }
-
-      // Цена
-      if (minPrice) {
-        const v = Number(minPrice);
-        if (!Number.isNaN(v)) query = query.gte("price", v);
-      }
-      if (maxPrice) {
-        const v = Number(maxPrice);
-        if (!Number.isNaN(v)) query = query.lte("price", v);
-      }
-
-      // Состояние
-      if (conditionFilter !== "all") {
-        query = query.eq("condition", conditionFilter);
-      }
-
-      // С фото (Photo Logic)
-      if (withPhotoFilter === "yes" || photoCountFilter !== "any") {
-         // If "yes" or any specific count, we at least need a main image
-         query = query.not("main_image_path", "is", null);
-      } else if (withPhotoFilter === "no") {
-         query = query.is("main_image_path", null);
-      }
-      
-      // Seller Status Filtering using the joined profile
-      if (sellerStatusFilter === 'verified') {
-          query = query.eq('profiles.is_verified', true);
-      } else if (sellerStatusFilter === 'rating_4') {
-          query = query.gte('profiles.rating', 4);
-      }
-
-      // Delivery (Assumption: delivery options are in 'parameters' or 'type')
-      if (deliveryFilter !== 'all') {
-          if (deliveryFilter === 'pickup') query = query.contains('parameters', { pickup: true });
-          if (deliveryFilter === 'delivery') query = query.contains('parameters', { delivery: true });
-      }
-
-      // Дата
-      if (dateFilter !== "all") {
-        const now = new Date();
-        let fromDate = null;
-
-        if (dateFilter === "today") {
-          const d = new Date();
-          d.setHours(0, 0, 0, 0);
-          fromDate = d;
-        } else if (dateFilter === "3d") {
-          const d = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
-          fromDate = d;
-        } else if (dateFilter === "7d") {
-          const d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          fromDate = d;
-        } else if (dateFilter === "30d") {
-          const d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          fromDate = d;
-        }
-
-        if (fromDate) {
-          query = query.gte("created_at", fromDate.toISOString());
-        }
-      }
-
-      // Динамические фильтры (JSONB)
-      if (categoryFilter !== "all" && Object.keys(dynamicFilters).length > 0) {
-        // Separate Range (min/max) from Exact matches
-        const exactFilters = {};
-        const rangeFilters = {};
-
-        Object.entries(dynamicFilters).forEach(([k, v]) => {
-            if (v === "" || v === false) return;
-            
-            if (k.endsWith('_min')) {
-                const realKey = k.replace('_min', '');
-                if (!rangeFilters[realKey]) rangeFilters[realKey] = {};
-                rangeFilters[realKey].min = v;
-            } else if (k.endsWith('_max')) {
-                 const realKey = k.replace('_max', '');
-                 if (!rangeFilters[realKey]) rangeFilters[realKey] = {};
-                 rangeFilters[realKey].max = v;
-            } else {
-                exactFilters[k] = v;
-            }
-        });
-
-        // Apply Exact Matches
-        if (Object.keys(exactFilters).length > 0) {
-          query = query.contains("parameters", exactFilters);
-        }
-        
-        // Apply Range Matches (Manually for JSONB)
-        // This relies on the value being stored as a Number in JSONB for proper comparison
-        Object.entries(rangeFilters).forEach(([key, range]) => {
-             if (range.min) {
-                 // Try casting to int if possible, or just string compare if consistent padding (unlikely)
-                 // PostgreSQL can't easily auto-cast JSONB inside operator without raw SQL.
-                 // HOWEVER, Supabase JS 'filter' might not allow complex casting syntax cleanly.
-                 // Let's assume consistent number storage.
-                 // NOTE: If this fails, we might need a raw RPC or SQL function.
-                 // For now, let's try raw filter notation if supported or fallback to 'gte'.
-                 query = query.filter(`parameters->>${key}`, 'gte', range.min);
-             }
-             if (range.max) {
-                 query = query.filter(`parameters->>${key}`, 'lte', range.max);
-             }
-        });
-      }
-
-      // Бартер
-      if (barterFilter === "yes") {
-        query = query.contains("parameters", { barter: true });
-      }
-
-      // Add signal
-      query = query.abortSignal(controller.signal);
-
-      const { data: rawListings, error } = await query;
-
-      if (error) {
-        console.error("Ошибка загрузки объявлений:", error);
-        return;
-      }
-
-      let chunk = rawListings || [];
-
-      // 2. Fetch related data manually (Images & Profiles)
-      if (chunk.length > 0) {
-        const listingIds = chunk.map((l) => l.id);
-        const userIds = [...new Set(chunk.map((l) => l.created_by).filter(Boolean))];
-
-        // Fetch Images
-        const { data: imagesData } = await supabase
-          .from("listing_images")
-          .select("listing_id, file_path") // Use file_path based on schema inspection
-          .in("listing_id", listingIds);
-
-        // Fetch Profiles
-        const { data: profilesData } = await supabase
-          .from("profiles")
-          .select("id, tg_username, full_name, avatar_url") // Use correct columns
-          .in("id", userIds);
-
-      // Merge data (profiles, images...)
-        chunk = chunk.map((listing) => {
-           // ... mapping logic ...
-           // (Preserving existing mapping code)
-           const listingImages = imagesData
-            ? imagesData
-                .filter((img) => img.listing_id === listing.id)
-                .map((img) => ({ image_path: img.file_path }))
-            : [];
-           const profile = profilesData
-            ? profilesData.find((p) => p.id === listing.created_by)
-            : null;
-           const mappedProfile = profile ? {
-                is_verified: false,
-                username: profile.tg_username,
-                first_name: profile.full_name ? profile.full_name.split(" ")[0] : "",
-                last_name: profile.full_name ? profile.full_name.split(" ").slice(1).join(" ") : "",
-                avatar_url: profile.avatar_url,
-              } : null;
-           return {
-            ...listing,
-            main_image_path: listing.main_image_path || listingImages[0]?.image_path || null,
-            listing_images: listingImages,
-            profiles: mappedProfile,
-           };
-        });
-
-      // 3. Restore Order (if we fetched via pre-sorted IDs)
-      if (preserveOrder && locationIds) {
-          // Create a map for O(1) lookup of index
-          const orderMap = new Map(locationIds.map((id, index) => [id, index]));
-          chunk.sort((a, b) => {
-              const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 9999;
-              const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 9999;
-              return idxA - idxB;
-          });
-      }
-      }
-
-      // Client-side distance filtering (REMOVED - now server-side)
-      /* 
-      if (userLocation && radiusFilter && chunk.length > 0) {
-        chunk = chunk.filter((listing) => {
-          if (!listing.latitude || !listing.longitude) return false;
-          const distance = calculateDistance(userLocation.lat, userLocation.lng, listing.latitude, listing.longitude);
-          return distance <= radiusFilter;
-        });
-      }
-      */
+      const chunk = await ListingService.search({
+          ...currentFilters,
+          page: pageIndex,
+          pageSize: PAGE_SIZE,
+          viewMode,
+          userLocation,
+          abortSignal: controller.signal
+      });
 
       if (append) {
         setListings((prev) => {
-            // Filter out duplicates based on ID
             const existingIds = new Set(prev.map(p => p.id));
             const uniqueChunk = chunk.filter(item => !existingIds.has(item.id));
             if (uniqueChunk.length === 0) return prev;
@@ -1246,7 +805,9 @@ export default function FeedPageClient({ forcedCategory = null }) {
       setHasMore(chunk.length === PAGE_SIZE);
       setPage(pageIndex);
     } catch (err) {
-      console.error("Неожиданная ошибка при загрузке ленты:", err);
+      if (err.name !== 'AbortError') {
+          console.error("Неожиданная ошибка при загрузке ленты (через сервис):", err);
+      }
     } finally {
       if (!append) setLoading(false);
       if (append) setLoadingMore(false);
@@ -1260,33 +821,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
     await fetchPage(0);
   };
 
-  // Pulsating Feed Logic: автообновление, если нет фильтров и мы на первой странице
-  // Pulsating Feed Logic: автообновление, если нет фильтров и мы на первой странице
-  useEffect(() => {
-    // Stop if search is active (even if empty results)
-    if (searchTerm && searchTerm.length > 0) return;
-
-    if (
-      hasSearchQuery ||
-      categoryFilter !== "all" ||
-      typeFilter !== "all" ||
-      page > 0
-    )
-      return;
-
-    const interval = setInterval(() => {
-      // Only refresh if scroll is at top AND we don't have a search term
-      if (window.scrollY < 200 && !searchTerm) {
-        console.log("🔄 Pulsating Feed: Refreshing...");
-        setIsLive(true);
-        fetchPage(0, { append: false }).then(() => {
-          setTimeout(() => setIsLive(false), 2000);
-        });
-      }
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [hasSearchQuery, categoryFilter, typeFilter, page, searchTerm]);
+  // Pulsating Feed Logic removed for performance and UX (no unexpected scrolls).
 
   // первоначальная загрузка и обновление при изменении фильтров
 

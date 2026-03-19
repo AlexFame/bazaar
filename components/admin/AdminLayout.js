@@ -1,8 +1,6 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabaseClient";
 import { 
   HomeIcon, 
@@ -13,11 +11,11 @@ import {
 
 export default function AdminLayout({ children }) {
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname = router.pathname;
   const [loading, setLoading] = useState(true);
 
   // Skip auth check for login page
-  if (pathname === "/admin-panel/auth") {
+  if (pathname === "/admin/auth") {
     return <>{children}</>;
   }
 
@@ -25,7 +23,7 @@ export default function AdminLayout({ children }) {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        router.push("/admin-panel/auth");
+        router.push("/admin/auth");
         return;
       }
 
@@ -37,7 +35,7 @@ export default function AdminLayout({ children }) {
 
       if (!profile?.is_admin) {
         await supabase.auth.signOut();
-        router.push("/admin-panel/auth");
+        router.push("/admin/auth");
         return;
       }
       
@@ -49,7 +47,7 @@ export default function AdminLayout({ children }) {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push("/admin-panel/auth");
+    router.push("/admin/auth");
   };
 
   if (loading) {
@@ -61,9 +59,9 @@ export default function AdminLayout({ children }) {
   }
 
   const navItems = [
-    { name: "Dashboard", href: "/admin-panel", icon: HomeIcon },
-    { name: "Users", href: "/admin-panel/users", icon: UsersIcon },
-    { name: "Listings", href: "/admin-panel/listings", icon: ShoppingBagIcon },
+    { name: "Dashboard", href: "/admin", icon: HomeIcon },
+    { name: "Users", href: "/admin/users", icon: UsersIcon },
+    { name: "Listings", href: "/admin/listings", icon: ShoppingBagIcon },
   ];
 
   return (

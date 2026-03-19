@@ -1,9 +1,8 @@
-"use client";
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import { MagnifyingGlassIcon, TrashIcon, NoSymbolIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 export default function AdminListings() {
   const [listings, setListings] = useState([]);
@@ -14,21 +13,26 @@ export default function AdminListings() {
 
   const fetchListings = async () => {
     setLoading(true);
-    let query = supabase
-      .from('listings')
-      .select('*, profiles:created_by(full_name, tg_username)', { count: 'exact' })
-      .order('created_at', { ascending: false })
-      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) return;
 
-    if (search) {
-      query = query.ilike('title', `%${search}%`);
+        const url = new URL(window.location.origin + '/api/admin/listings');
+        url.searchParams.set('page', page);
+        if (search) url.searchParams.set('search', search);
+
+        const res = await fetch(url, {
+            headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        
+        if (!res.ok) throw new Error("Failed to fetch");
+        const data = await res.json();
+        setListings(data.listings || []);
+    } catch (error) {
+        console.error(error);
+    } finally {
+        setLoading(false);
     }
-
-    const { data, error } = await query;
-    if (error) console.error(error);
-    else setListings(data || []);
-    
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -44,26 +48,43 @@ export default function AdminListings() {
   }, [search]);
 
   const toggleStatus = async (id, currentStatus) => {
-      // Logic: active -> banned -> active? Or closed?
-      // Simple toggle for now: if 'banned' -> 'active', else -> 'banned'
       const newStatus = currentStatus === 'banned' ? 'active' : 'banned';
-      
-      const { error } = await supabase.from('listings').update({ status: newStatus }).eq('id', id);
-      if (!error) {
-          setListings(prev => prev.map(l => l.id === id ? { ...l, status: newStatus } : l));
+      try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const res = await fetch('/api/admin/listings', {
+              method: 'PATCH',
+              headers: { 
+                  'Authorization': `Bearer ${session?.access_token}`,
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ id, status: newStatus })
+          });
+          if (res.ok) {
+              setListings(prev => prev.map(l => l.id === id ? { ...l, status: newStatus } : l));
+          }
+      } catch (e) {
+          console.error(e);
       }
   };
 
   const deleteListing = async (id) => {
       if (!confirm("Are you sure you want to PERMANENTLY delete this listing?")) return;
-      const { error } = await supabase.from('listings').delete().eq('id', id);
-      if (!error) {
-          setListings(prev => prev.filter(l => l.id !== id));
+      try {
+          const { data: { session } } = await supabase.auth.getSession();
+          const res = await fetch(`/api/admin/listings?id=${id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${session?.access_token}` }
+          });
+          if (res.ok) {
+              setListings(prev => prev.filter(l => l.id !== id));
+          }
+      } catch (e) {
+          console.error(e);
       }
   };
 
   return (
-    <div>
+    <AdminLayout>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold dark:text-white">Listings Moderation</h1>
         <div className="relative">
@@ -185,6 +206,6 @@ export default function AdminListings() {
              Next
          </button>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

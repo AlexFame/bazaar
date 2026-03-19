@@ -50,14 +50,15 @@ export async function POST(req) {
               updated_at,
               buyer_id,
               seller_id,
-              listing:listings(id, title, image_path, price),
+              listing:listings(id, title, main_image_path, price),
               buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
               seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url),
               deleted_by_buyer,
               deleted_by_seller
             `)
-            .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
-            .order("updated_at", { ascending: false });
+            .or(`and(buyer_id.eq.${userId},deleted_by_buyer.eq.false),and(seller_id.eq.${userId},deleted_by_seller.eq.false)`)
+            .order("updated_at", { ascending: false })
+            .limit(50);
             
         if (error) throw error;
         
