@@ -7,33 +7,8 @@ import { useRouter } from "next/navigation";
 
 import { useLang } from "@/lib/i18n-client";
 
-const translations = {
-  ru: {
-    back: "← Назад",
-    title: "Сохраненные поиски",
-    loading: "Загрузка...",
-    empty: "Нет сохраненных поисков.",
-    confirm_delete: "Удалить этот поиск?"
-  },
-  ua: {
-    back: "← Назад",
-    title: "Збережені пошуки",
-    loading: "Завантаження...",
-    empty: "Немає збережених пошуків.",
-    confirm_delete: "Видалити цей пошук?"
-  },
-  en: {
-    back: "← Back",
-    title: "Saved Searches",
-    loading: "Loading...",
-    empty: "No saved searches.",
-    confirm_delete: "Delete this search?"
-  }
-};
-
 export default function SavedSearchesPage() {
-  const { lang } = useLang();
-  const t = translations[lang] || translations.ru;
+  const { t } = useLang();
   const [searches, setSearches] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -68,7 +43,7 @@ export default function SavedSearchesPage() {
   }, []);
 
   async function handleDelete(id) {
-      if(!confirm(t.confirm_delete)) return;
+      if(!confirm(t("saved_searches_confirm_delete") || "Удалить этот поиск?")) return;
       
       const { error } = await supabase.from("saved_searches").delete().eq("id", id);
       if (!error) {
@@ -108,14 +83,14 @@ export default function SavedSearchesPage() {
   return (
     <div className="max-w-md mx-auto p-4">
       <div className="flex items-center gap-2 mb-4">
-        <Link href="/my" className="text-sm text-gray-500">{t.back}</Link>
-        <h1 className="text-xl font-bold">{t.title}</h1>
+        <Link href="/my" className="text-sm text-gray-500">← {t("btn_back") || "Назад"}</Link>
+        <h1 className="text-xl font-bold">{t("saved_searches_title") || "Сохраненные поиски"}</h1>
       </div>
 
-      {loading && <p>{t.loading}</p>}
+      {loading && <p>{t("loading") || "Загрузка..."}</p>}
 
       {!loading && searches.length === 0 && (
-          <p className="text-gray-500 text-center mt-10">{t.empty}</p>
+          <p className="text-gray-500 text-center mt-10">{t("saved_searches_empty") || "Нет сохраненных поисков."}</p>
       )}
 
       <div className="space-y-3">

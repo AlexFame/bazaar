@@ -11,72 +11,7 @@ import { getTelegramUser } from "@/lib/telegram";
 export default function AnalyticsPage() {
   const { listingId } = useParams();
   const router = useRouter();
-  const { t: tLang, lang } = useLang();
-  
-  const translations = {
-    ru: {
-      title: "Статистика",
-      views: "Просмотры",
-      contacts: "Контакты",
-      messages: "Сообщения",
-      favorites: "В избранном",
-      chartTitle: "Просмотры за 30 дней",
-      noData: "Нет данных за этот период",
-      daysAgo: "30 дней назад",
-      today: "Сегодня",
-      tipTitle: "Совет",
-      tipText: "Чтобы получить больше просмотров, попробуйте обновить фотографии или добавить более подробное описание. Также вы можете воспользоваться услугами продвижения.",
-      accessDeniedTitle: "Ошибка доступа",
-      accessDeniedText: "Доступ запрещен. Вы не владелец этого объявления.",
-      loginRequired: "Пожалуйста, войдите в систему.",
-      listingNotFound: "Объявление не найдено.",
-      errorPrefix: "Ошибка загрузки данных: ",
-      unknownError: "Произошла неизвестная ошибка: ",
-      errorTitle: "Ошибка",
-    },
-    ua: {
-      title: "Статистика",
-      views: "Перегляди",
-      contacts: "Контакти",
-      messages: "Повідомлення",
-      favorites: "В обраному",
-      chartTitle: "Перегляди за 30 днів",
-      noData: "Немає даних за цей період",
-      daysAgo: "30 днів тому",
-      today: "Сьогодні",
-      tipTitle: "Порада",
-      tipText: "Щоб отримати більше переглядів, спробуйте оновити фотографії або додати більш детальний опис. Також ви можете скористатися послугами просування.",
-      accessDeniedTitle: "Доступ заборонено",
-      accessDeniedText: "Доступ заборонено. Ви не власник цього оголошення.",
-      loginRequired: "Будь ласка, увійдіть у систему.",
-      listingNotFound: "Оголошення не знайдено.",
-      errorPrefix: "Помилка завантаження даних: ",
-      unknownError: "Невідома помилка: ",
-      errorTitle: "Помилка",
-    },
-    en: {
-      title: "Analytics",
-      views: "Views",
-      contacts: "Contacts",
-      messages: "Messages",
-      favorites: "Favorites",
-      chartTitle: "Views for 30 days",
-      noData: "No data for this period",
-      daysAgo: "30 days ago",
-      today: "Today",
-      tipTitle: "Tip",
-      tipText: "To get more views, try updating photos or adding a more detailed description. You can also use promotion services.",
-      accessDeniedTitle: "Access Denied",
-      accessDeniedText: "Access denied. You are not the owner of this listing.",
-      loginRequired: "Please log in.",
-      listingNotFound: "Listing not found.",
-      errorPrefix: "Error loading data: ",
-      unknownError: "Unknown error: ",
-      errorTitle: "Error",
-    }
-  };
-
-  const t = translations[lang] || translations.ru;
+  const { t } = useLang();
 
   const [loading, setLoading] = useState(true);
   const [listing, setListing] = useState(null);
@@ -114,17 +49,17 @@ export default function AnalyticsPage() {
         if (error) {
             console.error("RPC Error:", error);
             if (error.message.includes("Access denied")) {
-                 setErrorMsg(t.accessDeniedText);
+                 setErrorMsg(t("analytics_access_denied_text"));
             } else if (error.message.includes("Not authenticated")) {
-                 setErrorMsg(t.loginRequired);
+                 setErrorMsg(t("analytics_login_required"));
             } else {
-                 setErrorMsg(t.errorPrefix + error.message);
+                 setErrorMsg(t("analytics_error_prefix") + error.message);
             }
             return;
         }
 
         if (!data || data.length === 0) {
-             setErrorMsg(t.listingNotFound);
+             setErrorMsg(t("analytics_listing_not_found"));
              return;
         }
 
@@ -137,7 +72,7 @@ export default function AnalyticsPage() {
             .eq('id', listingId)
             .single();
 
-        setListing(listingData || { title: 'Объявление', price: 0 });
+        setListing(listingData || { title: t("no_title") || 'Объявление', price: 0 });
 
         setStats(row.daily_stats || []);
         setTotalStats({
@@ -149,7 +84,7 @@ export default function AnalyticsPage() {
 
       } catch (error) {
         console.error("Error:", error);
-        setErrorMsg(t.unknownError + error.message);
+        setErrorMsg((t("analytics_unknown_error") || "Неизвестная ошибка: ") + error.message);
       } finally {
         setLoading(false);
       }
@@ -169,7 +104,7 @@ export default function AnalyticsPage() {
   if (errorMsg) {
       return (
           <div className="min-h-screen bg-white dark:bg-black p-6 flex flex-col items-center justify-center text-center">
-              <h1 className="text-xl font-bold text-red-500 mb-2">{errorMsg === t.accessDeniedText ? t.accessDeniedTitle : t.errorTitle}</h1>
+              <h1 className="text-xl font-bold text-red-500 mb-2">{errorMsg === t("analytics_access_denied_text") ? t("analytics_access_denied_title") : t("analytics_error_title")}</h1>
               <p className="text-gray-600 dark:text-gray-300 mb-4">{errorMsg}</p>
               <BackButton />
           </div>
@@ -188,7 +123,7 @@ export default function AnalyticsPage() {
         {/* Header */}
         <div className="sticky top-0 z-10 bg-white/80 dark:bg-[#171717]/80 backdrop-blur-md border-b border-gray-100 dark:border-white/5 px-4 py-3 flex items-center gap-3">
           <BackButton />
-          <h1 className="text-lg font-bold text-black dark:text-white">Статистика</h1>
+          <h1 className="text-lg font-bold text-black dark:text-white">{t("analytics_title") || "Статистика"}</h1>
         </div>
 
         <div className="p-4 space-y-6">
@@ -216,26 +151,26 @@ export default function AnalyticsPage() {
           {/* Overview Cards */}
           <div className="grid grid-cols-2 gap-3">
             <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-2xl">
-              <div className="text-blue-500 dark:text-blue-400 text-xs font-medium mb-1">{t.views}</div>
+              <div className="text-blue-500 dark:text-blue-400 text-xs font-medium mb-1">{t("analytics_views") || "Просмотры"}</div>
               <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{totalStats.views}</div>
             </div>
             <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-2xl">
-              <div className="text-green-500 dark:text-green-400 text-xs font-medium mb-1">{t.contacts}</div>
+              <div className="text-green-500 dark:text-green-400 text-xs font-medium mb-1">{t("analytics_contacts") || "Контакты"}</div>
               <div className="text-2xl font-bold text-green-700 dark:text-green-300">{totalStats.contacts}</div>
             </div>
             <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-2xl">
-              <div className="text-purple-500 dark:text-purple-400 text-xs font-medium mb-1">{t.messages}</div>
+              <div className="text-purple-500 dark:text-purple-400 text-xs font-medium mb-1">{t("analytics_messages") || "Сообщения"}</div>
               <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">{totalStats.messages}</div>
             </div>
             <div className="p-4 bg-pink-50 dark:bg-pink-900/20 rounded-2xl">
-              <div className="text-pink-500 dark:text-pink-400 text-xs font-medium mb-1">{t.favorites}</div>
+              <div className="text-pink-500 dark:text-pink-400 text-xs font-medium mb-1">{t("analytics_favorites") || "В избранном"}</div>
               <div className="text-2xl font-bold text-pink-700 dark:text-pink-300">{totalStats.favorites}</div>
             </div>
           </div>
 
           {/* Views Chart */}
           <div className="bg-white dark:bg-white/5 rounded-2xl p-4 border border-gray-100 dark:border-white/5">
-            <h3 className="text-sm font-bold text-black dark:text-white mb-4">{t.chartTitle}</h3>
+            <h3 className="text-sm font-bold text-black dark:text-white mb-4">{t("analytics_chart_title") || "Просмотры за 30 дней"}</h3>
             
             <div className="h-40 flex items-end gap-1">
               {stats.length > 0 ? stats.map((day, i) => {
@@ -254,13 +189,13 @@ export default function AnalyticsPage() {
                 )
               }) : (
                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                  {t.noData}
+                  {t("analytics_no_data") || "Нет данных за этот период"}
                 </div>
               )}
             </div>
             <div className="flex justify-between mt-2 text-[10px] text-gray-400">
-              <span>{t.daysAgo}</span>
-              <span>{t.today}</span>
+              <span>{t("analytics_days_ago") || "30 дней назад"}</span>
+              <span>{t("analytics_today") || "Сегодня"}</span>
             </div>
           </div>
 
@@ -268,9 +203,9 @@ export default function AnalyticsPage() {
           <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl flex gap-3">
             <div className="text-2xl">💡</div>
             <div>
-              <h3 className="text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-1">{t.tipTitle}</h3>
+              <h3 className="text-sm font-bold text-yellow-800 dark:text-yellow-200 mb-1">{t("analytics_tip_title") || "Совет"}</h3>
               <p className="text-xs text-yellow-700 dark:text-yellow-300">
-                {t.tipText}
+                {t("analytics_tip_text") || "Чтобы получить больше просмотров, попробуйте обновить фотографии или добавить более подробное описание. Также вы можете воспользоваться услугами продвижения."}
               </p>
             </div>
           </div>

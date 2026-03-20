@@ -46,7 +46,7 @@ export default function NewListing() {
     if (submitting) return;
 
     if (!form.title.trim()) {
-      alert("Заполни заголовок");
+      alert(t("new_alert_fill_title") || "Заполни заголовок");
       return;
     }
 
@@ -77,7 +77,7 @@ export default function NewListing() {
       }
 
       if (!res.ok) {
-        let message = "Ошибка при создании объявления";
+        let message = t("new_alert_create_err") || "Ошибка при создании объявления";
 
         if (data?.error) {
           if (typeof data.error === "string") {
@@ -95,12 +95,12 @@ export default function NewListing() {
       if (data?.id) {
         router.push(`/listing/${data.id}`);
       } else {
-        alert("Сервер не вернул ID объявления");
+        alert(t("new_alert_no_id") || "Сервер не вернул ID объявления");
         console.error("No id in response:", data);
       }
     } catch (err) {
       console.error("Unexpected error:", err);
-      alert("Неизвестная ошибка при создании объявления");
+      alert(t("new_alert_unknown") || "Неизвестная ошибка при создании объявления");
     } finally {
       setSubmitting(false);
     }

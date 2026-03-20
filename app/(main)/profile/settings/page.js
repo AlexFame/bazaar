@@ -77,7 +77,7 @@ export default function SettingsPage() {
     } catch (e) {
         console.error("Error saving settings:", e);
         // Revert UI?
-        alert(t("save_error") || "Ошибка сохранения");
+        alert(t("settings_save_error") || "Ошибка сохранения");
     } finally {
         setSaving(false);
     }

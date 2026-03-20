@@ -10,7 +10,6 @@ import BackButton from "@/components/BackButton";
 
 export default function CatalogPage() {
   const { t, lang } = useLang();
-  // const { t, lang } = useLang(); // Removed duplicate
   const router = useRouter();
   const searchParams = useSearchParams();
   const startSearch = searchParams.get("q") || "";
@@ -105,7 +104,7 @@ export default function CatalogPage() {
                 </svg>
             </button>
             <h1 className="text-2xl font-bold dark:text-white">
-                {selectedCategory ? getSafeLabel(currentCategoryDef, currentCategoryDef?.ru) : "Каталог"}
+                {selectedCategory ? getSafeLabel(currentCategoryDef, currentCategoryDef?.ru) : t("catalog_title")}
             </h1>
         </div>
         
@@ -144,7 +143,7 @@ export default function CatalogPage() {
             onClick={() => {
               const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
               if (!SpeechRecognition) {
-                alert("Ваш браузер не поддерживает голосовой поиск");
+                alert(t("voice_not_supported") || "Ваш браузер не поддерживает голосовой поиск");
                 return;
               }
 
@@ -172,7 +171,7 @@ export default function CatalogPage() {
               recognition.onerror = (event) => {
                   console.error("Voice error:", event.error);
                   if (event.error === 'not-allowed') {
-                       alert("Разрешите доступ к микрофону!");
+                       alert(t("voice_mic_allow") || "Разрешите доступ к микрофону!");
                   }
                   setIsListening(false);
                   window.voiceRecognition = null;
@@ -231,11 +230,11 @@ export default function CatalogPage() {
         {!selectedCategory && (
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mt-4">
             {[
-                { key: 'all', label: t("typeAny") || "Все" },
-                { key: 'sell', label: t("typeSell") || "Продам" },
-                { key: 'buy', label: t("typeBuy") || "Куплю" },
-                { key: 'free', label: t("typeFree") || "Отдам" },
-                { key: 'exchange', label: t("typeExchange") || "Обмен" }
+                { key: 'all', label: t("catalog_type_all") || "Все" },
+                { key: 'sell', label: t("catalog_type_sell") || "Продам" },
+                { key: 'buy', label: t("catalog_type_buy") || "Куплю" },
+                { key: 'free', label: t("catalog_type_free") || "Отдам" },
+                { key: 'exchange', label: t("catalog_type_exchange") || "Обмен" }
             ].map(opt => (
                 <button
                     key={opt.key}

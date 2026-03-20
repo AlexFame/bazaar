@@ -9,33 +9,8 @@ import ListingCard from "@/components/ListingCard";
 import { ListingCardSkeleton } from "@/components/SkeletonLoader";
 import BackButton from "@/components/BackButton";
 
-const pageTranslations = {
-  ru: {
-    title: "Понравившиеся",
-    subtitle: "Объявления, которые вы сохранили",
-    loading: "Загружаем избранное...",
-    empty: "У вас пока нет избранных объявлений",
-    emptyHint: "Нажмите на сердечко на любом объявлении, чтобы добавить его в избранное",
-  },
-  ua: {
-    title: "Обране",
-    subtitle: "Оголошення, які ви зберегли",
-    loading: "Завантажуємо обране...",
-    empty: "У вас поки немає обраних оголошень",
-    emptyHint: "Натисніть на серце на будь-якому оголошенні, щоб додати його в обране",
-  },
-  en: {
-    title: "Favorites",
-    subtitle: "Listings you have saved",
-    loading: "Loading favorites...",
-    empty: "You don't have any favorite listings yet",
-    emptyHint: "Tap the heart on any listing to add it to favorites",
-  },
-};
-
 export default function FavoritesPage() {
-  const { lang } = useLang();
-  const t = pageTranslations[lang] || pageTranslations.ru;
+  const { t } = useLang();
 
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -125,8 +100,8 @@ export default function FavoritesPage() {
         <div className="mb-3">
             <BackButton />
         </div>
-        <h1 className="text-lg font-semibold mb-1">{t.title}</h1>
-        <p className="text-sm text-gray-500 mb-3">{t.subtitle}</p>
+        <h1 className="text-lg font-semibold mb-1">{t("favorites_title") || "Понравившиеся"}</h1>
+        <p className="text-sm text-gray-500 mb-3">{t("favorites_subtitle") || "Объявления, которые вы сохранили"}</p>
 
         {loading && (
           <div className="bg-white rounded-2xl shadow-sm p-3">
@@ -142,8 +117,8 @@ export default function FavoritesPage() {
 
         {!loading && listings.length === 0 && (
           <div className="bg-white rounded-2xl shadow-sm p-3 text-xs text-black/80">
-            <p>{t.empty}</p>
-            <p className="mt-1 text-black/60">{t.emptyHint}</p>
+            <p>{t("favorites_empty") || "У вас пока нет избранных объявлений"}</p>
+            <p className="mt-1 text-black/60">{t("favorites_empty_hint") || "Нажмите на сердечко на любом объявлении, чтобы добавить его в избранное"}</p>
           </div>
         )}
 

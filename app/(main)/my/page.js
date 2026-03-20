@@ -27,103 +27,8 @@ import NotificationsModal from "@/components/NotificationsModal";
 import ReviewList from "@/components/ReviewList"; // Added import
 import { toast } from "sonner"; // Added notification
 
-const pageTranslations = {
-  ru: {
-    my: "Мой профиль", // Changed from "Мои объявления"
-    my_orders: "Мои покупки",
-    mySubtitle:
-      "Здесь вы можете управлять своими объявлениями и настройками профиля.",
-    createBtn: "Создать объявление",
-    loading: "Загружаем данные профиля...",
-    empty: "У вас пока нет объявлений.",
-    hintCreate: "Нажмите кнопку выше, чтобы опубликовать первое объявление.",
-    userBlockTitle: "Telegram-профиль",
-    noUserText:
-      "Не удалось получить данные из Telegram. Это не критично — объявления всё равно будут работать.",
-    nameLabel: "Имя",
-    usernameLabel: "Юзернейм",
-    idLabel: "Telegram ID",
-    langLabel: "Язык Telegram",
-    confirm_delete: "Вы уверены, что хотите удалить это объявление?",
-    delete_error: "Не удалось удалить объявление",
-    tab_archive: "Архив",
-    settings: "Настройки",
-    stats_btn: "Статистика",
-    empty_drafts: "У вас нет черновиков.",
-    empty_archive: "Архив пуст.",
-    empty_favorites: "Избранного пока нет.",
-    saved_searches: "Подписки",
-    saved_searches: "Подписки",
-    reviews_about_you: "Отзывы о вас",
-    listing_deleted: "Объявление удалено"
-  },
-  ua: {
-    my: "Мій профіль", // Changed from "Мої оголошення"
-    my_orders: "Мої покупки",
-    mySubtitle:
-      "Тут ви можете керувати своїми оголошеннями та налаштуваннями профілю.",
-    createBtn: "Створити оголошення",
-    loading: "Завантажуємо дані профілю...",
-    empty: "У вас поки немає оголошень.",
-    hintCreate:
-      "Натисніть кнопку вище, щоб опублікувати своє перше оголошення.",
-    userBlockTitle: "Telegram-профіль",
-    noUserText:
-      "Не вдалося отримати дані з Telegram. Це не критично — оголошення все одно працюють.",
-    nameLabel: "Імʼя",
-    usernameLabel: "Юзернейм",
-    idLabel: "Telegram ID",
-    langLabel: "Мова Telegram",
-    confirm_delete: "Ви впевнені, що хочете видалити це оголошення?",
-    delete_error: "Не вдалося видалити оголошення",
-    tab_archive: "Архів",
-    settings: "Налаштування",
-    stats_btn: "Статистика",
-    empty_drafts: "У вас немає чернеток.",
-    empty_archive: "Архів порожній.",
-    empty_favorites: "Ви ще нічого не вподобали.",
-    saved_searches: "Підписки",
-    saved_searches: "Підписки",
-    reviews_about_you: "Відгуки про вас",
-    listing_deleted: "Оголошення видалено"
-  },
-  en: {
-    my: "My Profile", // Changed from "My listings"
-    my_orders: "My orders",
-    mySubtitle:
-      "Here you can manage your listings and profile settings.",
-    createBtn: "Create listing",
-    loading: "Loading your listings...",
-    empty: "You don’t have any listings yet.",
-    hintCreate: "Tap the button above to publish your first listing.",
-    userBlockTitle: "Telegram profile",
-    noUserText:
-      "Could not read Telegram data. It’s not critical – listings will still work.",
-    nameLabel: "Name",
-    usernameLabel: "Username",
-    idLabel: "Telegram ID",
-    langLabel: "Telegram language",
-    confirm_delete: "Are you sure you want to delete this listing?",
-    delete_error: "Failed to delete listing",
-    tab_active: "Active",
-    tab_drafts: "Drafts",
-    tab_archive: "Archive",
-    tab_favorites: "Favorites",
-    settings: "Settings",
-    stats_btn: "Statistics",
-    empty_drafts: "You don't have drafts.",
-    empty_archive: "Archive is empty.",
-    empty_favorites: "No favorites yet.",
-    saved_searches: "Saved Searches",
-    saved_searches: "Saved Searches",
-    reviews_about_you: "Reviews about you",
-    listing_deleted: "Listing deleted"
-  },
-};
-
 export default function MyPage() {
   const { lang, t } = useLang();
-  const localStrings = pageTranslations[lang] || pageTranslations.ru;
   const router = useRouter();
 
   const [userId, setUserId] = useState(null);
@@ -348,7 +253,7 @@ export default function MyPage() {
     
     // Remove from local state
     setListings(prev => prev.filter(l => l.id !== id));
-    toast.success(localStrings.listing_deleted || "Объявление удалено");
+    toast.success(t("listing_deleted") || "Объявление удалено");
   };
 
   const handlePromote = (id) => {
@@ -363,8 +268,8 @@ export default function MyPage() {
         <div className="mb-3">
             <BackButton />
         </div>
-        <h1 className="text-lg font-semibold mb-1 dark:text-white">{localStrings.my}</h1>
-        <p className="text-sm text-gray-500 mb-3">{localStrings.mySubtitle}</p>
+        <h1 className="text-lg font-semibold mb-1 dark:text-white">{t("my_profile") || "Мой профиль"}</h1>
+        <p className="text-sm text-gray-500 mb-3">{t("my_subtitle") || "Здесь вы можете управлять своими объявлениями и настройками профиля."}</p>
 
         {tgUser && (
             <FadeIn>
@@ -415,7 +320,7 @@ export default function MyPage() {
                 <div className="flex justify-start"> {/* Or justify-end if previous design intended it */}
                     <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-white/10 rounded-full hover:bg-gray-200 dark:hover:bg-white/20 transition-colors border-none w-full justify-center">
                        <Cog6ToothIcon className="h-4 w-4 text-gray-600 dark:text-gray-300" />
-                       <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{localStrings.settings || "Настройки"}</span>
+                       <span className="text-xs font-medium text-gray-700 dark:text-gray-200">{t("settings") || "Настройки"}</span>
                     </Link>
                 </div>
              </div>
@@ -447,7 +352,7 @@ export default function MyPage() {
                 onClick={() => setActiveTab("archive")}
                 className={`flex-none px-4 pb-2 text-sm font-medium transition-colors whitespace-nowrap relative ${activeTab === "archive" ? "text-black dark:text-white" : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"}`}
             >
-                {localStrings.tab_archive || "Архив"}
+                {t("tab_archive") || "Архив"}
                 {activeTab === "archive" && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-black dark:bg-white rounded-t-full"></div>}
             </button>
             <button 
@@ -481,7 +386,7 @@ export default function MyPage() {
                 className="w-full py-3 bg-blue-600 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-blue-700 transition-all"
             >
                 <span>📊</span>
-                {localStrings.stats_btn}
+                {t("stats_btn") || "Статистика"}
             </Link>
             
             {/* Create Listing Button */}
@@ -490,7 +395,7 @@ export default function MyPage() {
                 className="w-full py-3 bg-black dark:bg-white dark:text-black text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-800 transition-colors"
             >
                 <span>+</span>
-                {localStrings.createBtn}
+                {t("create_btn") || "Создать объявление"}
             </Link>
 
             {/* Saved Searches Button */}
@@ -499,7 +404,7 @@ export default function MyPage() {
                 className="w-full py-3 bg-white border border-gray-200 dark:bg-white/10 dark:border-white/10 dark:text-white text-black rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
             >
                 <MagnifyingGlassIcon className="h-5 w-5" />
-                {localStrings.saved_searches || "Подписки"}
+                {t("saved_searches") || "Подписки"}
             </Link>
         </div>
 
@@ -516,15 +421,15 @@ export default function MyPage() {
               </div>
         )}
 
-        {!loading && activeTab !== 'reviews' && listings.length === 0 && (
+         {!loading && activeTab !== 'reviews' && listings.length === 0 && (
            <div className="bg-white dark:bg-white/5 rounded-2xl shadow-sm p-3 text-xs text-black/80 dark:text-white/80 text-center py-8">
              <p className="text-gray-500 text-sm mb-2">
-               {activeTab === 'active' ? localStrings.empty : 
-                activeTab === 'draft' ? localStrings.empty_drafts : 
-                activeTab === 'archive' ? localStrings.empty_archive :
-                localStrings.empty_favorites}
+               {activeTab === 'active' ? (t("empty_listings") || "У вас пока нет объявлений.") : 
+                activeTab === 'draft' ? (t("empty_drafts") || "У вас нет черновиков.") : 
+                activeTab === 'archive' ? (t("empty_archive") || "Архив пуст.") :
+                (t("empty_favorites") || "Избранного пока нет.")}
              </p>
-             {activeTab === 'active' && <p className="text-black/60 dark:text-white/60">{localStrings.hintCreate}</p>}
+             {activeTab === 'active' && <p className="text-black/60 dark:text-white/60">{t("hint_create") || "Нажмите кнопку выше, чтобы опубликовать первое объявление."}</p>}
            </div>
         )}
 

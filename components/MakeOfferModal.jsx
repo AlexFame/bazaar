@@ -5,13 +5,14 @@ import { useLang } from "@/lib/i18n-client";
 
 export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle, listingPrice, symbol = '€' }) {
     const { t } = useLang();
-    const [price, setPrice] = useState(listingPrice ? String(listingPrice) : '');
+    const [price, setPrice] = useState('');
     const [loading, setLoading] = useState(false);
 
     if (!isOpen) return null;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (loading) return;
         const numPrice = Number(price);
         if (!price || isNaN(numPrice) || numPrice <= 0) {
             alert(t("invalid_price") || "Пожалуйста, введите корректную цену");
@@ -28,22 +29,24 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
     };
 
     const handlePriceChange = (val) => {
-        if (val === '') {
-            setPrice('');
-            return;
+        // Just allow numbers
+        const cleaned = val.replace(/\D/g, '');
+        // prevent leading zeros unless it's just '0'
+        if (cleaned.length > 1 && cleaned.startsWith('0')) {
+            setPrice(cleaned.replace(/^0+/, ''));
+        } else {
+            setPrice(cleaned);
         }
-        // Allow removing the leading zero to type new numbers properly
-        const numVal = Number(val);
-        setPrice(numVal === 0 ? val : String(numVal));
     };
 
     return (
         <div 
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4"
-            onClick={onClose}
+            className="fixed inset-0 z-[9999] flex items-start pt-[15vh] sm:items-center sm:pt-0 justify-center p-4 animate-in fade-in duration-200"
         >
-            <FadeIn>
-            <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl relative flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            
+            <FadeIn className="relative w-full max-w-sm z-10">
+            <div className="bg-white rounded-2xl w-full shadow-2xl flex flex-col max-h-[85vh]">
                 <button 
                     onClick={onClose} 
                     className="absolute top-3 right-3 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors z-10"
@@ -71,7 +74,9 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
                         {/* Price Input Display */}
                         <div className="text-center py-4 bg-gray-50 rounded-xl border border-gray-100 mb-4 flex items-center justify-center relative">
                             <input
-                                type="number"
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 value={price}
                                 onChange={(e) => handlePriceChange(e.target.value)}
                                 onFocus={(e) => e.target.select()}

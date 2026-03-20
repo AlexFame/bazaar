@@ -72,14 +72,14 @@ function StatisticsListingItem({ listing, t, sortBy }) {
           {/* Detailed Stats Row */}
           <div className="grid grid-cols-2 gap-y-2 gap-x-4 mt-3 text-xs sm:grid-cols-4 items-center">
             {/* 1. Views */}
-            <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1.5" title={t.views}>
+            <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1.5" title={t("analytics_views") || "Просмотры"}>
               <EyeIcon className="w-4 h-4" /> 
               <span className="font-semibold">{listing.views_count || 0}</span>
             </span>
             
             {/* 2. Favorites (conditionally render, but keep slot) */}
             {(listing.favorites_count > 0 || sortBy === 'favorites') ? (
-                <span className="text-red-500 flex items-center gap-1.5 font-medium" title={t.totalFavorites}>
+                <span className="text-red-500 flex items-center gap-1.5 font-medium" title={t("stat_total_favorites") || "В избранном"}>
                   <HeartIconSolid className="w-4 h-4" /> {listing.favorites_count || 0}
                 </span>
             ) : <span />}
@@ -91,8 +91,8 @@ function StatisticsListingItem({ listing, t, sortBy }) {
             </span>
 
             {/* 4. Days Active */}
-            <span className="text-gray-400 flex items-center gap-1.5 justify-self-end text-[10px]" title={t.daysActive}>
-              <CalendarIcon className="w-3.5 h-3.5" /> {listing.days_active} {t.daysActive?.toLowerCase()}
+            <span className="text-gray-400 flex items-center gap-1.5 justify-self-end text-[10px]" title={t("stat_days_active") || "дн."}>
+              <CalendarIcon className="w-3.5 h-3.5" /> {listing.days_active} {(t("stat_days_active") || "дн.")?.toLowerCase()}
             </span>
           </div>
         </div>
@@ -108,66 +108,7 @@ function StatisticsListingItem({ listing, t, sortBy }) {
 
 export default function ProfileStatisticsPage() {
   const router = useRouter();
-  const { t: tLang, lang } = useLang();
-  
-  const translations = {
-    ru: {
-      title: "Статистика профиля",
-      totalViews: "Всего просмотров",
-      totalContacts: "Всего контактов",
-      totalMessages: "Всего сообщений",
-      totalFavorites: "В избранном",
-      totalShares: "Репостов",
-      avgConversion: "Конверсия",
-      activeListings: "Активных объявлений",
-      totalListings: "Всего объявлений",
-      myListings: "Мои объявления",
-      views: "просмотров",
-      noListings: "У вас пока нет объявлений",
-      createFirst: "Создайте первое объявление",
-      sortByFavorites: "Сортировка по избранному",
-      resetSort: "Сбросить",
-      daysActive: "дн.",
-    },
-    ua: {
-      title: "Статистика профілю",
-      totalViews: "Всього переглядів",
-      totalContacts: "Всього контактів",
-      totalMessages: "Всього повідомлень",
-      totalFavorites: "В обраному",
-      totalShares: "Репостів",
-      avgConversion: "Конверсія",
-      activeListings: "Активних оголошень",
-      totalListings: "Всього оголошень",
-      myListings: "Мої оголошення",
-      views: "переглядів",
-      noListings: "У вас поки немає оголошень",
-      createFirst: "Створіть перше оголошення",
-      sortByFavorites: "Сортування за обраним",
-      resetSort: "Скинути",
-      daysActive: "дн.",
-    },
-    en: {
-      title: "Profile Statistics",
-      totalViews: "Total Views",
-      totalContacts: "Total Contacts",
-      totalMessages: "Total Messages",
-      totalFavorites: "In Favorites",
-      totalShares: "Total Shares",
-      avgConversion: "Avg. Conversion",
-      activeListings: "Active Listings",
-      totalListings: "Total Listings",
-      myListings: "My Listings",
-      views: "views",
-      noListings: "You don't have any listings yet",
-      createFirst: "Create your first listing",
-      sortByFavorites: "Sort by favorites",
-      resetSort: "Reset",
-      daysActive: "d.",
-    }
-  };
-
-  const t = translations[lang] || translations.ru;
+  const { t } = useLang();
 
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -426,7 +367,7 @@ export default function ProfileStatisticsPage() {
       <div className="sticky top-0 z-10 bg-white/80 dark:bg-black/80 backdrop-blur-md px-4 py-4 border-b border-gray-100 dark:border-white/10">
         <div className="flex items-center gap-3">
           <BackButton />
-          <h1 className="text-2xl font-bold dark:text-white">{t.title}</h1>
+          <h1 className="text-2xl font-bold dark:text-white">{t("stat_profile_title") || "Статистика профиля"}</h1>
         </div>
       </div>
 
@@ -439,7 +380,7 @@ export default function ProfileStatisticsPage() {
               {stats.totalViews.toLocaleString()}
             </div>
             <div className="text-sm font-medium text-blue-900 dark:text-blue-300 flex items-center gap-1">
-              <EyeIcon className="w-4 h-4" /> {t.totalViews}
+              <EyeIcon className="w-4 h-4" /> {t("stat_total_views") || "Всего просмотров"}
             </div>
           </div>
 
@@ -460,7 +401,7 @@ export default function ProfileStatisticsPage() {
                 {stats.totalFavorites.toLocaleString()}
               </div>
               <div className="text-sm font-medium text-red-900 dark:text-red-300 flex items-center gap-1">
-                <HeartIconSolid className="w-4 h-4" /> {t.totalFavorites}
+                <HeartIconSolid className="w-4 h-4" /> {t("stat_total_favorites") || "В избранном"}
               </div>
             </div>
           </button>
@@ -471,7 +412,7 @@ export default function ProfileStatisticsPage() {
               {stats.totalShares.toLocaleString()}
             </div>
             <div className="text-sm font-medium text-indigo-900 dark:text-indigo-300 flex items-center gap-1">
-              <ShareIcon className="w-4 h-4" /> {t.totalShares}
+              <ShareIcon className="w-4 h-4" /> {t("stat_total_shares") || "Репостов"}
             </div>
           </div>
 
@@ -481,7 +422,7 @@ export default function ProfileStatisticsPage() {
               {stats.avgConversion.toFixed(1)}%
             </div>
             <div className="text-sm font-medium text-emerald-900 dark:text-emerald-300 flex items-center gap-1">
-              <ChartBarIcon className="w-4 h-4" /> {t.avgConversion}
+              <ChartBarIcon className="w-4 h-4" /> {t("stat_avg_conversion") || "Конверсия"}
             </div>
           </div>
         </div>
@@ -489,7 +430,7 @@ export default function ProfileStatisticsPage() {
         {/* Analytics Chart */}
         {chartData.length > 0 && (
           <div className="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-3xl p-4 sm:p-6 mb-6 shadow-sm">
-            <h2 className="text-lg font-bold mb-4 dark:text-white">Динамика за 7 дней</h2>
+            <h2 className="text-lg font-bold mb-4 dark:text-white">{t("stat_dynamics_7d") || "Динамика за 7 дней"}</h2>
             <div className="w-full h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
@@ -510,8 +451,8 @@ export default function ProfileStatisticsPage() {
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                     itemStyle={{ fontSize: '14px', fontWeight: 500 }}
                   />
-                  <Area type="monotone" name="Просмотры" dataKey="views" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
-                  <Area type="monotone" name="Контакты" dataKey="contacts" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorContacts)" />
+                  <Area type="monotone" name={t("analytics_views") || "Просмотры"} dataKey="views" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorViews)" />
+                  <Area type="monotone" name={t("analytics_contacts") || "Контакты"} dataKey="contacts" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorContacts)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -526,7 +467,7 @@ export default function ProfileStatisticsPage() {
                {stats.totalContacts.toLocaleString()}
              </div>
              <div className="text-sm font-medium text-green-900 dark:text-green-300 flex items-center gap-1">
-               <PhoneIcon className="w-4 h-4" /> {t.totalContacts}
+               <PhoneIcon className="w-4 h-4" /> {t("stat_total_contacts") || "Всего контактов"}
              </div>
            </div>
 
@@ -537,7 +478,7 @@ export default function ProfileStatisticsPage() {
                 {stats.totalMessages.toLocaleString()}
               </div>
               <div className="text-sm font-medium text-purple-900 dark:text-purple-300 flex items-center gap-1">
-                <ChatBubbleLeftRightIcon className="w-4 h-4" /> {t.totalMessages}
+                <ChatBubbleLeftRightIcon className="w-4 h-4" /> {t("stat_total_messages") || "Всего сообщений"}
               </div>
             </div>
           </Link>
@@ -550,7 +491,7 @@ export default function ProfileStatisticsPage() {
               <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {stats.activeListings}
               </div>
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-400">{t.activeListings}</div>
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400">{t("stat_active_listings") || "Активных объявлений"}</div>
             </div>
           </Link>
 
@@ -559,7 +500,7 @@ export default function ProfileStatisticsPage() {
               <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                 {stats.totalListings}
               </div>
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-400">{t.totalListings}</div>
+              <div className="text-xs font-medium text-gray-600 dark:text-gray-400">{t("stat_total_listings") || "Всего объявлений"}</div>
             </div>
           </Link>
         </div>
@@ -567,25 +508,25 @@ export default function ProfileStatisticsPage() {
         {/* Listings List */}
         <div className="mt-8" id="listings-list">
           <div className="flex items-center justify-between mb-4">
-             <h2 className="text-xl font-bold dark:text-white">{t.myListings}</h2>
+             <h2 className="text-xl font-bold dark:text-white">{t("stat_my_listings") || "Мои объявления"}</h2>
              {sortBy === 'favorites' && (
                 <button 
                   onClick={() => setSortBy('date')}
                   className="text-sm text-red-500 font-medium"
                 >
-                  {t.resetSort}
+                  {t("stat_reset_sort") || "Сбросить"}
                 </button>
              )}
           </div>
           
           {sortedListings.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 dark:bg-white/5 rounded-3xl">
-              <p className="text-gray-500 mb-4">{t.noListings}</p>
+              <p className="text-gray-500 mb-4">{t("stat_no_listings") || "У вас пока нет объявлений"}</p>
               <Link 
                 href="/create"
                 className="inline-block px-6 py-3 bg-airbnb-red text-white rounded-full font-medium hover:scale-105 transition-transform"
               >
-                {t.createFirst}
+                {t("stat_create_first") || "Создайте первое объявление"}
               </Link>
             </div>
           ) : (
