@@ -663,10 +663,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
     let cat = searchParams.get("category") || forcedCategory || "all";
     
     // Smart category detection only if no category in URL and there is a query
+    /*
     if (cat === "all" && q) {
       const detected = detectCategory(q);
       if (detected) cat = detected;
     }
+    */
     setCategoryFilter(cat);
 
     setTypeFilter(searchParams.get("type") || "all");
