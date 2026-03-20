@@ -41,7 +41,8 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
 
     return (
         <div 
-            className="fixed inset-0 z-[9999] flex items-start pt-[15vh] sm:items-center sm:pt-0 justify-center p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-[9999] flex items-start pt-[80px] sm:items-center sm:pt-0 justify-center p-4 sm:p-4 animate-in fade-in duration-200"
+            style={{ touchAction: 'none' }} // Prevents iOS overscroll/swipe on the backdrop
         >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
             
@@ -88,18 +89,18 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
                         
                         {/* Price Slider */}
                         {listingPrice && (
-                            <div className="px-1 touch-none" onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
+                            <div className="px-4 py-2 touch-none select-none mb-2" onTouchStart={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
                                 <input
                                     type="range"
-                                    min={Math.floor(listingPrice * 0.5)}
+                                    min={0}
                                     max={listingPrice}
                                     step={1}
-                                    value={Number(price) || Math.floor(listingPrice * 0.5)}
+                                    value={Number(price) || 0}
                                     onChange={(e) => handlePriceChange(e.target.value)}
-                                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
+                                    className="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black touch-none"
                                 />
                                 <div className="flex justify-between mt-2 text-[10px] uppercase font-bold text-gray-400 tracking-wider">
-                                    <span>Min: {Math.floor(listingPrice * 0.5)}{symbol}</span>
+                                    <span>0{symbol}</span>
                                     <span>Max: {listingPrice}{symbol}</span>
                                 </div>
                             </div>
