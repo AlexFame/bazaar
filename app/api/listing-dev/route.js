@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabaseAdmin";
+import { supaAdmin } from "@/lib/supabaseAdmin";
 // import { getUserId } from "@/lib/telegram"; // Client-side only
 
+const supabase = supaAdmin();
 export async function POST(req) {
   try {
     const body = await req.json();
