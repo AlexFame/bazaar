@@ -41,39 +41,33 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
 
     return (
         <div 
-            className="fixed inset-0 z-[9999] flex items-start pt-[80px] sm:items-center sm:pt-0 justify-center p-4 sm:p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-[9999] flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 animate-in fade-in duration-200"
             style={{ touchAction: 'none' }} // Prevents iOS overscroll/swipe on the backdrop
         >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
             
-            <FadeIn className="relative w-full max-w-sm z-10">
-            <div className="bg-white rounded-2xl w-full shadow-2xl flex flex-col max-h-[85vh]">
+            <FadeIn className="relative w-full sm:max-w-sm z-10 mx-auto w-full mt-auto sm:mt-0">
+            <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full flex flex-col max-h-[90vh] pb-8 sm:pb-0 relative shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
                 <button 
                     onClick={onClose} 
-                    className="absolute top-3 right-3 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors z-10"
+                    className="absolute top-4 right-4 p-2 bg-gray-100/80 rounded-full hover:bg-gray-200 transition-colors z-10"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-gray-500">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
 
-                <div className="p-5 overflow-y-auto custom-scrollbar">
-                    <div className="text-center mb-6 mt-2">
-                        <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
-                            🔖
-                        </div>
+                <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1">
+                    <div className="text-center mb-4 mt-2">
                         <h3 className="text-xl font-bold text-gray-900">{t("make_offer_title") || "Предложить цену"}</h3>
                         <p className="text-sm text-gray-500 mt-1 line-clamp-1">{listingTitle}</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1 ml-1">
-                            {t("your_price") || "Ваша цена"}
-                        </label>
                         
                         {/* Price Input Display */}
-                        <div className="text-center py-4 bg-gray-50 rounded-xl border border-gray-100 mb-4 flex items-center justify-center relative">
+                        <div className="text-center py-3 bg-gray-50 rounded-xl border border-gray-100 mb-3 flex items-center justify-center relative">
                             <input
                                 type="text"
                                 inputMode="numeric"
@@ -81,10 +75,10 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
                                 value={price}
                                 onChange={(e) => handlePriceChange(e.target.value)}
                                 onFocus={(e) => e.target.select()}
-                                className="w-full bg-transparent text-center text-4xl font-black text-black tracking-tight outline-none"
+                                className="w-full bg-transparent text-center text-3xl font-black text-black tracking-tight outline-none"
                                 placeholder="0"
                             />
-                            <span className="text-2xl text-gray-400 font-medium absolute right-6">{symbol}</span>
+                            <span className="text-xl text-gray-400 font-medium absolute right-5">{symbol}</span>
                         </div>
                         
                         {/* Price Slider */}
@@ -109,8 +103,8 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
 
                         <button 
                             type="submit"
-                            disabled={loading}
-                            className={`w-full py-3.5 bg-black text-white rounded-xl font-bold text-base hover:bg-gray-800 transition-all active:scale-[0.98] ${loading ? 'opacity-70 cursor-wait' : ''}`}
+                            disabled={loading || !price}
+                            className={`w-full py-3.5 bg-black text-white rounded-xl font-bold text-base hover:bg-gray-800 transition-all active:scale-[0.98] mt-1 ${loading || !price ? 'opacity-70 !cursor-not-allowed' : ''}`}
                         >
                             {loading ? (t("sending") || "Отправка...") : (t("send_offer") || "Отправить предложение")}
                         </button>
