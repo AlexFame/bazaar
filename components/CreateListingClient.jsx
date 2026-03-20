@@ -398,7 +398,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       const accountAgeCheck = checkTelegramAccountAge();
       if (!accountAgeCheck.allowed) {
         console.warn("Blocked by account age check:", accountAgeCheck.reason);
-        toast.error(accountAgeCheck.reason || "Ваш аккаунт Telegram слишком новый.");
+        toast.error(accountAgeCheck.reason || t("tg_account_too_new") || "Ваш аккаунт Telegram слишком новый.");
         return;
       }
 
@@ -524,7 +524,7 @@ export default function CreateListingClient({ onCreated, editId }) {
         const tgUserId = getUserId();
 
         if (!tgUserId) {
-          toast.error("Ошибка авторизации. Попробуйте перезагрузить страницу.");
+          toast.error(t("auth_failed_reload") || "Ошибка авторизации. Попробуйте перезагрузить страницу.");
           setLoading(false);
           notificationOccurred('error');
           return;
@@ -784,7 +784,7 @@ export default function CreateListingClient({ onCreated, editId }) {
       } 
     } catch (err) {
       console.error("Error creating listing:", err);
-    toast.error("Ошибка: " + err.message);
+      toast.error((t("error_general") || "Ошибка:") + " " + err.message);
     } finally {
       setLoading(false);
     }
@@ -961,11 +961,9 @@ export default function CreateListingClient({ onCreated, editId }) {
             <section className="w-full max-w-xl mx-auto mt-4 px-3">
               <h1 className="text-lg font-semibold mb-4">{t("new_heading")}</h1>
               <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-3 py-3 text-xs text-black/80">
-                <div className="font-semibold mb-1">Открой через Telegram</div>
+                <div className="font-semibold mb-1">{t("open_via_telegram_title") || "Открой через Telegram"}</div>
                 <p className="leading-snug">
-                  Создавать объявления можно только если ты открыл Bazaar из
-                  Telegram-бота. Открой бота, нажми кнопку с WebApp и попробуй ещё
-                  раз.
+                  {t("open_via_telegram_desc") || "Создавать объявления можно только если ты открыл Bazaar из Telegram-бота. Открой бота, нажми кнопку с WebApp и попробуй ещё раз."}
                 </p>
               </div>
             </section>
@@ -1271,7 +1269,7 @@ export default function CreateListingClient({ onCreated, editId }) {
                     if (user?.username) {
                     setContacts(`@${user.username}`);
                     } else {
-                        alert("У вас не установлен username в Telegram.");
+                        alert(t("alert_no_username") || "У вас не установлен username в Telegram.");
                     }
                 }}
                 >
@@ -1352,7 +1350,7 @@ export default function CreateListingClient({ onCreated, editId }) {
             onClick={(e) => handleSubmit(e, 'draft')}
             className="flex-1 bg-white border border-black text-black text-sm rounded-full py-2 disabled:opacity-60 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
           >
-            {loading ? "Сохраняем..." : lang === "ua" ? "До чернетки" : "В черновик"}
+            {loading ? (t("saving") || "Сохраняем...") : (t("btn_save_draft") || "В черновик")}
           </button>
           <button
             type="button"
