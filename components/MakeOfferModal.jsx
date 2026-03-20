@@ -41,13 +41,13 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
 
     return (
         <div 
-            className="fixed inset-0 z-[9999] flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-[9999] flex flex-col items-center justify-start pt-[100px] p-4 animate-in fade-in duration-200"
             style={{ touchAction: 'none' }} // Prevents iOS overscroll/swipe on the backdrop
         >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
             
-            <FadeIn className="relative w-full sm:max-w-sm z-10 mx-auto w-full mt-auto sm:mt-0">
-            <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full flex flex-col max-h-[90vh] pb-8 sm:pb-0 relative shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+            <FadeIn className="relative w-full sm:max-w-sm z-10 mx-auto w-full">
+            <div className="bg-white rounded-3xl w-full flex flex-col shadow-[0_10px_40px_rgba(0,0,0,0.2)]">
                 <button 
                     onClick={onClose} 
                     className="absolute top-4 right-4 p-2 bg-gray-100/80 rounded-full hover:bg-gray-200 transition-colors z-10"
@@ -57,7 +57,7 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
                     </svg>
                 </button>
 
-                <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1">
+                <div className="p-4 sm:p-5 overflow-y-auto custom-scrollbar flex-1 pb-5">
                     <div className="text-center mb-4 mt-2">
                         <h3 className="text-xl font-bold text-gray-900">{t("make_offer_title") || "Предложить цену"}</h3>
                         <p className="text-sm text-gray-500 mt-1 line-clamp-1">{listingTitle}</p>
