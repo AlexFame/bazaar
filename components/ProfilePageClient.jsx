@@ -192,12 +192,17 @@ export default function ProfilePageClient({ profileId }) {
             {/* Avatar */}
             <div className="w-24 h-24 rounded-full bg-gray-100 mb-3 relative overflow-hidden border border-gray-100">
                 {profile.avatar_url ? (
-                    <Image 
-                        src={profile.avatar_url} 
-                        alt={profile.full_name || profile.tg_username || "User"} 
-                        fill 
-                        className="object-cover"
-                    />
+                    <>
+                        <img 
+                            src={profile.avatar_url.startsWith('http') ? profile.avatar_url : (supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data?.publicUrl || profile.avatar_url)} 
+                            alt={profile.full_name || profile.tg_username || "User"} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                        />
+                        <div className="w-full h-full items-center justify-center text-3xl bg-gradient-to-br from-blue-100 to-purple-100 text-blue-500 hidden">
+                            {(profile.full_name || profile.tg_username || "U")[0].toUpperCase()}
+                        </div>
+                    </>
                 ) : (
                     <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-blue-100 to-purple-100 text-blue-500">
                         {(profile.full_name || profile.tg_username || "U")[0].toUpperCase()}
