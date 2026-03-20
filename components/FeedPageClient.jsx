@@ -83,6 +83,8 @@ const PriceSlider = ({
   onBlur,
   minLimit = 0,
   maxLimit = 100000,
+  labelFrom = "От",
+  labelTo = "До",
 }) => {
   const minVal = min === "" ? minLimit : Number(min);
   const maxVal = max === "" ? maxLimit : Number(max);
@@ -165,7 +167,7 @@ const PriceSlider = ({
       </div>
       <div className="flex justify-between mt-4 gap-2">
         <div className="flex flex-col">
-          <span className="text-xs text-gray-500">От</span>
+          <span className="text-xs text-gray-500">{labelFrom}</span>
           <input
             type="number"
             value={localMin}
@@ -179,7 +181,7 @@ const PriceSlider = ({
           />
         </div>
         <div className="flex flex-col items-end">
-          <span className="text-xs text-gray-500">До</span>
+          <span className="text-xs text-gray-500">{labelTo}</span>
           <input
             type="number"
             value={localMax}
@@ -704,7 +706,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
     setGettingLocation(true);
     try {
       if (!navigator.geolocation) {
-         alert("Геолокация не поддерживается вашим браузером");
+         alert(t("geo_not_supported") || "Геолокация не поддерживается вашим браузером");
          return;
       }
 
@@ -724,20 +726,20 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 const result = await navigator.permissions.query({ name: "geolocation" });
                 console.log("📍 Permissions state:", result.state);
                 if (result.state === 'denied') {
-                    alert("Доступ к геолокации запрещен. Пожалуйста, разрешите доступ в настройках браузера или устройства.");
+                    alert(t("geo_denied") || "Доступ к геолокации запрещен. Пожалуйста, разрешите доступ в настройках браузера или устройства.");
                 } else {
-                    alert("Не удалось определить местоположение. Проверьте настройки GPS.");
+                    alert(t("geo_failed") || "Не удалось определить местоположение. Проверьте настройки GPS.");
                 }
              } catch (e) {
-                 alert("Не удалось определить местоположение.");
+                 alert(t("geo_failed") || "Не удалось определить местоположение.");
              }
         } else {
-             alert("Не удалось определить местоположение (возможно, отклонено пользователем).");
+             alert(t("geo_rejected") || "Не удалось определить местоположение (возможно, отклонено пользователем).");
         }
       }
     } catch (error) {
       console.error("❌ Ошибка получения геолокации:", error);
-      alert(`Ошибка: ${error.message || "Неизвестная ошибка"}`);
+      alert(`${t("error_general") || "Ошибка"}: ${error.message || "Unknown error"}`);
     } finally {
       setGettingLocation(false);
     }

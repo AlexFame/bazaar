@@ -228,7 +228,7 @@ export default function ListingComments({ listingId, ownerId }) {
                                 onClick={() => handleReply(comment)}
                                 className="text-xs text-blue-600 font-medium hover:underline p-1"
                             >
-                                Ответить
+                                {t("reply") || "Ответить"}
                             </button>
                         )
                     )}

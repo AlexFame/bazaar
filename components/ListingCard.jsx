@@ -605,13 +605,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleStatusChange('reserved'); }}
                         className="flex-1 py-1.5 px-3 bg-indigo-50 text-indigo-700 text-[11px] font-medium rounded-lg hover:bg-indigo-100 transition-colors"
                     >
-                        Бронь
+                        {t("btn_mark_reserved") || "Бронь"}
                     </button>
                     <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleStatusChange('closed'); }}
                         className="flex-1 py-1.5 px-3 bg-gray-100 text-gray-700 text-[11px] font-medium rounded-lg hover:bg-gray-200 transition-colors"
                     >
-                        Продано
+                        {t("btn_mark_sold") || "Продано"}
                     </button>
                 </div>
             )}
@@ -622,13 +622,13 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleStatusChange('active'); }}
                         className="flex-1 py-1.5 px-3 bg-green-50 text-green-700 text-[11px] font-medium rounded-lg hover:bg-green-100 transition-colors"
                     >
-                        Вернуть
+                        {t("btn_return_active") || "Вернуть"}
                     </button>
                     <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleStatusChange('closed'); }}
                         className="flex-1 py-1.5 px-3 bg-gray-100 text-gray-700 text-[11px] font-medium rounded-lg hover:bg-gray-200 transition-colors"
                     >
-                        Продано
+                        {t("btn_mark_sold") || "Продано"}
                     </button>
                 </div>
             )}
