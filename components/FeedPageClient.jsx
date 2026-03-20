@@ -436,6 +436,32 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
   const [categoryFilter, setCategoryFilter] = useState(getInitialCategory());
 
+  // Общие фильтры
+  const [typeFilter, setTypeFilter] = useState(searchParams.get("type") || "all"); // all | buy | sell | services | free
+  const [conditionFilter, setConditionFilter] = useState(searchParams.get("condition") || "all"); // all | new | used | like_new
+  const [barterFilter, setBarterFilter] = useState(searchParams.get("barter") || "all"); // all | yes | no
+
+  // Location-based filtering
+  const [userLocation, setUserLocation] = useState(null); // { lat, lng }
+  const [radiusFilter, setRadiusFilter] = useState(searchParams.get("radius") ? Number(searchParams.get("radius")) : null); // null | 1 | 5 | 10 | 25 | 50 (km)
+  const [viewMode, setViewMode] = useState("list"); // 'list' | 'map'
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [withPhotoFilter, setWithPhotoFilter] = useState(searchParams.get("photo") || "all"); // all | yes | no
+  const [dateFilter, setDateFilter] = useState(searchParams.get("date") || "all"); // all | today | used | like_new
+
+  // Autocomplete for location filter
+  const { suggestions: citySuggestions } = useCityAutocomplete(locationFilter, 2);
+  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
+
+  // Advanced Filters
+  const [sortFilter, setSortFilter] = useState(searchParams.get("sort") || "date_desc"); // date_desc | date_asc | price_asc | price_desc | distance
+  const [photoCountFilter, setPhotoCountFilter] = useState(searchParams.get("photo_count") || "any"); // any | 1 | 3 | 5
+  const [sellerStatusFilter, setSellerStatusFilter] = useState(searchParams.get("seller_status") || "any"); // any | verified | rating_4
+  const [deliveryFilter, setDeliveryFilter] = useState(searchParams.get("delivery") || "all"); // all | pickup | delivery | meet
+
+  // Динамические фильтры (JSONB)
+  const [dynamicFilters, setDynamicFilters] = useState({});
+
   // Construct current filter object to compare with cache.
   // CRITICAL FIX: we only track applied state (like the URL or applied dropdowns) to trigger feed reloading.
   // We do NOT track `searchTerm` directly, as that is live typing state. We track `urlQuery` (the confirmed search).
@@ -489,34 +515,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
           setLoading(false);
      }
   }, [JSON.stringify(currentFilters)]); // Depend on stable stringified filters
-
-
-
-  // Общие фильтры
-  const [typeFilter, setTypeFilter] = useState(searchParams.get("type") || "all"); // all | buy | sell | services | free
-  const [conditionFilter, setConditionFilter] = useState(searchParams.get("condition") || "all"); // all | new | used | like_new
-  const [barterFilter, setBarterFilter] = useState(searchParams.get("barter") || "all"); // all | yes | no
-
-  // Location-based filtering
-  const [userLocation, setUserLocation] = useState(null); // { lat, lng }
-  const [radiusFilter, setRadiusFilter] = useState(searchParams.get("radius") ? Number(searchParams.get("radius")) : null); // null | 1 | 5 | 10 | 25 | 50 (km)
-  const [viewMode, setViewMode] = useState("list"); // 'list' | 'map'
-  const [gettingLocation, setGettingLocation] = useState(false);
-  const [withPhotoFilter, setWithPhotoFilter] = useState(searchParams.get("photo") || "all"); // all | yes | no
-  const [dateFilter, setDateFilter] = useState(searchParams.get("date") || "all"); // all | today | used | like_new
-
-  // Autocomplete for location filter
-  const { suggestions: citySuggestions } = useCityAutocomplete(locationFilter, 2);
-  const [showCitySuggestions, setShowCitySuggestions] = useState(false);
-
-  // Advanced Filters
-  const [sortFilter, setSortFilter] = useState(searchParams.get("sort") || "date_desc"); // date_desc | date_asc | price_asc | price_desc | distance
-  const [photoCountFilter, setPhotoCountFilter] = useState(searchParams.get("photo_count") || "any"); // any | 1 | 3 | 5
-  const [sellerStatusFilter, setSellerStatusFilter] = useState(searchParams.get("seller_status") || "any"); // any | verified | rating_4
-  const [deliveryFilter, setDeliveryFilter] = useState(searchParams.get("delivery") || "all"); // all | pickup | delivery | meet
-
-  // Динамические фильтры (JSONB)
-  const [dynamicFilters, setDynamicFilters] = useState({});
 
   // Состояние для компактных выпадающих фильтров
   const [openDropdown, setOpenDropdown] = useState(null); // 'category', 'price', 'condition', etc.
