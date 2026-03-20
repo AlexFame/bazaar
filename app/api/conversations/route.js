@@ -36,8 +36,8 @@ export async function POST(req) {
         const tgUserId = authData.user.id;
         const supa = supaAdmin();
         
-        // 1. Get Profile ID
-        const { data: profile } = await supa.from('profiles').select('id').eq('tg_user_id', tgUserId).single();
+        // 1. Get Profile
+        const { data: profile } = await supa.from('profiles').select('id, full_name, avatar_url').eq('tg_user_id', tgUserId).single();
         if (!profile) return new Response(JSON.stringify([]), { status: 200 }); // Valid auth, no profile = no chats
         
         const userId = profile.id;
@@ -62,20 +62,24 @@ export async function POST(req) {
             
         if (error) throw error;
         
-        // 3. Fetch Last Messages (n+1 problem, but tolerable for paging)
-        // Optimization: Fetch all messages for these conversation IDs in one go?
-        // Or just iterate.
-        const conversationsWithMessages = await Promise.all(conversations.map(async (conv) => {
-             const { data: lastMsg } = await supa
-               .from("messages")
-               .select("content, created_at, sender_id")
-               .eq("conversation_id", conv.id)
-               .order("created_at", { ascending: false })
-               .limit(1)
-               .maybeSingle(); // Use maybeSingle to avoid 406 on empty
-               
-             return { ...conv, lastMessage: lastMsg };
-        }));
+        // 3. Fetch Last Messages (Optimized to O(1) queries instead of N)
+        const convIds = conversations.map(c => c.id);
+        const { data: allMessages } = await supa
+            .from("messages")
+            .select("conversation_id, content, created_at, sender_id")
+            .in("conversation_id", convIds)
+            .order("created_at", { ascending: false });
+
+        const lastMsgMap = {};
+        allMessages?.forEach(msg => {
+             if (!lastMsgMap[msg.conversation_id]) {
+                 lastMsgMap[msg.conversation_id] = msg;
+             }
+        });
+
+        const conversationsWithMessages = conversations.map(conv => {
+             return { ...conv, lastMessage: lastMsgMap[conv.id] || null };
+        });
         
         // 4. Counts
         const { data: unreadData } = await supa

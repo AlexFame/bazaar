@@ -414,8 +414,19 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                 {showDate && (
                     <div className="flex justify-center my-4"><span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full">{new Date(msg.created_at).toLocaleDateString([], { day: 'numeric', month: 'long' })}</span></div>
                 )}
-                <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2 w-full`}>
-                  <div className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm relative group ${isMe ? "bg-black dark:bg-white text-white dark:text-black rounded-br-none" : "bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-bl-none"}`}>
+                <div className={`flex ${isMe ? "justify-end" : "justify-start"} mb-2 w-full items-end gap-1.5`}>
+                  {!isMe && (
+                      <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
+                          {otherUser?.avatar_url && (
+                              <img src={otherUser.avatar_url.startsWith('http') ? otherUser.avatar_url : (supabase.storage.from('avatars').getPublicUrl(otherUser.avatar_url).data?.publicUrl || otherUser.avatar_url)} alt="A" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                          )}
+                          <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-[10px] bg-gray-100 dark:bg-gray-800" style={{ display: otherUser?.avatar_url ? 'none' : 'flex' }}>
+                             {(otherUser?.full_name || "U")[0].toUpperCase()}
+                          </div>
+                      </div>
+                  )}
+
+                  <div className={`max-w-[85%] px-4 py-2 rounded-2xl text-sm relative group ${isMe ? "bg-black dark:bg-white text-white dark:text-black rounded-br-[4px]" : "bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-bl-[4px]"}`}>
                     <p className="whitespace-pre-wrap break-words min-w-[20px]">{msg.content || <span className="italic opacity-50">{t("chat_empty_msg") || "Пустое сообщение"}</span>}</p>
                     <div className={`text-[9px] mt-1 flex items-center justify-end gap-1 ${isMe ? "text-white/60 dark:text-black/60" : "text-black/40 dark:text-white/40"}`}>
                         <span>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
@@ -423,6 +434,18 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                         {isMe && !msg.is_read && <span>✓</span>}
                     </div>
                   </div>
+
+                  {isMe && (
+                      <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
+                          {user?.avatar_url && (
+                              <img src={user.avatar_url.startsWith('http') ? user.avatar_url : (supabase.storage.from('avatars').getPublicUrl(user.avatar_url).data?.publicUrl || user.avatar_url)} alt="Me" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                          )}
+                          <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-[10px] bg-gray-100 dark:bg-gray-800" style={{ display: user?.avatar_url ? 'none' : 'flex' }}>
+                             {(user?.full_name || "Я")[0].toUpperCase()}
+                          </div>
+                      </div>
+                  )}
+
                 </div>
             </motion.div>
           );

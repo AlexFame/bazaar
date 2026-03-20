@@ -35,8 +35,8 @@ export async function POST(req) {
         const tgUserId = authData.user.id;
         const supa = supaAdmin();
         
-        // 1. Get Profile ID
-        const { data: profile } = await supa.from('profiles').select('id').eq('tg_user_id', tgUserId).single();
+        // 1. Get Profile
+        const { data: profile } = await supa.from('profiles').select('id, full_name, avatar_url').eq('tg_user_id', tgUserId).single();
         if (!profile) return new Response('Profile not found', { status: 404 });
         
         const userId = profile.id;
