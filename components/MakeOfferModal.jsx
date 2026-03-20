@@ -12,32 +12,36 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!price || isNaN(price) || Number(price) <= 0) {
+        const numPrice = Number(price);
+        if (!price || isNaN(numPrice) || numPrice <= 0) {
             alert(t("invalid_price") || "Пожалуйста, введите корректную цену");
             return;
         }
+        if (listingPrice && numPrice > listingPrice) {
+            alert((t("price_too_high") || "Ваше предложение не может быть выше начальной цены: ") + listingPrice);
+            return;
+        }
         setLoading(true);
-        await onSubmit(Number(price));
+        await onSubmit(numPrice);
         setLoading(false);
         onClose();
     };
 
     const handlePriceChange = (val) => {
-        // Clamp value: Allow typing, but if it exceeds max, cap it
         if (val === '') {
             setPrice('');
             return;
         }
-        let numVal = Number(val);
-        if (listingPrice && numVal > listingPrice) {
-            numVal = listingPrice;
-        }
         // Allow removing the leading zero to type new numbers properly
+        const numVal = Number(val);
         setPrice(numVal === 0 ? val : String(numVal));
     };
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+        <div 
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4"
+            onClick={onClose}
+        >
             <FadeIn>
             <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl relative flex flex-col max-h-[90vh]" onClick={e => e.stopPropagation()}>
                 <button 
@@ -70,6 +74,7 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
                                 type="number"
                                 value={price}
                                 onChange={(e) => handlePriceChange(e.target.value)}
+                                onFocus={(e) => e.target.select()}
                                 className="w-full bg-transparent text-center text-4xl font-black text-black tracking-tight outline-none"
                                 placeholder="0"
                             />
