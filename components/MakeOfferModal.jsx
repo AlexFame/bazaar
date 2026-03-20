@@ -41,7 +41,7 @@ export default function MakeOfferModal({ isOpen, onClose, onSubmit, listingTitle
 
     return (
         <div 
-            className="fixed inset-0 z-[9999] flex flex-col items-center justify-start pt-[100px] p-4 animate-in fade-in duration-200"
+            className="fixed inset-0 z-[9999] flex flex-col items-center justify-start pt-4 p-4 animate-in fade-in duration-200"
             style={{ touchAction: 'none' }} // Prevents iOS overscroll/swipe on the backdrop
         >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
