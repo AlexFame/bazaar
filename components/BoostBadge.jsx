@@ -1,34 +1,38 @@
 "use client";
 
+import { useLang } from "@/lib/i18n-client";
+
 export default function BoostBadge({ boost, service }) {
+  const { t, lang } = useLang();
+
   if (!boost || !boost.is_active) return null;
 
   const getBadgeConfig = (serviceType) => {
     const configs = {
       urgent_sticker: {
         icon: "🔥",
-        text: "Срочно",
-        className: "bg-[#FF385C] text-white animate-pulse", // Airbnb Red
+        text: t("badge_urgent") || (lang === 'en' ? "Urgent" : "Срочно"),
+        className: "bg-[#FF385C] text-white animate-pulse",
       },
       boost_1d: {
         icon: "⬆️",
-        text: "В топе",
-        className: "bg-[#FF385C]/90 text-white", // Slightly lighter/transparent red
+        text: t("badge_top") || (lang === 'en' ? "Top" : "В топе"),
+        className: "bg-[#FF385C]/90 text-white",
       },
       boost_3d: {
         icon: "🚀",
-        text: "В топе",
+        text: t("badge_top") || (lang === 'en' ? "Top" : "В топе"),
         className: "bg-[#FF385C] text-white",
       },
       pin_7d: {
         icon: "📌",
-        text: "Закреплено",
-        className: "bg-black text-white", // Distinctive "Pinned" usually implies stability -> Black/Dark
+        text: t("badge_pinned") || (lang === 'en' ? "Pinned" : "Закреплено"),
+        className: "bg-black text-white",
       },
       combo_7d: {
         icon: "⭐️",
-        text: "Премиум",
-        className: "bg-gradient-to-r from-[#FF385C] to-[#E00B41] text-white animate-pulse", // Red Gradient
+        text: t("badge_premium") || (lang === 'en' ? "Premium" : "Премиум"),
+        className: "bg-gradient-to-r from-[#FF385C] to-[#E00B41] text-white animate-pulse",
       },
     };
     return configs[serviceType] || configs.boost_1d;
@@ -46,9 +50,9 @@ export default function BoostBadge({ boost, service }) {
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
-    if (days > 0) return `${days}д`;
-    if (hours > 0) return `${hours}ч`;
-    return "< 1ч";
+    if (days > 0) return `${days}${t("time_d") || (lang === 'en' ? "d" : "д")}`;
+    if (hours > 0) return `${hours}${t("time_h") || (lang === 'en' ? "h" : "ч")}`;
+    return `< 1${t("time_h") || (lang === 'en' ? "h" : "ч")}`;
   };
 
   const timeRemaining = getTimeRemaining();

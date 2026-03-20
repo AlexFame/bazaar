@@ -326,7 +326,7 @@ export default function ChatListClient() {
           <div className="text-center mt-20">
             <p className="text-gray-500 mb-4">{t("msg_login")}</p>
             <Link href="/login" className="inline-block px-6 py-2 bg-black text-white rounded-xl">
-              Войти
+              {t("login_btn") || "Войти"}
             </Link>
           </div>
         ) : displayedChats.length === 0 ? (

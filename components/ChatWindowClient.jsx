@@ -317,7 +317,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
              headers: { "Content-Type": "application/json" },
              body: JSON.stringify({
                recipientId: otherUser.id,
-               message: `💬 Новое сообщение: ${content}`,
+               message: `${t("chat_new_msg") || "💬 Новое сообщение:"} ${content}`,
                url: `https://t.me/bazaarua_bot/app?startapp=chat_${conversationId}`
              }),
            }).catch(console.error);

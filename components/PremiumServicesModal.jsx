@@ -181,12 +181,12 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                 
                 {/* Manual Actions (MVP) */}
                 <div className="bg-white dark:bg-[#1C1C1E] rounded-[20px] p-4 mb-3">
-                   <h3 className="text-md font-bold mb-3 dark:text-white">🚀 Быстрые действия</h3>
+                   <h3 className="text-md font-bold mb-3 dark:text-white">🚀 {t("premium_quick_actions") || "Быстрые действия"}</h3>
                    <div className="grid grid-cols-2 gap-3">
                        <ActionConfirmButton 
                           icon="⬆️" 
-                          label="Поднять" 
-                          confirmLabel="Точно?"
+                          label={t("premium_action_bump") || "Поднять"} 
+                          confirmLabel={t("premium_action_confirm") || "Точно?"}
                           onConfirm={async () => {
                                   const tg = window.Telegram?.WebApp;
                                   const res = await fetch('/api/listings/bump', {
@@ -194,11 +194,11 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                                       body: JSON.stringify({ initData: tg?.initData, listingId })
                                   });
                                   if (res.ok) {
-                                      alert("Успешно поднято!");
+                                      alert(t("premium_success_bump") || "Успешно поднято!");
                                       onClose();
                                       window.location.reload(); 
                                   } else {
-                                      alert("Ошибка");
+                                      alert(t("premium_error") || "Ошибка");
                                   }
                           }}
                           className="bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-100"
@@ -206,8 +206,8 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
 
                        <ActionConfirmButton 
                           icon="📌" 
-                          label="Закрепить" 
-                          confirmLabel="VIP 7дн?"
+                          label={t("premium_action_pin") || "Закрепить"} 
+                          confirmLabel={t("premium_action_pin_confirm") || "VIP 7дн?"}
                           onConfirm={async () => {
                                   const tg = window.Telegram?.WebApp;
                                   const res = await fetch('/api/listings/pin', {
@@ -215,11 +215,11 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                                       body: JSON.stringify({ initData: tg?.initData, listingId, durationDays: 7 })
                                   });
                                   if (res.ok) {
-                                      alert("Успешно закреплено!");
+                                      alert(t("premium_success_pin") || "Успешно закреплено!");
                                       onClose();
                                       window.location.reload();
                                   } else {
-                                      alert("Ошибка");
+                                      alert(t("premium_error") || "Ошибка");
                                   }
                           }}
                           className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 hover:bg-purple-100"
@@ -260,7 +260,7 @@ export default function PremiumServicesModal({ listingId, isOpen, onClose }) {
                                         </h3>
                                         {isRecommended && (
                                             <span className="bg-[#007AFF] text-white text-[10px] uppercase font-bold px-1.5 py-0.5 rounded-[4px]">
-                                                {lang === 'en' ? 'HIT' : 'ХИТ'}
+                                                {lang === 'en' ? 'HIT' : (lang === 'ua' ? 'ХІТ' : 'ХИТ')}
                                             </span>
                                         )}
                                     </div>
