@@ -126,7 +126,15 @@ export default function SellerCard({ listing, isOwner }) {
             const data = await res.json();
             
             if (!res.ok) {
-                throw new Error(data.error || 'Failed to make offer');
+                let errorMsg = data.error || 'Failed to make offer';
+                if (errorMsg === 'You already have a pending offer for this item') {
+                    errorMsg = t("offer_already_exists") || (lang === 'en' ? 'You already have a pending offer for this item.' : 'У вас уже есть активное предложение для этого объявления. Дождитесь ответа продавца.');
+                } else if (errorMsg === 'Auth failed' || errorMsg === 'Missing initData') {
+                    errorMsg = t("auth_failed") || (lang === 'en' ? 'Authorization failed. Please restart the app.' : 'Ошибка авторизации. Пожалуйста, перезапустите мини-приложение.');
+                } else if (errorMsg === 'User profile not found') {
+                    errorMsg = t("profile_not_found") || (lang === 'en' ? 'User profile not found' : 'Профиль пользователя не найден.');
+                }
+                throw new Error(errorMsg);
             }
             
             alert(t("offer_sent") || "Предложение отправлено! Продавец получит уведомление.");
