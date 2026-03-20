@@ -42,7 +42,7 @@ export async function POST(req) {
         
         const userId = profile.id;
         
-        // 2. Fetch Conversations
+        // 2. Fetch Conversations with their latest message attached via PostgREST resource embedding
         const { data: conversations, error } = await supa
             .from("conversations")
             .select(`
@@ -54,31 +54,22 @@ export async function POST(req) {
               buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
               seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url),
               deleted_by_buyer,
-              deleted_by_seller
+              deleted_by_seller,
+              messages (content, created_at, sender_id)
             `)
             .or(`and(buyer_id.eq.${userId},deleted_by_buyer.eq.false),and(seller_id.eq.${userId},deleted_by_seller.eq.false)`)
             .order("updated_at", { ascending: false })
+            .order("created_at", { foreignTable: "messages", ascending: false })
+            .limit(1, { foreignTable: "messages" })
             .limit(50);
             
         if (error) throw error;
-        
-        // 3. Fetch Last Messages (Optimized to O(1) queries instead of N)
-        const convIds = conversations.map(c => c.id);
-        const { data: allMessages } = await supa
-            .from("messages")
-            .select("conversation_id, content, created_at, sender_id")
-            .in("conversation_id", convIds)
-            .order("created_at", { ascending: false });
 
-        const lastMsgMap = {};
-        allMessages?.forEach(msg => {
-             if (!lastMsgMap[msg.conversation_id]) {
-                 lastMsgMap[msg.conversation_id] = msg;
-             }
-        });
-
+        // Clean up the embedded messages array into a singular lastMessage object
         const conversationsWithMessages = conversations.map(conv => {
-             return { ...conv, lastMessage: lastMsgMap[conv.id] || null };
+             const msgs = conv.messages || [];
+             delete conv.messages;
+             return { ...conv, lastMessage: msgs.length > 0 ? msgs[0] : null };
         });
         
         // 4. Counts

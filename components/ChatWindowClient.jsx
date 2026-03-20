@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { UserService } from "@/lib/services/UserService";
-import BackButton from "@/components/BackButton";
 import Link from "next/link";
 import { useLang } from "@/lib/i18n-client";
 import { ChatDetailSkeleton } from "./SkeletonLoader";
@@ -369,11 +368,15 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
   return (
     <div className="flex flex-col min-h-screen w-full max-w-[520px] mx-auto bg-white dark:bg-background relative">
-      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 p-3 pt-[calc(env(safe-area-inset-top)+12px)] border-b border-gray-100 dark:border-white/10 bg-white/90 dark:bg-black/90 backdrop-blur-md w-full transition-all duration-200">
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-            <BackButton />
+      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 p-2 pt-[calc(env(safe-area-inset-top)+8px)] border-b border-gray-100 dark:border-white/10 bg-white/95 dark:bg-black/95 backdrop-blur-xl w-full transition-all duration-200">
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+            <button onClick={() => router.back()} className="p-2 -ml-1 text-blue-500 hover:text-blue-600 transition-colors bg-transparent border-none outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="w-[26px] h-[26px]">
+                    <path d="M15 18l-6-6 6-6" />
+                </svg>
+            </button>
             {otherUser && (
-            <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+            <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
                 <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-white/10 relative">
                 {otherUser.avatar_url ? (
                     <img src={otherUser.avatar_url.startsWith('http') ? otherUser.avatar_url : (supabase.storage.from('avatars').getPublicUrl(otherUser.avatar_url).data?.publicUrl || otherUser.avatar_url)} alt={otherUser.full_name} className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
