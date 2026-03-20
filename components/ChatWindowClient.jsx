@@ -367,8 +367,8 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   if (loading) return <ChatDetailSkeleton />;
 
   return (
-    <div className="flex flex-col min-h-screen w-full max-w-[520px] mx-auto bg-white dark:bg-background relative">
-      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 p-2 pt-[calc(env(safe-area-inset-top)+8px)] border-b border-gray-100 dark:border-white/10 bg-white/95 dark:bg-black/95 backdrop-blur-xl w-full transition-all duration-200">
+    <div className="flex flex-col h-[100dvh] w-full max-w-[520px] mx-auto bg-white dark:bg-background relative overflow-hidden">
+      <div className="flex-shrink-0 z-50 flex items-center justify-between gap-3 p-2 pt-[calc(env(safe-area-inset-top)+8px)] border-b border-gray-100 dark:border-white/10 bg-white/95 dark:bg-black/95 backdrop-blur-xl w-full transition-all duration-200">
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <button onClick={() => router.back()} className="p-2 -ml-1 text-blue-500 hover:text-blue-600 transition-colors bg-transparent border-none outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="w-[26px] h-[26px]">
@@ -379,7 +379,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
             <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
                 <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-white/10 relative">
                 {otherUser.avatar_url ? (
-                    <img src={otherUser.avatar_url.startsWith('http') ? otherUser.avatar_url : (supabase.storage.from('avatars').getPublicUrl(otherUser.avatar_url).data?.publicUrl || otherUser.avatar_url)} alt={otherUser.full_name} className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                    <img src={otherUser.avatar_url.startsWith('http') ? otherUser.avatar_url : (supabase.storage.from('avatars').getPublicUrl(otherUser.avatar_url).data?.publicUrl || otherUser.avatar_url)} alt={otherUser.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
                 ) : null}
                 <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-xs bg-gray-100 dark:bg-gray-800" style={{ display: otherUser.avatar_url ? 'none' : 'flex' }}>
                     {(otherUser.full_name || "U")[0].toUpperCase()}
@@ -407,7 +407,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           </div>
       )}
 
-      <div className="flex-1 w-full p-3 space-y-1 pb-32 min-h-0">
+      <div className="flex-1 overflow-y-auto w-full p-3 space-y-1 relative">
         <AnimatePresence initial={false} mode="popLayout">
         {messages.map((msg, index) => {
           const isMe = msg.sender_id === user?.id;
@@ -421,7 +421,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                   {!isMe && (
                       <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
                           {otherUser?.avatar_url && (
-                              <img src={otherUser.avatar_url.startsWith('http') ? otherUser.avatar_url : (supabase.storage.from('avatars').getPublicUrl(otherUser.avatar_url).data?.publicUrl || otherUser.avatar_url)} alt="A" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                              <img src={otherUser.avatar_url.startsWith('http') ? otherUser.avatar_url : (supabase.storage.from('avatars').getPublicUrl(otherUser.avatar_url).data?.publicUrl || otherUser.avatar_url)} alt="A" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
                           )}
                           <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-[10px] bg-gray-100 dark:bg-gray-800" style={{ display: otherUser?.avatar_url ? 'none' : 'flex' }}>
                              {(otherUser?.full_name || "U")[0].toUpperCase()}
@@ -441,7 +441,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                   {isMe && (
                       <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
                           {user?.avatar_url && (
-                              <img src={user.avatar_url.startsWith('http') ? user.avatar_url : (supabase.storage.from('avatars').getPublicUrl(user.avatar_url).data?.publicUrl || user.avatar_url)} alt="Me" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                              <img src={user.avatar_url.startsWith('http') ? user.avatar_url : (supabase.storage.from('avatars').getPublicUrl(user.avatar_url).data?.publicUrl || user.avatar_url)} alt="Me" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
                           )}
                           <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-[10px] bg-gray-100 dark:bg-gray-800" style={{ display: user?.avatar_url ? 'none' : 'flex' }}>
                              {(user?.full_name || "Я")[0].toUpperCase()}
@@ -454,10 +454,10 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           );
         })}
         </AnimatePresence>
-        <div ref={messagesEndRef} /> 
+        <div ref={messagesEndRef} className="h-2" /> 
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] w-full max-w-[520px] mx-auto">
+      <div className="flex-shrink-0 z-50 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] w-full max-w-[520px] mx-auto">
         <form onSubmit={(e) => { e.preventDefault(); handleSend(e); }} className="flex items-end gap-2 w-full">
           <textarea ref={textareaRef} value={newMessage} onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }} onKeyDown={handleKeyDown} placeholder={t("chat_placeholder") || "Написать сообщение..."} className="flex-1 bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-2xl px-4 py-3 text-sm resize-none max-h-32 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white min-w-0 w-full" rows={1} style={{ minHeight: "44px" }} />
           <button type="submit" disabled={!newMessage.trim() || isSending} className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95">

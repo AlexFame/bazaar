@@ -71,7 +71,7 @@ async function verifyHandler(req) {
     // 1. Check for existing profile (The "Truth" for data)
     const { data: existingProfile } = await supa
         .from('profiles')
-        .select('id')
+        .select('id, avatar_url, full_name')
         .eq('tg_user_id', tg_user_id)
         .maybeSingle();
 
@@ -134,17 +134,23 @@ async function verifyHandler(req) {
     }
 
     // 3. Upsert profile to ensure it's up to date
-    const avatar_url = data.user.photo_url || null; // Get avatar from Telegram
+    const updates = { 
+        id: authUser.id, 
+        tg_user_id, 
+        tg_username,
+        full_name: data.user.first_name + (data.user.last_name ? ` ${data.user.last_name}` : '')
+    };
+    
+    // If TG gave us a photo, use it. Else fall back to existing DB avatar to avoid deleting it.
+    if (data.user.photo_url) {
+        updates.avatar_url = data.user.photo_url;
+    } else if (existingProfile && existingProfile.avatar_url) {
+        updates.avatar_url = existingProfile.avatar_url;
+    }
+
     const { data: profile, error: profileErr } = await supa
         .from('profiles')
-        .upsert({ 
-            id: authUser.id, 
-            tg_user_id, 
-            tg_username,
-            avatar_url, // Save Telegram avatar
-            full_name: data.user.first_name + (data.user.last_name ? ` ${data.user.last_name}` : '')
-            // updated_at removed to avoid schema error
-        })
+        .upsert(updates)
         .select()
         .single();
         

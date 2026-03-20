@@ -197,6 +197,7 @@ export default function ProfilePageClient({ profileId }) {
                             src={profile.avatar_url.startsWith('http') ? profile.avatar_url : (supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data?.publicUrl || profile.avatar_url)} 
                             alt={profile.full_name || profile.tg_username || "User"} 
                             className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
                             onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                         />
                         <div className="w-full h-full items-center justify-center text-3xl bg-gradient-to-br from-blue-100 to-purple-100 text-blue-500 hidden">

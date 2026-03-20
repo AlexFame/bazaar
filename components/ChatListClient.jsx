@@ -403,7 +403,7 @@ function ChatItem({ conv, user, unreadCounts, onDelete, getImageUrl }) {
               {/* Large Avatar */}
               <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
                 {other.avatar_url ? (
-                  <img src={other.avatar_url.startsWith('http') ? other.avatar_url : (supabase.storage.from('avatars').getPublicUrl(other.avatar_url).data?.publicUrl || other.avatar_url)} alt={other.full_name} className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                  <img src={other.avatar_url.startsWith('http') ? other.avatar_url : (supabase.storage.from('avatars').getPublicUrl(other.avatar_url).data?.publicUrl || other.avatar_url)} alt={other.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
                 ) : null}
                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-xl font-bold bg-gray-100 dark:bg-gray-800" style={{ display: other.avatar_url ? 'none' : 'flex' }}>
                     {other.full_name?.[0]?.toUpperCase() || "?"}
