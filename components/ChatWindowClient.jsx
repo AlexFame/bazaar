@@ -23,20 +23,51 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   const [error, setError] = useState(null);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [channel, setChannel] = useState(null);
+  const [viewportHeight, setViewportHeight] = useState('100vh');
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const lastTypingTimeRef = useRef(0);
 
-  const scrollToBottom = () => {
-    if (messagesEndRef.current) {
-        // window.scrollTo scrolls the page safely without bringing header out of sync
-        window.scrollTo({ top: document.body.scrollHeight, behavior: "auto" });
-    }
-  };
-
   // Auto-scroll removed based on user feedback to prevent page jumping. 
   // We now rely purely on manual scrolling or scrolling when the user manually sends a message.
+
+  useEffect(() => {
+    // Advanced Keyboard Handling for flawless native UX
+    let isMounted = true;
+    
+    if (typeof window !== "undefined") {
+        if (window.Telegram?.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.expand();
+            const updateHeight = () => {
+                if (!isMounted) return;
+                setViewportHeight(`${tg.viewportStableHeight || window.innerHeight}px`);
+                // Briefly scroll to bottom on resize to keep input visible correctly
+                setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }), 50);
+            };
+            tg.onEvent('viewportChanged', updateHeight);
+            updateHeight();
+            return () => {
+                isMounted = false;
+                tg.offEvent('viewportChanged', updateHeight);
+            };
+        } else if (window.visualViewport) {
+            const updateHeightVis = () => {
+                if (!isMounted) return;
+                setViewportHeight(`${window.visualViewport.height}px`);
+            };
+            window.visualViewport.addEventListener('resize', updateHeightVis);
+            updateHeightVis();
+            return () => {
+                isMounted = false;
+                window.visualViewport.removeEventListener('resize', updateHeightVis);
+            };
+        } else {
+            setViewportHeight(`${window.innerHeight}px`);
+        }
+    }
+  }, []);
 
   useEffect(() => {
     const initChat = async () => {
@@ -248,7 +279,6 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
         let actualConversationId = conversationId;
         const isTelegram = typeof window !== "undefined" && window.Telegram?.WebApp?.initData;
 
-        // Create Conversation
         if (conversationId === "new" && listingId && sellerId) {
             if (isTelegram) {
                 const res = await fetch('/api/conversations/create', {
@@ -287,7 +317,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           is_read: false
        };
        setMessages(prev => [...prev, optimisticMessage]);
-       scrollToBottom();
+       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
 
        // Send Message
        if (isTelegram) {
@@ -369,8 +399,11 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   if (loading) return <ChatDetailSkeleton />;
 
   return (
-    <div className="flex flex-col min-h-screen w-full max-w-[520px] mx-auto bg-white dark:bg-background relative">
-      <div className="sticky top-0 z-50 flex items-center justify-between gap-3 p-2 pt-[calc(env(safe-area-inset-top)+8px)] border-b border-gray-100 dark:border-white/10 bg-white/95 dark:bg-black/95 backdrop-blur-xl w-full transition-all duration-200">
+    <div 
+      className="fixed inset-0 z-50 bg-white dark:bg-background flex flex-col w-full max-w-[520px] mx-auto overflow-hidden" 
+      style={{ height: viewportHeight }}
+    >
+      <div className="flex-shrink-0 z-50 flex items-center justify-between gap-3 p-2 pt-[calc(env(safe-area-inset-top)+8px)] border-b border-gray-100 dark:border-white/10 bg-white/95 dark:bg-black/95 backdrop-blur-xl w-full transition-all duration-200">
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <button onClick={() => router.back()} className="p-2 -ml-1 text-blue-500 hover:text-blue-600 transition-colors bg-transparent border-none outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="w-[26px] h-[26px]">
@@ -409,7 +442,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           </div>
       )}
 
-      <div className="flex-1 w-full p-3 space-y-1 pb-32 min-h-0">
+      <div className="flex-1 overflow-y-auto w-full p-3 pb-4 space-y-1 relative" style={{ WebkitOverflowScrolling: 'touch' }}>
         <AnimatePresence initial={false} mode="popLayout">
         {messages.map((msg, index) => {
           const isMe = msg.sender_id === user?.id;
@@ -456,10 +489,10 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           );
         })}
         </AnimatePresence>
-        <div ref={messagesEndRef} /> 
+        <div ref={messagesEndRef} className="h-1" /> 
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] w-full max-w-[520px] mx-auto">
+      <div className="flex-shrink-0 z-50 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] w-full max-w-[520px] mx-auto">
         <form onSubmit={(e) => { e.preventDefault(); handleSend(e); }} className="flex items-end gap-2 w-full">
           <textarea ref={textareaRef} value={newMessage} onChange={(e) => { setNewMessage(e.target.value); handleTyping(); }} onKeyDown={handleKeyDown} placeholder={t("chat_placeholder") || "Написать сообщение..."} className="flex-1 bg-gray-100 dark:bg-gray-800 text-black dark:text-white rounded-2xl px-4 py-3 text-sm resize-none max-h-32 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white min-w-0 w-full" rows={1} style={{ minHeight: "44px" }} />
           <button type="submit" disabled={!newMessage.trim() || isSending} className="flex-shrink-0 w-11 h-11 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-transform active:scale-95">
