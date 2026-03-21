@@ -24,8 +24,17 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   const [channel, setChannel] = useState(null);
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
-  const lastTypingTimeRef = useRef(0);
+  const scrollToBottom = (smooth = false) => {
+    if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: smooth ? 'smooth' : 'instant', block: 'end' });
+    }
+  };
+
+  useEffect(() => {
+    // Scroll instantly on initial load so user starts at the newest message seamlessly
+    const timer = setTimeout(() => scrollToBottom(false), 50);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     // Expand Telegram WebApp to claim full space
@@ -302,7 +311,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           is_read: false
        };
        setMessages(prev => [...prev, optimisticMessage]);
-       setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+       setTimeout(() => scrollToBottom(true), 50);
 
        // Send Message
        if (isTelegram) {
@@ -385,7 +394,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
   return (
     <div className="fixed inset-0 z-50 bg-white dark:bg-background flex flex-col w-full max-w-[520px] mx-auto overflow-hidden" style={{ height: 'var(--tg-viewport-stable-height, 100dvh)' }}>
-      <div className="flex-shrink-0 z-50 flex items-center justify-between gap-3 p-2 pt-[calc(env(safe-area-inset-top)+8px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black w-full shadow-sm">
+      <div className="flex-shrink-0 z-50 flex items-center justify-between gap-3 p-2 pt-[calc(env(safe-area-inset-top)+8px)] border-b border-gray-100 dark:border-white/10 bg-white/90 dark:bg-black/90 backdrop-blur-xl w-full shadow-sm">
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <button onClick={() => router.back()} className="p-2 -ml-1 text-blue-500 hover:text-blue-600 transition-colors bg-transparent border-none outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="w-[26px] h-[26px]">
