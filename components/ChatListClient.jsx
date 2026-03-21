@@ -137,7 +137,7 @@ export default function ChatListClient() {
       
       setUser(user);
 
-      // Fetch ALL conversations via RLS
+      // Fetch ALL conversations via RLS with embedded messages
       const { data, error } = await supabase
         .from("conversations")
         .select(`
@@ -149,30 +149,24 @@ export default function ChatListClient() {
           buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
           seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url),
           deleted_by_buyer,
-          deleted_by_seller
+          deleted_by_seller,
+          messages (content, created_at, sender_id)
         `)
         .or(`and(buyer_id.eq.${user.id},deleted_by_buyer.eq.false),and(seller_id.eq.${user.id},deleted_by_seller.eq.false)`)
         .order("updated_at", { ascending: false })
+        .order("created_at", { foreignTable: "messages", ascending: false })
+        .limit(1, { foreignTable: "messages" })
         .limit(50);
 
       if (error) {
         console.error("Error fetching chats:", error);
         setFetchError(error.message);
       } else {
-        // Fetch last message for each conversation
-        const conversationsWithMessages = await Promise.all(
-          (data || []).map(async (conv) => {
-            const { data: lastMsg } = await supabase
-              .from("messages")
-              .select("content, created_at, sender_id")
-              .eq("conversation_id", conv.id)
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .single();
-            
-            return { ...conv, lastMessage: lastMsg };
-          })
-        );
+        const conversationsWithMessages = (data || []).map(conv => {
+            const msgs = conv.messages || [];
+            delete conv.messages;
+            return { ...conv, lastMessage: msgs.length > 0 ? msgs[0] : null };
+        });
         
         setConversations(conversationsWithMessages);
         
