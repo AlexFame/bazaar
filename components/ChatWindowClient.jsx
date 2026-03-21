@@ -27,8 +27,32 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   const typingTimeoutRef = useRef(null);
   const lastTypingTimeRef = useRef(0);
 
-  // Auto-scroll removed based on user feedback to prevent page jumping. 
-  // We now rely purely on manual scrolling or scrolling when the user manually sends a message.
+  useEffect(() => {
+    // Expand Telegram WebApp to claim full space
+    if (typeof window !== "undefined" && window.Telegram?.WebApp) {
+        window.Telegram.WebApp.expand();
+    }
+
+    // CRITICAL: Lock the OS from scrolling the document body to prevent the 
+    // "bouncing page" / "text riding up" bug when the keyboard opens in WebKit.
+    document.body.style.position = 'fixed';
+    document.body.style.top = '0';
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.bottom = '0';
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+
+    return () => {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.bottom = '';
+        document.body.style.overflow = '';
+        document.body.style.overscrollBehavior = '';
+    };
+  }, []);
 
   useEffect(() => {
     const initChat = async () => {
@@ -360,7 +384,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   if (loading) return <ChatDetailSkeleton />;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white dark:bg-background flex flex-col w-full max-w-[520px] mx-auto overflow-hidden h-[100dvh]">
+    <div className="fixed inset-0 z-50 bg-white dark:bg-background flex flex-col w-full max-w-[520px] mx-auto overflow-hidden" style={{ height: 'var(--tg-viewport-stable-height, 100dvh)' }}>
       <div className="flex-shrink-0 z-50 flex items-center justify-between gap-3 p-2 pt-[calc(env(safe-area-inset-top)+8px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black w-full shadow-sm">
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <button onClick={() => router.back()} className="p-2 -ml-1 text-blue-500 hover:text-blue-600 transition-colors bg-transparent border-none outline-none">
