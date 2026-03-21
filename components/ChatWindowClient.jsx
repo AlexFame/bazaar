@@ -433,12 +433,14 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
           </div>
       )}
 
-      <div className="flex-1 overflow-y-auto w-full p-3 pb-4 space-y-1 relative" style={{ WebkitOverflowScrolling: 'touch' }}>
-        {messages.map((msg, index) => {
+      <div className="flex-1 overflow-y-auto w-full p-3 pb-4 flex flex-col-reverse relative" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div ref={messagesEndRef} className="h-1 flex-shrink-0" />
+        {messages.slice().reverse().map((msg, index) => {
+           const originalIndex = messages.length - 1 - index;
            const isMe = msg.sender_id === user?.id;
-           const showDate = index === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[index - 1].created_at).toDateString();
+           const showDate = originalIndex === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[originalIndex - 1].created_at).toDateString();
            return (
-            <div key={msg.id} className="flex flex-col w-full">
+            <div key={msg.id} className="flex flex-col w-full flex-shrink-0">
                 {showDate && (
                     <div className="flex justify-center my-4"><span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full">{new Date(msg.created_at).toLocaleDateString([], { day: 'numeric', month: 'long' })}</span></div>
                 )}
@@ -478,7 +480,6 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
             </div>
           );
         })}
-        <div ref={messagesEndRef} className="h-1" /> 
       </div>
 
       <div className="flex-shrink-0 z-50 bg-white dark:bg-black border-t border-gray-100 dark:border-white/10 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)] w-full max-w-[520px] mx-auto">
