@@ -7,7 +7,6 @@ import { UserService } from "@/lib/services/UserService";
 import Link from "next/link";
 import { useLang } from "@/lib/i18n-client";
 import { ChatDetailSkeleton } from "./SkeletonLoader";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function ChatWindowClient({ conversationId, listingId, sellerId }) {
   const router = useRouter();
@@ -23,7 +22,6 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   const [error, setError] = useState(null);
   const [otherUserTyping, setOtherUserTyping] = useState(false);
   const [channel, setChannel] = useState(null);
-  const [viewportHeight, setViewportHeight] = useState('100vh');
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -31,43 +29,6 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
 
   // Auto-scroll removed based on user feedback to prevent page jumping. 
   // We now rely purely on manual scrolling or scrolling when the user manually sends a message.
-
-  useEffect(() => {
-    // Advanced Keyboard Handling for flawless native UX
-    let isMounted = true;
-    
-    if (typeof window !== "undefined") {
-        if (window.Telegram?.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.expand();
-            const updateHeight = () => {
-                if (!isMounted) return;
-                setViewportHeight(`${tg.viewportStableHeight || window.innerHeight}px`);
-                // Briefly scroll to bottom on resize to keep input visible correctly
-                setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }), 50);
-            };
-            tg.onEvent('viewportChanged', updateHeight);
-            updateHeight();
-            return () => {
-                isMounted = false;
-                tg.offEvent('viewportChanged', updateHeight);
-            };
-        } else if (window.visualViewport) {
-            const updateHeightVis = () => {
-                if (!isMounted) return;
-                setViewportHeight(`${window.visualViewport.height}px`);
-            };
-            window.visualViewport.addEventListener('resize', updateHeightVis);
-            updateHeightVis();
-            return () => {
-                isMounted = false;
-                window.visualViewport.removeEventListener('resize', updateHeightVis);
-            };
-        } else {
-            setViewportHeight(`${window.innerHeight}px`);
-        }
-    }
-  }, []);
 
   useEffect(() => {
     const initChat = async () => {
@@ -399,11 +360,8 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
   if (loading) return <ChatDetailSkeleton />;
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-white dark:bg-background flex flex-col w-full max-w-[520px] mx-auto overflow-hidden" 
-      style={{ height: viewportHeight }}
-    >
-      <div className="flex-shrink-0 z-50 flex items-center justify-between gap-3 p-2 pt-[calc(env(safe-area-inset-top)+8px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black w-full transition-all duration-200">
+    <div className="fixed inset-0 z-50 bg-white dark:bg-background flex flex-col w-full max-w-[520px] mx-auto overflow-hidden h-[100dvh]">
+      <div className="flex-shrink-0 z-50 flex items-center justify-between gap-3 p-2 pt-[calc(env(safe-area-inset-top)+8px)] border-b border-gray-100 dark:border-white/10 bg-white dark:bg-black w-full shadow-sm">
         <div className="flex items-center gap-1.5 flex-1 min-w-0">
             <button onClick={() => router.back()} className="p-2 -ml-1 text-blue-500 hover:text-blue-600 transition-colors bg-transparent border-none outline-none">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="w-[26px] h-[26px]">
@@ -443,12 +401,11 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
       )}
 
       <div className="flex-1 overflow-y-auto w-full p-3 pb-4 space-y-1 relative" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <AnimatePresence initial={false} mode="popLayout">
         {messages.map((msg, index) => {
-          const isMe = msg.sender_id === user?.id;
-          const showDate = index === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[index - 1].created_at).toDateString();
-          return (
-            <motion.div key={msg.id} initial={{ opacity: 0, scale: 0.9, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ type: "spring", stiffness: 400, damping: 25 }} className="flex flex-col w-full">
+           const isMe = msg.sender_id === user?.id;
+           const showDate = index === 0 || new Date(msg.created_at).toDateString() !== new Date(messages[index - 1].created_at).toDateString();
+           return (
+            <div key={msg.id} className="flex flex-col w-full">
                 {showDate && (
                     <div className="flex justify-center my-4"><span className="text-[10px] bg-gray-100 dark:bg-gray-800 text-gray-500 px-2 py-1 rounded-full">{new Date(msg.created_at).toLocaleDateString([], { day: 'numeric', month: 'long' })}</span></div>
                 )}
@@ -485,10 +442,9 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                   )}
 
                 </div>
-            </motion.div>
+            </div>
           );
         })}
-        </AnimatePresence>
         <div ref={messagesEndRef} className="h-1" /> 
       </div>
 
