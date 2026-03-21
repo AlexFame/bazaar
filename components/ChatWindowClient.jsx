@@ -35,9 +35,8 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
     }
   };
 
-  useLayoutEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // Auto-scroll removed based on user feedback to prevent page jumping. 
+  // We now rely purely on manual scrolling or scrolling when the user manually sends a message.
 
   useEffect(() => {
     const initChat = async () => {
