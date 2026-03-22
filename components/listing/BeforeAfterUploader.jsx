@@ -162,7 +162,7 @@ export default function BeforeAfterUploader({ value, onChange }) {
         </div>
       </div>
       <div className="text-[10px] text-gray-400 mt-1.5 text-center leading-tight">
-        {t("before_after_hint") || "Загрузите фото 'До' и 'После', чтобы показать результат работы в слайдере."}
+        {t("before_after_hint") || "Загрузите фото 'До' и 'После', чтобы показать результат. Поддерживаются видео (до 30 МБ)."}
       </div>
     </div>
   );
