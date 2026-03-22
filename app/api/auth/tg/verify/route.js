@@ -77,58 +77,59 @@ async function verifyHandler(req) {
 
     let authUser;
 
-    // 2. Check for existing Auth User by email
-    const { data: { users }, error: listErr } = await supa.auth.admin.listUsers();
-    if (listErr) throw listErr;
-    
-    let existingAuthUser = users.find(u => u.email === fakeEmail);
-
     if (existingProfile) {
-        // Case A: Profile exists. We MUST match this ID to keep data access.
-        
+        // FAST PATH: Get AuthUser directly by ID (O(1)). Eliminates fetching all users!
+        const { data: userResponse } = await supa.auth.admin.getUserById(existingProfile.id);
+        const existingAuthUser = userResponse?.user;
+
         if (existingAuthUser) {
-            if (existingAuthUser.id === existingProfile.id) {
-                // Perfect match
-                authUser = existingAuthUser;
-            } else {
-                // Mismatch! The auth user is wrong (likely new/empty). The profile is old (has data).
-                // Delete the wrong auth user so we can recreate it with the correct ID
-                console.warn(`Mismatch! Deleting wrong auth user ${existingAuthUser.id} to restore profile ${existingProfile.id}`);
-                await supa.auth.admin.deleteUser(existingAuthUser.id);
-                
-                // Re-create with correct ID
-                const { data: newUser, error: createErr } = await supa.auth.admin.createUser({
-                    id: existingProfile.id, // RESTORE OLD ID
-                    email: fakeEmail,
-                    email_confirm: true,
-                    user_metadata: { tg_user_id, tg_username }
-                });
-                if (createErr) throw createErr;
-                authUser = newUser.user;
-            }
+            authUser = existingAuthUser;
         } else {
-            // Profile exists, but no Auth User (Orphan). Restore Auth User.
-            console.log(`Restoring orphan profile ${existingProfile.id}`);
+            // Profile exists, but Auth User doesn't. Restore the Auth User with correct ID.
             const { data: newUser, error: createErr } = await supa.auth.admin.createUser({
-                id: existingProfile.id, // RESTORE OLD ID
+                id: existingProfile.id,
                 email: fakeEmail,
                 email_confirm: true,
                 user_metadata: { tg_user_id, tg_username }
             });
-            if (createErr) throw createErr;
-            authUser = newUser.user;
+            
+            if (createErr) {
+                // If it fails with "Email exists", it means another mismatched Auth User holds the email.
+                if (createErr.status === 422 || createErr.message.includes('already exists') || createErr.code === 'user_already_exists') {
+                    console.warn(`Email already taken by a mismatched user. Resolving via listUsers fallback...`);
+                    const { data: { users } } = await supa.auth.admin.listUsers();
+                    const badUser = users.find(u => u.email === fakeEmail);
+                    if (badUser) {
+                         await supa.auth.admin.deleteUser(badUser.id);
+                         const { data: retryUser, error: retryErr } = await supa.auth.admin.createUser({
+                             id: existingProfile.id, email: fakeEmail, email_confirm: true, user_metadata: { tg_user_id, tg_username }
+                         });
+                         if (retryErr) throw retryErr;
+                         authUser = retryUser.user;
+                    } else throw createErr;
+                } else throw createErr;
+            } else {
+                authUser = newUser.user;
+            }
         }
     } else {
-        // Case B: No profile. Standard flow.
-        if (existingAuthUser) {
-            authUser = existingAuthUser;
+        // FAST PATH: First time login. Create user directly.
+        const { data: newUser, error: createErr } = await supa.auth.admin.createUser({
+            email: fakeEmail,
+            email_confirm: true,
+            user_metadata: { tg_user_id, tg_username }
+        });
+        
+        if (createErr) {
+            // If email exists, it's an orphaned Auth User without a Profile (edge case).
+            if (createErr.status === 422 || createErr.message.includes('already exists') || createErr.code === 'user_already_exists') {
+                console.warn(`Orphaned Auth User detected. Resolving via listUsers fallback...`);
+                const { data: { users } } = await supa.auth.admin.listUsers();
+                const orphanUser = users.find(u => u.email === fakeEmail);
+                if (orphanUser) authUser = orphanUser;
+                else throw createErr;
+            } else throw createErr;
         } else {
-            const { data: newUser, error: createErr } = await supa.auth.admin.createUser({
-                email: fakeEmail, // Auto ID
-                email_confirm: true,
-                user_metadata: { tg_user_id, tg_username }
-            });
-            if (createErr) throw createErr;
             authUser = newUser.user;
         }
     }
