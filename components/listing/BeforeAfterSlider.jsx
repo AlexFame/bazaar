@@ -9,6 +9,25 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
   const [zoomedImage, setZoomedImage] = useState(null);
   const [mounted, setMounted] = useState(false);
 
+  const isVideo = (url) => typeof url === 'string' && !!url.match(/\.(mp4|webm|mov|mkv)(\?.*)?$/i);
+
+  const renderMedia = (src, className, isZoomed = false) => {
+      if (isVideo(src)) {
+          return (
+              <video 
+                  src={src} 
+                  className={className}
+                  autoPlay 
+                  loop 
+                  muted={!isZoomed} 
+                  playsInline 
+                  controls={isZoomed}
+              />
+          );
+      }
+      return <img src={src} alt="Media" className={className} />;
+  };
+
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -43,11 +62,7 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
            className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 dark:bg-neutral-800 border border-black/5 dark:border-white/5 cursor-zoom-in active:scale-[0.98] transition-transform"
            onClick={() => handleZoom(beforeImage)}
          >
-            <img
-              src={beforeImage}
-              alt="Before"
-              className="w-full h-full object-cover pointer-events-none"
-            />
+            {renderMedia(beforeImage, "w-full h-full object-cover pointer-events-none")}
             <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider backdrop-blur-sm">
                 {t("label_before") || "До"}
             </div>
@@ -58,11 +73,7 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
            className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 dark:bg-neutral-800 border border-black/5 dark:border-white/5 cursor-zoom-in active:scale-[0.98] transition-transform"
            onClick={() => handleZoom(afterImage)}
          >
-            <img
-              src={afterImage}
-              alt="After"
-              className="w-full h-full object-cover pointer-events-none"
-            />
+            {renderMedia(afterImage, "w-full h-full object-cover pointer-events-none")}
             <div className="absolute top-2 left-2 bg-green-600/80 text-white text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase tracking-wider backdrop-blur-sm">
                 {t("label_after") || "Після"}
             </div>
@@ -100,15 +111,15 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
                   </button>
                 </div>
 
-                <img
-                  src={zoomedImage}
-                  alt="Zoomed"
-                  className="w-full max-h-[75dvh] object-contain rounded-lg shadow-2xl cursor-zoom-out"
+                <div 
+                  className="w-full max-h-[75dvh] flex justify-center cursor-zoom-out"
                   onClick={(e) => {
                     e.stopPropagation();
                     setZoomedImage(null);
                   }}
-                />
+                >
+                  {renderMedia(zoomedImage, "max-h-[75dvh] object-contain rounded-lg shadow-2xl", true)}
+                </div>
               </motion.div>
             </motion.div>
           )}

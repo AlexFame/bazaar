@@ -12,12 +12,46 @@ export default function BeforeAfterUploader({ value, onChange }) {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const isVideo = (srcObj) => {
+      if (!srcObj) return false;
+      const url = typeof srcObj === 'string' ? srcObj : (srcObj.url || "");
+      const file = srcObj.file;
+      if (file && file.type && file.type.startsWith('video/')) return true;
+      return !!url.match(/\.(mp4|webm|mov|mkv)(\?.*)?$/i);
+  };
+
+  const renderPreview = (srcObj, type) => {
+      const url = typeof srcObj === 'string' ? srcObj : srcObj.url;
+      if (isVideo(srcObj)) {
+          return <video src={url} className="w-full h-full object-cover" autoPlay loop muted playsInline />;
+      }
+      return <img src={url} className="w-full h-full object-cover" alt={type} />;
+  };
+
   const handleFileChange = async (e, type) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 30 * 1024 * 1024) {
+        alert(t("alert_video_too_large") || "Размер файла не должен превышать 30 МБ");
+        e.target.value = ""; // Reset input
+        return;
+    }
+
     setIsLoading(true);
     try {
+      if (file.type.startsWith("video/")) {
+          // Bypass heavy JS compression for videos and rely on OS/Telegram native compression
+          const newData = { ...(value || {}) };
+          newData[type] = {
+              file: file,
+              url: URL.createObjectURL(file) 
+          };
+          onChange(newData);
+          setIsLoading(false);
+          return;
+      }
+
       const options = {
         maxSizeMB: 1,
         maxWidthOrHeight: 1920,
@@ -73,15 +107,11 @@ export default function BeforeAfterUploader({ value, onChange }) {
           
           {value?.before ? (
             <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-white/10">
-              <img 
-                src={value.before.url || value.before} 
-                alt="Before" 
-                className="w-full h-full object-cover" 
-              />
+              {renderPreview(value.before, "Before")}
               <button
                 type="button"
                 onClick={() => removeImage('before')}
-                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70"
+                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 z-10 hover:bg-black/70"
               >
                 <XMarkIcon className="w-4 h-4" />
               </button>
@@ -92,7 +122,7 @@ export default function BeforeAfterUploader({ value, onChange }) {
               <span className="text-[10px] text-gray-500">{t("upload") || "Загрузить"}</span>
               <input 
                 type="file" 
-                accept="image/*" 
+                accept="image/*,video/mp4,video/quicktime,video/webm" 
                 className="hidden" 
                 onChange={(e) => handleFileChange(e, 'before')}
               />
@@ -108,15 +138,11 @@ export default function BeforeAfterUploader({ value, onChange }) {
 
           {value?.after ? (
             <div className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 dark:border-white/10">
-              <img 
-                src={value.after.url || value.after} 
-                alt="After" 
-                className="w-full h-full object-cover" 
-              />
+              {renderPreview(value.after, "After")}
               <button
                 type="button"
                 onClick={() => removeImage('after')}
-                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 hover:bg-black/70"
+                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 z-10 hover:bg-black/70"
               >
                 <XMarkIcon className="w-4 h-4" />
               </button>
@@ -127,7 +153,7 @@ export default function BeforeAfterUploader({ value, onChange }) {
               <span className="text-[10px] text-gray-500">{t("upload") || "Загрузить"}</span>
               <input 
                 type="file" 
-                accept="image/*" 
+                accept="image/*,video/mp4,video/quicktime,video/webm" 
                 className="hidden" 
                 onChange={(e) => handleFileChange(e, 'after')}
               />
