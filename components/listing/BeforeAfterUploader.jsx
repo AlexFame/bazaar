@@ -22,7 +22,19 @@ export default function BeforeAfterUploader({ value, onChange }) {
 
   const renderPreview = (srcObj, type) => {
       const url = typeof srcObj === 'string' ? srcObj : srcObj.url;
+      const isLocalFile = typeof srcObj !== 'string' && srcObj.file;
+
       if (isVideo(srcObj)) {
+          // iOS WKWebView (Telegram) cannot play blob: videos. 
+          // Show a placeholder for local files, and real video for remote files.
+          if (isLocalFile) {
+              return (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-white p-2 text-center">
+                     <span className="text-[10px] font-medium opacity-70 mb-1">{t("video_selected") || "Видео выбрано"}</span>
+                     <span className="text-[8px] opacity-50 truncate w-full">{srcObj.file.name}</span>
+                  </div>
+              );
+          }
           return <video src={url} className="w-full h-full object-cover" autoPlay loop muted playsInline />;
       }
       return <img src={url} className="w-full h-full object-cover" alt={type} />;
