@@ -557,10 +557,22 @@ export default function CreateListingClient({ onCreated, editId }) {
         const folderName = `listing-${currentId}`;
         const filePath = `${folderName}/${fileName}`;
 
+        let mimeType = img.file.type;
+        if (!mimeType) {
+            const ext = fileExt.toLowerCase();
+            if (ext === 'mp4') mimeType = 'video/mp4';
+            else if (ext === 'mov') mimeType = 'video/quicktime';
+            else if (ext === 'webm') mimeType = 'video/webm';
+            else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
+            else if (ext === 'png') mimeType = 'image/png';
+            else if (ext === 'webp') mimeType = 'image/webp';
+            else mimeType = 'application/octet-stream';
+        }
+
         const { error: uploadError } = await supabase.storage
           .from("listing-images")
           .upload(filePath, img.file, {
-              contentType: img.file.type,
+              contentType: mimeType,
               upsert: true
           });
 
@@ -628,10 +640,23 @@ export default function CreateListingClient({ onCreated, editId }) {
               if (imgObj.file) {
                  const fileExt = imgObj.file.name.split('.').pop();
                  const uniqueFileName = `${listingId}_ba_${Math.random().toString(36).substring(2)}.${fileExt}`;
+                 
+                 let mimeType = imgObj.file.type;
+                 if (!mimeType) {
+                     const ext = fileExt.toLowerCase();
+                     if (ext === 'mp4') mimeType = 'video/mp4';
+                     else if (ext === 'mov') mimeType = 'video/quicktime';
+                     else if (ext === 'webm') mimeType = 'video/webm';
+                     else if (ext === 'jpg' || ext === 'jpeg') mimeType = 'image/jpeg';
+                     else if (ext === 'png') mimeType = 'image/png';
+                     else if (ext === 'webp') mimeType = 'image/webp';
+                     else mimeType = 'application/octet-stream';
+                 }
+
                  const { data, error } = await supabase.storage
                     .from('listing-images')
                     .upload(`listing-${editId || listingId}/${uniqueFileName}`, imgObj.file, {
-                        contentType: imgObj.file.type,
+                        contentType: mimeType,
                         upsert: true
                     });
                  
