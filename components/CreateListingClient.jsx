@@ -559,7 +559,10 @@ export default function CreateListingClient({ onCreated, editId }) {
 
         const { error: uploadError } = await supabase.storage
           .from("listing-images")
-          .upload(filePath, img.file);
+          .upload(filePath, img.file, {
+              contentType: img.file.type,
+              upsert: true
+          });
 
         if (uploadError) {
           console.error("Upload error:", uploadError);
@@ -627,7 +630,10 @@ export default function CreateListingClient({ onCreated, editId }) {
                  const uniqueFileName = `${listingId}_ba_${Math.random().toString(36).substring(2)}.${fileExt}`;
                  const { data, error } = await supabase.storage
                     .from('listing-images')
-                    .upload(`listing-${editId || listingId}/${uniqueFileName}`, imgObj.file);
+                    .upload(`listing-${editId || listingId}/${uniqueFileName}`, imgObj.file, {
+                        contentType: imgObj.file.type,
+                        upsert: true
+                    });
                  
                   if (error) throw error;
                   return data.path; 
