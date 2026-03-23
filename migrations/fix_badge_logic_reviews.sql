@@ -20,7 +20,7 @@ begin
 
     -- 2. "Top Seller" now requires 5+ POSITIVE REVIEWS (Rating >= 4)
     select count(*) into review_count from public.reviews 
-    where target_id = user_id and rating >= 4;
+    where target_user_id = user_id and rating >= 4;
     
     if review_count >= 5 then
         new_badges := array_append(new_badges, 'top_seller');
