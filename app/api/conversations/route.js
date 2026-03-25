@@ -1,5 +1,6 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
+import { withRateLimit } from '@/lib/ratelimit';
 
 // Reusable Telegram Auth Check (should be in a lib but putting here for speed)
 function checkTelegramAuth(initData, botToken) {
@@ -23,7 +24,7 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(req) {
+async function conversationsHandler(req) {
     try {
         const body = await req.json();
         const { initData } = body;
@@ -95,3 +96,5 @@ export async function POST(req) {
         return new Response(JSON.stringify({ error: e.message }), { status: 500 });
     }
 }
+
+export const POST = withRateLimit(conversationsHandler, { limit: 20, window: '30 s' });

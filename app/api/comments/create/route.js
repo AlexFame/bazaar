@@ -50,7 +50,7 @@ async function commentHandler(req) {
         const { data: profile } = await supaAdmin
              .from('profiles')
              .select('id')
-             .eq('telegram_id', tgUser.id)
+             .eq('tg_user_id', tgUser.id)
              .single();
         
         if (!profile) {

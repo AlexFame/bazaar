@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supaAdmin } from "@/lib/supabaseAdmin";
 import crypto from 'crypto';
+import { withRateLimit } from '@/lib/ratelimit';
 
 // Auth Helper
 function checkTelegramAuth(initData, botToken) {
@@ -30,7 +31,7 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(req) {
+async function myListingsHandler(req) {
   try {
     const { initData, tab } = await req.json();
     
@@ -87,3 +88,5 @@ export async function POST(req) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
+
+export const POST = withRateLimit(myListingsHandler, { limit: 20, window: '30 s' });

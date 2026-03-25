@@ -1,27 +1,53 @@
 import { NextResponse } from "next/server";
 import { supaAdmin } from "@/lib/supabaseAdmin";
-// import { getUserId } from "@/lib/telegram"; // Client-side only
+import crypto from 'crypto';
+import { withRateLimit } from '@/lib/ratelimit';
 
-const supabase = supaAdmin();
-export async function POST(req) {
+function checkTelegramAuth(initData, botToken) {
+  if (!initData) return null;
+  const url = new URLSearchParams(initData);
+  const hash = url.get('hash');
+  url.delete('hash');
+  const params = [...url.entries()].sort(([a],[b]) => a.localeCompare(b));
+  const dataCheckString = params.map(([k,v]) => `${k}=${v}`).join('\n');
+  const secret = crypto.createHmac('sha256', 'WebAppData').update(botToken.trim()).digest();
+  const check = crypto.createHmac('sha256', secret).update(dataCheckString).digest('hex');
+  if (check !== hash) return null;
+  const obj = Object.fromEntries(url.entries());
+  if (obj.user) { try { obj.user = JSON.parse(obj.user); } catch (e) {} }
+  return obj;
+}
+
+async function listingDevHandler(req) {
   try {
     const body = await req.json();
     if (!body) {
       return NextResponse.json({ error: "Пустой запрос" }, { status: 400 });
     }
 
-    // Получаем user_id из Telegram Mini App (passed in body for dev/api)
-    const owner_id = body.owner_id || null;
+    // AUTH CHECK — require Telegram initData
+    const { initData } = body;
+    if (!initData || !process.env.TG_BOT_TOKEN) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    // Если нет owner_id — пользователь не открыл через Telegram
-    if (!owner_id) {
-      return NextResponse.json(
-        {
-          error:
-            "Открой мини-аппку через нашего Telegram-бота, чтобы публиковать объявления.",
-        },
-        { status: 401 }
-      );
+    const authData = checkTelegramAuth(initData, process.env.TG_BOT_TOKEN);
+    if (!authData?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const tgUserId = Number(authData.user.id);
+    const supabase = supaAdmin();
+
+    // Resolve profile from Telegram user
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('tg_user_id', tgUserId)
+      .single();
+
+    if (!profile) {
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
     // Данные объявления
@@ -32,11 +58,7 @@ export async function POST(req) {
       description: body.description || null,
       contacts: body.contacts || null,
       location_text: body.location || null,
-
-      // единственное новое поле:
-      owner_id: owner_id,
-
-      // категория — если есть в body, иначе null
+      owner_id: profile.id, // Use verified profile ID, not user-supplied
       category_key: body.category_key || null,
     };
 
@@ -64,3 +86,5 @@ export async function POST(req) {
     );
   }
 }
+
+export const POST = withRateLimit(listingDevHandler, { limit: 10, window: '30 s' });

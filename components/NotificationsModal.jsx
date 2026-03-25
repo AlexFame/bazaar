@@ -56,7 +56,7 @@ export default function NotificationsModal({ isOpen, onClose, onUpdate }) {
               await fetch('/api/notifications', {
                   method: 'PATCH',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ id: notification.id })
+                  body: JSON.stringify({ id: notification.id, initData: window.Telegram?.WebApp?.initData })
               });
               
               // Update local state

@@ -1,5 +1,6 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
+import { withRateLimit } from '@/lib/ratelimit';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -22,7 +23,7 @@ function checkTelegramAuth(initData, botToken) {
   return obj;
 }
 
-export async function POST(req) {
+async function detailHandler(req) {
     try {
         const body = await req.json();
         const { initData, conversationId } = body;
@@ -93,3 +94,5 @@ export async function POST(req) {
         return new Response(JSON.stringify({ error: e.message }), { status: 500 });
     }
 }
+
+export const POST = withRateLimit(detailHandler, { limit: 30, window: '30 s' });
