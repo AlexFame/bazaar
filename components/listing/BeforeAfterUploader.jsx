@@ -36,7 +36,9 @@ export default function BeforeAfterUploader({ value, onChange }) {
                   </div>
               );
           }
-          return <video src={url} className="w-full h-full object-cover" autoPlay loop muted playsInline />;
+          // Append #t=0.001 to force WKWebView to load the first frame as poster
+          const videoSrc = url.includes('#') ? url : `${url}#t=0.001`;
+          return <video key={videoSrc} src={videoSrc} className="w-full h-full object-cover" autoPlay loop muted playsInline preload="metadata" />;
       }
       return <img src={url} className="w-full h-full object-cover" alt={type} />;
   };

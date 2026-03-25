@@ -13,15 +13,20 @@ export default function BeforeAfterSlider({ beforeImage, afterImage }) {
 
   const renderMedia = (src, className, isZoomed = false) => {
       if (isVideo(src)) {
+          // Force WKWebView to load first frame by appending #t=0.001
+          const videoSrc = src.includes('#') ? src : `${src}#t=0.001`;
           return (
               <video 
-                  src={src} 
+                  // Keys force re-render if the source changes
+                  key={videoSrc}
+                  src={videoSrc} 
                   className={className}
-                  autoPlay 
+                  autoPlay={true}
                   loop 
-                  muted={!isZoomed} 
+                  muted={true} // WKWebView requires autoplay videos to be muted
                   playsInline 
                   controls={isZoomed}
+                  preload="metadata"
               />
           );
       }
