@@ -2,6 +2,7 @@ import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
 import { withRateLimit } from '@/lib/ratelimit';
 import { listingDeleteSchema, validateBody } from '@/lib/validation';
+import { revalidatePath } from 'next/cache';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -78,6 +79,9 @@ async function deleteHandler(req) {
 
     const { error } = await supa.from('listings').delete().eq('id', id);
     if (error) throw error;
+
+    revalidatePath('/', 'page');
+    revalidatePath('/(main)', 'layout');
 
     return new Response(JSON.stringify({ success: true }), { status: 200 });
 

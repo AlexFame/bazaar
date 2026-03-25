@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { sanitizeTitle, sanitizeContent } from '@/lib/security';
 import { withRateLimit } from '@/lib/ratelimit';
 import { sendNotification } from '@/lib/bot';
+import { revalidatePath } from 'next/cache';
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -208,6 +209,10 @@ async function saveHandler(req) {
            }
        })();
     }
+
+    // Invalidate the main feed cache
+    revalidatePath('/', 'page');
+    revalidatePath('/(main)', 'layout'); 
 
     return new Response(JSON.stringify({ success: true }), { 
       status: 200,
