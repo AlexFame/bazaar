@@ -62,6 +62,12 @@ export default function NewListing() {
         location: form.location.trim() || null,
       };
 
+      // Add Telegram auth
+      const tg = window.Telegram?.WebApp;
+      if (tg?.initData) {
+        payload.initData = tg.initData;
+      }
+
       // ВАЖНО: сюда ставим /api/listing-dev
       const res = await fetch("/api/listing-dev", {
         method: "POST",
