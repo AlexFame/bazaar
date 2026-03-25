@@ -8,6 +8,18 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.supabase.co',
       },
+      {
+        protocol: 'https',
+        hostname: 't.me',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.telegram.org',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.telegram-cdn.org',
+      }
     ],
   },
   // Enable standalone output for Docker
@@ -26,7 +38,7 @@ const nextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://telegram.org",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://*.supabase.co https://t.me",
+              "img-src 'self' data: blob: https://*.supabase.co https://t.me https://*.telegram.org https://*.telegram-cdn.org",
               "connect-src 'self' https://*.supabase.co https://translate.googleapis.com wss://*.supabase.co",
               "frame-ancestors 'none'",
               "base-uri 'self'",

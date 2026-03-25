@@ -144,19 +144,35 @@ async function verifyHandler(req) {
     
     let avatar_url = data.user.photo_url || null;
 
-    // If initData didn't provide a photo, let's try to fetch it via the Bot API
+    // If initData didn't provide a photo, let's try to fetch it via the Bot API and store safely
     if (!avatar_url) {
         try {
             const photosRes = await fetch(`https://api.telegram.org/bot${process.env.TG_BOT_TOKEN}/getUserProfilePhotos?user_id=${tg_user_id}&limit=1`);
             const photosData = await photosRes.json();
             if (photosData.ok && photosData.result.total_count > 0) {
-                // Get the largest size of the first photo
                 const photoSizes = photosData.result.photos[0];
-                const bestPhoto = photoSizes[photoSizes.length - 1]; // Last is usually largest, or first is smallest. Actually photos is array of sizes.
+                const bestPhoto = photoSizes[photoSizes.length - 1]; 
                 const fileRes = await fetch(`https://api.telegram.org/bot${process.env.TG_BOT_TOKEN}/getFile?file_id=${bestPhoto.file_id}`);
                 const fileData = await fileRes.json();
                 if (fileData.ok) {
-                    avatar_url = `https://api.telegram.org/file/bot${process.env.TG_BOT_TOKEN}/${fileData.result.file_path}`;
+                    const tgFileUrl = `https://api.telegram.org/file/bot${process.env.TG_BOT_TOKEN}/${fileData.result.file_path}`;
+                    // CRITICAL: DO NOT save tgFileUrl directly to DB as it contains the Bot Token!
+                    // Download and upload to Supabase:
+                    const imageRes = await fetch(tgFileUrl);
+                    const arrayBuffer = await imageRes.arrayBuffer();
+                    
+                    const filePath = `avatars/${tg_user_id}_${Date.now()}.jpg`;
+                    const { error: uploadErr } = await supa.storage
+                        .from('listing-images') // reuse existing public bucket
+                        .upload(filePath, arrayBuffer, {
+                            contentType: 'image/jpeg',
+                            upsert: true
+                        });
+                        
+                    if (!uploadErr) {
+                        const { data: { publicUrl } } = supa.storage.from('listing-images').getPublicUrl(filePath);
+                        avatar_url = publicUrl;
+                    }
                 }
             }
         } catch (botErr) {
