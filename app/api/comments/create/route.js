@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { sanitizeContent } from '@/lib/security';
 import { withRateLimit } from '@/lib/ratelimit';
 import { commentCreateSchema, validateBody } from '@/lib/validation';
+import { revalidatePath } from 'next/cache';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
@@ -83,6 +84,9 @@ async function commentHandler(req) {
         // Client uses `/api/notifications/telegram` which relies on `ownerId`.
         // We can keep that logic on client or move here.
         // Let's keep it simple: just return success.
+
+        revalidatePath(`/listing/${listingId}`);
+        revalidatePath('/'); // In case comments are counted in the feed
 
         return new Response(JSON.stringify({ success: true, data }), { status: 200 });
 
