@@ -1632,7 +1632,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     {/* Radius / Location Quick Filter in Search Overlay */}
                     <div className="px-4 py-3 border-b border-gray-50 dark:border-white/10 bg-white dark:bg-neutral-900 shadow-sm mb-2">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Область поиска</span>
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{t("search_area") || "Область поиска"}</span>
                             {userLocation && (
                                 <button 
                                     onClick={() => { setRadiusFilter(null); setUserLocation(null); }}
@@ -1734,7 +1734,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                     {/* Radius / Location Quick Filter in Search History Overlay */}
                     <div className="px-4 py-3 border-b border-gray-50 dark:border-white/10 bg-white dark:bg-black shadow-sm mb-2">
                         <div className="flex items-center justify-between mb-2">
-                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">Область поиска</span>
+                            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{t("search_area") || "Область поиска"}</span>
                             {userLocation && (
                                 <button 
                                     onClick={() => { setRadiusFilter(null); setUserLocation(null); }}

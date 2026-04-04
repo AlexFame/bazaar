@@ -78,37 +78,13 @@ export default function ChatListClient() {
               
               if (res.ok) {
                   const data = await res.json();
-                  // We need to fetch user profile too to set 'user' state correctly for filtering
-                  // The API doesn't return the "current user profile" in the list response directly?
-                  // Wait, we need 'user' for activeConversations filtering (ID check).
-                  // I should probably fetch profile separately or return it from API.
-                  
-                  // Fallback: Get profile from Supabase using correct ID... 
-                  // actually API ensures we are valid.
-                  // Let's rely on the profile resolution we had before or just fetch it here.
-                  
-                  // Better: let's get profile via supabase simply to populate 'user' state.
-                  // OR enhance API to return currentUser.
-                  // Let's assume the previous logic for 'user' finding works for identifying WHO we are,
-                  // allowing us to filter.
-                  
-                  // Let's do the fetch logic I wrote, but OVERRIDE the conversations fetch.
-                  
-                  // 1. Resolve User (Same as before)
-                   const tgUser = window.Telegram.WebApp.initDataUnsafe.user;
-                   let resolvedUser = null;
-                   if (tgUser?.id) {
-                        const profile = await UserService.getByTgId(tgUser.id);
-                        if (profile) resolvedUser = profile;
-                   }
-                   
-                   if (resolvedUser) {
-                       setUser(resolvedUser);
+                  if (data.currentUser) {
+                       setUser(data.currentUser);
                        setConversations(data.conversations || []);
                        setUnreadCounts(data.unreadCounts || {});
                        setLoading(false);
                        return;
-                   }
+                  }
               }
           } catch (e) {
               console.error("API Fetch failed, falling back to Supabase", e);

@@ -4,7 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
-export default function ListingGallery({ imageUrls, isFavorite, onToggleFavorite }) {
+export default function ListingGallery({
+  imageUrls,
+  isFavorite,
+  onToggleFavorite,
+}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
@@ -18,11 +22,38 @@ export default function ListingGallery({ imageUrls, isFavorite, onToggleFavorite
     }
   }
 
+  // Purely image based now
+  const renderMedia = (url, isFullscreen = false) => {
+    if (isFullscreen) {
+      return (
+        <Image
+          src={url}
+          alt="Full size"
+          fill
+          className="object-contain"
+          sizes="100vw"
+        />
+      );
+    }
+
+    return (
+      <Image
+        src={url}
+        alt=""
+        fill
+        className="object-contain"
+        sizes="(max-width: 768px) 100vw, 520px"
+        placeholder="blur"
+        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN88/7dfwAIuQNS4g0U2AAAAABJRU5ErkJggg=="
+      />
+    );
+  };
+
   if (!imageUrls || imageUrls.length === 0) {
     return (
       <div className="relative mb-3">
         <FavoriteButton isFavorite={isFavorite} onClick={onToggleFavorite} />
-        
+
         <div className="w-full bg-gray-100 rounded-2xl overflow-hidden relative h-[300px] flex items-center justify-center">
           <svg
             className="w-16 h-16 text-gray-300"
@@ -58,7 +89,7 @@ export default function ListingGallery({ imageUrls, isFavorite, onToggleFavorite
           onScroll={handleScroll}
         >
           {imageUrls.map((url, i) => (
-            <div 
+            <div
               key={i}
               className="w-full flex-shrink-0 cursor-pointer bg-gray-50 rounded-2xl overflow-hidden relative h-[300px]"
               style={{ scrollSnapAlign: "center" }}
@@ -67,15 +98,7 @@ export default function ListingGallery({ imageUrls, isFavorite, onToggleFavorite
                 setIsLightboxOpen(true);
               }}
             >
-              <Image
-                src={url}
-                alt=""
-                fill
-                className="object-contain"
-                sizes="(max-width: 768px) 100vw, 520px"
-                placeholder="blur"
-                blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN88/7dfwAIuQNS4g0U2AAAAABJRU5ErkJggg==" // grey-ish
-              />
+              {renderMedia(url)}
             </div>
           ))}
         </div>
@@ -102,77 +125,121 @@ export default function ListingGallery({ imageUrls, isFavorite, onToggleFavorite
 
       {/* Lightbox Modal */}
       {isLightboxOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
           onClick={() => setIsLightboxOpen(false)}
         >
-          <button 
+          <button
             className="absolute top-4 right-4 text-white p-2 z-50"
             onClick={() => setIsLightboxOpen(false)}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-8 h-8"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
-          
+
           <div className="relative w-full h-full flex items-center justify-center">
-            <TransformWrapper
-              initialScale={1}
-              minScale={1}
-              maxScale={4}
-              centerOnInit
-              doubleClick={{ disabled: false, mode: "toggle" }}
-              pinch={{ disabled: true }}
-            >
-              {({ zoomIn, zoomOut, resetTransform, state }) => (
-                <TransformComponent
-                  wrapperClass="!w-full !h-full flex items-center justify-center"
-                  contentClass="!w-full !h-full flex items-center justify-center"
-                >
-                  <div 
-                    className="relative w-full h-full max-w-4xl max-h-[90vh] flex items-center justify-center"
-                    onClick={(e) => {
-                      if (state.scale === 1) {
-                        e.stopPropagation();
-                        setIsLightboxOpen(false);
-                      }
-                    }}
+            {isVideo(imageUrls[currentIndex]) ? (
+              /* Video: render directly without zoom wrapper */
+              <div
+                className="w-full h-full flex items-center justify-center"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsLightboxOpen(false);
+                }}
+              >
+                {renderMedia(imageUrls[currentIndex], true)}
+              </div>
+            ) : (
+              /* Image: with zoom wrapper */
+              <TransformWrapper
+                initialScale={1}
+                minScale={1}
+                maxScale={4}
+                centerOnInit
+                doubleClick={{ disabled: false, mode: "toggle" }}
+                pinch={{ disabled: true }}
+              >
+                {({ zoomIn, zoomOut, resetTransform, state }) => (
+                  <TransformComponent
+                    wrapperClass="!w-full !h-full flex items-center justify-center"
+                    contentClass="!w-full !h-full flex items-center justify-center"
                   >
-                    <Image
-                      src={imageUrls[currentIndex]}
-                      alt="Full size"
-                      fill
-                      className="object-contain"
-                      sizes="100vw"
-                    />
-                  </div>
-                </TransformComponent>
-              )}
-            </TransformWrapper>
-            
+                    <div
+                      className="relative w-full h-full max-w-4xl max-h-[90vh] flex items-center justify-center"
+                      onClick={(e) => {
+                        if (state.scale === 1) {
+                          e.stopPropagation();
+                          setIsLightboxOpen(false);
+                        }
+                      }}
+                    >
+                      {renderMedia(imageUrls[currentIndex], true)}
+                    </div>
+                  </TransformComponent>
+                )}
+              </TransformWrapper>
+            )}
+
             {imageUrls.length > 1 && (
               <>
-                <button 
-                    className="absolute left-2 text-white p-2 bg-black/20 rounded-full hover:bg-black/40 z-10"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length);
-                    }}
+                <button
+                  className="absolute left-2 text-white p-2 bg-black/20 rounded-full hover:bg-black/40 z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentIndex(
+                      (prev) =>
+                        (prev - 1 + imageUrls.length) % imageUrls.length,
+                    );
+                  }}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="w-6 h-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 19l-7-7 7-7"
+                    />
+                  </svg>
                 </button>
-                <button 
-                    className="absolute right-2 text-white p-2 bg-black/20 rounded-full hover:bg-black/40 z-10"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        setCurrentIndex((prev) => (prev + 1) % imageUrls.length);
-                    }}
+                <button
+                  className="absolute right-2 text-white p-2 bg-black/20 rounded-full hover:bg-black/40 z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentIndex((prev) => (prev + 1) % imageUrls.length);
+                  }}
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="w-6 h-6"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
                 </button>
               </>
             )}
@@ -197,7 +264,11 @@ function FavoriteButton({ isFavorite, onClick }) {
         strokeWidth="2"
         className="w-5 h-5 text-black"
       >
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+        />
       </svg>
     </button>
   );

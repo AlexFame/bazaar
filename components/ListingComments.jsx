@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import Image from "next/image";
 import { validateComment } from "@/lib/moderation";
 import { useLang } from "@/lib/i18n-client";
+import { UserService } from "@/lib/services/UserService";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 
 export default function ListingComments({ listingId, ownerId }) {
@@ -36,6 +36,13 @@ export default function ListingComments({ listingId, ownerId }) {
         // 2. Try Telegram Auth (initData)
         if (typeof window !== 'undefined' && window.Telegram?.WebApp?.initData) {
              setCanPost(true);
+             const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+             if (tgUser?.id) {
+                 const profile = await UserService.getByTgId(tgUser.id);
+                 if (profile) {
+                     setCurrentUser(profile);
+                 }
+             }
         }
     }
     checkUser();
@@ -172,12 +179,11 @@ export default function ListingComments({ listingId, ownerId }) {
           <div key={comment.id} className="flex gap-3">
             <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden relative">
                 {comment.profiles?.avatar_url ? (
-                    <Image src={comment.profiles.avatar_url} alt="Avatar" fill className="object-cover" />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500">
-                        {(comment.profiles?.full_name || comment.profiles?.tg_username || "U")[0].toUpperCase()}
-                    </div>
-                )}
+                    <img src={comment.profiles.avatar_url} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                ) : null}
+                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-gray-500" style={{ display: comment.profiles?.avatar_url ? 'none' : 'flex' }}>
+                    {(comment.profiles?.full_name || comment.profiles?.tg_username || "U")[0].toUpperCase()}
+                </div>
             </div>
             <div className="flex-1">
                 <div className="flex items-baseline gap-2">

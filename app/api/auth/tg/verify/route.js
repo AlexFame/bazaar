@@ -142,9 +142,23 @@ async function verifyHandler(req) {
         full_name: data.user.first_name + (data.user.last_name ? ` ${data.user.last_name}` : '')
     };
     
-    let avatar_url = data.user.photo_url || null;
+    let avatar_url = null;
 
-    // If initData didn't provide a photo, let's try to fetch it via the Bot API and store safely
+    // Fetch and proxy the avatar to our stable storage
+    if (data.user.photo_url) {
+        try {
+            const imageRes = await fetch(data.user.photo_url);
+            if (imageRes.ok) {
+                 const arrayBuffer = await imageRes.arrayBuffer();
+                 const filePath = `avatars/user_${tg_user_id}.jpg`;
+                 const { error: uploadErr } = await supa.storage.from('listing-images').upload(filePath, arrayBuffer, { contentType: 'image/jpeg', upsert: true });
+                 if (!uploadErr) {
+                     avatar_url = supa.storage.from('listing-images').getPublicUrl(filePath).data.publicUrl + '?t=' + Date.now();
+                 }
+            }
+        } catch (e) { console.error("Error bypassing photo_url:", e); }
+    }
+
     if (!avatar_url) {
         try {
             const photosRes = await fetch(`https://api.telegram.org/bot${process.env.TG_BOT_TOKEN}/getUserProfilePhotos?user_id=${tg_user_id}&limit=1`);
@@ -156,22 +170,19 @@ async function verifyHandler(req) {
                 const fileData = await fileRes.json();
                 if (fileData.ok) {
                     const tgFileUrl = `https://api.telegram.org/file/bot${process.env.TG_BOT_TOKEN}/${fileData.result.file_path}`;
-                    // CRITICAL: DO NOT save tgFileUrl directly to DB as it contains the Bot Token!
-                    // Download and upload to Supabase:
                     const imageRes = await fetch(tgFileUrl);
                     const arrayBuffer = await imageRes.arrayBuffer();
                     
-                    const filePath = `avatars/${tg_user_id}_${Date.now()}.jpg`;
+                    const filePath = `avatars/user_${tg_user_id}.jpg`;
                     const { error: uploadErr } = await supa.storage
-                        .from('listing-images') // reuse existing public bucket
+                        .from('listing-images')
                         .upload(filePath, arrayBuffer, {
                             contentType: 'image/jpeg',
                             upsert: true
                         });
                         
                     if (!uploadErr) {
-                        const { data: { publicUrl } } = supa.storage.from('listing-images').getPublicUrl(filePath);
-                        avatar_url = publicUrl;
+                        avatar_url = supa.storage.from('listing-images').getPublicUrl(filePath).data.publicUrl + '?t=' + Date.now();
                     }
                 }
             }

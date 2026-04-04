@@ -60,16 +60,16 @@ async function conversationsHandler(req) {
             `)
             .or(`and(buyer_id.eq.${userId},deleted_by_buyer.eq.false),and(seller_id.eq.${userId},deleted_by_seller.eq.false)`)
             .order("updated_at", { ascending: false })
-            .order("created_at", { foreignTable: "messages", ascending: false })
-            .limit(1, { foreignTable: "messages" })
+            .order("updated_at", { ascending: false })
             .limit(50);
             
         if (error) throw error;
 
-        // Clean up the embedded messages array into a singular lastMessage object
         const conversationsWithMessages = conversations.map(conv => {
              const msgs = conv.messages || [];
              delete conv.messages;
+             // Sort manual since removed from query
+             msgs.sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
              return { ...conv, lastMessage: msgs.length > 0 ? msgs[0] : null };
         });
         
@@ -86,7 +86,7 @@ async function conversationsHandler(req) {
             unreadCounts[m.conversation_id] = (unreadCounts[m.conversation_id] || 0) + 1;
         });
 
-        return new Response(JSON.stringify({ conversations: conversationsWithMessages, unreadCounts }), {
+        return new Response(JSON.stringify({ currentUser: profile, conversations: conversationsWithMessages, unreadCounts }), {
            status: 200,
            headers: { 'Content-Type': 'application/json' }
         });
