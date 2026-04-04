@@ -22,8 +22,24 @@ export default function ListingGallery({
     }
   }
 
-  // Purely image based now
+  const isVideo = (path) => {
+    if (!path) return false;
+    return path.toLowerCase().match(/\.(mp4|webm|mov|quicktime)(\?.*)?$/) != null;
+  };
+
   const renderMedia = (url, isFullscreen = false) => {
+    if (isVideo(url)) {
+      return (
+        <video 
+            src={url} 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            className={`object-contain ${isFullscreen ? 'w-full h-full' : 'absolute inset-0 w-full h-full'}`}
+        />
+      );
+    }
     if (isFullscreen) {
       return (
         <Image

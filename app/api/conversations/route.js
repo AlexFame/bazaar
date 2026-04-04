@@ -43,10 +43,7 @@ async function conversationsHandler(req) {
         
         const userId = profile.id;
         
-        // 2. Fetch Conversations with their latest message attached via PostgREST resource embedding
-        const { data: conversations, error } = await supa
-            .from("conversations")
-            .select(`
+        const queryColumns = `
               id,
               updated_at,
               buyer_id,
@@ -57,14 +54,33 @@ async function conversationsHandler(req) {
               deleted_by_buyer,
               deleted_by_seller,
               messages (content, created_at, sender_id)
-            `)
-            .or(`and(buyer_id.eq.${userId},deleted_by_buyer.eq.false),and(seller_id.eq.${userId},deleted_by_seller.eq.false)`)
-            .order("updated_at", { ascending: false })
-            .order("created_at", { foreignTable: "messages", ascending: false })
-            .limit(1, { foreignTable: "messages" })
-            .limit(50);
-            
-        if (error) throw error;
+        `;
+
+        const [buyingRes, sellingRes] = await Promise.all([
+            supa.from("conversations")
+                .select(queryColumns)
+                .eq('buyer_id', userId)
+                .eq('deleted_by_buyer', false)
+                .order("updated_at", { ascending: false })
+                .order("created_at", { foreignTable: "messages", ascending: false })
+                .limit(1, { foreignTable: "messages" })
+                .limit(50),
+            supa.from("conversations")
+                .select(queryColumns)
+                .eq('seller_id', userId)
+                .eq('deleted_by_seller', false)
+                .order("updated_at", { ascending: false })
+                .order("created_at", { foreignTable: "messages", ascending: false })
+                .limit(1, { foreignTable: "messages" })
+                .limit(50)
+        ]);
+
+        if (buyingRes.error) throw buyingRes.error;
+        if (sellingRes.error) throw sellingRes.error;
+
+        const conversations = [...(buyingRes.data || []), ...(sellingRes.data || [])]
+            .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
+            .slice(0, 50);
 
         const conversationsWithMessages = conversations.map(conv => {
              const msgs = conv.messages || [];
