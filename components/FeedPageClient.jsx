@@ -1348,7 +1348,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
             onClick={handleResetFilters}
             className="mb-2 px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200"
           >
-            Сбросить
+            {t("reset") || "Сбросить"}
           </button>
         </div>
       </div>
@@ -1602,7 +1602,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                 className={`text-sm font-medium text-black dark:text-white whitespace-nowrap px-2 ml-2 ${isSearchFocused ? 'block' : 'hidden'}`}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
              >
-                {txt.cancel || "Отмена"}
+                {t("cancel") || "Отмена"}
              </button>
         </div>
           
@@ -1638,7 +1638,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                     onClick={() => { setRadiusFilter(null); setUserLocation(null); }}
                                     className="text-[10px] text-red-500 hover:text-red-600"
                                 >
-                                    Сбросить
+                                    {t("reset") || "Сбросить"}
                                 </button>
                             )}
                         </div>
@@ -1657,7 +1657,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                         onClick={() => setRadiusFilter(null)}
                                         className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap border ${!radiusFilter ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600'}`}
                                    >
-                                       Вся страна
+                                       {t("whole_country") || "Вся страна"}
                                    </button>
                                    {[5, 10, 30, 50].map(km => (
                                        <button
@@ -1740,7 +1740,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                     onClick={() => { setRadiusFilter(null); setUserLocation(null); }}
                                     className="text-[10px] text-red-500 hover:text-red-600"
                                 >
-                                    Сбросить
+                                    {t("reset") || "Сбросить"}
                                 </button>
                             )}
                         </div>
@@ -1759,7 +1759,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                         onClick={() => setRadiusFilter(null)}
                                         className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap border ${!radiusFilter ? 'bg-black text-white border-black' : 'border-gray-200 text-gray-600 dark:text-gray-400 dark:border-zinc-800'}`}
                                    >
-                                       Вся страна
+                                       {t("whole_country") || "Вся страна"}
                                    </button>
                                    {[5, 10, 30, 50].map(km => (
                                        <button
@@ -1918,7 +1918,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
                                 </span>
                             )
                         })}
-                         <button onClick={handleResetFilters} className="text-[10px] underline text-gray-500">Сбросить</button>
+                         <button onClick={handleResetFilters} className="text-[10px] underline text-gray-500">{t("reset") || "Сбросить"}</button>
                      </div>
                  )}
             </div>

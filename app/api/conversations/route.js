@@ -60,7 +60,8 @@ async function conversationsHandler(req) {
             `)
             .or(`and(buyer_id.eq.${userId},deleted_by_buyer.eq.false),and(seller_id.eq.${userId},deleted_by_seller.eq.false)`)
             .order("updated_at", { ascending: false })
-            .order("updated_at", { ascending: false })
+            .order("created_at", { foreignTable: "messages", ascending: false })
+            .limit(1, { foreignTable: "messages" })
             .limit(50);
             
         if (error) throw error;
