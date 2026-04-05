@@ -246,7 +246,6 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
             transition={{ duration: 0.3 }}
             drag={isTop ? "x" : false}
             dragElastic={1}
-            dragConstraints={{ left: -300, right: 300 }}
             onDragEnd={(e, info) => handleDragEnd(e, info, idx, listing)}
         >
             {/* Image Background */}
