@@ -354,10 +354,12 @@ export default function FeedPageClient({ forcedCategory = null }) {
     return fallback;
   };
 
-  // Lock body scroll and hide bottom navigation when search is active
+  // Lock body scroll and hide bottom navigation when search or swipe mode is active.
   useEffect(() => {
     const nav = document.getElementById("mobile-bottom-nav");
-    if (isSearchFocused) {
+    const shouldOverlayPage = isSearchFocused || isSwipeModeActive;
+
+    if (shouldOverlayPage) {
       document.body.style.overflow = "hidden";
       if (nav) nav.style.display = "none";
     } else {
@@ -368,7 +370,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       document.body.style.overflow = "";
       if (nav) nav.style.display = "";
     };
-  }, [isSearchFocused]);
+  }, [isSearchFocused, isSwipeModeActive]);
 
   // useImpressionTracker(listings, "feed");
   const [page, setPage] = useState(0);

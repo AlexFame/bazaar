@@ -87,18 +87,23 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   };
 
   const handleDragEnd = (event, info, idx, listing) => {
-    const threshold = 100;
-    const velocityThreshold = 200; // px/s - minimum velocity to count as intentional swipe
+    const distanceThreshold = 110;
+    const flickVelocityThreshold = 650;
+    const minFlickOffset = 35;
     const ox = info.offset.x;
     const vx = info.velocity.x;
-    
-    // Only trigger if offset exceeds threshold AND velocity is in the same direction (not dragging back)
-    if (ox > threshold && vx > -velocityThreshold) {
+
+    const isRightSwipe =
+      ox > distanceThreshold || (ox > minFlickOffset && vx > flickVelocityThreshold);
+    const isLeftSwipe =
+      ox < -distanceThreshold || (ox < -minFlickOffset && vx < -flickVelocityThreshold);
+
+    if (isRightSwipe) {
       // Swiped Right!
       setDirection(1);
       handleLike(listing);
       popCard(idx);
-    } else if (ox < -threshold && vx < velocityThreshold) {
+    } else if (isLeftSwipe) {
       // Swiped Left!
       setDirection(-1);
       markSeen(listing.id);
@@ -120,7 +125,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[999] bg-neutral-900">
+    <div className="fixed inset-0 z-[10001] bg-neutral-900">
       <motion.div 
           className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden"
           initial={{ opacity: 0 }}
@@ -185,7 +190,10 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
       )}
 
       {/* Footer Controls */}
-      <div className="absolute bottom-8 flex gap-8 z-50">
+      <div
+          className="absolute flex gap-8 z-50"
+          style={{ bottom: "calc(env(safe-area-inset-bottom) + 2rem)" }}
+      >
           <button 
               onClick={() => {
                   setDirection(-1);
@@ -220,8 +228,8 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
 
 function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, t }) {
     const x = useMotionValue(0);
-    // Maps x offset (-200 to 200) to rotation (-15deg to 15deg)
-    const rotate = useTransform(x, [-200, 200], [-15, 15]);
+    // A slightly stronger tilt keeps the gesture feeling closer to Tinder.
+    const rotate = useTransform(x, [-180, 180], [-18, 18]);
 
     return (
         <motion.div
@@ -245,7 +253,10 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
             }}
             transition={{ duration: 0.3 }}
             drag={isTop ? "x" : false}
-            dragElastic={1}
+            dragElastic={0.18}
+            dragMomentum={false}
+            dragSnapToOrigin
+            whileDrag={{ scale: 1.02 }}
             onDragEnd={(e, info) => handleDragEnd(e, info, idx, listing)}
         >
             {/* Image Background */}
@@ -265,13 +276,13 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
                     {/* Add Like/Nope overlay opacities based on drag */}
                     <motion.div 
                         className="absolute right-4 top-4 border-4 border-green-500 text-green-500 font-black text-4xl rounded-xl px-4 py-1 rotate-12"
-                        style={{ opacity: useTransform(x, [0, 100], [0, 1]) }}
+                        style={{ opacity: useTransform(x, [0, 80], [0, 1]) }}
                     >
                         LIKE
                     </motion.div>
                     <motion.div 
                         className="absolute left-4 top-4 border-4 border-red-500 text-red-500 font-black text-4xl rounded-xl px-4 py-1 -rotate-12"
-                        style={{ opacity: useTransform(x, [0, -100], [0, 1]) }}
+                        style={{ opacity: useTransform(x, [0, -80], [0, 1]) }}
                     >
                         NOPE
                     </motion.div>
