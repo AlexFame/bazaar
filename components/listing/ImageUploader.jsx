@@ -84,19 +84,15 @@ export default function ImageUploader({ images, setImages }) {
         reader.readAsDataURL(compressedFile);
       } catch (error) {
         console.error("Image compression error:", error);
-        // Fallback to original
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setImages((prev) => [
-            ...prev,
-            {
-              type: "new",
-              url: event.target.result,
-              file: file,
-            },
-          ]);
-        };
-        reader.readAsDataURL(file);
+        // Fallback to original using blob URL to avoid massive memory usage for videos
+        setImages((prev) => [
+          ...prev,
+          {
+            type: "new",
+            url: URL.createObjectURL(file),
+            file: file,
+          },
+        ]);
       }
     }
   }
@@ -108,7 +104,7 @@ export default function ImageUploader({ images, setImages }) {
   return (
     <div className="mb-3">
         <div className="text-[11px] font-semibold mb-1 dark:text-gray-300">
-            {t("field_photos") || "Фото"}
+            {t("field_photos") || "Фото/Видео"}
         </div>
         <div
         className="w-full mt-2 border border-dashed border-gray-300 dark:border-white/20 rounded-2xl px-4 py-8 text-xs text-center cursor-pointer bg-transparent dark:bg-white/5 text-foreground dark:text-white"
@@ -120,11 +116,22 @@ export default function ImageUploader({ images, setImages }) {
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 w-full justify-items-center">
                 {images.map((img, idx) => (
                 <div key={idx} className="relative w-full" style={{ paddingBottom: "100%" }}>
-                    <img
-                    src={img.url}
-                    alt={`Предпросмотр ${idx + 1}`}
-                    className="absolute inset-0 w-full h-full rounded-xl object-cover border border-gray-100 dark:border-white/10"
-                    />
+                    {img.file?.type?.startsWith('video/') || img.url.match(/\.(mp4|webm|mov|quicktime)(\?.*)?$/i) ? (
+                        <video
+                            src={img.url}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="absolute inset-0 w-full h-full rounded-xl object-cover border border-gray-100 dark:border-white/10"
+                        />
+                    ) : (
+                        <img
+                        src={img.url}
+                        alt={`Предпросмотр ${idx + 1}`}
+                        className="absolute inset-0 w-full h-full rounded-xl object-cover border border-gray-100 dark:border-white/10"
+                        />
+                    )}
                     <button
                     type="button"
                     className="absolute -top-1 -right-1 bg-black text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center z-10"
@@ -154,7 +161,7 @@ export default function ImageUploader({ images, setImages }) {
 
             <input
             type="file"
-            accept="image/*"
+            accept="image/*,video/mp4,video/quicktime,video/webm"
             multiple
             className="hidden"
             onChange={handleFileChange}
