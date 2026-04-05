@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supaAdmin } from "@/lib/supabaseAdmin";
-import TelegramService from "@/lib/telegram";
+import { sendNotification } from "@/lib/bot";
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -53,7 +53,7 @@ export async function POST(req) {
       .from("favorites")
       .insert({ profile_id: userProfile.id, listing_id: listingId });
       
-    if (favError && favError.code !== '23505') { // Ignore unique violation
+    if (favError && favError.code !== '23505') {
         console.error("Favorite error", favError);
     }
 
@@ -74,14 +74,16 @@ export async function POST(req) {
 
        if (sellerProfile && sellerProfile.telegram_id) {
            const buyerName = userProfile.first_name || "Пользователь";
-           const text = `🔥 *Новый отклик!*\n${buyerName} заинтересовался вашей услугой *«${listing.title}»* через функцию "Умный подбор".\n\nНапишите ему первым, пока он не ушел к конкурентам!`;
+           const text = `🔥 <b>Новый отклик!</b>\n${buyerName} заинтересовался вашей услугой <b>«${listing.title}»</b> через функцию "Умный подбор".\n\nНапишите ему первым, пока он не ушел к конкурентам!`;
            
            const replyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}?user=${userProfile.id}`;
 
-           await TelegramService.sendNotification(sellerProfile.telegram_id, text, {
-               inline_keyboard: [[
-                 { text: `💬 Написать ${buyerName}`, web_app: { url: replyUrl } }
-               ]]
+           await sendNotification(sellerProfile.telegram_id, text, {
+               reply_markup: {
+                   inline_keyboard: [[
+                     { text: `💬 Написать ${buyerName}`, web_app: { url: replyUrl } }
+                   ]]
+               }
            });
        }
     }
