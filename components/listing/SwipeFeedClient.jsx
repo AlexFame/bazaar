@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { XMarkIcon, HeartIcon, MapPinIcon } from "@heroicons/react/24/solid";
+import { useRouter } from "next/navigation";
 import { ListingService } from "@/lib/services/ListingService";
 import { useLang } from "@/lib/i18n-client";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 
 export default function SwipeFeedClient({ onClose, userLocation }) {
   const { t } = useLang();
+  const router = useRouter();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
@@ -124,6 +126,10 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
     });
   };
 
+  const openListing = (listingId) => {
+    router.push(`/listing/${listingId}`);
+  };
+
   return (
     <div className="fixed inset-0 z-[10001] bg-neutral-900">
       <motion.div 
@@ -181,6 +187,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
                               direction={direction}
                               isTop={isTop}
                               handleDragEnd={handleDragEnd}
+                              openListing={openListing}
                               t={t}
                           />
                       );
@@ -191,7 +198,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
 
       {/* Footer Controls */}
       <div
-          className="absolute flex gap-8 z-50"
+          className="absolute flex items-center gap-4 z-50"
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 2rem)" }}
       >
           <button 
@@ -205,6 +212,17 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
               className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/5 active:scale-90 transition-transform"
           >
               <XMarkIcon className="w-8 h-8 text-red-500" />
+          </button>
+
+          <button
+              onClick={() => {
+                  if (cards.length) {
+                    openListing(cards[cards.length - 1].id);
+                  }
+              }}
+              className="px-5 h-14 rounded-full bg-white/12 backdrop-blur-md text-white font-semibold shadow-lg border border-white/10 active:scale-95 transition-transform"
+          >
+              {t("more") || "Подробнее"}
           </button>
           
           <button 
@@ -226,7 +244,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   );
 }
 
-function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, t }) {
+function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, openListing, t }) {
     const x = useMotionValue(0);
     // A slightly stronger tilt keeps the gesture feeling closer to Tinder.
     const rotate = useTransform(x, [-180, 180], [-18, 18]);
@@ -257,6 +275,11 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
             dragMomentum={false}
             dragSnapToOrigin
             whileDrag={{ scale: 1.02 }}
+            onTap={() => {
+                if (isTop) {
+                    openListing(listing.id);
+                }
+            }}
             onDragEnd={(e, info) => handleDragEnd(e, info, idx, listing)}
         >
             {/* Image Background */}
@@ -303,6 +326,9 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
                     <h2 className="text-xl font-bold line-clamp-1">{listing.title}</h2>
                     <p className="text-pink-400 font-bold mt-1 text-lg">
                         {listing.price ? `${listing.price} ${listing.currency || '€'}` : (t("swipe_negotiable") || "Договорная")}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2">
+                        {t("more") || "Подробнее"}
                     </p>
                 </div>
                 
