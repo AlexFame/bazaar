@@ -127,7 +127,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   };
 
   const openListing = (listingId) => {
-    router.push(`/listing/${listingId}`);
+    router.push(`/listing/${listingId}?from=swipe`);
   };
 
   return (
@@ -222,7 +222,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
               }}
               className="px-5 h-14 rounded-full bg-white/12 backdrop-blur-md text-white font-semibold shadow-lg border border-white/10 active:scale-95 transition-transform"
           >
-              {t("more") || "Подробнее"}
+              {t("swipe_open_listing") || "Подробнее"}
           </button>
           
           <button 
@@ -327,12 +327,9 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
                     <p className="text-pink-400 font-bold mt-1 text-lg">
                         {listing.price ? `${listing.price} ${listing.currency || '€'}` : (t("swipe_negotiable") || "Договорная")}
                     </p>
-                    <p className="text-xs text-gray-400 mt-2">
-                        {t("more") || "Подробнее"}
-                    </p>
                 </div>
                 
-                <div className="flex items-center gap-3 mt-4">
+                <div className="flex items-center gap-3 mt-4 min-h-8">
                     <div className="w-8 h-8 rounded-full overflow-hidden bg-white/20 shrink-0">
                         {listing.profiles?.avatar_url && (
                             <img src={listing.profiles.avatar_url} className="w-full h-full object-cover" />

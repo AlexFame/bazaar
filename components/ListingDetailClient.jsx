@@ -32,6 +32,8 @@ import ListingOffers from "@/components/listing/ListingOffers";
 export default function ListingDetailClient({ id }) {
   const { t, lang } = useLang();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const openedFromSwipe = searchParams.get("from") === "swipe";
 
   const [listing, setListing] = useState(null);
   const [imageUrls, setImageUrls] = useState([]);
@@ -50,7 +52,6 @@ export default function ListingDetailClient({ id }) {
   const [profileId, setProfileId] = useState(null);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const searchParams = useSearchParams();
 
   // Payment Success Handler
   useEffect(() => {
@@ -437,13 +438,27 @@ export default function ListingDetailClient({ id }) {
     }
   };
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    if (openedFromSwipe) {
+      router.push("/?swipe=1");
+      return;
+    }
+
+    router.push("/");
+  };
+
   return (
     <>
       <div className="w-full min-h-screen bg-gray-50 dark:bg-black flex justify-center py-3 transition-colors duration-300">
         <div className="w-full max-w-[520px] px-3">
           <div className="mb-3 flex items-center justify-between gap-3">
             <div className="flex-shrink-0">
-              <BackButton />
+              <BackButton onClick={handleBack} />
             </div>
 
             <div className="flex items-center gap-2">

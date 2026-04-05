@@ -28,9 +28,8 @@ test.describe('Create Listing Page', () => {
     await page.goto('/create');
     await page.waitForLoadState('networkidle');
     
-    // Check that form is visible
-    // Check that form is visible (targeting inputs which are more critical than H1)
-    await expect(page.locator('input[placeholder*="Название"], input[type="text"]')).toBeVisible({ timeout: 10000 });
+    // Check that a core form field is visible without using an ambiguous text input locator.
+    await expect(page.locator('textarea').first()).toBeVisible({ timeout: 10000 });
     await expect(page).toHaveURL(/\/create/);
   });
 

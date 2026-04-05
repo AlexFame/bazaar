@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, useMemo } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useAtom } from "jotai"; // Added Jotai
 import { feedListingsAtom, feedFiltersAtom, feedMetaAtom, feedScrollAtom } from "@/lib/store"; // Added atoms
@@ -337,12 +337,13 @@ export default function FeedPageClient({ forcedCategory = null }) {
   };
 
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const urlQuery = (searchParams.get("q") || "").trim();
   const hasSearchQuery = urlQuery.length > 0;
+  const isSwipeModeActive = searchParams.get("swipe") === "1";
   
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [isSwipeModeActive, setIsSwipeModeActive] = useState(false);
 
   // Helper to safely resolve translation labels
   const getSafeLabel = (obj, fallback) => {
@@ -352,6 +353,19 @@ export default function FeedPageClient({ forcedCategory = null }) {
         return obj[lang] || obj.ru || obj.en || fallback;
     }
     return fallback;
+  };
+
+  const setSwipeMode = (active) => {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (active) {
+      params.set("swipe", "1");
+    } else {
+      params.delete("swipe");
+    }
+
+    const next = params.toString();
+    router.push(next ? `${pathname}?${next}` : pathname, { scroll: false });
   };
 
   // Lock body scroll and hide bottom navigation when search or swipe mode is active.
@@ -2425,7 +2439,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
         {/* Swipe Mode Hero Banner */}
         {categoryFilter === "all" && !searchTerm.trim() && !forcedCategory && (
-            <SwipeModeBanner onStart={() => setIsSwipeModeActive(true)} />
+            <SwipeModeBanner onStart={() => setSwipeMode(true)} />
         )}
 
         {/* Popular Listings (Horizontal) */}
@@ -2576,7 +2590,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
       <AnimatePresence>
         {isSwipeModeActive && (
           <SwipeFeedClient 
-              onClose={() => setIsSwipeModeActive(false)} 
+              onClose={() => setSwipeMode(false)} 
               userLocation={userLocation} 
           />
         )}
