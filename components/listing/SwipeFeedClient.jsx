@@ -88,12 +88,17 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
 
   const handleDragEnd = (event, info, idx, listing) => {
     const threshold = 100;
-    if (info.offset.x > threshold) {
+    const velocityThreshold = 200; // px/s - minimum velocity to count as intentional swipe
+    const ox = info.offset.x;
+    const vx = info.velocity.x;
+    
+    // Only trigger if offset exceeds threshold AND velocity is in the same direction (not dragging back)
+    if (ox > threshold && vx > -velocityThreshold) {
       // Swiped Right!
       setDirection(1);
       handleLike(listing);
       popCard(idx);
-    } else if (info.offset.x < -threshold) {
+    } else if (ox < -threshold && vx < velocityThreshold) {
       // Swiped Left!
       setDirection(-1);
       markSeen(listing.id);
@@ -240,7 +245,8 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
             }}
             transition={{ duration: 0.3 }}
             drag={isTop ? "x" : false}
-            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={1}
+            dragConstraints={{ left: -300, right: 300 }}
             onDragEnd={(e, info) => handleDragEnd(e, info, idx, listing)}
         >
             {/* Image Background */}
