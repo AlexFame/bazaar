@@ -50,7 +50,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
       setPage(pageIdx);
     } catch (e) {
       console.error(e);
-      toast.error("Error loading services");
+      toast.error(t("swipe_error") || "Error loading services");
     } finally {
       setLoading(false);
     }
@@ -67,7 +67,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
 
   const handleLike = async (listing) => {
     markSeen(listing.id);
-    toast.success("Добавлено в избранное! 🔥", { duration: 1500 });
+    toast.success(t("swipe_liked") || "Добавлено в избранное! 🔥", { duration: 1500 });
     
     if (!tgInitData) return; // If web only, skip backend notification
 
@@ -142,17 +142,17 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
       </div>
 
       {loading && cards.length === 0 ? (
-          <div className="text-white animate-pulse">Загружаем мастеров поблизости...</div>
+          <div className="text-white animate-pulse">{t("swipe_loading") || "Загружаем мастеров поблизости..."}</div>
       ) : cards.length === 0 ? (
           <div className="text-center p-8 bg-white/5 rounded-2xl">
               <div className="text-4xl mb-4">🤷‍♂️</div>
-              <h3 className="text-white font-bold text-lg">Вы просмотрели всех!</h3>
-              <p className="text-gray-400 text-sm mt-2 mb-6">В вашем районе больше нет услуг. Загляните позже.</p>
+              <h3 className="text-white font-bold text-lg">{t("swipe_empty_title") || "Вы просмотрели всех!"}</h3>
+              <p className="text-gray-400 text-sm mt-2 mb-6">{t("swipe_empty_desc") || "В вашем районе больше нет услуг. Загляните позже."}</p>
               <button 
                 onClick={onClose}
                 className="bg-purple-600 text-white px-6 py-2 rounded-full font-bold"
               >
-                  Вернуться
+                  {t("swipe_back") || "Вернуться"}
               </button>
           </div>
       ) : (
@@ -171,6 +171,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
                               direction={direction}
                               isTop={isTop}
                               handleDragEnd={handleDragEnd}
+                              t={t}
                           />
                       );
                   })}
@@ -212,7 +213,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   );
 }
 
-function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd }) {
+function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, t }) {
     const x = useMotionValue(0);
     // Maps x offset (-200 to 200) to rotation (-15deg to 15deg)
     const rotate = useTransform(x, [-200, 200], [-15, 15]);
@@ -285,7 +286,7 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd }
                 <div>
                     <h2 className="text-xl font-bold line-clamp-1">{listing.title}</h2>
                     <p className="text-pink-400 font-bold mt-1 text-lg">
-                        {listing.price ? `${listing.price} ${listing.currency || '€'}` : "Договорная"}
+                        {listing.price ? `${listing.price} ${listing.currency || '€'}` : (t("swipe_negotiable") || "Договорная")}
                     </p>
                 </div>
                 
@@ -296,7 +297,7 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd }
                         )}
                     </div>
                     <div className="text-sm text-gray-300 font-medium line-clamp-1">
-                        Мастер: {listing.profiles?.first_name || "Аноним"}
+                        {t("swipe_master") || "Мастер"}: {listing.profiles?.first_name || "Аноним"}
                     </div>
                 </div>
             </div>
