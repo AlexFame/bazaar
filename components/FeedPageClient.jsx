@@ -17,8 +17,9 @@ import { CATEGORY_DEFS } from "@/lib/categories";
 import { useCityAutocomplete } from "@/hooks/useCityAutocomplete";
 import { useLang } from "@/lib/i18n-client";
 import { expandSearchTerm, detectCategory, SYNONYMS } from "@/lib/searchUtils";
-
 import { getTelegramUser } from "@/lib/telegram";
+import SwipeModeBanner from "@/components/SwipeModeBanner";
+import SwipeFeedClient from "@/components/listing/SwipeFeedClient";
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, XMarkIcon, HeartIcon, BellIcon } from "@heroicons/react/24/outline";
 import {
   getUserLocation,
@@ -341,6 +342,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
   
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isSwipeModeActive, setIsSwipeModeActive] = useState(false);
 
   // Helper to safely resolve translation labels
   const getSafeLabel = (obj, fallback) => {
@@ -1402,6 +1404,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
 
 
   return (
+    <>
     <main className="min-h-screen pb-20 bg-gray-50 dark:bg-black text-foreground transition-colors duration-300">
       {/* Search Header */}
       <header 
@@ -2418,9 +2421,14 @@ export default function FeedPageClient({ forcedCategory = null }) {
           </div>
         )}
 
+        {/* Swipe Mode Hero Banner */}
+        {categoryFilter === "all" && !searchTerm.trim() && !forcedCategory && (
+            <SwipeModeBanner onStart={() => setIsSwipeModeActive(true)} />
+        )}
+
         {/* Popular Listings (Horizontal) */}
         {categoryFilter === "all" && !searchTerm.trim() && !forcedCategory && (
-          <div className="mt-6">
+          <div className="mt-2">
             <PopularListingsScroll />
           </div>
         )}
@@ -2562,5 +2570,15 @@ export default function FeedPageClient({ forcedCategory = null }) {
       </div>
 
     </main>
+
+      <AnimatePresence>
+        {isSwipeModeActive && (
+          <SwipeFeedClient 
+              onClose={() => setIsSwipeModeActive(false)} 
+              userLocation={userLocation} 
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
