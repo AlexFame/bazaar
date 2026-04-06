@@ -22,7 +22,7 @@ export default function SwipeModeBanner({ onStart }) {
           <div className="flex items-center gap-2 mb-2">
             <SparklesIcon className="w-6 h-6 text-pink-400" />
             <h2 className="text-xl md:text-2xl font-black italic tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-white to-pink-200 uppercase" style={{ textShadow: '0 2px 10px rgba(255,255,255,0.2)'}}>
-              {t("swipe_banner_title") || "SWIPE & DISCOVER!"}
+              {`${t("swipe_word") || "EXPERTS"} ${t("discover_word") || "NEARBY"}`}
             </h2>
             <SparklesIcon className="w-6 h-6 text-blue-400" />
           </div>

@@ -152,7 +152,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
             <XMarkIcon className="w-6 h-6" />
         </button>
         <div className="font-black italic text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400">
-            DISCOVER
+            {t("discover_word") || "NEARBY"}
         </div>
         <div className="w-10 h-10"></div> {/* Placeholder for centering */}
       </div>
