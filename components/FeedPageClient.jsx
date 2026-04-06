@@ -387,8 +387,6 @@ export default function FeedPageClient({ forcedCategory = null }) {
     };
   }, [isSearchFocused, isSwipeModeActive]);
 
-  useImpressionTracker(listings, "feed");
-
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -423,6 +421,7 @@ export default function FeedPageClient({ forcedCategory = null }) {
   const [cachedFilters, setCachedFilters] = useAtom(feedFiltersAtom);
   const [cachedMeta, setCachedMeta] = useAtom(feedMetaAtom);
   const [scrollPos, setScrollPos] = useAtom(feedScrollAtom);
+  useImpressionTracker(listings, "feed");
   
   // Local loading state (only true if we need to fetch)
   
