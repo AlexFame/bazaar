@@ -1,6 +1,8 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
-import { withRateLimit } from '@/lib/ratelimit';
+
+export const runtime = 'nodejs';
+export const preferredRegion = ['fra1'];
 
 // Reusable Telegram Auth Check (should be in a lib but putting here for speed)
 function checkTelegramAuth(initData, botToken) {
@@ -60,32 +62,19 @@ async function conversationsHandler(req) {
         `;
 
         const conversationsStartedAt = Date.now();
-        const [buyingRes, sellingRes] = await Promise.all([
-            supa.from("conversations")
-                .select(queryColumns)
-                .eq('buyer_id', userId)
-                .eq('deleted_by_buyer', false)
-                .order("updated_at", { ascending: false })
-                .order("created_at", { foreignTable: "messages", ascending: false })
-                .limit(1, { foreignTable: "messages" })
-                .limit(50),
-            supa.from("conversations")
-                .select(queryColumns)
-                .eq('seller_id', userId)
-                .eq('deleted_by_seller', false)
-                .order("updated_at", { ascending: false })
-                .order("created_at", { foreignTable: "messages", ascending: false })
-                .limit(1, { foreignTable: "messages" })
-                .limit(50)
-        ]);
+        const { data: conversationsData, error: conversationsError } = await supa
+            .from("conversations")
+            .select(queryColumns)
+            .or(`and(buyer_id.eq.${userId},deleted_by_buyer.eq.false),and(seller_id.eq.${userId},deleted_by_seller.eq.false)`)
+            .order("updated_at", { ascending: false })
+            .order("created_at", { foreignTable: "messages", ascending: false })
+            .limit(1, { foreignTable: "messages" })
+            .limit(50);
         console.info(`[api/conversations] conversations queries: ${Date.now() - conversationsStartedAt}ms`);
 
-        if (buyingRes.error) throw buyingRes.error;
-        if (sellingRes.error) throw sellingRes.error;
+        if (conversationsError) throw conversationsError;
 
-        const conversations = [...(buyingRes.data || []), ...(sellingRes.data || [])]
-            .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at))
-            .slice(0, 50);
+        const conversations = (conversationsData || []).slice(0, 50);
 
         const conversationsWithMessages = conversations.map(conv => {
              const msgs = conv.messages || [];
@@ -125,4 +114,4 @@ async function conversationsHandler(req) {
     }
 }
 
-export const POST = withRateLimit(conversationsHandler, { limit: 20, window: '30 s' });
+export const POST = conversationsHandler;
