@@ -15,6 +15,7 @@ import { motion, AnimatePresence, useAnimation } from "framer-motion"; // Import
 export default function ChatListClient() {
   const router = useRouter();
   const { t } = useLang();
+  const isDev = process.env.NODE_ENV !== "production";
 
   const [activeTab, setActiveTab] = useState("selling"); // 'selling' | 'buying'
   const [loading, setLoading] = useState(true);
@@ -65,16 +66,22 @@ export default function ChatListClient() {
 
   useEffect(() => {
     const fetchUserAndChats = async () => {
+      const startedAt = typeof performance !== "undefined" ? performance.now() : Date.now();
       setLoading(true);
       
       // Attempt API strategy if in Telegram
       if (typeof window !== "undefined" && window.Telegram?.WebApp?.initData) {
           try {
+              const apiStartedAt = typeof performance !== "undefined" ? performance.now() : Date.now();
               const res = await fetch('/api/conversations', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ initData: window.Telegram.WebApp.initData })
               });
+              const apiDuration = (typeof performance !== "undefined" ? performance.now() : Date.now()) - apiStartedAt;
+              if (isDev) {
+                console.info(`[messages] API /api/conversations: ${apiDuration.toFixed(1)}ms status=${res.status}`);
+              }
               
               if (res.ok) {
                   const data = await res.json();
@@ -83,6 +90,12 @@ export default function ChatListClient() {
                        setConversations(data.conversations || []);
                        setUnreadCounts(data.unreadCounts || {});
                        setLoading(false);
+                       if (isDev) {
+                         const totalDuration = (typeof performance !== "undefined" ? performance.now() : Date.now()) - startedAt;
+                         console.info(
+                           `[messages] Loaded via API in ${totalDuration.toFixed(1)}ms conversations=${(data.conversations || []).length}`
+                         );
+                       }
                        return;
                   }
               }
@@ -93,7 +106,12 @@ export default function ChatListClient() {
 
       // Fallback to legacy RLS (if API failed or not in Telegram)
       // Try Supabase Auth first
+      const authStartedAt = typeof performance !== "undefined" ? performance.now() : Date.now();
       let { data: { user } } = await supabase.auth.getUser();
+      if (isDev) {
+        const authDuration = (typeof performance !== "undefined" ? performance.now() : Date.now()) - authStartedAt;
+        console.info(`[messages] supabase.auth.getUser(): ${authDuration.toFixed(1)}ms`);
+      }
 
       // If no Supabase user, try Telegram
       if (!user) {
@@ -114,6 +132,7 @@ export default function ChatListClient() {
       setUser(user);
 
       // Fetch ALL conversations via RLS with embedded messages
+      const conversationsStartedAt = typeof performance !== "undefined" ? performance.now() : Date.now();
       const { data, error } = await supabase
         .from("conversations")
         .select(`
@@ -133,6 +152,10 @@ export default function ChatListClient() {
         .order("created_at", { foreignTable: "messages", ascending: false })
         .limit(1, { foreignTable: "messages" })
         .limit(50);
+      if (isDev) {
+        const conversationsDuration = (typeof performance !== "undefined" ? performance.now() : Date.now()) - conversationsStartedAt;
+        console.info(`[messages] conversations query: ${conversationsDuration.toFixed(1)}ms`);
+      }
 
       if (error) {
         console.error("Error fetching chats:", error);
@@ -147,11 +170,16 @@ export default function ChatListClient() {
         setConversations(conversationsWithMessages);
         
         // Fetch unread messages count
+        const unreadStartedAt = typeof performance !== "undefined" ? performance.now() : Date.now();
         const { data: unreadData } = await supabase
             .from('messages')
             .select('conversation_id')
             .eq('is_read', false)
             .neq('sender_id', user.id);
+        if (isDev) {
+          const unreadDuration = (typeof performance !== "undefined" ? performance.now() : Date.now()) - unreadStartedAt;
+          console.info(`[messages] unread query: ${unreadDuration.toFixed(1)}ms`);
+        }
         
         const counts = {};
         unreadData?.forEach(msg => {
@@ -160,6 +188,10 @@ export default function ChatListClient() {
         setUnreadCounts(counts);
       }
       setLoading(false);
+      if (isDev) {
+        const totalDuration = (typeof performance !== "undefined" ? performance.now() : Date.now()) - startedAt;
+        console.info(`[messages] Loaded via fallback in ${totalDuration.toFixed(1)}ms`);
+      }
     };
 
     fetchUserAndChats();

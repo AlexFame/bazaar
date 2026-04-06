@@ -26,6 +26,7 @@ function checkTelegramAuth(initData, botToken) {
 
 async function conversationsHandler(req) {
     try {
+        const startedAt = Date.now();
         const body = await req.json();
         const { initData } = body;
         
@@ -38,7 +39,9 @@ async function conversationsHandler(req) {
         const supa = supaAdmin();
         
         // 1. Get Profile
+        const profileStartedAt = Date.now();
         const { data: profile } = await supa.from('profiles').select('id, full_name, avatar_url').eq('tg_user_id', tgUserId).single();
+        console.info(`[api/conversations] profile lookup: ${Date.now() - profileStartedAt}ms`);
         if (!profile) return new Response(JSON.stringify([]), { status: 200 }); // Valid auth, no profile = no chats
         
         const userId = profile.id;
@@ -56,6 +59,7 @@ async function conversationsHandler(req) {
               messages (content, created_at, sender_id)
         `;
 
+        const conversationsStartedAt = Date.now();
         const [buyingRes, sellingRes] = await Promise.all([
             supa.from("conversations")
                 .select(queryColumns)
@@ -74,6 +78,7 @@ async function conversationsHandler(req) {
                 .limit(1, { foreignTable: "messages" })
                 .limit(50)
         ]);
+        console.info(`[api/conversations] conversations queries: ${Date.now() - conversationsStartedAt}ms`);
 
         if (buyingRes.error) throw buyingRes.error;
         if (sellingRes.error) throw sellingRes.error;
@@ -91,17 +96,23 @@ async function conversationsHandler(req) {
         });
         
         // 4. Counts
+        const unreadStartedAt = Date.now();
         const { data: unreadData } = await supa
             .from('messages')
             .select('conversation_id')
             .eq('is_read', false)
             .neq('sender_id', userId)
             .in('conversation_id', conversations.map(c => c.id));
+        console.info(`[api/conversations] unread counts: ${Date.now() - unreadStartedAt}ms`);
             
         const unreadCounts = {};
         unreadData?.forEach(m => {
             unreadCounts[m.conversation_id] = (unreadCounts[m.conversation_id] || 0) + 1;
         });
+
+        console.info(
+          `[api/conversations] total: ${Date.now() - startedAt}ms conversations=${conversationsWithMessages.length}`
+        );
 
         return new Response(JSON.stringify({ currentUser: profile, conversations: conversationsWithMessages, unreadCounts }), {
            status: 200,
