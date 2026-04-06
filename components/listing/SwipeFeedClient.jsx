@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { XMarkIcon, HeartIcon, MapPinIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
+import { trackProductEvent } from "@/lib/analytics";
 import { ListingService } from "@/lib/services/ListingService";
 import { useLang } from "@/lib/i18n-client";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
     if (typeof window !== "undefined" && window.Telegram?.WebApp) {
       setTgInitData(window.Telegram.WebApp.initData);
     }
+    trackProductEvent("swipe_open", { source: "feed" });
     fetchCards(0);
   }, []);
 
@@ -68,6 +70,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   };
 
   const handleLike = async (listing) => {
+    trackProductEvent("swipe_like", { listingId: listing.id });
     markSeen(listing.id);
     toast.success(t("swipe_liked") || "Добавлено в избранное! 🔥", { duration: 1500 });
     
@@ -107,6 +110,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
       popCard(idx);
     } else if (isLeftSwipe) {
       // Swiped Left!
+      trackProductEvent("swipe_skip", { listingId: listing.id });
       setDirection(-1);
       markSeen(listing.id);
       popCard(idx);
@@ -127,6 +131,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   };
 
   const openListing = (listingId) => {
+    trackProductEvent("swipe_open_listing", { listingId });
     router.push(`/listing/${listingId}?from=swipe`);
   };
 
@@ -205,6 +210,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
               onClick={() => {
                   setDirection(-1);
                   if(cards.length) {
+                      trackProductEvent("swipe_skip", { listingId: cards[cards.length-1].id });
                       markSeen(cards[cards.length-1].id);
                       popCard(cards.length-1);
                   }

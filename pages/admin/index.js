@@ -24,6 +24,14 @@ export default function AdminDashboard() {
     listings: 0,
     activeOffers: 0,
   });
+  const [productStats, setProductStats] = useState({
+    homeOpen: 0,
+    swipeOpen: 0,
+    swipeOpenListing: 0,
+    createListingStart: 0,
+    createListingSuccess: 0,
+    repeatVisit: 0,
+  });
   const [chartData, setChartData] = useState([]);
   const [topListings, setTopListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,6 +53,14 @@ export default function AdminDashboard() {
             setStats(data.stats);
             setChartData(data.chartData);
             setTopListings(data.topListings);
+            setProductStats(data.productStats || {
+              homeOpen: 0,
+              swipeOpen: 0,
+              swipeOpenListing: 0,
+              createListingStart: 0,
+              createListingSuccess: 0,
+              repeatVisit: 0,
+            });
 
        } catch (e) {
            console.error("Dashboard error:", e);
@@ -60,6 +76,14 @@ export default function AdminDashboard() {
     { name: 'Total Users', value: stats.users, icon: UsersIcon, color: 'bg-blue-500' },
     { name: 'Total Listings', value: stats.listings, icon: ShoppingBagIcon, color: 'bg-purple-500' },
     { name: 'Completed Deals', value: stats.activeOffers, icon: ArrowTrendingUpIcon, color: 'bg-green-500' },
+  ];
+  const funnelCards = [
+    { name: 'Home Opens', value: productStats.homeOpen },
+    { name: 'Swipe Opens', value: productStats.swipeOpen },
+    { name: 'Swipe Detail Opens', value: productStats.swipeOpenListing },
+    { name: 'Create Starts', value: productStats.createListingStart },
+    { name: 'Create Success', value: productStats.createListingSuccess },
+    { name: 'Repeat Visits', value: productStats.repeatVisit },
   ];
 
   if (loading) return (
@@ -90,6 +114,23 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 ))}
+            </div>
+
+            <div className="bg-white dark:bg-neutral-900 rounded-2xl shadow-sm border border-gray-100 dark:border-white/10 p-6">
+                <div className="flex items-center justify-between gap-4 mb-6">
+                    <div>
+                        <h2 className="text-lg font-bold dark:text-white">Product Funnel</h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">Last 30 days, product-level events</p>
+                    </div>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+                    {funnelCards.map((card) => (
+                        <div key={card.name} className="rounded-2xl border border-gray-100 dark:border-white/10 bg-gray-50/70 dark:bg-white/[0.03] p-4">
+                            <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{card.name}</p>
+                            <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{card.value}</p>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -77,10 +77,43 @@ export async function GET(req) {
             }
         }
 
+        let productStats = {
+            homeOpen: 0,
+            swipeOpen: 0,
+            swipeOpenListing: 0,
+            createListingStart: 0,
+            createListingSuccess: 0,
+            repeatVisit: 0,
+        };
+
+        try {
+            const { data: productEvents, error: productError } = await supa
+                .from('product_analytics_events')
+                .select('event_type')
+                .gte('created_at', thirtyDaysAgo.toISOString());
+
+            if (productError) throw productError;
+
+            if (productEvents) {
+                productStats = productEvents.reduce((acc, event) => {
+                    if (event.event_type === 'home_open') acc.homeOpen += 1;
+                    if (event.event_type === 'swipe_open') acc.swipeOpen += 1;
+                    if (event.event_type === 'swipe_open_listing') acc.swipeOpenListing += 1;
+                    if (event.event_type === 'create_listing_start') acc.createListingStart += 1;
+                    if (event.event_type === 'create_listing_success') acc.createListingSuccess += 1;
+                    if (event.event_type === 'repeat_visit') acc.repeatVisit += 1;
+                    return acc;
+                }, { ...productStats });
+            }
+        } catch (productAnalyticsError) {
+            console.warn("Product analytics unavailable in admin stats:", productAnalyticsError?.message || productAnalyticsError);
+        }
+
         return new Response(JSON.stringify({
             stats: { users: usersCount || 0, listings: listingsCount || 0, activeOffers: offersCount || 0 },
             chartData: chartDataArray,
-            topListings: mergedListings
+            topListings: mergedListings,
+            productStats
         }), { status: 200, headers: { 'Content-Type': 'application/json' }});
     } catch (e) {
         console.error("Admin API Error:", e);

@@ -26,6 +26,7 @@ import {
   validateDescription,
   validatePrice,
 } from "@/lib/moderation";
+import { trackProductEvent } from "@/lib/analytics";
 import { calculateQuality } from "@/lib/quality"; // NEW
 
 import { useHaptic } from "@/hooks/useHaptic";
@@ -114,11 +115,20 @@ export default function CreateListingClient({ onCreated, editId }) {
 
   // Quality Score
   const [quality, setQuality] = useState({ score: 0, breakdown: [] });
+  const hasTrackedCreateStartRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
     setInTelegram(isTelegramEnv());
   }, []);
+
+  useEffect(() => {
+    if (editId || hasTrackedCreateStartRef.current) return;
+    hasTrackedCreateStartRef.current = true;
+    trackProductEvent("create_listing_start", {
+      mode: "create",
+    });
+  }, [editId]);
 
   useEffect(() => {
     const q = calculateQuality({
@@ -959,6 +969,11 @@ export default function CreateListingClient({ onCreated, editId }) {
           }, 1500);
         } else {
           // CREATE CASE: Confetti + Success Screen
+          trackProductEvent("create_listing_success", {
+            listingId,
+            categoryKey,
+            listingType,
+          });
           localStorage.removeItem("listing_draft_v1"); // Clear draft
           triggerConfetti();
           notificationOccurred("success");

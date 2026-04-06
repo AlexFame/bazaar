@@ -55,7 +55,7 @@ export async function GET(req) {
         if (chartDataMap[dateStr]) {
           if (event.event_type === 'view') {
             chartDataMap[dateStr].views += 1;
-          } else if (event.event_type === 'contact') {
+          } else if (event.event_type === 'contact_click') {
             chartDataMap[dateStr].contacts += 1;
           } else if (event.event_type === 'impression') {
             chartDataMap[dateStr].impressions += 1;

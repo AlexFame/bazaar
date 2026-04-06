@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { AnimatePresence, motion } from "framer-motion";
  // Added animation lib
 import { supabase } from "@/lib/supabaseClient";
+import { trackProductEvent } from "@/lib/analytics";
 import { ListingService } from "@/lib/services/ListingService";
 import Stories from "./Stories";
 import ListingCard from "./ListingCard";
@@ -386,7 +387,32 @@ export default function FeedPageClient({ forcedCategory = null }) {
     };
   }, [isSearchFocused, isSwipeModeActive]);
 
-  // useImpressionTracker(listings, "feed");
+  useImpressionTracker(listings, "feed");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (!sessionStorage.getItem("analytics_home_open_tracked")) {
+      trackProductEvent("home_open", {
+        path: pathname,
+        hasSearchQuery,
+      });
+      sessionStorage.setItem("analytics_home_open_tracked", "1");
+    }
+
+    const hasVisitedBefore = localStorage.getItem("bazaar_has_visited_before");
+    if (hasVisitedBefore && !sessionStorage.getItem("analytics_repeat_visit_tracked")) {
+      trackProductEvent("repeat_visit", {
+        path: pathname,
+      });
+      sessionStorage.setItem("analytics_repeat_visit_tracked", "1");
+    }
+
+    if (!hasVisitedBefore) {
+      localStorage.setItem("bazaar_has_visited_before", "1");
+    }
+  }, [pathname, hasSearchQuery]);
+
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLive, setIsLive] = useState(false);

@@ -22,7 +22,7 @@ async function trackHandler(request) {
     }
 
     // Validate event type
-    const validEventTypes = ['view', 'contact_click', 'message_click', 'favorite_add', 'share', 'impression', 'search_appearance'];
+    const validEventTypes = ['view', 'contact_click', 'message_click', 'favorite_add', 'share', 'impression', 'search_appearance', 'make_offer'];
     if (!validEventTypes.includes(eventType)) {
       return NextResponse.json(
         { error: "Invalid event type" },
