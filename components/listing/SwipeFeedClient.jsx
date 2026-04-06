@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { XMarkIcon, HeartIcon, MapPinIcon } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
@@ -246,6 +246,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
 
 function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, openListing, t }) {
     const x = useMotionValue(0);
+    const canOpenOnTapRef = useRef(true);
     // A slightly stronger tilt keeps the gesture feeling closer to Tinder.
     const rotate = useTransform(x, [-180, 180], [-18, 18]);
 
@@ -275,8 +276,14 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
             dragMomentum={false}
             dragSnapToOrigin
             whileDrag={{ scale: 1.02 }}
+            onPointerDown={() => {
+                canOpenOnTapRef.current = true;
+            }}
+            onDragStart={() => {
+                canOpenOnTapRef.current = false;
+            }}
             onTap={() => {
-                if (isTop) {
+                if (isTop && canOpenOnTapRef.current) {
                     openListing(listing.id);
                 }
             }}
