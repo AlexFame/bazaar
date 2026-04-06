@@ -1,6 +1,8 @@
 import { supaAdmin } from '@/lib/supabaseAdmin';
 import crypto from 'crypto';
-import { withRateLimit } from '@/lib/ratelimit';
+
+export const runtime = 'nodejs';
+export const preferredRegion = ['fra1'];
 
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
@@ -25,6 +27,7 @@ function checkTelegramAuth(initData, botToken) {
 
 async function detailHandler(req) {
     try {
+        const startedAt = Date.now();
         const body = await req.json();
         const { initData, conversationId } = body;
         
@@ -37,22 +40,29 @@ async function detailHandler(req) {
         const supa = supaAdmin();
         
         // 1. Get Profile
+        const profileStartedAt = Date.now();
         const { data: profile } = await supa.from('profiles').select('id, full_name, avatar_url').eq('tg_user_id', tgUserId).single();
+        console.info(`[api/conversations/detail] profile lookup: ${Date.now() - profileStartedAt}ms`);
         if (!profile) return new Response('Profile not found', { status: 404 });
         
         const userId = profile.id;
 
         // 2. Get Conversation (Verify access)
+        const conversationStartedAt = Date.now();
         const { data: conv, error: convError } = await supa
         .from("conversations")
         .select(`
-          *,
-          listing:listings(id, title, price, image_path),
+          id,
+          buyer_id,
+          seller_id,
+          listing_id,
+          listing:listings(id, title, price, currency, main_image_path),
           buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
           seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url)
         `)
         .eq("id", conversationId)
         .single();
+        console.info(`[api/conversations/detail] conversation lookup: ${Date.now() - conversationStartedAt}ms`);
         
         if (convError || !conv) return new Response('Conversation not found', { status: 404 });
         
@@ -62,11 +72,13 @@ async function detailHandler(req) {
         }
 
         // 3. fetch messages
+        const messagesStartedAt = Date.now();
         const { data: msgs, error: msgsError } = await supa
         .from("messages")
-        .select("*")
+        .select("id, conversation_id, sender_id, content, created_at, is_read")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true });
+        console.info(`[api/conversations/detail] messages lookup: ${Date.now() - messagesStartedAt}ms`);
         
         if (msgsError) throw msgsError;
         
@@ -77,8 +89,16 @@ async function detailHandler(req) {
             .map(m => m.id);
         
         if (unreadIds?.length > 0) {
-            await supa.from('messages').update({ is_read: true }).in('id', unreadIds);
+            supa.from('messages').update({ is_read: true }).in('id', unreadIds).then(({ error }) => {
+                if (error) {
+                    console.error('[api/conversations/detail] mark read error:', error);
+                }
+            });
         }
+
+        console.info(
+          `[api/conversations/detail] total: ${Date.now() - startedAt}ms messages=${msgs?.length || 0}`
+        );
 
         return new Response(JSON.stringify({ 
             conversation: conv,
@@ -95,4 +115,4 @@ async function detailHandler(req) {
     }
 }
 
-export const POST = withRateLimit(detailHandler, { limit: 30, window: '30 s' });
+export const POST = detailHandler;
