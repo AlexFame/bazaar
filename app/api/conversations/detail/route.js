@@ -52,11 +52,8 @@ async function detailHandler(req) {
         const { data: conv, error: convError } = await supa
         .from("conversations")
         .select(`
-          id,
-          buyer_id,
-          seller_id,
-          listing_id,
-          listing:listings(id, title, price, currency, main_image_path),
+          *,
+          listing:listings(id, title, price, image_path),
           buyer:profiles!conversations_buyer_id_fkey(id, full_name, avatar_url),
           seller:profiles!conversations_seller_id_fkey(id, full_name, avatar_url)
         `)
@@ -75,7 +72,7 @@ async function detailHandler(req) {
         const messagesStartedAt = Date.now();
         const { data: msgs, error: msgsError } = await supa
         .from("messages")
-        .select("id, conversation_id, sender_id, content, created_at, is_read")
+        .select("*")
         .eq("conversation_id", conversationId)
         .order("created_at", { ascending: true });
         console.info(`[api/conversations/detail] messages lookup: ${Date.now() - messagesStartedAt}ms`);
