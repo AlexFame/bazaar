@@ -9,6 +9,8 @@ import { ListingService } from "@/lib/services/ListingService";
 import { useLang } from "@/lib/i18n-client";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { supabase } from "@/lib/supabaseClient";
+import { getUserId } from "@/lib/userId";
 
 export default function SwipeFeedClient({ onClose, userLocation }) {
   const { t } = useLang();
@@ -97,18 +99,40 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
     markSeen(listing.id);
     toast.success(t("swipe_favorited") || "Добавлено в Избранное ⭐️", { duration: 1500 });
     
-    if (!tgInitData) return;
-
     try {
-      await fetch("/api/swipe-like", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          listingId: listing.id,
-          initData: tgInitData,
-          action: "favorite"
-        })
-      });
+      let profileIdToUse = null;
+      const tgUserId = getUserId();
+      if (tgUserId) {
+         const { data } = await supabase.from('profiles').select('id').eq('tg_user_id', Number(tgUserId)).maybeSingle();
+         if (data) profileIdToUse = data.id;
+      }
+      if (!profileIdToUse) {
+         const { data: { user } } = await supabase.auth.getUser();
+         if (user) {
+            const { data } = await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle();
+            if (data) profileIdToUse = data.id;
+         }
+      }
+
+      if (profileIdToUse) {
+        await supabase.from("favorites").insert({
+          profile_id: profileIdToUse,
+          listing_id: listing.id
+        });
+      } else {
+        // Fallback to API if we couldn't get profileId locally but have tgInitData
+        if (tgInitData) {
+          await fetch("/api/swipe-like", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              listingId: listing.id,
+              initData: tgInitData,
+              action: "favorite"
+            })
+          });
+        }
+      }
     } catch (e) {
       console.error("Favorite error", e);
     }
