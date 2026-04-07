@@ -117,18 +117,18 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   const handleDragEnd = (event, info, idx, listing) => {
     const distanceThreshold = 110;
     const flickVelocityThreshold = 650;
+    const upThreshold = 80;
     const minFlickOffset = 35;
     const ox = info.offset.x;
     const oy = info.offset.y;
     const vx = info.velocity.x;
     const vy = info.velocity.y;
 
-    const isRightSwipe =
-      ox > distanceThreshold || (ox > minFlickOffset && vx > flickVelocityThreshold);
-    const isLeftSwipe =
-      ox < -distanceThreshold || (ox < -minFlickOffset && vx < -flickVelocityThreshold);
-    const isUpSwipe =
-      oy < -distanceThreshold || (oy < -minFlickOffset && vy < -flickVelocityThreshold);
+    const isDominantlyVertical = Math.abs(oy) > Math.abs(ox);
+
+    const isUpSwipe = isDominantlyVertical && (oy < -upThreshold || (oy < -minFlickOffset && vy < -flickVelocityThreshold));
+    const isRightSwipe = !isDominantlyVertical && (ox > distanceThreshold || (ox > minFlickOffset && vx > flickVelocityThreshold));
+    const isLeftSwipe = !isDominantlyVertical && (ox < -distanceThreshold || (ox < -minFlickOffset && vx < -flickVelocityThreshold));
 
     if (isUpSwipe) {
       // Swiped Up! Add to favorites
@@ -136,15 +136,15 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
       handleFavorite(listing);
       popCard(idx);
     } else if (isRightSwipe) {
-      // Swiped Right! (Hide)
-      trackProductEvent("swipe_skip", { listingId: listing.id });
+      // Swiped Right! (Like)
       setDirection(1);
-      markSeen(listing.id);
+      handleLike(listing);
       popCard(idx);
     } else if (isLeftSwipe) {
-      // Swiped Left! (Notify)
+      // Swiped Left! (Hide)
+      trackProductEvent("swipe_skip", { listingId: listing.id });
       setDirection(-1);
-      handleLike(listing);
+      markSeen(listing.id);
       popCard(idx);
     }
   };
@@ -243,19 +243,6 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
                   onClick={() => {
                       setDirection(-1);
                       if(cards.length) {
-                          handleLike(cards[cards.length-1]);
-                          popCard(cards.length-1);
-                      }
-                  }}
-                  className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center shadow-lg shadow-pink-500/20 active:scale-90 transition-transform"
-              >
-                  <HeartIcon className="w-8 h-8 text-white" />
-              </button>
-
-              <button 
-                  onClick={() => {
-                      setDirection(1);
-                      if(cards.length) {
                           trackProductEvent("swipe_skip", { listingId: cards[cards.length-1].id });
                           markSeen(cards[cards.length-1].id);
                           popCard(cards.length-1);
@@ -264,6 +251,19 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
                   className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/5 active:scale-90 transition-transform"
               >
                   <XMarkIcon className="w-8 h-8 text-red-500" />
+              </button>
+
+              <button 
+                  onClick={() => {
+                      setDirection(1);
+                      if(cards.length) {
+                          handleLike(cards[cards.length-1]);
+                          popCard(cards.length-1);
+                      }
+                  }}
+                  className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center shadow-lg shadow-pink-500/20 active:scale-90 transition-transform"
+              >
+                  <HeartIcon className="w-8 h-8 text-white" />
               </button>
           </div>
           <p className="text-gray-400 text-xs text-center w-3/4 max-w-xs mt-3 px-2 font-medium">
@@ -278,6 +278,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
 
 function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, openListing, t }) {
     const x = useMotionValue(0);
+    const y = useMotionValue(0);
     const canOpenOnTapRef = useRef(true);
     // A slightly stronger tilt keeps the gesture feeling closer to Tinder.
     const rotate = useTransform(x, [-180, 180], [-18, 18]);
@@ -287,6 +288,7 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
             style={{ 
                 zIndex: idx, 
                 x: isTop ? x : 0, 
+                y: isTop ? y : undefined,
                 rotate: isTop ? rotate : 0 
             }}
             className="absolute w-[90%] h-full rounded-3xl bg-neutral-800 shadow-2xl overflow-hidden border border-white/10 will-change-transform"
@@ -335,20 +337,27 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
                 )}
                 
                 {/* Gradient overlay */}
-                <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-neutral-800 to-transparent flex flex-col justify-end p-4">
-                    {/* Sliding Left -> Like */}
+                <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-neutral-800 to-transparent flex flex-col justify-end p-4 pointer-events-none">
+                    {/* Sliding Right -> Like */}
                     <motion.div 
-                        className="absolute right-4 top-4 border-4 border-green-500 text-green-500 font-black text-4xl rounded-xl px-4 py-1 rotate-12"
-                        style={{ opacity: useTransform(x, [0, -80], [0, 1]) }}
+                        className="absolute left-4 top-4 border-4 border-green-500 text-green-500 font-black text-4xl rounded-xl px-4 py-1 -rotate-12"
+                        style={{ opacity: useTransform(x, [0, 80], [0, 1]) }}
                     >
                         {t("swipe_like_tag") || "ЛАЙК"}
                     </motion.div>
-                    {/* Sliding Right -> Skip */}
+                    {/* Sliding Left -> Skip */}
                     <motion.div 
-                        className="absolute left-4 top-4 border-4 border-red-500 text-red-500 font-black text-4xl rounded-xl px-4 py-1 -rotate-12"
-                        style={{ opacity: useTransform(x, [0, 80], [0, 1]) }}
+                        className="absolute right-4 top-4 border-4 border-red-500 text-red-500 font-black text-4xl rounded-xl px-4 py-1 rotate-12"
+                        style={{ opacity: useTransform(x, [0, -80], [0, 1]) }}
                     >
                         {t("swipe_skip_tag") || "СКРЫТЬ"}
+                    </motion.div>
+                    {/* Sliding Up -> Favorite */}
+                    <motion.div 
+                        className="absolute bottom-12 left-1/2 -translate-x-1/2 border-4 border-blue-500 text-blue-500 font-black text-2xl rounded-xl px-4 py-1"
+                        style={{ opacity: useTransform(y, [0, -80], [0, 1]) }}
+                    >
+                        {t("swipe_favorited_tag") || "В ИЗБРАННОЕ"}
                     </motion.div>
                 </div>
                 
