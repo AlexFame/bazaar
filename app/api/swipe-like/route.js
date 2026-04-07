@@ -23,7 +23,7 @@ function checkTelegramAuth(initData, botToken) {
 
 export async function POST(req) {
   try {
-    const { listingId, initData } = await req.json();
+    const { listingId, initData, action } = await req.json();
 
     if (!listingId) {
       return NextResponse.json({ error: "Missing listingId" }, { status: 400 });
@@ -55,6 +55,11 @@ export async function POST(req) {
       
     if (favError && favError.code !== '23505') {
         console.error("Favorite error", favError);
+    }
+
+    if (action === "favorite") {
+      // If just favorite, we do not notify the seller
+      return NextResponse.json({ success: true, action: "favorite" });
     }
 
     // 2. Fetch the Listing to get Seller ID and Title

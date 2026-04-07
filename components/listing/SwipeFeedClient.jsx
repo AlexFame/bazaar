@@ -72,9 +72,9 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   const handleLike = async (listing) => {
     trackProductEvent("swipe_like", { listingId: listing.id });
     markSeen(listing.id);
-    toast.success(t("swipe_liked") || "Добавлено в избранное! 🔥", { duration: 1500 });
+    toast.success(t("swipe_liked_notice") || "Специалист получит уведомление! 💌", { duration: 2000 });
     
-    if (!tgInitData) return; // If web only, skip backend notification
+    if (!tgInitData) return;
 
     // Fire API to notify seller and add to favorites
     try {
@@ -84,10 +84,33 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
         body: JSON.stringify({
           listingId: listing.id,
           initData: tgInitData,
+          action: "like"
         })
       });
     } catch (e) {
       console.error("Like error", e);
+    }
+  };
+
+  const handleFavorite = async (listing) => {
+    trackProductEvent("swipe_favorite", { listingId: listing.id });
+    markSeen(listing.id);
+    toast.success(t("swipe_favorited") || "Добавлено в Избранное ⭐️", { duration: 1500 });
+    
+    if (!tgInitData) return;
+
+    try {
+      await fetch("/api/swipe-like", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          listingId: listing.id,
+          initData: tgInitData,
+          action: "favorite"
+        })
+      });
+    } catch (e) {
+      console.error("Favorite error", e);
     }
   };
 
@@ -96,23 +119,32 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
     const flickVelocityThreshold = 650;
     const minFlickOffset = 35;
     const ox = info.offset.x;
+    const oy = info.offset.y;
     const vx = info.velocity.x;
+    const vy = info.velocity.y;
 
     const isRightSwipe =
       ox > distanceThreshold || (ox > minFlickOffset && vx > flickVelocityThreshold);
     const isLeftSwipe =
       ox < -distanceThreshold || (ox < -minFlickOffset && vx < -flickVelocityThreshold);
+    const isUpSwipe =
+      oy < -distanceThreshold || (oy < -minFlickOffset && vy < -flickVelocityThreshold);
 
-    if (isRightSwipe) {
-      // Swiped Right!
+    if (isUpSwipe) {
+      // Swiped Up! Add to favorites
+      setDirection(-2);
+      handleFavorite(listing);
+      popCard(idx);
+    } else if (isRightSwipe) {
+      // Swiped Right! (Hide)
+      trackProductEvent("swipe_skip", { listingId: listing.id });
       setDirection(1);
-      handleLike(listing);
+      markSeen(listing.id);
       popCard(idx);
     } else if (isLeftSwipe) {
-      // Swiped Left!
-      trackProductEvent("swipe_skip", { listingId: listing.id });
+      // Swiped Left! (Notify)
       setDirection(-1);
-      markSeen(listing.id);
+      handleLike(listing);
       popCard(idx);
     }
   };
@@ -203,46 +235,40 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
 
       {/* Footer Controls */}
       <div
-          className="absolute flex items-center gap-4 z-50"
+          className="absolute flex flex-col items-center z-50 w-full"
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 2rem)" }}
       >
-          <button 
-              onClick={() => {
-                  setDirection(-1);
-                  if(cards.length) {
-                      trackProductEvent("swipe_skip", { listingId: cards[cards.length-1].id });
-                      markSeen(cards[cards.length-1].id);
-                      popCard(cards.length-1);
-                  }
-              }}
-              className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/5 active:scale-90 transition-transform"
-          >
-              <XMarkIcon className="w-8 h-8 text-red-500" />
-          </button>
+          <div className="flex items-center gap-6 justify-center">
+              <button 
+                  onClick={() => {
+                      setDirection(-1);
+                      if(cards.length) {
+                          handleLike(cards[cards.length-1]);
+                          popCard(cards.length-1);
+                      }
+                  }}
+                  className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center shadow-lg shadow-pink-500/20 active:scale-90 transition-transform"
+              >
+                  <HeartIcon className="w-8 h-8 text-white" />
+              </button>
 
-          <button
-              onClick={() => {
-                  if (cards.length) {
-                    openListing(cards[cards.length - 1].id);
-                  }
-              }}
-              className="px-5 h-14 rounded-full bg-white/12 backdrop-blur-md text-white font-semibold shadow-lg border border-white/10 active:scale-95 transition-transform"
-          >
-              {t("swipe_open_listing") || "Подробнее"}
-          </button>
-          
-          <button 
-              onClick={() => {
-                  setDirection(1);
-                  if(cards.length) {
-                      handleLike(cards[cards.length-1]);
-                      popCard(cards.length-1);
-                  }
-              }}
-              className="w-16 h-16 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center shadow-lg shadow-pink-500/20 active:scale-90 transition-transform"
-          >
-              <HeartIcon className="w-8 h-8 text-white" />
-          </button>
+              <button 
+                  onClick={() => {
+                      setDirection(1);
+                      if(cards.length) {
+                          trackProductEvent("swipe_skip", { listingId: cards[cards.length-1].id });
+                          markSeen(cards[cards.length-1].id);
+                          popCard(cards.length-1);
+                      }
+                  }}
+                  className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/5 active:scale-90 transition-transform"
+              >
+                  <XMarkIcon className="w-8 h-8 text-red-500" />
+              </button>
+          </div>
+          <p className="text-gray-400 text-xs text-center w-3/4 max-w-xs mt-3 px-2 font-medium">
+              {t("swipe_like_hint") || "Лайк — это сигнал специалисту написать вам в ЛС"}
+          </p>
       </div>
 
     </motion.div>
@@ -271,13 +297,14 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
                 opacity: 1
             }}
             exit={{ 
-                x: direction * 300, 
+                x: direction === -2 ? 0 : (direction === 1 ? 300 : -300), 
+                y: direction === -2 ? -500 : 0,
                 opacity: 0, 
                 scale: 0.8,
-                rotate: direction * 25 // strong rotation on exit
+                rotate: direction === -2 ? 0 : (direction === 1 ? 25 : -25)
             }}
             transition={{ duration: 0.3 }}
-            drag={isTop ? "x" : false}
+            drag={isTop}
             dragElastic={0.18}
             dragMomentum={false}
             dragSnapToOrigin
@@ -309,18 +336,19 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
                 
                 {/* Gradient overlay */}
                 <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-neutral-800 to-transparent flex flex-col justify-end p-4">
-                    {/* Add Like/Nope overlay opacities based on drag */}
+                    {/* Sliding Left -> Like */}
                     <motion.div 
                         className="absolute right-4 top-4 border-4 border-green-500 text-green-500 font-black text-4xl rounded-xl px-4 py-1 rotate-12"
-                        style={{ opacity: useTransform(x, [0, 80], [0, 1]) }}
-                    >
-                        LIKE
-                    </motion.div>
-                    <motion.div 
-                        className="absolute left-4 top-4 border-4 border-red-500 text-red-500 font-black text-4xl rounded-xl px-4 py-1 -rotate-12"
                         style={{ opacity: useTransform(x, [0, -80], [0, 1]) }}
                     >
-                        NOPE
+                        {t("swipe_like_tag") || "ЛАЙК"}
+                    </motion.div>
+                    {/* Sliding Right -> Skip */}
+                    <motion.div 
+                        className="absolute left-4 top-4 border-4 border-red-500 text-red-500 font-black text-4xl rounded-xl px-4 py-1 -rotate-12"
+                        style={{ opacity: useTransform(x, [0, 80], [0, 1]) }}
+                    >
+                        {t("swipe_skip_tag") || "СКРЫТЬ"}
                     </motion.div>
                 </div>
                 
