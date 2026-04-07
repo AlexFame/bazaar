@@ -13,6 +13,7 @@ import BackButton from "@/components/BackButton";
 import { useLang } from "@/lib/i18n-client";
 
 import { useRouter } from "next/navigation";
+import { resolveAvatarUrl } from "@/lib/avatar";
 
 export default function ProfilePageClient({ profileId }) {
   const router = useRouter();
@@ -194,7 +195,7 @@ export default function ProfilePageClient({ profileId }) {
                 {profile.avatar_url ? (
                     <>
                         <img 
-                            src={profile.avatar_url.startsWith('http') ? profile.avatar_url : (supabase.storage.from('avatars').getPublicUrl(profile.avatar_url).data?.publicUrl || profile.avatar_url)} 
+                            src={resolveAvatarUrl(profile.avatar_url)} 
                             alt={profile.full_name || profile.tg_username || "User"} 
                             className="w-full h-full object-cover"
                             referrerPolicy="no-referrer"

@@ -20,6 +20,7 @@ import { useLang } from "@/lib/i18n-client";
 import ListingCard from "@/components/ListingCard";
 import { ListingCardSkeleton } from "@/components/SkeletonLoader";
 import { getTelegramUser } from "@/lib/telegram";
+import { resolveAvatarUrl } from "@/lib/avatar";
 import BackButton from "@/components/BackButton";
 import PremiumServicesModal from "@/components/PremiumServicesModal";
 import FadeIn from "@/components/FadeIn";
@@ -52,6 +53,7 @@ export default function MyPage() {
 
   const [isAdmin, setIsAdmin] = useState(cachedAdmin);
   const [tgUser, setTgUser] = useState(null);
+  const [currentProfile, setCurrentProfile] = useState(null);
   const [isPremiumModalOpen, setIsPremiumModalOpen] = useState(false);
   const [selectedListingId, setSelectedListingId] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -247,6 +249,26 @@ export default function MyPage() {
     }
   }, []);
 
+  useEffect(() => {
+    const loadCurrentProfile = async () => {
+      const tgId = getUserId();
+      if (!tgId) return;
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, tg_username, avatar_url, is_admin")
+        .eq("tg_user_id", tgId)
+        .single();
+
+      if (data) {
+        setCurrentProfile(data);
+        if (typeof data.is_admin === "boolean") setIsAdmin(data.is_admin);
+      }
+    };
+
+    loadCurrentProfile();
+  }, []);
+
   const handleDelete = (id) => {
     // ListingCard already handles the API deletion and confirmation.
     // We just need to update the UI state.
@@ -280,22 +302,22 @@ export default function MyPage() {
                    {/* User Avatar & Name */}
                    <div className="flex items-center space-x-4">
                       <div className="h-16 w-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl relative overflow-hidden">
-                         {tgUser.photo_url ? (
+                         {resolveAvatarUrl(currentProfile?.avatar_url) || tgUser.photo_url ? (
                             <img 
-                               src={tgUser.photo_url} 
+                               src={resolveAvatarUrl(currentProfile?.avatar_url) || tgUser.photo_url} 
                                alt="Avatar" 
                                className="h-full w-full object-cover"
                             />
                          ) : (
-                            <span>{tgUser.first_name?.[0]}{tgUser.last_name?.[0]}</span>
+                            <span>{(currentProfile?.full_name || tgUser.first_name || "U")?.[0]}{tgUser.last_name?.[0]}</span>
                          )}
                       </div>
                       <div>
                          <h1 className={`text-xl font-bold text-gray-900 dark:text-foreground`}>
-                            {tgUser.first_name} {tgUser.last_name || ""}
+                            {currentProfile?.full_name || `${tgUser.first_name} ${tgUser.last_name || ""}`.trim()}
                          </h1>
                          <p className={`text-sm text-gray-500`}>
-                            {tgUser.username ? `@${tgUser.username}` : t('no_username')}
+                            {currentProfile?.tg_username ? `@${currentProfile.tg_username}` : (tgUser.username ? `@${tgUser.username}` : t('no_username'))}
                          </p>
                       </div>
                    </div>

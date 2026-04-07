@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { UserService } from "@/lib/services/UserService";
 import Link from "next/link";
 import { useLang } from "@/lib/i18n-client";
+import { resolveAvatarUrl } from "@/lib/avatar";
 import { ChatDetailSkeleton } from "./SkeletonLoader";
 
 export default function ChatWindowClient({ conversationId, listingId, sellerId }) {
@@ -405,7 +406,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
             <Link href={`/profile/${otherUser.id}`} className="flex items-center gap-2.5 flex-1 min-w-0 pr-2">
                 <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 border border-gray-100 dark:border-white/10 relative">
                 {otherUser.avatar_url ? (
-                    <img src={otherUser.avatar_url.startsWith('http') ? otherUser.avatar_url : (supabase.storage.from('avatars').getPublicUrl(otherUser.avatar_url).data?.publicUrl || otherUser.avatar_url)} alt={otherUser.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                    <img src={resolveAvatarUrl(otherUser.avatar_url)} alt={otherUser.full_name} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
                 ) : null}
                 <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-xs bg-gray-100 dark:bg-gray-800" style={{ display: otherUser.avatar_url ? 'none' : 'flex' }}>
                     {(otherUser.full_name || "U")[0].toUpperCase()}
@@ -448,7 +449,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                   {!isMe && (
                       <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
                           {otherUser?.avatar_url && (
-                              <img src={otherUser.avatar_url.startsWith('http') ? otherUser.avatar_url : (supabase.storage.from('avatars').getPublicUrl(otherUser.avatar_url).data?.publicUrl || otherUser.avatar_url)} alt="A" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                              <img src={resolveAvatarUrl(otherUser.avatar_url)} alt="A" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
                           )}
                           <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-[10px] bg-gray-100 dark:bg-gray-800" style={{ display: otherUser?.avatar_url ? 'none' : 'flex' }}>
                              {(otherUser?.full_name || "U")[0].toUpperCase()}
@@ -468,7 +469,7 @@ export default function ChatWindowClient({ conversationId, listingId, sellerId }
                   {isMe && (
                       <div className="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden flex-shrink-0 relative border border-gray-100 dark:border-gray-700">
                           {user?.avatar_url && (
-                              <img src={user.avatar_url.startsWith('http') ? user.avatar_url : (supabase.storage.from('avatars').getPublicUrl(user.avatar_url).data?.publicUrl || user.avatar_url)} alt="Me" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+                              <img src={resolveAvatarUrl(user.avatar_url)} alt="Me" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
                           )}
                           <div className="w-full h-full flex items-center justify-center font-bold text-gray-400 text-[10px] bg-gray-100 dark:bg-gray-800" style={{ display: user?.avatar_url ? 'none' : 'flex' }}>
                              {(user?.full_name || "Я")[0].toUpperCase()}
