@@ -464,6 +464,8 @@ export default function MyPage() {
                     key={listing.id} 
                     listing={listing} 
                     showActions={activeTab !== 'favorites'}
+                    hideFavorite={activeTab !== 'favorites'}
+                    isFavoriteInit={activeTab === 'favorites' ? true : undefined}
                     onDelete={() => handleDelete(listing.id)}
                     onPromote={() => handlePromote(listing.id)}
                     onAnalytics={() => router.push(`/my/analytics/${listing.id}`)}

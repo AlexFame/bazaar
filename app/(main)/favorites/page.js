@@ -129,6 +129,7 @@ export default function FavoritesPage() {
                 <ListingCard 
                   key={listing.id} 
                   listing={listing}
+                  isFavoriteInit={true}
                   onDelete={handleFavoriteRemoved}
                 />
               ))}

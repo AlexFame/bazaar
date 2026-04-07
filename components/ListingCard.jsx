@@ -94,7 +94,7 @@ function formatDate(createdAt, lang) {
   });
 }
 
-export default function ListingCard({ listing, showActions, onDelete, onPromote, onAnalytics, onStatusChange, compact }) {
+export default function ListingCard({ listing, showActions, onDelete, onPromote, onAnalytics, onStatusChange, compact, hideFavorite, isFavoriteInit }) {
   const { lang, t } = useLang();
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState(null);
@@ -152,24 +152,39 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
 
   // Load favorite status
   useEffect(() => {
+    if (hideFavorite) return;
+    if (isFavoriteInit !== undefined) {
+      setIsFavorite(isFavoriteInit);
+      return;
+    }
+
     async function loadFavoriteStatus() {
       let profileIdToUse = null;
       
-      // 1. Try Telegram ID
-      const tgUserId = getUserId();
-      if (tgUserId) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("tg_user_id", Number(tgUserId))
-          .single();
-        if (profileData) profileIdToUse = profileData.id;
-      }
+      // Use in-memory global cache if available to prevent N+1 identical profile queries
+      if (typeof window !== "undefined" && window._cachedProfileId) {
+          profileIdToUse = window._cachedProfileId;
+      } else {
+          // 1. Try Telegram ID
+          const tgUserId = getUserId();
+          if (tgUserId) {
+            const { data: profileData } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq("tg_user_id", Number(tgUserId))
+              .maybeSingle();
+            if (profileData) profileIdToUse = profileData.id;
+          }
 
-      // 2. Fallback to Supabase Auth
-      if (!profileIdToUse) {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) profileIdToUse = user.id;
+          // 2. Fallback to Supabase Auth
+          if (!profileIdToUse) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) profileIdToUse = user.id;
+          }
+          
+          if (profileIdToUse && typeof window !== "undefined") {
+              window._cachedProfileId = profileIdToUse;
+          }
       }
 
       if (!profileIdToUse) return;
@@ -190,7 +205,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
     }
 
     loadFavoriteStatus();
-  }, [listing.id]);
+  }, [listing.id, hideFavorite, isFavoriteInit]);
 
   // Auto-translate title when language changes
   // Lazy Auto-Translation
@@ -245,7 +260,28 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
     e.preventDefault();
     e.stopPropagation();
 
-    if (!profileId) return;
+    let currentProfileId = profileId;
+    if (!currentProfileId) {
+        if (typeof window !== "undefined" && window._cachedProfileId) {
+            currentProfileId = window._cachedProfileId;
+        } else {
+            const tgUserId = getUserId();
+            if (tgUserId) {
+                const { data } = await supabase.from("profiles").select("id").eq("tg_user_id", Number(tgUserId)).maybeSingle();
+                if (data) currentProfileId = data.id;
+            }
+            if (!currentProfileId) {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) currentProfileId = user.id;
+            }
+            if (currentProfileId && typeof window !== "undefined") {
+                window._cachedProfileId = currentProfileId;
+            }
+        }
+        if (currentProfileId) setProfileId(currentProfileId);
+    }
+
+    if (!currentProfileId) return;
 
     try {
       if (isFavorite) {
@@ -253,7 +289,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
         await supabase
           .from("favorites")
           .delete()
-          .eq("profile_id", profileId)
+          .eq("profile_id", currentProfileId)
           .eq("listing_id", listing.id);
         setIsFavorite(false);
       } else {
@@ -261,7 +297,7 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
         await supabase
           .from("favorites")
           .insert({
-            profile_id: profileId,
+            profile_id: currentProfileId,
             listing_id: listing.id,
           });
         setIsFavorite(true);
@@ -459,21 +495,23 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
         )}
 
         {/* Heart button */}
-        <button
-          onClick={handleFavoriteClick}
-          className="absolute top-3 right-3 z-10 p-2 bg-white/95 backdrop-blur-sm rounded-full shadow-md hover:scale-110 transition-transform"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill={isFavorite ? "#ef4444" : "none"}
-            stroke={isFavorite ? "#ef4444" : "currentColor"}
-            strokeWidth="2"
-            className="w-5 h-5 text-gray-700"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-          </svg>
-        </button>
+        {!hideFavorite && (
+            <button
+              onClick={handleFavoriteClick}
+              className="absolute top-3 right-3 z-10 p-2 bg-white/95 backdrop-blur-sm rounded-full shadow-md hover:scale-110 transition-transform"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill={isFavorite ? "#ef4444" : "none"}
+                stroke={isFavorite ? "#ef4444" : "currentColor"}
+                strokeWidth="2"
+                className="w-5 h-5 text-gray-700"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+              </svg>
+            </button>
+        )}
 
         <div className="aspect-square w-full bg-gray-100 relative overflow-hidden">
           {imageUrl ? (
