@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getTG } from "@/lib/telegram";
 import { useLang } from "@/lib/i18n-client";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLang();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const nextPath = searchParams.get("next") || "/my";
 
   const handleLogin = async () => {
     setLoading(true);
@@ -44,8 +46,8 @@ export default function LoginPage() {
         throw new Error(t("login_session_err") || "Сессия не сохранилась. Попробуйте снова.");
       }
 
-      // Success — go back
-      router.back();
+      // Success — go to the originally requested protected page.
+      router.replace(nextPath);
     } catch (err) {
       console.error("Login error:", err);
       setError(err.message || t("login_gen_err") || "Произошла ошибка");
@@ -57,7 +59,7 @@ export default function LoginPage() {
   useEffect(() => {
     // Auto-login attempt on mount
     handleLogin();
-  }, []);
+  }, [nextPath]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
