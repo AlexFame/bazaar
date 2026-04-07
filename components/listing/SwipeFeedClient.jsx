@@ -259,7 +259,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
 
       {/* Footer Controls */}
       <div
-          className="absolute flex flex-col items-center z-50 w-full"
+          className="absolute flex flex-col items-center z-50 w-full left-0 right-0 mx-auto"
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 2rem)" }}
       >
           <div className="flex items-center gap-6 justify-center">
@@ -345,7 +345,7 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
                 y: isTop ? y : undefined,
                 rotate: isTop ? rotate : 0 
             }}
-            className="absolute w-[90%] h-full rounded-3xl bg-neutral-800 shadow-2xl overflow-hidden border border-white/10 will-change-transform"
+            className="absolute w-[90%] left-0 right-0 mx-auto h-full rounded-3xl bg-neutral-800 shadow-2xl overflow-hidden border border-white/10 will-change-transform"
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ 
                 scale: isTop ? 1 : 1 - (totalCards - 1 - idx) * 0.05, 
