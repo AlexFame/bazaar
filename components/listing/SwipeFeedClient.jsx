@@ -283,6 +283,36 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
     // A slightly stronger tilt keeps the gesture feeling closer to Tinder.
     const rotate = useTransform(x, [-180, 180], [-18, 18]);
 
+    const opacityLike = useTransform(() => {
+        if (!isTop) return 0;
+        const currentX = x.get();
+        const currentY = y.get();
+        if (Math.abs(currentX) < 15) return 0;
+        if (Math.abs(currentY) >= Math.abs(currentX)) return 0;
+        if (currentX <= 0) return 0;
+        return Math.min((currentX - 15) / 60, 1);
+    });
+
+    const opacitySkip = useTransform(() => {
+        if (!isTop) return 0;
+        const currentX = x.get();
+        const currentY = y.get();
+        if (Math.abs(currentX) < 15) return 0;
+        if (Math.abs(currentY) >= Math.abs(currentX)) return 0;
+        if (currentX >= 0) return 0;
+        return Math.min((Math.abs(currentX) - 15) / 60, 1);
+    });
+
+    const opacityFav = useTransform(() => {
+        if (!isTop) return 0;
+        const currentX = x.get();
+        const currentY = y.get();
+        if (Math.abs(currentY) < 15) return 0;
+        if (currentY >= 0) return 0;
+        if (Math.abs(currentX) > Math.abs(currentY)) return 0;
+        return Math.min((Math.abs(currentY) - 15) / 60, 1);
+    });
+
     return (
         <motion.div
             style={{ 
@@ -341,21 +371,21 @@ function SwipeCard({ listing, idx, totalCards, direction, isTop, handleDragEnd, 
                     {/* Sliding Right -> Like */}
                     <motion.div 
                         className="absolute left-4 top-4 border-4 border-green-500 text-green-500 font-black text-4xl rounded-xl px-4 py-1 -rotate-12"
-                        style={{ opacity: useTransform(x, [0, 80], [0, 1]) }}
+                        style={{ opacity: opacityLike }}
                     >
                         {t("swipe_like_tag") || "ЛАЙК"}
                     </motion.div>
                     {/* Sliding Left -> Skip */}
                     <motion.div 
                         className="absolute right-4 top-4 border-4 border-red-500 text-red-500 font-black text-4xl rounded-xl px-4 py-1 rotate-12"
-                        style={{ opacity: useTransform(x, [0, -80], [0, 1]) }}
+                        style={{ opacity: opacitySkip }}
                     >
                         {t("swipe_skip_tag") || "СКРЫТЬ"}
                     </motion.div>
                     {/* Sliding Up -> Favorite */}
                     <motion.div 
                         className="absolute bottom-12 left-1/2 -translate-x-1/2 border-4 border-blue-500 text-blue-500 font-black text-2xl rounded-xl px-4 py-1"
-                        style={{ opacity: useTransform(y, [0, -80], [0, 1]) }}
+                        style={{ opacity: opacityFav }}
                     >
                         {t("swipe_favorited_tag") || "В ИЗБРАННОЕ"}
                     </motion.div>
