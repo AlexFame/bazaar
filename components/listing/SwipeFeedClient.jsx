@@ -8,7 +8,6 @@ import { trackProductEvent } from "@/lib/analytics";
 import { ListingService } from "@/lib/services/ListingService";
 import { useLang } from "@/lib/i18n-client";
 import { toast } from "sonner";
-import { useAuth } from "@/lib/auth";
 import { supabase } from "@/lib/supabaseClient";
 import { getUserId } from "@/lib/userId";
 
@@ -20,20 +19,58 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [direction, setDirection] = useState(0);
+  const currentProfileIdRef = useRef(null);
   
   // Minimal auth check if we need to send likes
   // In a robust implementation, the API route handles Telegram Auth via initData
   const [tgInitData, setTgInitData] = useState(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.Telegram?.WebApp) {
-      setTgInitData(window.Telegram.WebApp.initData);
-    }
+    let mounted = true;
+
+    const initSwipeFeed = async () => {
+      if (typeof window !== "undefined" && window.Telegram?.WebApp) {
+        setTgInitData(window.Telegram.WebApp.initData);
+      }
+
+      const profileId = await resolveCurrentProfileId();
+      if (!mounted) return;
+
+      currentProfileIdRef.current = profileId;
+      fetchCards(0, profileId);
+    };
+
     trackProductEvent("swipe_open", { source: "feed" });
-    fetchCards(0);
+    initSwipeFeed();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  const fetchCards = async (pageIdx) => {
+  const resolveCurrentProfileId = async () => {
+    try {
+      const tgUserId = getUserId();
+      if (tgUserId) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("tg_user_id", Number(tgUserId))
+          .maybeSingle();
+
+        if (data?.id) return data.id;
+      }
+
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData?.user?.id) return authData.user.id;
+    } catch (e) {
+      console.warn("Could not resolve swipe profile id", e);
+    }
+
+    return null;
+  };
+
+  const fetchCards = async (pageIdx, excludeProfileId = currentProfileIdRef.current) => {
     try {
       if (pageIdx === 0) setLoading(true);
       const data = await ListingService.search({
@@ -41,14 +78,18 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
         userLocation: userLocation,
         page: pageIdx,
         pageSize: 15,
-        categoryFilter: 'business' // explicitly force services/business
+        categoryFilter: 'business', // explicitly force services/business
+        excludeUserId: excludeProfileId
       });
       
       // Filter out seen/skipped IDs from sessionStorage if needed
       const seenRaw = sessionStorage.getItem("swipe_seen_ids") || "[]";
       const seen = JSON.parse(seenRaw);
       
-      const novel = data.filter(d => !seen.includes(d.id));
+      const novel = data.filter(d => (
+        !seen.includes(d.id) &&
+        (!excludeProfileId || String(d.created_by) !== String(excludeProfileId))
+      ));
 
       if (novel.length < 15) setHasMore(false);
       
@@ -180,7 +221,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
         
         // Fetch more if almost empty
         if (newCards.length < 5 && hasMore) {
-            fetchCards(page + 1);
+            fetchCards(page + 1, currentProfileIdRef.current);
         }
         return newCards;
     });
