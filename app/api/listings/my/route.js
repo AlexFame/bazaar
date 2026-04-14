@@ -58,6 +58,22 @@ async function myListingsHandler(req) {
         return NextResponse.json({ items: [] });
     }
 
+    if (tab === 'favorites') {
+        const { data: favorites, error } = await admin
+            .from('favorites')
+            .select('listing_id, listings(*, profiles:created_by(*))')
+            .eq('profile_id', profile.id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const items = (favorites || [])
+            .map((favorite) => favorite.listings)
+            .filter(Boolean);
+
+        return NextResponse.json({ items, isAdmin: profile.is_admin });
+    }
+
     // 2. Fetch Listings (Bypassing RLS)
     let query = admin
         .from('listings')

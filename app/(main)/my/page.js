@@ -35,15 +35,16 @@ export default function MyPage() {
   const [userId, setUserId] = useState(null);
   
   // JOTAI CACHE
-  const [listings, setListings] = useAtom(myListingsAtom);
+  const [listingsByTab, setListingsByTab] = useAtom(myListingsAtom);
   const [cachedActiveTab, setCachedActiveTab] = useAtom(myActiveTabAtom);
   const [cachedAdmin, setCachedAdmin] = useAtom(myIsAdminAtom);
   
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get("tab");
 
-  const [loading, setLoading] = useState(listings.length === 0);
   const [activeTab, setActiveTab] = useState(tabFromUrl || cachedActiveTab || "active"); // Sync with param or cache
+  const listings = listingsByTab[activeTab] || [];
+  const [loading, setLoading] = useState(!listingsByTab[activeTab]);
   
   useEffect(() => {
     if (tabFromUrl && ["active", "archive", "draft", "favorites"].includes(tabFromUrl)) {
@@ -117,9 +118,16 @@ export default function MyPage() {
     };
   }, []);
 
-  const loadListings = async (force = false) => {
-    // If we have data and tab hasn't changed (and not forced), skip fetch
-    if (!force && listings.length > 0 && activeTab === cachedActiveTab) {
+  const setTabListings = (tab, items) => {
+    setListingsByTab((prev) => ({
+      ...prev,
+      [tab]: items
+    }));
+  };
+
+  const loadListings = async (tab = activeTab, force = false) => {
+    // If we have cached data for this exact tab, show it instantly.
+    if (!force && listingsByTab[tab]) {
         setLoading(false);
         return;
     }
@@ -137,26 +145,7 @@ export default function MyPage() {
       // Handles favorites & reviews separately as they might need different logic,
       // BUT for "active", "archive", "draft", we use the new API to bypass RLS.
       
-      if (activeTab === 'favorites') {
-          // Favorites fetch logic (Client side is fine usually, but check RLS)
-          // RLS for favorites usually allows "select own".
-          // RLS for listings in favorites: "select active". User might not see closed favorites?
-          // For now keep favorites logic as is, or move to API too?
-          // Let's keep existing favorites logic for now, fix drafts first.
-          
-          let uid = tgUserId;
-          if (!uid) {
-             const { data: { user } } = await supabase.auth.getUser();
-             uid = user?.id; // If getting by profile, we need profile id logic again.
-             // Existing code handled this via profile lookup.
-             // Let's just fix the "My Listings" part first.
-          }
-          
-          // Re-implementing profile fetch for Favorites/Reviews as they don't use the new API yet
-          // (Or we could extend the API).
-          // Let's minimize changes and valid RLS usage. 
-          // Favorites usually point to ACTIVE listings, so RLS is OK.
-          
+      if (tab === 'reviews') {
             const { data: profileData } = await supabase
                 .from("profiles")
                 .select("id, is_admin")
@@ -166,40 +155,29 @@ export default function MyPage() {
             if (profileData) {
                 setIsAdmin(profileData.is_admin);
                 
-                 if (activeTab === 'favorites') {
-                    const { data: favoritesData } = await supabase
-                      .from("favorites")
-                      .select("listing_id, listings(*, profiles:created_by(*))")
-                      .eq("profile_id", profileData.id)
-                      .order("created_at", { ascending: false });
-
-                     const favs = (favoritesData || []).map(f => f.listings).filter(Boolean);
-                     setListings(favs);
-                 } else if (activeTab === 'reviews') {
-                     const { data: reviewsData } = await supabase
-                        .from("reviews")
-                        .select("*, reviewer:profiles!reviewer_id(full_name, tg_username, avatar_url)")
-                        .eq("target_id", profileData.id)
-                        .order("created_at", { ascending: false });
-                     setReviews(reviewsData || []);
-                 }
+                const { data: reviewsData } = await supabase
+                  .from("reviews")
+                  .select("*, reviewer:profiles!reviewer_id(full_name, tg_username, avatar_url)")
+                  .eq("target_id", profileData.id)
+                  .order("created_at", { ascending: false });
+                setReviews(reviewsData || []);
             }
             setLoading(false);
             return;
       }
 
-      // FOR OWN LISTINGS (Active, Archive, Draft)
+      // FOR OWN LISTINGS AND FAVORITES
       if (initData) {
           const res = await fetch('/api/listings/my', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ initData, tab: activeTab })
+              body: JSON.stringify({ initData, tab })
           });
           
           if (!res.ok) throw new Error("Failed to fetch listings");
           
           const data = await res.json();
-          setListings(data.items || []);
+          setTabListings(tab, data.items || []);
           if (data.isAdmin !== undefined) setIsAdmin(data.isAdmin);
           
       } else {
@@ -213,15 +191,15 @@ export default function MyPage() {
                   .eq("created_by", user.id)
                   .order("created_at", { ascending: false });
 
-                if (activeTab === 'active') query = query.in('status', ['active', 'reserved']);
-                else if (activeTab === 'archive') query = query.in('status', ['closed', 'sold', 'archived']);
-                else query = query.eq('status', activeTab);
+                if (tab === 'active') query = query.in('status', ['active', 'reserved']);
+                else if (tab === 'archive') query = query.in('status', ['closed', 'sold', 'archived']);
+                else query = query.eq('status', tab);
                 
                 const { data } = await query;
-                setListings(data || []);
+                setTabListings(tab, data || []);
            } else {
                // Only if absolutely no auth
-               setListings([]);
+               setTabListings(tab, []);
            }
       }
 
@@ -235,10 +213,10 @@ export default function MyPage() {
 
   useEffect(() => {
     // Check if we have cached data for the current tab
-    if (listings.length > 0 && activeTab === cachedActiveTab) {
+    if (listingsByTab[activeTab]) {
         setLoading(false);
     } else {
-        loadListings(true);
+        loadListings(activeTab);
     }
   }, [activeTab]);
 
@@ -274,7 +252,10 @@ export default function MyPage() {
     // We just need to update the UI state.
     
     // Remove from local state
-    setListings(prev => prev.filter(l => l.id !== id));
+    setListingsByTab((prev) => ({
+      ...prev,
+      [activeTab]: (prev[activeTab] || []).filter(l => l.id !== id)
+    }));
     toast.success(t("listing_deleted") || "Объявление удалено");
   };
 

@@ -42,7 +42,7 @@ export async function POST(req) {
       .from("profiles")
       .select("id, first_name")
       .eq("tg_user_id", authData.id)
-      .single();
+      .maybeSingle();
 
     if (!userProfile) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
@@ -51,7 +51,10 @@ export async function POST(req) {
     // 1. Add to Favorites
     const { error: favError } = await supa
       .from("favorites")
-      .insert({ profile_id: userProfile.id, listing_id: listingId });
+      .upsert(
+        { profile_id: userProfile.id, listing_id: listingId },
+        { onConflict: "profile_id,listing_id", ignoreDuplicates: true }
+      );
       
     if (favError && favError.code !== '23505') {
         console.error("Favorite error", favError);
@@ -65,25 +68,25 @@ export async function POST(req) {
     // 2. Fetch the Listing to get Seller ID and Title
     const { data: listing } = await supa
       .from("listings")
-      .select("title, user_id")
+      .select("title, created_by")
       .eq("id", listingId)
-      .single();
+      .maybeSingle();
 
-    if (listing && listing.user_id !== userProfile.id) {
+    if (listing && listing.created_by !== userProfile.id) {
        // Fetch Seller's Telegram ID
        const { data: sellerProfile } = await supa
          .from("profiles")
-         .select("telegram_id, first_name")
-         .eq("id", listing.user_id)
-         .single();
+         .select("tg_user_id, first_name")
+         .eq("id", listing.created_by)
+         .maybeSingle();
 
-       if (sellerProfile && sellerProfile.telegram_id) {
+       if (sellerProfile && sellerProfile.tg_user_id) {
            const buyerName = userProfile.first_name || "Пользователь";
            const text = `🔥 <b>Новый отклик!</b>\n${buyerName} заинтересовался вашей услугой <b>«${listing.title}»</b> через функцию "Умный подбор".\n\nНапишите ему первым, пока он не ушел к конкурентам!`;
            
            const replyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}?user=${userProfile.id}`;
 
-           await sendNotification(sellerProfile.telegram_id, text, {
+           await sendNotification(sellerProfile.tg_user_id, text, {
                reply_markup: {
                    inline_keyboard: [[
                      { text: `💬 Написать ${buyerName}`, web_app: { url: replyUrl } }

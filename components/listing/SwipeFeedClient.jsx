@@ -138,9 +138,25 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
   const handleFavorite = async (listing) => {
     trackProductEvent("swipe_favorite", { listingId: listing.id });
     markSeen(listing.id);
-    toast.success(t("swipe_favorited") || "Добавлено в Избранное ⭐️", { duration: 1500 });
     
     try {
+      if (tgInitData) {
+        const res = await fetch("/api/swipe-like", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            listingId: listing.id,
+            initData: tgInitData,
+            action: "favorite"
+          })
+        });
+
+        if (!res.ok) throw new Error("Favorite API failed");
+
+        toast.success(t("swipe_favorited") || "Добавлено в Избранное ⭐️", { duration: 1500 });
+        return;
+      }
+
       let profileIdToUse = null;
       const tgUserId = getUserId();
       if (tgUserId) {
@@ -156,26 +172,22 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
       }
 
       if (profileIdToUse) {
-        await supabase.from("favorites").insert({
+        const { error } = await supabase.from("favorites").upsert({
           profile_id: profileIdToUse,
           listing_id: listing.id
+        }, {
+          onConflict: "profile_id,listing_id",
+          ignoreDuplicates: true
         });
+
+        if (error) throw error;
+        toast.success(t("swipe_favorited") || "Добавлено в Избранное ⭐️", { duration: 1500 });
       } else {
-        // Fallback to API if we couldn't get profileId locally but have tgInitData
-        if (tgInitData) {
-          await fetch("/api/swipe-like", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              listingId: listing.id,
-              initData: tgInitData,
-              action: "favorite"
-            })
-          });
-        }
+        throw new Error("Profile not resolved");
       }
     } catch (e) {
       console.error("Favorite error", e);
+      toast.error(t("favorite_error") || "Не удалось добавить в Избранное");
     }
   };
 
