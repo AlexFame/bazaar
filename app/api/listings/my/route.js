@@ -58,6 +58,38 @@ async function myListingsHandler(req) {
         return NextResponse.json({ items: [] });
     }
 
+    // --- BULK PREFETCH: return all tabs in one shot ---
+    if (tab === 'all') {
+        const [activeRes, archiveRes, draftRes, favRes] = await Promise.all([
+            admin.from('listings').select('*, profiles:created_by(*)')
+                .eq('created_by', profile.id)
+                .in('status', ['active', 'reserved'])
+                .order('created_at', { ascending: false }),
+            admin.from('listings').select('*, profiles:created_by(*)')
+                .eq('created_by', profile.id)
+                .in('status', ['closed', 'sold', 'archived'])
+                .order('created_at', { ascending: false }),
+            admin.from('listings').select('*, profiles:created_by(*)')
+                .eq('created_by', profile.id)
+                .eq('status', 'draft')
+                .order('created_at', { ascending: false }),
+            admin.from('favorites')
+                .select('listing_id, listings(*, profiles:created_by(*))')
+                .eq('profile_id', profile.id)
+                .order('created_at', { ascending: false }),
+        ]);
+
+        return NextResponse.json({
+            tabs: {
+                active: activeRes.data || [],
+                archive: archiveRes.data || [],
+                draft: draftRes.data || [],
+                favorites: (favRes.data || []).map(f => f.listings).filter(Boolean),
+            },
+            isAdmin: profile.is_admin,
+        });
+    }
+
     if (tab === 'favorites') {
         const { data: favorites, error } = await admin
             .from('favorites')
@@ -77,11 +109,10 @@ async function myListingsHandler(req) {
     // 2. Fetch Listings (Bypassing RLS)
     let query = admin
         .from('listings')
-        .select('*, profiles:created_by(*)') // Join profile if needed for UI consistency
+        .select('*, profiles:created_by(*)')
         .eq('created_by', profile.id)
         .order('created_at', { ascending: false });
 
-    // Filter by tab
     if (tab === 'active') {
         query = query.in('status', ['active', 'reserved']);
     } else if (tab === 'archive') {
@@ -89,7 +120,6 @@ async function myListingsHandler(req) {
     } else if (tab === 'draft') {
         query = query.eq('status', 'draft');
     } else {
-        // Fallback or specific status
         query = query.in('status', ['active', 'reserved']);
     }
 

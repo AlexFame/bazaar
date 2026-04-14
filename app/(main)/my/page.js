@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
   PlusIcon,
@@ -125,6 +125,35 @@ export default function MyPage() {
     }));
   };
 
+  // Prefetch ALL tabs in one API call, then individual tab fetches are instant
+  const prefetchAllTabs = async () => {
+    const tg = typeof window !== 'undefined' ? window.Telegram?.WebApp : null;
+    const initData = tg?.initData;
+    if (!initData) return false;
+
+    try {
+      setLoading(true);
+      const res = await fetch('/api/listings/my', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData, tab: 'all' })
+      });
+
+      if (!res.ok) return false;
+
+      const data = await res.json();
+      if (data.tabs) {
+        setListingsByTab(data.tabs);
+        if (data.isAdmin !== undefined) setIsAdmin(data.isAdmin);
+        setLoading(false);
+        return true;
+      }
+    } catch (e) {
+      console.error("Prefetch error:", e);
+    }
+    return false;
+  };
+
   const loadListings = async (tab = activeTab, force = false) => {
     // If we have cached data for this exact tab, show it instantly.
     if (!force && listingsByTab[tab]) {
@@ -134,17 +163,11 @@ export default function MyPage() {
 
     setLoading(true);
     let tgUserId = getUserId();
-    // Fallback to Supabase Auth if no Telegram ID logic remains same for getting ID for local state,
-    // but for fetching we now prefer API.
     
-    // We need initData for API
     const tg = typeof window !== 'undefined' ? window.Telegram?.WebApp : null;
     const initData = tg?.initData;
 
     try {
-      // Handles favorites & reviews separately as they might need different logic,
-      // BUT for "active", "archive", "draft", we use the new API to bypass RLS.
-      
       if (tab === 'reviews') {
             const { data: profileData } = await supabase
                 .from("profiles")
@@ -166,7 +189,7 @@ export default function MyPage() {
             return;
       }
 
-      // FOR OWN LISTINGS AND FAVORITES
+      // Single-tab fetch (fallback / force-refresh)
       if (initData) {
           const res = await fetch('/api/listings/my', {
               method: 'POST',
@@ -181,8 +204,6 @@ export default function MyPage() {
           if (data.isAdmin !== undefined) setIsAdmin(data.isAdmin);
           
       } else {
-          // Fallback for non-TG env (Dev/Browser without initData)
-          // Still use Supabase direct, assuming Dev has RLS disabled or is logged in via Auth
            const { data: { user } } = await supabase.auth.getUser();
            if (user) {
                let query = supabase
@@ -198,24 +219,44 @@ export default function MyPage() {
                 const { data } = await query;
                 setTabListings(tab, data || []);
            } else {
-               // Only if absolutely no auth
                setTabListings(tab, []);
            }
       }
 
     } catch (e) {
       console.error("Error loading listings:", e);
-      // setListings([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // On mount: prefetch all tabs in one request so tab switching is instant
+  const hasPrefetchedRef = useRef(false);
   useEffect(() => {
-    // Check if we have cached data for the current tab
+    if (hasPrefetchedRef.current) return;
+    hasPrefetchedRef.current = true;
+
+    // If Jotai already has cached data for all main tabs, skip the fetch
+    const hasAll = listingsByTab.active && listingsByTab.archive && listingsByTab.draft && listingsByTab.favorites;
+    if (hasAll) {
+      setLoading(false);
+      return;
+    }
+
+    prefetchAllTabs().then((ok) => {
+      if (!ok) {
+        // Fallback: just load the current tab
+        loadListings(activeTab);
+      }
+    });
+  }, []);
+
+  // When tab changes, data is already in cache from prefetch — just read it
+  useEffect(() => {
     if (listingsByTab[activeTab]) {
         setLoading(false);
     } else {
+        // Edge case: reviews tab or cache miss
         loadListings(activeTab);
     }
   }, [activeTab]);
