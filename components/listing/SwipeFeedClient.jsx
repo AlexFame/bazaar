@@ -182,15 +182,12 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
 
         if (!profileIdToUse) throw new Error("Profile not resolved");
 
-        const { error } = await supabase.from("favorites").upsert({
+        const { error } = await supabase.from("favorites").insert({
           profile_id: profileIdToUse,
           listing_id: listing.id
-        }, {
-          onConflict: "profile_id,listing_id",
-          ignoreDuplicates: true
         });
 
-        if (error) throw error;
+        if (error && error.code !== '23505') throw error;
       }
 
       toast.success(t("swipe_favorited") || "Добавлено в Избранное ⭐️", { duration: 1500 });

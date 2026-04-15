@@ -64,15 +64,11 @@ export async function POST(req) {
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
-    // 1. Add to Favorites
     const { error: favError } = await supa
       .from("favorites")
-      .upsert(
-        { profile_id: userProfile.id, listing_id: listingId },
-        { onConflict: "profile_id,listing_id", ignoreDuplicates: true }
-      );
+      .insert({ profile_id: userProfile.id, listing_id: listingId });
 
-    if (favError) {
+    if (favError && favError.code !== '23505') {
         console.error("Swipe-like favorite insert error:", favError);
     }
 
