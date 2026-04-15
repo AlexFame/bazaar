@@ -10,6 +10,7 @@ import { useLang } from "@/lib/i18n-client";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabaseClient";
 import { getUserId } from "@/lib/userId";
+import { setFavorite } from "@/lib/favoritesClient";
 
 export default function SwipeFeedClient({ onClose, userLocation }) {
   const { t } = useLang();
@@ -140,56 +141,7 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
     markSeen(listing.id);
     
     try {
-      let saved = false;
-
-      // Try API first (server-side, bypasses RLS)
-      if (tgInitData) {
-        try {
-          const res = await fetch("/api/swipe-like", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              listingId: listing.id,
-              initData: tgInitData,
-              action: "favorite"
-            })
-          });
-          if (res.ok) saved = true;
-        } catch (apiErr) {
-          console.warn("Favorite API failed, falling back to direct insert", apiErr);
-        }
-      }
-
-      // Fallback: direct Supabase insert (client-side)
-      if (!saved) {
-        let profileIdToUse = null;
-        if (typeof window !== "undefined" && window._cachedProfileId) {
-          profileIdToUse = window._cachedProfileId;
-        } else {
-          const tgUserId = getUserId();
-          if (tgUserId) {
-            const { data } = await supabase.from('profiles').select('id').eq('tg_user_id', Number(tgUserId)).maybeSingle();
-            if (data) {
-              profileIdToUse = data.id;
-              if (typeof window !== "undefined") window._cachedProfileId = data.id;
-            }
-          }
-          if (!profileIdToUse) {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) profileIdToUse = user.id;
-          }
-        }
-
-        if (!profileIdToUse) throw new Error("Profile not resolved");
-
-        const { error } = await supabase.from("favorites").insert({
-          profile_id: profileIdToUse,
-          listing_id: listing.id
-        });
-
-        if (error && error.code !== '23505') throw error;
-      }
-
+      await setFavorite(listing.id, true);
       toast.success(t("swipe_favorited") || "Добавлено в Избранное ⭐️", { duration: 1500 });
     } catch (e) {
       console.error("Favorite error", e);

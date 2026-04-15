@@ -7,9 +7,9 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { useLang } from "@/lib/i18n-client";
 import { CATEGORY_DEFS } from "@/lib/categories";
-import { getUserId } from "@/lib/userId";
 import { translateText } from "@/lib/translation";
 import { trackAnalyticsEvent } from "@/lib/analytics";
+import { getFavoriteStatus, setFavorite } from "@/lib/favoritesClient";
 
 import { motion } from "framer-motion";
 import { useHaptic } from "@/hooks/useHaptic";
@@ -99,7 +99,6 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
   const router = useRouter();
   const [imageUrl, setImageUrl] = useState(null);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [profileId, setProfileId] = useState(null);
   const [translatedTitle, setTranslatedTitle] = useState("");
   const [status, setStatus] = useState(listing.status); // Local status state
   const [isLoading, setIsLoading] = useState(false); // Loading state for status changes
@@ -159,47 +158,10 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
     }
 
     async function loadFavoriteStatus() {
-      let profileIdToUse = null;
-      
-      // Use in-memory global cache if available to prevent N+1 identical profile queries
-      if (typeof window !== "undefined" && window._cachedProfileId) {
-          profileIdToUse = window._cachedProfileId;
-      } else {
-          // 1. Try Telegram ID
-          const tgUserId = getUserId();
-          if (tgUserId) {
-            const { data: profileData } = await supabase
-              .from("profiles")
-              .select("id")
-              .eq("tg_user_id", Number(tgUserId))
-              .maybeSingle();
-            if (profileData) profileIdToUse = profileData.id;
-          }
-
-          // 2. Fallback to Supabase Auth
-          if (!profileIdToUse) {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) profileIdToUse = user.id;
-          }
-          
-          if (profileIdToUse && typeof window !== "undefined") {
-              window._cachedProfileId = profileIdToUse;
-          }
-      }
-
-      if (!profileIdToUse) return;
-      setProfileId(profileIdToUse);
-
       try {
-        const { data: favoriteData } = await supabase
-          .from("favorites")
-          .select("id")
-          .eq("profile_id", profileIdToUse)
-          .eq("listing_id", listing.id)
-          .maybeSingle();
-
-        setIsFavorite(!!favoriteData);
+        setIsFavorite(await getFavoriteStatus(listing.id));
       } catch (e) {
+        console.error("Error loading favorite status:", e);
         setIsFavorite(false);
       }
     }
@@ -260,47 +222,11 @@ export default function ListingCard({ listing, showActions, onDelete, onPromote,
     e.preventDefault();
     e.stopPropagation();
 
-    let currentProfileId = profileId;
-    if (!currentProfileId) {
-        if (typeof window !== "undefined" && window._cachedProfileId) {
-            currentProfileId = window._cachedProfileId;
-        } else {
-            const tgUserId = getUserId();
-            if (tgUserId) {
-                const { data } = await supabase.from("profiles").select("id").eq("tg_user_id", Number(tgUserId)).maybeSingle();
-                if (data) currentProfileId = data.id;
-            }
-            if (!currentProfileId) {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) currentProfileId = user.id;
-            }
-            if (currentProfileId && typeof window !== "undefined") {
-                window._cachedProfileId = currentProfileId;
-            }
-        }
-        if (currentProfileId) setProfileId(currentProfileId);
-    }
-
-    if (!currentProfileId) return;
-
     try {
-      if (isFavorite) {
-        // Remove from favorites
-        await supabase
-          .from("favorites")
-          .delete()
-          .eq("profile_id", currentProfileId)
-          .eq("listing_id", listing.id);
-        setIsFavorite(false);
-      } else {
-        // Add to favorites
-        await supabase
-          .from("favorites")
-          .insert({
-            profile_id: currentProfileId,
-            listing_id: listing.id,
-          });
-        setIsFavorite(true);
+      const nextFavorite = await setFavorite(listing.id, !isFavorite);
+      setIsFavorite(nextFavorite);
+
+      if (nextFavorite) {
         trackAnalyticsEvent(listing.id, 'favorite_add');
         impactOccurred('light');
       }

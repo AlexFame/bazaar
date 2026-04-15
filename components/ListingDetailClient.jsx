@@ -25,6 +25,7 @@ import ListingInfo from "@/components/listing/ListingInfo";
 import SellerCard from "@/components/listing/SellerCard";
 import ListingActions from "@/components/listing/ListingActions";
 import ListingOffers from "@/components/listing/ListingOffers";
+import { getFavoriteStatus, resolveFavoriteProfileId, setFavorite } from "@/lib/favoritesClient";
 
 // Helpers moved to subcomponents or unused
 // buildContactLink, detectType, formatLastSeen, getSellerActivityStats moved to SellerCard.jsx
@@ -74,41 +75,13 @@ export default function ListingDetailClient({ id }) {
     if (!id) return;
 
     async function loadFavoriteStatus() {
-      let profileIdToUse = null;
-
-      // 1. Try Telegram User
-      if (typeof getTelegramUser === "function") {
-        const tgUser = getTelegramUser();
-        if (tgUser?.id) {
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("tg_user_id", tgUser.id)
-            .maybeSingle();
-          if (profileData) profileIdToUse = profileData.id;
-        }
-      }
-
-      // 2. Fallback to Supabase Auth
-      if (!profileIdToUse) {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        if (user) profileIdToUse = user.id;
-      }
-
-      if (!profileIdToUse) return;
-      setProfileId(profileIdToUse);
-
       try {
-        const { data: favoriteData } = await supabase
-          .from("favorites")
-          .select("id")
-          .eq("profile_id", profileIdToUse)
-          .eq("listing_id", id)
-          .maybeSingle();
-
-        setIsFavorite(!!favoriteData);
+        const [profileIdToUse, favoriteStatus] = await Promise.all([
+          resolveFavoriteProfileId(),
+          getFavoriteStatus(id),
+        ]);
+        if (profileIdToUse) setProfileId(profileIdToUse);
+        setIsFavorite(favoriteStatus);
       } catch (e) {
         console.error("Error loading favorite status:", e);
       }
@@ -130,22 +103,7 @@ export default function ListingDetailClient({ id }) {
     }
 
     try {
-      if (isFavorite) {
-        // Remove from favorites
-        await supabase
-          .from("favorites")
-          .delete()
-          .eq("profile_id", profileId)
-          .eq("listing_id", id);
-        setIsFavorite(false);
-      } else {
-        // Add to favorites
-        await supabase.from("favorites").insert({
-          profile_id: profileId,
-          listing_id: id,
-        });
-        setIsFavorite(true);
-      }
+      setIsFavorite(await setFavorite(id, !isFavorite));
     } catch (error) {
       console.error("Error toggling favorite:", error);
     }

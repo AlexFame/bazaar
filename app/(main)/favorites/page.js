@@ -2,12 +2,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabaseClient";
-import { getUserId } from "@/lib/userId";
 import { useLang } from "@/lib/i18n-client";
 import ListingCard from "@/components/ListingCard";
 import { ListingCardSkeleton } from "@/components/SkeletonLoader";
 import BackButton from "@/components/BackButton";
+import { listFavorites } from "@/lib/favoritesClient";
 
 export default function FavoritesPage() {
   const { t } = useLang();
@@ -16,63 +15,9 @@ export default function FavoritesPage() {
   const [loading, setLoading] = useState(true);
 
   const loadFavorites = async () => {
-    let tgUserId = getUserId();
-    let profileId = null;
-
-    // 1. Try Telegram ID
-    if (tgUserId) {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("tg_user_id", Number(tgUserId))
-        .single();
-      if (profileData) profileId = profileData.id;
-    }
-
-    // 2. Fallback to Supabase Auth
-    if (!profileId) {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-         // Try to find profile by user_id
-         const { data: profileData } = await supabase
-            .from("profiles")
-            .select("id")
-            .eq("id", user.id)
-            .maybeSingle();
-         if (profileData) profileId = profileData.id;
-      }
-    }
-
-    if (!profileId) {
-      setLoading(false);
-      setListings([]);
-      return;
-    }
-
+    setLoading(true);
     try {
-      // Get favorites with listing details
-      const { data, error } = await supabase
-        .from("favorites")
-        .select(`
-          listing_id,
-          listings (
-            *,
-            profiles:created_by(*)
-          )
-        `)
-        .eq("profile_id", profileId)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Error loading favorites:", error);
-        setListings([]);
-      } else {
-        // Extract listings from the joined data
-        const favoriteListings = data
-          .map(fav => fav.listings)
-          .filter(listing => listing !== null);
-        setListings(favoriteListings);
-      }
+      setListings(await listFavorites());
     } catch (e) {
       console.error("Error loading favorites:", e);
       setListings([]);
