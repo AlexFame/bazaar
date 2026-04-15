@@ -140,38 +140,48 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
     markSeen(listing.id);
     
     try {
+      let saved = false;
+
+      // Try API first (server-side, bypasses RLS)
       if (tgInitData) {
-        const res = await fetch("/api/swipe-like", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            listingId: listing.id,
-            initData: tgInitData,
-            action: "favorite"
-          })
-        });
-
-        if (!res.ok) throw new Error("Favorite API failed");
-
-        toast.success(t("swipe_favorited") || "Добавлено в Избранное ⭐️", { duration: 1500 });
-        return;
+        try {
+          const res = await fetch("/api/swipe-like", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              listingId: listing.id,
+              initData: tgInitData,
+              action: "favorite"
+            })
+          });
+          if (res.ok) saved = true;
+        } catch (apiErr) {
+          console.warn("Favorite API failed, falling back to direct insert", apiErr);
+        }
       }
 
-      let profileIdToUse = null;
-      const tgUserId = getUserId();
-      if (tgUserId) {
-         const { data } = await supabase.from('profiles').select('id').eq('tg_user_id', Number(tgUserId)).maybeSingle();
-         if (data) profileIdToUse = data.id;
-      }
-      if (!profileIdToUse) {
-         const { data: { user } } = await supabase.auth.getUser();
-         if (user) {
-            const { data } = await supabase.from('profiles').select('id').eq('id', user.id).maybeSingle();
-            if (data) profileIdToUse = data.id;
-         }
-      }
+      // Fallback: direct Supabase insert (client-side)
+      if (!saved) {
+        let profileIdToUse = null;
+        if (typeof window !== "undefined" && window._cachedProfileId) {
+          profileIdToUse = window._cachedProfileId;
+        } else {
+          const tgUserId = getUserId();
+          if (tgUserId) {
+            const { data } = await supabase.from('profiles').select('id').eq('tg_user_id', Number(tgUserId)).maybeSingle();
+            if (data) {
+              profileIdToUse = data.id;
+              if (typeof window !== "undefined") window._cachedProfileId = data.id;
+            }
+          }
+          if (!profileIdToUse) {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) profileIdToUse = user.id;
+          }
+        }
 
-      if (profileIdToUse) {
+        if (!profileIdToUse) throw new Error("Profile not resolved");
+
         const { error } = await supabase.from("favorites").upsert({
           profile_id: profileIdToUse,
           listing_id: listing.id
@@ -181,10 +191,9 @@ export default function SwipeFeedClient({ onClose, userLocation }) {
         });
 
         if (error) throw error;
-        toast.success(t("swipe_favorited") || "Добавлено в Избранное ⭐️", { duration: 1500 });
-      } else {
-        throw new Error("Profile not resolved");
       }
+
+      toast.success(t("swipe_favorited") || "Добавлено в Избранное ⭐️", { duration: 1500 });
     } catch (e) {
       console.error("Favorite error", e);
       toast.error(t("favorite_error") || "Не удалось добавить в Избранное");

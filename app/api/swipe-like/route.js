@@ -2,23 +2,31 @@ import { NextResponse } from "next/server";
 import { supaAdmin } from "@/lib/supabaseAdmin";
 import { sendNotification } from "@/lib/bot";
 
+import crypto from 'crypto';
+
 function checkTelegramAuth(initData, botToken) {
   if (!initData) return null;
-  const crypto = require('crypto');
   const url = new URLSearchParams(initData);
-  const hash = url.get("hash");
-  url.delete("hash");
+  const hash = url.get('hash');
+  url.delete('hash');
 
-  const keys = Array.from(url.keys()).sort();
-  const dataCheckString = keys.map((key) => `${key}=${url.get(key)}`).join("\n");
-  const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken.trim()).digest();
-  const computedHash = crypto.createHmac("sha256", secretKey).update(dataCheckString).digest("hex");
+  const params = [...url.entries()]
+    .sort(([a],[b]) => a.localeCompare(b));
 
-  if (computedHash !== hash) return null;
+  const dataCheckString = params
+    .map(([k,v]) => `${k}=${v}`)
+    .join('\n');
 
-  const userStr = url.get("user");
-  if (!userStr) return null;
-  return JSON.parse(userStr);
+  const secret = crypto.createHmac('sha256', 'WebAppData').update(botToken.trim()).digest();
+  const check = crypto.createHmac('sha256', secret).update(dataCheckString).digest('hex');
+
+  if (check !== hash) return null;
+
+  const obj = Object.fromEntries(url.entries());
+  if (obj.user) {
+    try { obj.user = JSON.parse(obj.user); } catch(e) {}
+  }
+  return obj;
 }
 
 export async function POST(req) {
@@ -31,20 +39,28 @@ export async function POST(req) {
 
     // Auth via Telegram initData
     const authData = checkTelegramAuth(initData, process.env.TG_BOT_TOKEN);
-    if (!authData) {
+    if (!authData || !authData.user) {
+      console.error("Swipe-like auth failed. initData present:", !!initData, "botToken present:", !!process.env.TG_BOT_TOKEN);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const tgUserId = authData.user.id;
     const supa = supaAdmin();
 
     // Get the user's profile UUID from their Telegram ID
-    const { data: userProfile } = await supa
+    const { data: userProfile, error: profileError } = await supa
       .from("profiles")
       .select("id, first_name")
-      .eq("tg_user_id", authData.id)
+      .eq("tg_user_id", tgUserId)
       .maybeSingle();
 
+    if (profileError) {
+      console.error("Swipe-like profile lookup error:", profileError);
+      return NextResponse.json({ error: "Profile lookup failed" }, { status: 500 });
+    }
+
     if (!userProfile) {
+      console.error("Swipe-like: no profile for tg_user_id", tgUserId);
       return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
@@ -55,9 +71,9 @@ export async function POST(req) {
         { profile_id: userProfile.id, listing_id: listingId },
         { onConflict: "profile_id,listing_id", ignoreDuplicates: true }
       );
-      
-    if (favError && favError.code !== '23505') {
-        console.error("Favorite error", favError);
+
+    if (favError) {
+        console.error("Swipe-like favorite insert error:", favError);
     }
 
     if (action === "favorite") {
