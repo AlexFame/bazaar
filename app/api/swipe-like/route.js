@@ -5,7 +5,7 @@ import { sendNotification } from "@/lib/bot";
 import crypto from 'crypto';
 
 function checkTelegramAuth(initData, botToken) {
-  if (!initData) return null;
+  if (!initData || !botToken) return null;
   const url = new URLSearchParams(initData);
   const hash = url.get('hash');
   url.delete('hash');
@@ -50,7 +50,7 @@ export async function POST(req) {
     // Get the user's profile UUID from their Telegram ID
     const { data: userProfile, error: profileError } = await supa
       .from("profiles")
-      .select("id, first_name")
+      .select("id, full_name, tg_username")
       .eq("tg_user_id", tgUserId)
       .maybeSingle();
 
@@ -66,10 +66,14 @@ export async function POST(req) {
 
     const { error: favError } = await supa
       .from("favorites")
-      .insert({ profile_id: userProfile.id, listing_id: listingId });
+      .upsert(
+        { profile_id: userProfile.id, listing_id: listingId },
+        { onConflict: "profile_id,listing_id", ignoreDuplicates: true }
+      );
 
-    if (favError && favError.code !== '23505') {
+    if (favError) {
         console.error("Swipe-like favorite insert error:", favError);
+        return NextResponse.json({ error: "Favorite insert failed" }, { status: 500 });
     }
 
     if (action === "favorite") {
@@ -88,12 +92,12 @@ export async function POST(req) {
        // Fetch Seller's Telegram ID
        const { data: sellerProfile } = await supa
          .from("profiles")
-         .select("tg_user_id, first_name")
+         .select("tg_user_id, full_name, tg_username")
          .eq("id", listing.created_by)
          .maybeSingle();
 
        if (sellerProfile && sellerProfile.tg_user_id) {
-           const buyerName = userProfile.first_name || "Пользователь";
+           const buyerName = userProfile.full_name || userProfile.tg_username || "Пользователь";
            const text = `🔥 <b>Новый отклик!</b>\n${buyerName} заинтересовался вашей услугой <b>«${listing.title}»</b> через функцию "Умный подбор".\n\nНапишите ему первым, пока он не ушел к конкурентам!`;
            
            const replyUrl = `${process.env.NEXT_PUBLIC_BASE_URL}?user=${userProfile.id}`;
