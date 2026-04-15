@@ -11,7 +11,7 @@ function checkTelegramAuth(initData, botToken) {
 
   const keys = Array.from(url.keys()).sort();
   const dataCheckString = keys.map((key) => `${key}=${url.get(key)}`).join("\n");
-  const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken).digest();
+  const secretKey = crypto.createHmac("sha256", "WebAppData").update(botToken.trim()).digest();
   const computedHash = crypto.createHmac("sha256", secretKey).update(dataCheckString).digest("hex");
 
   if (computedHash !== hash) return null;
